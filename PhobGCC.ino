@@ -82,6 +82,7 @@ double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
 int calStep;
 unsigned int startBtnSince;
 int lastStartBtn;
+int watchingStart;
 double calPointsX[CALIBRATION_POINTS];
 double calPointsY[CALIBRATION_POINTS];
 
@@ -123,7 +124,9 @@ void setup() {
 	btn.high = 1;
 	startBtnSince = millis();
 	lastStartBtn = 0;
-	analogReadResolution(13);
+	watchingStart = 0;
+	calStep = -1;
+	analogReadResolution(8);
 	setPinModes();
 	//start USB serial
 	Serial.begin(57600);
@@ -138,7 +141,7 @@ void loop() {
 	readButtons();
 	readSticks();
 	setPole();
-	if(!calStep){
+	if(calStep >=0){
 		calibrate();
 	}
 }
@@ -180,24 +183,36 @@ void readButtons(){
 	
 	if(btn.S && !lastStartBtn){
 		startBtnSince = millis();
+		watchingStart = true;
 	}
-	if(startBtnSince > 5000){
-		calStep = 0;
+	else if(btn.S && watchingStart){
+		int startTimer = millis()- startBtnSince;
+		//Serial.println(startTimer);
+		if(startTimer > 2000){
+			calStep ++;
+			watchingStart = false;
+		}
 	}
+	lastStartBtn = btn.S;
 }
 void readSticks(){
 	//btn.Ax = analogRead(18);
 	//btn.Ay = analogRead(19);
-	btn.La = analogRead(22)>>5;
-	btn.Ra = analogRead(15)>>5;
+
+	btn.La = analogRead(22);
+	btn.Ra = analogRead(15);
 	
-	AStickHX = (float)analogRead(HALX);
-	AStickHY = (float)analogRead(HALY);
-	btn.Ax = (uint8_t) (xCoeffs[0]*pow(AStickHX,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
-	btn.Ay = (uint8_t) (yCoeffs[0]*pow(AStickHY,3) + yCoeffs[1]*pow(AStickHY,2) + yCoeffs[2]*pow(AStickHY,1) + yCoeffs[2]*AStickHY) + 128;
+	AStickHX = analogRead(HALX);
+	AStickHY = analogRead(HALY);
+	//btn.Ax = (uint8_t) (xCoeffs[0]*pow(,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
+	//btn.Ay = (uint8_t) (yCoeffs[0]*pow(AStickHY,3) + yCoeffs[1]*pow(AStickHY,2) + yCoeffs[2]*pow(AStickHY,1) + yCoeffs[2]*AStickHY) + 128;
 	
-	btn.Cx = analogRead(17)>>5;//note it looks like these are swapped from what I thought
-	btn.Cy = analogRead(16)>>5;
+	btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX*AStickHX) + xCoeffs[1]*(AStickHX*AStickHX) + xCoeffs[2]*AStickHX + xCoeffs[2]) + 128;
+	btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY*AStickHY) + yCoeffs[1]*(AStickHY*AStickHY) + yCoeffs[2]*AStickHY + yCoeffs[2]) + 128;
+
+	
+	btn.Cx = analogRead(17);//note it looks like these are swapped from what I thought
+	btn.Cy = analogRead(16);
 }
 void setPole(){
 	for(int i = 0; i < 8; i++){
@@ -238,6 +253,7 @@ void setPole(){
 	 //delay(1);
 }
 void communicate(){
+	//Serial.println("communicating");
 	//check if a command has started (bytes available on the serial line)
 	if (Serial1.available()){
 	//wait for the first 5 bytes of the command to arrive
@@ -300,11 +316,12 @@ void communicate(){
 	}
 }
 void calibrate(){
-	if(btn.A){
-		calPointsX[calStep] = AStickHX;
-		calPointsY[calStep] = AStickHY;
-		calStep++;
-	}
+	Serial.println("calibrating");
+	Serial.println(calStep);
+
+	calPointsX[calStep] = AStickHX;
+	calPointsY[calStep] = AStickHY;
+	
 	if(calStep >= CALIBRATION_POINTS){
 		double x_input[5] = {
 		calPointsX[9],
@@ -324,6 +341,8 @@ void calibrate(){
 		
 		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
 		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
+		
+		calStep = -1;
 	}
-	calStep = -1;
+
 }
