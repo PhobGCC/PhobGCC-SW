@@ -13,7 +13,7 @@
 #define HALX 21
 #define HALY 20
 
-#define FIT_ORDER 3
+#define FIT_ORDER 2
 
 union Buttons{
 	uint8_t arr[10];
@@ -77,8 +77,10 @@ union Buttons{
 
 unsigned int AStickHX;
 unsigned int AStickHY;
-double xCoeffs[FIT_ORDER+1] = {0,0,1,0};
-double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
+//double xCoeffs[FIT_ORDER+1] = {0,0,1,0};
+//double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
+double xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
+double yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
 int calStep;
 unsigned int startBtnSince;
 int lastStartBtn;
@@ -140,10 +142,10 @@ void loop() {
 	communicate();
 	readButtons();
 	readSticks();
-	setPole();
 	if(calStep >=0){
 		calibrate();
 	}
+	setPole();
 }
 
 void setPinModes(){
@@ -153,7 +155,7 @@ void setPinModes(){
 	pinMode(12,INPUT_PULLUP);
 	pinMode(11,INPUT_PULLUP);
 	pinMode(6,INPUT_PULLUP);
-	pinMode(14,INPUT_PULLUP);
+	pinMode(13,INPUT_PULLUP);
 	pinMode(8,INPUT_PULLUP);
 	pinMode(3,INPUT_PULLUP);
 	pinMode(4,INPUT_PULLUP);
@@ -174,7 +176,7 @@ void readButtons(){
 	btn.Y = !digitalRead(12);
 	btn.Z = !digitalRead(11);
 	btn.S = !digitalRead(6);
-	btn.L = !digitalRead(14); //note, need to cut and reroute this trace, was to pin 1
+	btn.L = !digitalRead(13); //note, need to cut and reroute this trace, was to pin 1
 	btn.R = !digitalRead(8);
 	btn.Du = !digitalRead(3);
 	btn.Dd = !digitalRead(4);
@@ -188,9 +190,11 @@ void readButtons(){
 	else if(btn.S && watchingStart){
 		int startTimer = millis()- startBtnSince;
 		//Serial.println(startTimer);
-		if(startTimer > 2000){
+		if(startTimer > 1000){
 			calStep ++;
-			watchingStart = false;
+			watchingStart = false;	
+			Serial.println("calibrating");
+			Serial.println(calStep);
 		}
 	}
 	lastStartBtn = btn.S;
@@ -207,12 +211,19 @@ void readSticks(){
 	//btn.Ax = (uint8_t) (xCoeffs[0]*pow(,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
 	//btn.Ay = (uint8_t) (yCoeffs[0]*pow(AStickHY,3) + yCoeffs[1]*pow(AStickHY,2) + yCoeffs[2]*pow(AStickHY,1) + yCoeffs[2]*AStickHY) + 128;
 	
-	btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX*AStickHX) + xCoeffs[1]*(AStickHX*AStickHX) + xCoeffs[2]*AStickHX + xCoeffs[2]) + 128;
-	btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY*AStickHY) + yCoeffs[1]*(AStickHY*AStickHY) + yCoeffs[2]*AStickHY + yCoeffs[2]) + 128;
+	//btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX*AStickHX) + xCoeffs[1]*(AStickHX*AStickHX) + xCoeffs[2]*AStickHX + xCoeffs[3]); //+ 128;
+	//btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY*AStickHY) + yCoeffs[1]*(AStickHY*AStickHY) + yCoeffs[2]*AStickHY + yCoeffs[3]); //+ 128;
 
-	
+	btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX) + xCoeffs[1]*AStickHX + xCoeffs[2]); //+ 128;
+	btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY) + yCoeffs[1]*AStickHY + yCoeffs[2]); //+ 128;
+
 	btn.Cx = analogRead(17);//note it looks like these are swapped from what I thought
 	btn.Cy = analogRead(16);
+	
+	//Serial.print("C X = ");
+	//Serial.println(btn.Cx);
+	//Serial.print("C Y = ");
+	//Serial.println(btn.Cy);
 }
 void setPole(){
 	for(int i = 0; i < 8; i++){
@@ -284,7 +295,7 @@ void communicate(){
 	  }
 	}
 	//print the command byte over the USB serial connection
-	Serial.println(cmdByte,HEX);
+	//Serial.println(cmdByte,HEX);
 	
 	//decide what to do based on the command
 	switch(cmdByte){
@@ -292,9 +303,9 @@ void communicate(){
 		  while(Serial1.read() != 0xFF){}
 		  for(int i = 0; i <POLL_LENGTH; i++){
 				Serial1.write(pollResponse[i]);
-				Serial.print(pollResponse[i],HEX);
+				//Serial.print(pollResponse[i],HEX);
 		  }
-		  Serial.println();
+		  //Serial.println();
 		  while(Serial1.read() != 0xFF){}
 		  break;
 		case 0x00:
@@ -315,34 +326,96 @@ void communicate(){
 	  }
 	}
 }
-void calibrate(){
-	Serial.println("calibrating");
-	Serial.println(calStep);
 
-	calPointsX[calStep] = AStickHX;
-	calPointsY[calStep] = AStickHY;
-	
-	if(calStep >= CALIBRATION_POINTS){
+uint8_t calGuideX[CALIBRATION_POINTS] = {128,228,128,198,128,128,128,58,128,28,128,58,128,128,128,198,128};
+uint8_t calGuideY[CALIBRATION_POINTS] = {128,128,128,198,128,228,128,198,128,128,128,58,128,28,128,58,128};
+
+void calibrate(){
+
+	if(calStep >= (CALIBRATION_POINTS)){
+		Serial.println("the x calibration points are:");
+		for(int i = 0; i < CALIBRATION_POINTS; i++){
+			Serial.print(calPointsX[i]);
+			Serial.print(',');
+		}
+		Serial.println();
+		
+		Serial.println("the y calibration points are:");
+		for(int i = 0; i < CALIBRATION_POINTS; i++){
+			Serial.print(calPointsY[i]);
+			Serial.print(',');
+		}
+		Serial.println();
+		
 		double x_input[5] = {
 		calPointsX[9],
 		(calPointsX[7]+calPointsX[11])/2.0,
-		(calPointsX[0]+calPointsX[2]+calPointsX[4]+calPointsX[6]+calPointsX[8]+calPointsX[10]+calPointsX[12]+calPointsX[14]+calPointsX[16])/8.0,
+		(calPointsX[0]+calPointsX[2]+calPointsX[4]+calPointsX[6]+calPointsX[8]+calPointsX[10]+calPointsX[12]+calPointsX[14]+calPointsX[16])/9.0,
 		(calPointsX[3]+calPointsX[15])/2.0,
 		calPointsX[1]};
-		double x_output[5] = {-100,-70.71,0,70.71,100};
+		//double x_output[5] = {-100,-70.71,0,70.71,100};
+		double x_output[5] = {28,57.29,128,198.71,228};
+		
+		Serial.println("x inputs are:");
+		Serial.print(x_input[0]);
+		Serial.print(',');
+		Serial.print(x_input[1]);
+		Serial.print(',');
+		Serial.print(x_input[2]);
+		Serial.print(',');
+		Serial.print(x_input[3]);
+		Serial.print(',');
+		Serial.println(x_input[4]);
 		
 		double y_input[5] = {
 		calPointsY[13],
 		(calPointsY[11]+calPointsY[15])/2.0,
 		(calPointsY[0]+calPointsY[2]+calPointsY[4]+calPointsY[6]+calPointsY[8]+calPointsY[10]+calPointsY[12]+calPointsY[14]+calPointsY[16])/9.0,
 		(calPointsY[3]+calPointsY[7])/2.0,
-		calPointsY[4]};
-		double y_output[5] = {-100,-70.71,0,70.71,100};		
+		calPointsY[5]};
+		//double y_output[5] = {-100,-70.71,0,70.71,100};
+		double y_output[5] = {28,57.29,128,198.71,228};	
+
+		Serial.println("y inputs are:");
+		Serial.print(y_input[0]);
+		Serial.print(',');
+		Serial.print(y_input[1]);
+		Serial.print(',');
+		Serial.print(y_input[2]);
+		Serial.print(',');
+		Serial.print(y_input[3]);
+		Serial.print(',');
+		Serial.println(y_input[4]);		
 		
 		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
 		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
 		
+		Serial.println("x coefficients are:");
+		Serial.print(xCoeffs[0]);
+		Serial.print(',');
+		Serial.print(xCoeffs[1]);
+		Serial.print(',');
+		Serial.println(xCoeffs[2]);
+		//Serial.print(',');
+		//Serial.println(xCoeffs[3]);
+		
+		Serial.println("y coefficients are:");
+		Serial.print(yCoeffs[0]);
+		Serial.print(',');
+		Serial.print(yCoeffs[1]);
+		Serial.print(',');
+		Serial.println(yCoeffs[2]);
+		//Serial.print(',');
+		//Serial.println(yCoeffs[3]);
+		
 		calStep = -1;
+	}
+	else{
+		calPointsX[calStep] = (double) AStickHX;
+		calPointsY[calStep] = (double) AStickHY;
+		
+		btn.Cx = calGuideX[calStep];
+		btn.Cy = calGuideY[calStep];
 	}
 
 }
