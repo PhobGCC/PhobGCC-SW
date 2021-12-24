@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <curveFitting.h>
+#include <EEPROM.h>
 
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
@@ -14,6 +15,7 @@
 #define HALY 20
 
 #define FIT_ORDER 2
+#define FIT_ADDRESS 0
 
 union Buttons{
 	uint8_t arr[10];
@@ -79,8 +81,9 @@ unsigned int AStickHX;
 unsigned int AStickHY;
 //double xCoeffs[FIT_ORDER+1] = {0,0,1,0};
 //double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
-double xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
-double yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
+//double xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
+//double yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
+double fitCoeffs[(FIT_ORDER+1)*2] = {-0.01,-2.2,303.81,0.00,2.31,-61.02};
 int calStep;
 unsigned int startBtnSince;
 int lastStartBtn;
@@ -128,12 +131,28 @@ void setup() {
 	lastStartBtn = 0;
 	watchingStart = 0;
 	calStep = -1;
-	analogReadResolution(8);
+	EEPROM.get( FIT_ADDRESS, fitCoeffs );
+	
+	
+	
+	analogReadResolution(13);
 	setPinModes();
 	//start USB serial
 	Serial.begin(57600);
 	//Serial.begin(9600);
 	Serial.println("starting");
+	Serial.println("x coefficients are:");
+	Serial.print(fitCoeffs[0]);
+	Serial.print(',');
+	Serial.print(fitCoeffs[1]);
+	Serial.print(',');
+	Serial.println(fitCoeffs[2]);
+	Serial.println("y coefficients are:");
+	Serial.print(fitCoeffs[3]);
+	Serial.print(',');
+	Serial.print(fitCoeffs[4]);
+	Serial.print(',');
+	Serial.println(fitCoeffs[5]);
 	//start hardware serail
 	Serial1.begin(1000000);
 }
@@ -183,11 +202,11 @@ void readButtons(){
 	btn.Dl = !digitalRead(2);
 	btn.Dr = !digitalRead(5);
 	
-	if(btn.S && !lastStartBtn){
+	if(btn.Dl && !lastStartBtn){
 		startBtnSince = millis();
 		watchingStart = true;
 	}
-	else if(btn.S && watchingStart){
+	else if(btn.Dl && watchingStart){
 		int startTimer = millis()- startBtnSince;
 		//Serial.println(startTimer);
 		if(startTimer > 1000){
@@ -197,14 +216,19 @@ void readButtons(){
 			Serial.println(calStep);
 		}
 	}
-	lastStartBtn = btn.S;
+	lastStartBtn = btn.Dl;
 }
 void readSticks(){
 	//btn.Ax = analogRead(18);
 	//btn.Ay = analogRead(19);
 
-	btn.La = analogRead(22);
-	btn.Ra = analogRead(15);
+	btn.La = analogRead(22)>>5;
+	btn.Ra = analogRead(15)>>5;
+	
+	//Serial.print("L Trigger");
+	//Serial.println(btn.La,DEC);
+	Serial.print("R Trigger");
+	Serial.println(btn.Ra,DEC);
 	
 	AStickHX = analogRead(HALX);
 	AStickHY = analogRead(HALY);
@@ -214,11 +238,11 @@ void readSticks(){
 	//btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX*AStickHX) + xCoeffs[1]*(AStickHX*AStickHX) + xCoeffs[2]*AStickHX + xCoeffs[3]); //+ 128;
 	//btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY*AStickHY) + yCoeffs[1]*(AStickHY*AStickHY) + yCoeffs[2]*AStickHY + yCoeffs[3]); //+ 128;
 
-	btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX) + xCoeffs[1]*AStickHX + xCoeffs[2]); //+ 128;
-	btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY) + yCoeffs[1]*AStickHY + yCoeffs[2]); //+ 128;
+	btn.Ax = (uint8_t) (fitCoeffs[0]*(AStickHX*AStickHX) + fitCoeffs[1]*AStickHX + fitCoeffs[2]); //+ 128;
+	btn.Ay = (uint8_t) (fitCoeffs[3]*(AStickHY*AStickHY) + fitCoeffs[4]*AStickHY + fitCoeffs[5]); //+ 128;
 
-	btn.Cx = analogRead(17);//note it looks like these are swapped from what I thought
-	btn.Cy = analogRead(16);
+	btn.Cx = analogRead(17)>>5;//note it looks like these are swapped from what I thought
+	btn.Cy = analogRead(16)>>5;
 	
 	//Serial.print("C X = ");
 	//Serial.println(btn.Cx);
@@ -387,26 +411,31 @@ void calibrate(){
 		Serial.print(',');
 		Serial.println(y_input[4]);		
 		
-		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
-		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
+		//fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
+		//fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
+		
+		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, fitCoeffs);
+		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, &fitCoeffs[FIT_ORDER+1]);
 		
 		Serial.println("x coefficients are:");
-		Serial.print(xCoeffs[0]);
+		Serial.print(fitCoeffs[0]);
 		Serial.print(',');
-		Serial.print(xCoeffs[1]);
+		Serial.print(fitCoeffs[1]);
 		Serial.print(',');
-		Serial.println(xCoeffs[2]);
+		Serial.println(fitCoeffs[2]);
 		//Serial.print(',');
 		//Serial.println(xCoeffs[3]);
 		
 		Serial.println("y coefficients are:");
-		Serial.print(yCoeffs[0]);
+		Serial.print(fitCoeffs[3]);
 		Serial.print(',');
-		Serial.print(yCoeffs[1]);
+		Serial.print(fitCoeffs[4]);
 		Serial.print(',');
-		Serial.println(yCoeffs[2]);
+		Serial.println(fitCoeffs[5]);
 		//Serial.print(',');
 		//Serial.println(yCoeffs[3]);
+		
+		EEPROM.put(FIT_ADDRESS,fitCoeffs);
 		
 		calStep = -1;
 	}
