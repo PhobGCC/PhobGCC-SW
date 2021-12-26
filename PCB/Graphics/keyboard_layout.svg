@@ -1,0 +1,1297 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="177mm"
+   height="66mm"
+   viewBox="0 0 177 66"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="keyboard_test_1.svg">
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="428.86938"
+     inkscape:cy="14.146517"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g822"
+     showgrid="true"
+     inkscape:window-width="1224"
+     inkscape:window-height="1343"
+     inkscape:window-x="29"
+     inkscape:window-y="48"
+     inkscape:window-maximized="0"
+     borderlayer="true"
+     inkscape:snap-object-midpoints="true">
+    <inkscape:grid
+       id="grid816"
+       units="mm"
+       type="xygrid"
+       empspacing="1"
+       spacingy="2.54"
+       spacingx="2.54" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="g822"
+     inkscape:groupmode="layer"
+     inkscape:label="[fixed] BG"
+     style="display:inline"
+     transform="translate(0,-34)"
+     sodipodi:insensitive="true">
+    <rect
+       id="rect820"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.81240386"
+       height="66"
+       width="177"
+       y="34"
+       x="0" />
+  </g>
+  <g
+     id="g824"
+     inkscape:groupmode="layer"
+     inkscape:label="Edge.Cuts"
+     style="display:inline"
+     transform="translate(0,-34)" />
+  <g
+     id="g826"
+     inkscape:groupmode="layer"
+     inkscape:label="B.Cu-disabled"
+     style="display:inline"
+     transform="translate(0,-34)" />
+  <g
+     id="g828"
+     inkscape:groupmode="layer"
+     inkscape:label="B.Mask-disabled"
+     style="display:inline"
+     transform="translate(0,-34)" />
+  <g
+     id="g830"
+     inkscape:groupmode="layer"
+     inkscape:label="B.Silk-disabled"
+     style="display:inline"
+     transform="translate(0,-34)" />
+  <g
+     id="g832"
+     inkscape:groupmode="layer"
+     inkscape:label="F.Cu"
+     style="display:inline"
+     transform="translate(0,-34)">
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271912"
+       x="137.70799"
+       height="16.852028"
+       width="16.852028"
+       id="rect4673-3-3"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect6093-6-6"
+       width="16.852028"
+       height="16.852028"
+       x="8.7162514"
+       y="73.215744"
+       ry="3.978951"
+       rx="3.978951" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="32.169292"
+       height="16.852028"
+       width="16.852028"
+       id="rect4467-7-1"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="55.622341"
+       height="16.852028"
+       width="16.852028"
+       id="rect4485-5-2"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4503-3-9"
+       width="16.852028"
+       height="16.852028"
+       x="79.075401"
+       y="73.215759"
+       ry="3.978951"
+       rx="3.978951" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215767"
+       x="102.52843"
+       height="16.852028"
+       width="16.852028"
+       id="rect4521-5-3"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4539-6-1"
+       width="16.852028"
+       height="16.852028"
+       x="125.98149"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4557-2-9"
+       width="16.852028"
+       height="16.852028"
+       x="149.43448"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271881"
+       x="20.442766"
+       height="16.852028"
+       width="16.852028"
+       id="rect4593-9-4"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4609-1-7"
+       width="16.852028"
+       height="16.852028"
+       x="43.895817"
+       y="48.271889"
+       ry="3.978951"
+       rx="3.978951" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271896"
+       x="90.801903"
+       height="16.852028"
+       width="16.852028"
+       id="rect4641-2-8"
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="display:inline;opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4657-7-4"
+       width="16.852028"
+       height="16.852028"
+       x="114.25493"
+       y="48.271904"
+       ry="3.978951"
+       rx="3.978951" />
+  </g>
+  <g
+     id="g834"
+     inkscape:groupmode="layer"
+     inkscape:label="F.Mask"
+     style="display:inline"
+     transform="translate(0,-34)">
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271912"
+       x="137.70799"
+       height="16.852028"
+       width="16.852028"
+       id="rect4673-3"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect6093-6"
+       width="16.852028"
+       height="16.852028"
+       x="8.7162514"
+       y="73.215744"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="32.169292"
+       height="16.852028"
+       width="16.852028"
+       id="rect4467-7"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="55.622341"
+       height="16.852028"
+       width="16.852028"
+       id="rect4485-5"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4503-3"
+       width="16.852028"
+       height="16.852028"
+       x="79.075394"
+       y="73.215759"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215767"
+       x="102.52843"
+       height="16.852028"
+       width="16.852028"
+       id="rect4521-5"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4539-6"
+       width="16.852028"
+       height="16.852028"
+       x="125.98149"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4557-2"
+       width="16.852028"
+       height="16.852028"
+       x="149.43449"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271881"
+       x="20.442766"
+       height="16.852028"
+       width="16.852028"
+       id="rect4593-9"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4609-1"
+       width="16.852028"
+       height="16.852028"
+       x="43.895813"
+       y="48.271889"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271896"
+       x="90.801903"
+       height="16.852028"
+       width="16.852028"
+       id="rect4641-2"
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="opacity:1;fill:#030200;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4657-7"
+       width="16.852028"
+       height="16.852028"
+       x="114.25493"
+       y="48.271904"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+  </g>
+  <g
+     id="g836"
+     inkscape:groupmode="layer"
+     inkscape:label="F.Silk"
+     style="display:inline"
+     transform="translate(0,-34)">
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle5759"
+       cx="-54.074181"
+       cy="78.24894"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="78.24894"
+       cx="-37.536957"
+       id="circle5765"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="61.7117"
+       cx="-54.074188"
+       id="circle5771"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle5777"
+       cx="-37.536957"
+       cy="61.711693"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 13.232573,69.447839 c -4.5804949,0 -8.285282,3.704787 -8.285282,8.285282 v 1.136881 c 0.3727461,-0.06234 0.7548701,-0.04919 1.1234458,0.03824 v -1.175123 c 0,-3.977527 3.18431,-7.162353 7.1618362,-7.162353 h 1.164271 c -0.07822,-0.369647 -0.08399,-0.752009 -0.01344,-1.122929 z"
+       id="path4449"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 19.901418,69.447839 c 0.07056,0.37092 0.06479,0.753283 -0.01344,1.122929 h 1.163236 c 3.977526,0 7.161837,3.184827 7.161837,7.162353 v 1.175123 c 0.368297,-0.08753 0.750398,-0.100793 1.122929,-0.03876 V 77.73312 c 0,-4.580496 -3.704271,-8.285282 -8.284766,-8.285282 z"
+       id="path4445"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="M 6.0707368,84.37406 C 5.7021611,84.46149 5.3200371,84.474639 4.947291,84.4123 v 1.138949 c 0,4.580493 3.7047871,8.285282 8.285282,8.285282 h 1.150319 c -0.07049,-0.370867 -0.06521,-0.753277 0.01292,-1.122929 h -1.163238 c -3.9775264,0 -7.1618365,-3.184826 -7.1618365,-7.162353 z"
+       id="path4439"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 28.213055,84.37506 v 1.176158 c 0,3.977526 -3.184311,7.162352 -7.161837,7.162352 h -1.162719 c 0.07794,0.369695 0.08324,0.752055 0.0124,1.122929 h 1.150317 c 4.580495,0 8.284766,-3.704788 8.284766,-8.285281 v -1.137915 c -0.372624,0.06226 -0.754521,0.04901 -1.122929,-0.03824 z"
+       id="path4437"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="94.786179"
+       cx="-37.536949"
+       id="circle4451"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4453"
+       cx="-20.999729"
+       cy="94.786179"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="78.248932"
+       cx="-20.999729"
+       id="circle4457"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4459"
+       d="m 36.685619,69.447846 c -4.580495,0 -8.285282,3.704788 -8.285282,8.285281 v 1.136882 c 0.372746,-0.06234 0.75487,-0.04919 1.123445,0.03824 v -1.175123 c 0,-3.977527 3.184311,-7.162353 7.161837,-7.162353 h 1.16427 c -0.07822,-0.369647 -0.08399,-0.75201 -0.01344,-1.12293 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4461"
+       d="m 43.354464,69.447846 c 0.07056,0.370918 0.06479,0.753281 -0.01344,1.12293 h 1.163235 c 3.977526,0 7.161837,3.184824 7.161837,7.162351 v 1.175123 c 0.368297,-0.08753 0.750398,-0.100793 1.122931,-0.03876 v -1.136364 c 0,-4.580496 -3.704272,-8.285283 -8.284768,-8.285283 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4463"
+       d="m 29.523782,84.374068 c -0.368575,0.08743 -0.750699,0.100578 -1.123445,0.03824 v 1.13895 c 0,4.580493 3.704787,8.285284 8.285282,8.285284 h 1.150319 c -0.07049,-0.370869 -0.06521,-0.75328 0.01291,-1.122932 H 36.68561 c -3.977526,0 -7.161836,-3.184826 -7.161836,-7.162352 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4465"
+       d="m 51.6661,84.375065 v 1.176158 c 0,3.977526 -3.18431,7.162353 -7.161837,7.162353 h -1.162719 c 0.07794,0.369694 0.08324,0.752054 0.01241,1.122928 h 1.150316 c 4.580495,0 8.284765,-3.704788 8.284765,-8.285281 v -1.137912 c -0.372623,0.06226 -0.75452,0.04901 -1.122928,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="111.32342"
+       cx="-20.999722"
+       id="circle4469"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4471"
+       cx="-4.4624963"
+       cy="111.32342"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="94.786171"
+       cx="-4.4624944"
+       id="circle4475"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4477"
+       d="m 60.138662,69.44785 c -4.580493,0 -8.285282,3.704786 -8.285282,8.285282 v 1.13688 c 0.372748,-0.06234 0.75487,-0.04919 1.123445,0.03824 v -1.175123 c 0,-3.977526 3.184311,-7.162353 7.161837,-7.162353 h 1.16427 c -0.07822,-0.369646 -0.08399,-0.752009 -0.01344,-1.122928 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4479"
+       d="m 66.807506,69.44785 c 0.07056,0.37092 0.06479,0.753282 -0.01344,1.122929 h 1.163238 c 3.977526,0 7.161837,3.184827 7.161837,7.162353 v 1.175123 c 0.368297,-0.08753 0.750398,-0.100793 1.122929,-0.03876 V 77.73313 c 0,-4.580495 -3.704273,-8.285281 -8.284766,-8.285281 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4481"
+       d="m 52.976825,84.37407 c -0.368575,0.08743 -0.750697,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.580493 3.704789,8.285281 8.285282,8.285281 h 1.150318 c -0.07049,-0.370866 -0.06521,-0.753276 0.01291,-1.122928 h -1.163238 c -3.977524,0 -7.161834,-3.184827 -7.161834,-7.162353 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4483"
+       d="m 75.119143,84.375071 v 1.176157 c 0,3.977526 -3.184311,7.162353 -7.161837,7.162353 h -1.16272 c 0.07794,0.369694 0.08324,0.752054 0.01241,1.122929 h 1.150316 c 4.580496,0 8.284768,-3.704789 8.284768,-8.285282 v -1.137915 c -0.372626,0.06226 -0.754523,0.04901 -1.122928,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4487"
+       cx="-4.4624887"
+       cy="127.86066"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="127.86066"
+       cx="12.074735"
+       id="circle4489"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4493"
+       cx="12.074735"
+       cy="111.32342"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 83.591707,69.447857 c -4.580496,0 -8.285282,3.704787 -8.285282,8.28528 v 1.136883 c 0.372745,-0.06234 0.75487,-0.04919 1.123445,0.03824 v -1.175123 c 0,-3.977526 3.184311,-7.162353 7.161837,-7.162353 h 1.16427 c -0.07822,-0.369646 -0.08399,-0.752009 -0.01344,-1.122929 z"
+       id="path4495"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 90.260551,69.447857 c 0.07056,0.370918 0.06479,0.753283 -0.01344,1.12293 h 1.163235 c 3.977527,0 7.161837,3.184827 7.161837,7.16235 v 1.175123 c 0.368298,-0.08753 0.750401,-0.100793 1.122929,-0.03876 v -1.136364 c 0,-4.580496 -3.70427,-8.285282 -8.284766,-8.285282 z"
+       id="path4497"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 76.42987,84.374078 c -0.368575,0.08743 -0.7507,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.58049 3.704786,8.285281 8.285282,8.285281 h 1.150318 c -0.07049,-0.370866 -0.06521,-0.753276 0.01291,-1.122928 H 83.5917 c -3.977527,0 -7.161837,-3.18483 -7.161837,-7.162353 z"
+       id="path4499"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 98.572188,84.375078 v 1.176155 c 0,3.977527 -3.184311,7.162356 -7.161837,7.162356 h -1.16272 c 0.07794,0.369692 0.08324,0.752052 0.01241,1.122929 h 1.150319 c 4.580493,0 8.284763,-3.704791 8.284763,-8.285285 v -1.137912 c -0.372618,0.06226 -0.754521,0.04901 -1.122926,-0.03824 z"
+       id="path4501"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="144.39787"
+       cx="12.074739"
+       id="circle4505"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4507"
+       cx="28.611963"
+       cy="144.39787"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="127.86066"
+       cx="28.611963"
+       id="circle4511"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4513"
+       d="m 107.04475,69.44786 c -4.58049,0 -8.28528,3.704787 -8.28528,8.285283 v 1.13688 c 0.372745,-0.06234 0.75487,-0.04919 1.123445,0.03824 V 77.73314 c 0,-3.977526 3.184305,-7.162353 7.161835,-7.162353 h 1.16427 c -0.0782,-0.369647 -0.084,-0.752009 -0.0134,-1.122929 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4515"
+       d="m 113.71359,69.44786 c 0.0706,0.37092 0.0648,0.753283 -0.0134,1.12293 h 1.16324 c 3.97752,0 7.16184,3.184826 7.16184,7.162353 v 1.175123 c 0.36829,-0.08753 0.75039,-0.100793 1.12292,-0.03876 v -1.136364 c 0,-4.580496 -3.70427,-8.285282 -8.28476,-8.285282 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4517"
+       d="m 99.882915,84.374081 c -0.368575,0.08743 -0.7507,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.580494 3.70479,8.285282 8.28528,8.285282 h 1.15032 c -0.0705,-0.370866 -0.0652,-0.753277 0.0129,-1.122929 h -1.16324 c -3.97753,0 -7.161833,-3.184826 -7.161833,-7.162353 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4519"
+       d="m 122.02523,84.375081 v 1.176158 c 0,3.977523 -3.18431,7.162353 -7.16184,7.162353 h -1.16272 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122928 h 1.15032 c 4.5805,0 8.28477,-3.704788 8.28477,-8.285281 v -1.137915 c -0.37263,0.06226 -0.75452,0.04901 -1.12293,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4523"
+       cx="28.611971"
+       cy="160.93513"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="160.93513"
+       cx="45.1492"
+       id="circle4525"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4529"
+       cx="45.1492"
+       cy="144.39787"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 130.49779,69.447867 c -4.58049,0 -8.28528,3.704788 -8.28528,8.285281 v 1.136883 c 0.37275,-0.06234 0.75487,-0.04919 1.12345,0.03824 v -1.175123 c 0,-3.977523 3.18431,-7.16235 7.16183,-7.16235 h 1.16427 c -0.0782,-0.369647 -0.084,-0.752009 -0.0134,-1.12293 z"
+       id="path4531"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 137.16664,69.447867 c 0.0706,0.370919 0.0648,0.753281 -0.0134,1.122931 h 1.16323 c 3.97753,0 7.16184,3.184824 7.16184,7.16235 v 1.175123 c 0.3683,-0.08753 0.7504,-0.100793 1.12293,-0.03876 v -1.136367 c 0,-4.580493 -3.70427,-8.28528 -8.28477,-8.28528 z"
+       id="path4533"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 123.33596,84.374086 c -0.36858,0.08743 -0.7507,0.100582 -1.12345,0.03824 v 1.138949 c 0,4.580493 3.70479,8.285281 8.28528,8.285281 h 1.15032 c -0.0705,-0.370866 -0.0652,-0.753276 0.0129,-1.122928 h -1.16324 c -3.97752,0 -7.16183,-3.184827 -7.16183,-7.162353 z"
+       id="path4535"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 145.47827,84.375086 v 1.176158 c 0,3.977526 -3.18431,7.162353 -7.16183,7.162353 h -1.16272 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122929 h 1.15032 c 4.58049,0 8.28476,-3.704789 8.28476,-8.285282 v -1.137915 c -0.37262,0.06226 -0.75452,0.04901 -1.12293,-0.03824 z"
+       id="path4537"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4541"
+       cx="45.149208"
+       cy="177.47237"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="177.47237"
+       cx="61.686424"
+       id="circle4543"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4547"
+       cx="61.686424"
+       cy="160.93512"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 153.95084,69.447871 c -4.5805,0 -8.28529,3.704786 -8.28529,8.285282 v 1.13688 c 0.37275,-0.06234 0.75487,-0.04919 1.12345,0.03824 v -1.175124 c 0,-3.977526 3.18431,-7.162352 7.16184,-7.162352 h 1.16427 c -0.0782,-0.369647 -0.084,-0.75201 -0.0134,-1.122929 z"
+       id="path4549"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 160.61968,69.447871 c 0.0706,0.37092 0.0648,0.753283 -0.0134,1.122929 h 1.16324 c 3.97752,0 7.16183,3.184827 7.16183,7.162353 v 1.175123 c 0.3683,-0.08753 0.7504,-0.100793 1.12293,-0.03876 v -1.136365 c 0,-4.580495 -3.70427,-8.285281 -8.28476,-8.285281 z"
+       id="path4551"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 146.789,84.374092 c -0.36858,0.08743 -0.7507,0.100578 -1.12345,0.03824 v 1.138949 c 0,4.580493 3.70479,8.285282 8.28529,8.285282 h 1.15031 c -0.0705,-0.370867 -0.0652,-0.753277 0.0129,-1.122929 h -1.16323 c -3.97752,0 -7.16184,-3.184827 -7.16184,-7.162353 z"
+       id="path4553"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 168.93132,84.375092 v 1.176157 c 0,3.977527 -3.18431,7.162353 -7.16184,7.162353 h -1.16272 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122929 h 1.15032 c 4.58049,0 8.28476,-3.704789 8.28476,-8.285282 v -1.137914 c -0.37262,0.06226 -0.75452,0.04901 -1.12292,-0.03824 z"
+       id="path4555"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="68.82962"
+       cx="-28.11764"
+       id="circle4577"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4579"
+       cx="-11.580417"
+       cy="68.82962"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4581"
+       cx="-28.117647"
+       cy="52.292381"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="52.292374"
+       cx="-11.580417"
+       id="circle4583"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4585"
+       d="m 24.959089,44.503974 c -4.580495,0 -8.285282,3.704786 -8.285282,8.285281 v 1.136881 c 0.372746,-0.06234 0.75487,-0.04919 1.123445,0.03824 v -1.175123 c 0,-3.977526 3.184311,-7.162352 7.161837,-7.162352 h 1.16427 c -0.07822,-0.369647 -0.08399,-0.75201 -0.01344,-1.122929 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4587"
+       d="m 31.627932,44.503974 c 0.07056,0.370919 0.06479,0.753282 -0.01344,1.122929 h 1.163235 c 3.977526,0 7.161837,3.184826 7.161837,7.162352 v 1.175123 c 0.368298,-0.08753 0.750398,-0.100793 1.122929,-0.03876 v -1.136365 c 0,-4.580495 -3.70427,-8.285281 -8.284766,-8.285281 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4589"
+       d="m 17.797252,59.430194 c -0.368575,0.08743 -0.750699,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.580493 3.704787,8.285282 8.285282,8.285282 h 1.150318 c -0.07049,-0.370867 -0.06521,-0.753277 0.01292,-1.122929 H 24.95909 c -3.977526,0 -7.161838,-3.184827 -7.161838,-7.162353 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4591"
+       d="m 39.939571,59.431194 v 1.176157 c 0,3.977526 -3.184313,7.162353 -7.161839,7.162353 h -1.162717 c 0.07794,0.369694 0.08324,0.752054 0.01241,1.122929 h 1.150318 c 4.580493,0 8.284766,-3.704789 8.284766,-8.285282 v -1.137914 c -0.372624,0.06226 -0.75452,0.04901 -1.122929,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4595"
+       cx="-11.580409"
+       cy="85.366859"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="85.366859"
+       cx="4.9568152"
+       id="circle4597"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4599"
+       cx="4.9568152"
+       cy="68.829613"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 48.412133,44.503981 c -4.580493,0 -8.285282,3.704786 -8.285282,8.285281 v 1.136881 c 0.372748,-0.06234 0.75487,-0.04919 1.123445,0.03824 V 52.78926 c 0,-3.977526 3.184313,-7.162352 7.161837,-7.162352 h 1.164272 c -0.07822,-0.369647 -0.08399,-0.75201 -0.01344,-1.122929 z"
+       id="path4601"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 55.080977,44.503981 c 0.07056,0.370919 0.06479,0.753282 -0.01344,1.122929 h 1.163235 c 3.977526,0 7.161837,3.184826 7.161837,7.162352 v 1.175123 c 0.368298,-0.08753 0.750398,-0.100793 1.122929,-0.03876 V 52.78926 c 0,-4.580495 -3.70427,-8.285281 -8.284766,-8.285281 z"
+       id="path4603"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 41.250296,59.430201 c -0.368575,0.08743 -0.750697,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.580493 3.704789,8.285282 8.285282,8.285282 h 1.150318 c -0.07049,-0.370867 -0.06521,-0.753277 0.01291,-1.122929 h -1.163238 c -3.977526,0 -7.161837,-3.184827 -7.161837,-7.162353 z"
+       id="path4605"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 63.392616,59.431201 v 1.176157 c 0,3.977526 -3.184311,7.162353 -7.161837,7.162353 H 55.06806 c 0.07794,0.369694 0.08324,0.752054 0.01241,1.122929 h 1.150318 c 4.580496,0 8.284766,-3.704789 8.284766,-8.285282 v -1.137914 c -0.372624,0.06226 -0.75452,0.04901 -1.122929,-0.03824 z"
+       id="path4607"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="101.90408"
+       cx="21.494043"
+       id="circle4613"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="118.44135"
+       cx="21.494051"
+       id="circle4627"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4629"
+       cx="38.031273"
+       cy="118.44135"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="101.90408"
+       cx="38.031273"
+       id="circle4631"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4633"
+       d="m 95.318223,44.503992 c -4.580496,0 -8.285282,3.704786 -8.285282,8.285281 v 1.136881 c 0.372745,-0.06234 0.75487,-0.04919 1.123445,0.03824 v -1.175123 c 0,-3.977526 3.18431,-7.162352 7.161837,-7.162352 h 1.16427 c -0.07822,-0.369647 -0.08399,-0.75201 -0.01344,-1.122929 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4635"
+       d="m 101.98707,44.503992 c 0.0706,0.370919 0.0648,0.753282 -0.0134,1.122929 h 1.16323 c 3.97753,0 7.16184,3.184826 7.16184,7.162352 v 1.175123 c 0.36829,-0.08753 0.7504,-0.100793 1.12293,-0.03876 v -1.136365 c 0,-4.580495 -3.70428,-8.285281 -8.28477,-8.285281 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4637"
+       d="m 88.156386,59.430212 c -0.368575,0.08743 -0.7507,0.100579 -1.123445,0.03824 v 1.138949 c 0,4.580493 3.704786,8.285282 8.285282,8.285282 h 1.150318 c -0.07049,-0.370867 -0.06521,-0.753277 0.01291,-1.122929 h -1.163238 c -3.977526,0 -7.161837,-3.184827 -7.161837,-7.162353 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4639"
+       d="m 110.2987,59.431212 v 1.176157 c 0,3.977526 -3.18431,7.162353 -7.16184,7.162353 h -1.16271 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122929 h 1.15031 c 4.5805,0 8.28477,-3.704789 8.28477,-8.285282 v -1.137914 c -0.37262,0.06226 -0.75452,0.04901 -1.12293,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4643"
+       cx="38.031281"
+       cy="134.97858"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="134.97858"
+       cx="54.568504"
+       id="circle4645"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4647"
+       cx="54.568504"
+       cy="118.44135"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 118.77126,44.503995 c -4.58049,0 -8.28528,3.704786 -8.28528,8.285281 v 1.136881 c 0.37275,-0.06234 0.75487,-0.04919 1.12345,0.03824 v -1.175123 c 0,-3.977526 3.1843,-7.162352 7.16183,-7.162352 h 1.16427 c -0.0782,-0.369647 -0.084,-0.75201 -0.0134,-1.122929 z"
+       id="path4649"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 125.4401,44.503995 c 0.0706,0.370919 0.0648,0.753282 -0.0134,1.122929 h 1.16324 c 3.97752,0 7.16184,3.184826 7.16184,7.162352 v 1.175123 c 0.36829,-0.08753 0.75039,-0.100793 1.12292,-0.03876 v -1.136365 c 0,-4.580495 -3.70427,-8.285281 -8.28476,-8.285281 z"
+       id="path4651"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 111.60943,59.430215 c -0.36858,0.08743 -0.7507,0.100579 -1.12345,0.03824 v 1.138949 c 0,4.580493 3.70479,8.285282 8.28528,8.285282 h 1.15032 c -0.0705,-0.370867 -0.0652,-0.753277 0.0129,-1.122929 h -1.16324 c -3.97753,0 -7.16183,-3.184827 -7.16183,-7.162353 z"
+       id="path4653"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="m 133.75174,59.431215 v 1.176157 c 0,3.977526 -3.18431,7.162353 -7.16184,7.162353 h -1.16272 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122929 h 1.15032 c 4.5805,0 8.28477,-3.704789 8.28477,-8.285282 v -1.137914 c -0.37263,0.06226 -0.75452,0.04901 -1.12293,-0.03824 z"
+       id="path4655"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="151.51582"
+       cx="54.568512"
+       id="circle4659"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle4661"
+       cx="71.105743"
+       cy="151.51582"
+       r="1.3781023"
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <circle
+       transform="matrix(0.70909815,-0.70510979,0.70909815,0.70510979,0,0)"
+       r="1.3781023"
+       cy="134.97858"
+       cx="71.105743"
+       id="circle4663"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.00000799;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4665"
+       d="m 142.2243,44.504002 c -4.58049,0 -8.28528,3.704786 -8.28528,8.285281 v 1.136881 c 0.37275,-0.06234 0.75487,-0.04919 1.12345,0.03824 v -1.175123 c 0,-3.977526 3.18431,-7.162352 7.16183,-7.162352 h 1.16427 c -0.0782,-0.369647 -0.084,-0.75201 -0.0134,-1.122929 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4667"
+       d="m 148.89315,44.504002 c 0.0706,0.370919 0.0648,0.753282 -0.0134,1.122929 h 1.16323 c 3.97753,0 7.16184,3.184826 7.16184,7.162352 v 1.175123 c 0.3683,-0.08753 0.7504,-0.100793 1.12293,-0.03876 v -1.136365 c 0,-4.580495 -3.70427,-8.285281 -8.28477,-8.285281 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4669"
+       d="m 135.06247,59.430222 c -0.36858,0.08743 -0.7507,0.100579 -1.12345,0.03824 v 1.138949 c 0,4.580493 3.70479,8.285282 8.28528,8.285282 h 1.15032 c -0.0705,-0.370867 -0.0652,-0.753277 0.0129,-1.122929 h -1.16324 c -3.97752,0 -7.16183,-3.184827 -7.16183,-7.162353 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <path
+       id="path4671"
+       d="m 157.20478,59.431222 v 1.176157 c 0,3.977526 -3.18431,7.162353 -7.16183,7.162353 h -1.16272 c 0.0779,0.369694 0.0832,0.752054 0.0124,1.122929 h 1.15032 c 4.58049,0 8.28476,-3.704789 8.28476,-8.285282 v -1.137914 c -0.37262,0.06226 -0.75452,0.04901 -1.12293,-0.03824 z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.12346852;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271912"
+       x="137.70799"
+       height="16.852028"
+       width="16.852028"
+       id="rect4673-3-2"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect6093-6-0"
+       width="16.852028"
+       height="16.852028"
+       x="8.7162514"
+       y="73.215744"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="32.169292"
+       height="16.852028"
+       width="16.852028"
+       id="rect4467-7-2"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215752"
+       x="55.622341"
+       height="16.852028"
+       width="16.852028"
+       id="rect4485-5-3"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4503-3-7"
+       width="16.852028"
+       height="16.852028"
+       x="79.075401"
+       y="73.215759"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="73.215767"
+       x="102.52843"
+       height="16.852028"
+       width="16.852028"
+       id="rect4521-5-5"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4539-6-9"
+       width="16.852028"
+       height="16.852028"
+       x="125.98149"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4557-2-2"
+       width="16.852028"
+       height="16.852028"
+       x="149.43448"
+       y="73.215775"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271881"
+       x="20.442766"
+       height="16.852028"
+       width="16.852028"
+       id="rect4593-9-2"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4609-1-8"
+       width="16.852028"
+       height="16.852028"
+       x="43.895817"
+       y="48.271889"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       rx="3.978951"
+       ry="3.978951"
+       y="48.271896"
+       x="90.801903"
+       height="16.852028"
+       width="16.852028"
+       id="rect4641-2-9"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.12346852;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4657-7-7"
+       width="16.852028"
+       height="16.852028"
+       x="114.25493"
+       y="48.271904"
+       ry="3.978951"
+       rx="3.978951"
+       inkscape:export-filename="/home/gtaubman/blog/content/posts/kicad-custom-footprint/keyboard_mockup.png"
+       inkscape:export-xdpi="151.25"
+       inkscape:export-ydpi="151.25" />
+  </g>
+  <g
+     id="g838"
+     inkscape:groupmode="layer"
+     inkscape:label="Drill"
+     style="display:none"
+     transform="translate(0,-34)" />
+</svg>

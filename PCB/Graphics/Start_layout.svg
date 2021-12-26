@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100.0mm"
+   height="100.0mm"
+   viewBox="0 0 100.0 100.0"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="Start_layout.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="1.5001964"
+     inkscape:cx="406.28014"
+     inkscape:cy="218.97133"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g23"
+     borderlayer="true">
+    <inkscape:grid
+       spacingx="2.54"
+       spacingy="2.54"
+       empspacing="1"
+       type="xygrid"
+       units="mm"
+       id="grid13" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <marker
+       id="DistanceX"
+       orient="auto"
+       refX="0.0"
+       refY="0.0"
+       style="overflow:visible">
+      <path
+         d="M 3,-3 L -3,3 M 0,-5 L  0,5"
+         style="stroke:#000000; stroke-width:0.5"
+         id="path22" />
+    </marker>
+    <pattern
+       id="Hatch"
+       patternUnits="userSpaceOnUse"
+       width="8"
+       height="8"
+       x="0"
+       y="0">
+      <path
+         d="M8 4 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path25" />
+      <path
+         d="M6 2 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path27" />
+      <path
+         d="M4 0 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path29" />
+    </pattern>
+    <symbol
+       id="*Model_Space" />
+    <symbol
+       id="*Paper_Space" />
+    <symbol
+       id="*Paper_Space0" />
+  </defs>
+  <g
+     inkscape:label="[fixed] BG"
+     inkscape:groupmode="layer"
+     sodipodi:insensitive="true"
+     id="g19">
+    <rect
+       x="0"
+       y="0"
+       width="100.0"
+       height="100.0"
+       style="fill:#FFFFFF;fill-opacity:1;stroke:none"
+       id="rect17" />
+  </g>
+  <g
+     inkscape:label="F.Cu"
+     inkscape:groupmode="layer"
+     id="g21"
+     style="display:inline">
+    <path
+       style="fill:#000000;stroke-width:0.0176366"
+       d="M 48.982767,50.397914 V 47.7877 h 0.952375 0.952375 v -0.06708 c 0,-0.08442 0.07417,-0.235443 0.144819,-0.294895 0.304212,-0.255978 0.733203,-0.101705 0.798136,0.287023 l 0.01252,0.07496 h 0.897915 0.897916 v 2.610214 2.610213 H 53.356638 53.074453 V 50.680099 48.35207 H 52.333717 51.59298 v 2.328029 2.328028 H 51.310795 51.02861 V 50.680099 48.35207 h -0.749555 -0.749554 v 2.328029 2.328028 h -0.273367 -0.273367 z"
+       id="path600" />
+    <path
+       style="fill:#000000;stroke-width:0.0176366"
+       d="m 50.085053,54.326706 c -0.184141,-0.06618 -0.326277,-0.244674 -0.326277,-0.409728 v -0.06229 H 48.85931 47.959845 v -2.601395 -2.601396 h 0.273367 0.273367 v 2.31921 2.319211 h 0.749555 0.749554 v -2.319211 -2.31921 h 0.273367 0.273367 v 2.31921 2.319211 h 0.749555 0.749554 v -2.319211 -2.31921 h 0.282186 0.282185 v 2.601396 2.601395 h -0.952376 c -0.908932,0 -0.952375,0.0015 -0.952375,0.03207 0,0.0858 -0.05809,0.216791 -0.133195,0.300322 -0.124125,0.138057 -0.332804,0.197171 -0.492903,0.139629 z"
+       id="path639" />
+  </g>
+  <g
+     inkscape:label="F.Mask"
+     inkscape:groupmode="layer"
+     id="g23"
+     style="display:inline">
+    <rect
+       style="fill:#000000;stroke-width:0.0264583"
+       id="rect860"
+       width="6.0959997"
+       height="6.6040001"
+       x="47.751999"
+       y="47.519855" />
+  </g>
+  <g
+     inkscape:label="F.SilkS"
+     inkscape:groupmode="layer"
+     id="g25" />
+</svg>

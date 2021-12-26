@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100.0mm"
+   height="100.0mm"
+   viewBox="0 0 100.0 100.0"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="DPad_layout.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="1.060799"
+     inkscape:cx="318.15639"
+     inkscape:cy="260.65257"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g25"
+     borderlayer="true">
+    <inkscape:grid
+       spacingx="2.54"
+       spacingy="2.54"
+       empspacing="1"
+       type="xygrid"
+       units="mm"
+       id="grid13" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <marker
+       id="DistanceX"
+       orient="auto"
+       refX="0.0"
+       refY="0.0"
+       style="overflow:visible">
+      <path
+         d="M 3,-3 L -3,3 M 0,-5 L  0,5"
+         style="stroke:#000000; stroke-width:0.5"
+         id="path2434" />
+    </marker>
+    <pattern
+       id="Hatch"
+       patternUnits="userSpaceOnUse"
+       width="8"
+       height="8"
+       x="0"
+       y="0">
+      <path
+         d="M8 4 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path2437" />
+      <path
+         d="M6 2 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path2439" />
+      <path
+         d="M4 0 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path2441" />
+    </pattern>
+    <symbol
+       id="*Model_Space" />
+    <symbol
+       id="*Paper_Space" />
+    <symbol
+       id="*Paper_Space0" />
+  </defs>
+  <g
+     inkscape:label="[fixed] BG"
+     inkscape:groupmode="layer"
+     sodipodi:insensitive="true"
+     id="g19">
+    <rect
+       x="0"
+       y="0"
+       width="100.0"
+       height="100.0"
+       style="fill:#FFFFFF;fill-opacity:1;stroke:none"
+       id="rect17" />
+  </g>
+  <g
+     inkscape:label="F.Cu"
+     inkscape:groupmode="layer"
+     id="g21"
+     style="display:inline">
+    <path
+       style="fill:#000000;stroke-width:0.0249419"
+       d="m 48.363295,47.124855 c 0.173137,-0.946456 0.89897,-1.725017 1.829844,-1.962772 l 0.124924,-0.03191 0.01247,-0.398328 c 0.01225,-0.391409 0.01371,-0.399955 0.08395,-0.491945 0.181229,-0.237353 0.464218,-0.272652 0.678379,-0.08462 0.152493,0.133891 0.170224,0.191828 0.184792,0.603837 l 0.01314,0.371641 0.171904,0.04702 c 0.646375,0.176795 1.230046,0.658283 1.536382,1.267406 0.09883,0.19651 0.206994,0.513004 0.236548,0.692137 l 0.01749,0.106003 H 50.79737 48.341622 Z"
+       id="path2713" />
+    <path
+       style="fill:#000000;stroke-width:0.0249419"
+       d="m 50.617365,50.988689 c -0.1168,-0.05581 -0.222886,-0.162323 -0.260303,-0.261354 -0.01459,-0.03862 -0.02653,-0.220792 -0.02653,-0.404831 v -0.334617 l -0.06859,-0.01515 c -0.456351,-0.100783 -0.880875,-0.341247 -1.220669,-0.691426 -0.36627,-0.377465 -0.564587,-0.743494 -0.666659,-1.230436 l -0.03334,-0.15906 h 2.45373 c 1.349552,0 2.45373,0.0091 2.45373,0.02019 0,0.01111 -0.0235,0.113138 -0.05223,0.226738 -0.227974,0.901514 -0.899075,1.576785 -1.809791,1.821035 l -0.103619,0.02779 -0.0086,0.342632 c -0.0072,0.288158 -0.01691,0.358494 -0.06073,0.4424 -0.112114,0.214668 -0.389216,0.315068 -0.596384,0.216082 z"
+       id="path2752" />
+  </g>
+  <g
+     inkscape:label="F.Mask"
+     inkscape:groupmode="layer"
+     id="g23"
+     style="display:inline">
+    <path
+       style="fill:#000000;stroke-width:0.0249419"
+       d="m 50.496,51.793067 c -0.43843,-0.10612 -0.81004,-0.474163 -0.929619,-0.920693 -0.01837,-0.06859 -0.03353,-0.161046 -0.03369,-0.205457 -2.72e-4,-0.07467 -0.01309,-0.08719 -0.170172,-0.166296 -0.941771,-0.474268 -1.60869,-1.362552 -1.790871,-2.385301 -0.05415,-0.304012 -0.05495,-0.812073 -0.0017,-1.110396 0.179971,-1.008943 0.830231,-1.891836 1.730837,-2.35005 l 0.231415,-0.11774 1.06e-4,-0.113947 c 2.38e-4,-0.2463 0.14823,-0.582865 0.34433,-0.783124 0.467114,-0.477022 1.14765,-0.537526 1.675478,-0.148961 0.276163,0.2033 0.446092,0.497416 0.504519,0.873232 l 0.02839,0.182623 0.160515,0.07902 c 0.882552,0.434479 1.537557,1.280975 1.755067,2.268164 0.07537,0.342078 0.08148,0.946322 0.01285,1.272036 -0.210378,0.998543 -0.827071,1.828921 -1.694923,2.282216 -0.126266,0.06595 -0.231769,0.121307 -0.23445,0.123012 -0.0027,0.0017 -0.01693,0.08134 -0.03166,0.176976 -0.111725,0.725159 -0.844484,1.217001 -1.556397,1.044684 z"
+       id="path2988" />
+  </g>
+  <g
+     inkscape:label="F.SilkS"
+     inkscape:groupmode="layer"
+     id="g25" />
+</svg>
