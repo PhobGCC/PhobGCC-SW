@@ -1,4 +1,4 @@
-update=12/26/2021 9:43:33 AM
+update=12/26/2021 1:57:12 PM
 version=1
 last_client=kicad
 [general]
@@ -231,7 +231,18 @@ Enabled=0
 [pcbnew/Netclasses]
 [pcbnew/Netclasses/Default]
 Name=Default
-Clearance=0.1525
+Clearance=0.25
+TrackWidth=0.25
+ViaDiameter=0.8
+ViaDrill=0.4
+uViaDiameter=0.3
+uViaDrill=0.1
+dPairWidth=0.77
+dPairGap=0.155
+dPairViaGap=0.25
+[pcbnew/Netclasses/1]
+Name=USB
+Clearance=0.15
 TrackWidth=0.25
 ViaDiameter=0.8
 ViaDrill=0.4
