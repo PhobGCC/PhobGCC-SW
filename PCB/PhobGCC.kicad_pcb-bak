@@ -50,7 +50,7 @@
     (mod_text_width 0.15)
     (pad_size 2.8 2.2)
     (pad_drill 2.8)
-    (pad_to_mask_clearance 0)
+    (pad_to_mask_clearance 0.0508)
     (aux_axis_origin 0 0)
     (visible_elements 7FFFFFFF)
     (pcbplotparams

@@ -415,6 +415,7 @@ F 7 "Compliant" H 5550 3050 50  0001 L BNN "EU_RoHS_Compliance"
 	1    5850 3750
 	1    0    0    -1  
 $EndComp
+NoConn ~ 6350 3950
 Connection ~ 7000 3750
 Wire Wire Line
 	7000 3750 7000 4300

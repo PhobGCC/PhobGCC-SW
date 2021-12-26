@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name GCC)(type Legacy)(uri "D:/owncloud/Projects/000-028_Game_Cube_Controller/PhobGCC/PCB/Gamecube MB-cache.lib")(options "")(descr ""))
+)
