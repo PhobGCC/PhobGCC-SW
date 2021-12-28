@@ -4,6 +4,11 @@
 #include <math.h>
 #include <curveFitting.h>
 #include <EEPROM.h>
+#include <eigen.h>
+#include <Eigen/LU>
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
@@ -14,8 +19,10 @@
 #define HALX 21
 #define HALY 20
 
-#define FIT_ORDER 2
+#define FIT_ORDER 4
 #define FIT_ADDRESS 0
+
+#define GC_FREQUENCY 1000000
 
 union Buttons{
 	uint8_t arr[10];
@@ -83,7 +90,7 @@ unsigned int AStickHY;
 //double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
 //double xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
 //double yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
-double fitCoeffs[(FIT_ORDER+1)*2] = {-0.01,-2.2,303.81,0.00,2.31,-61.02};
+float fitCoeffs[(FIT_ORDER+1)*2]l;// = {-0.01,-2.2,303.81,0.00,2.31,-61.02};
 int calStep;
 unsigned int startBtnSince;
 int lastStartBtn;
@@ -134,7 +141,6 @@ void setup() {
 	EEPROM.get( FIT_ADDRESS, fitCoeffs );
 	
 	
-	
 	analogReadResolution(13);
 	setPinModes();
 	//start USB serial
@@ -154,7 +160,7 @@ void setup() {
 	Serial.print(',');
 	Serial.println(fitCoeffs[5]);
 	//start hardware serail
-	Serial1.begin(1000000);
+	Serial1.begin(GC_FREQUENCY);
 }
 
 void loop() {
@@ -232,14 +238,15 @@ void readSticks(){
 	
 	AStickHX = analogRead(HALX);
 	AStickHY = analogRead(HALY);
+	
 	//btn.Ax = (uint8_t) (xCoeffs[0]*pow(,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
 	//btn.Ay = (uint8_t) (yCoeffs[0]*pow(AStickHY,3) + yCoeffs[1]*pow(AStickHY,2) + yCoeffs[2]*pow(AStickHY,1) + yCoeffs[2]*AStickHY) + 128;
 	
-	//btn.Ax = (uint8_t) (xCoeffs[0]*(AStickHX*AStickHX*AStickHX) + xCoeffs[1]*(AStickHX*AStickHX) + xCoeffs[2]*AStickHX + xCoeffs[3]); //+ 128;
-	//btn.Ay = (uint8_t) (yCoeffs[0]*(AStickHY*AStickHY*AStickHY) + yCoeffs[1]*(AStickHY*AStickHY) + yCoeffs[2]*AStickHY + yCoeffs[3]); //+ 128;
+	btn.Ax = (uint8_t) (fitCoeffs[0]*(AStickHX*AStickHX*AStickHX*AStickHX) + fitCoeffs[1]*(AStickHX*AStickHX*AStickHX) + fitCoeffs[2]*(AStickHX*AStickHX) + fitCoeffs[3]*AStickHX + fitCoeffs[4]);
+	btn.Ay = (uint8_t) (fitCoeffs[5]*(AStickHY*AStickHY*AStickHY*AStickHY) + fitCoeffs[6]*(AStickHY*AStickHY*AStickHY) + fitCoeffs[7]*(AStickHY*AStickHY) + fitCoeffs[8]*AStickHY + fitCoeffs[9]);
 
-	btn.Ax = (uint8_t) (fitCoeffs[0]*(AStickHX*AStickHX) + fitCoeffs[1]*AStickHX + fitCoeffs[2]); //+ 128;
-	btn.Ay = (uint8_t) (fitCoeffs[3]*(AStickHY*AStickHY) + fitCoeffs[4]*AStickHY + fitCoeffs[5]); //+ 128;
+	//btn.Ax = (uint8_t) (fitCoeffs[0]*(AStickHX*AStickHX) + fitCoeffs[1]*AStickHX + fitCoeffs[2]); //+ 128;
+	//btn.Ay = (uint8_t) (fitCoeffs[3]*(AStickHY*AStickHY) + fitCoeffs[4]*AStickHY + fitCoeffs[5]); //+ 128;
 
 	btn.Cx = analogRead(17)>>5;//note it looks like these are swapped from what I thought
 	btn.Cy = analogRead(16)>>5;
@@ -414,8 +421,38 @@ void calibrate(){
 		//fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
 		//fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
 		
-		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, fitCoeffs);
-		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, &fitCoeffs[FIT_ORDER+1]);
+		//fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, fitCoeffs);
+		//fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, &fitCoeffs[FIT_ORDER+1]);
+		
+		MatrixXf xX(5,5);
+		MatrixXf yX(5,5);
+		VectorXf out(5);
+		VectorXf yY(5);
+		
+		xX << x_input[0]*x_input[0]*x_input[0]*x_input[0],  x_input[0]*x_input[0]*x_input[0],  x_input[0]*x_input[0], x_input[0],1,
+				x_input[1]*x_input[1]*x_input[1]*x_input[1],  x_input[1]*x_input[1]*x_input[1],  x_input[1]*x_input[1], x_input[1],1,
+        x_input[2]*x_input[2]*x_input[2]*x_input[2],  x_input[2]*x_input[2]*x_input[2],  x_input[2]*x_input[2], x_input[2],1,
+				x_input[3]*x_input[3]*x_input[3]*x_input[3],  x_input[3]*x_input[3]*x_input[3],  x_input[3]*x_input[3], x_input[3],1,
+        x_input[4]*x_input[4]*x_input[4]*x_input[4],  x_input[4]*x_input[4]*x_input[4],  x_input[4]*x_input[4], x_input[4],1;
+				
+		yX << y_input[0]*y_input[0]*y_input[0]*y_input[0],  y_input[0]*y_input[0]*y_input[0],  y_input[0]*y_input[0], y_input[0],1,
+				y_input[1]*y_input[1]*y_input[1]*y_input[1],  y_input[1]*y_input[1]*y_input[1],  y_input[1]*y_input[1], y_input[1],1,
+        y_input[2]*y_input[2]*y_input[2]*y_input[2],  y_input[2]*y_input[2]*y_input[2],  y_input[2]*y_input[2], y_input[2],1,
+				y_input[3]*y_input[3]*y_input[3]*y_input[3],  y_input[3]*y_input[3]*y_input[3],  y_input[3]*y_input[3], y_input[3],1,
+        y_input[4]*y_input[4]*y_input[4]*y_input[4],  y_input[4]*y_input[4]*y_input[4],  y_input[4]*y_input[4], y_input[4],1;
+				
+		out << 28,57.29,128,198.71,228;
+		
+		VectorXf xCoeffs(5);
+		VectorXf yCoeffs(5);
+		xCoeffs = xX.colPivHouseholderQr().solve(out);
+		yCoeffs = yX.colPivHouseholderQr().solve(out);
+		
+		for(int i = 0; i <= FIT_ORDER; i++){
+			fitCoeffs[i] = xCoeffs[i];
+			fitCoeffs[i+FIT_ORDER+1] = yCoeffs[i];
+		}
+
 		
 		Serial.println("x coefficients are:");
 		Serial.print(fitCoeffs[0]);
