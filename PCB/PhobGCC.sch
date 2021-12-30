@@ -389,16 +389,16 @@ Wire Wire Line
 Wire Wire Line
 	2200 5000 1950 5000
 Wire Wire Line
-	2200 3400 1950 3400
+	2200 3800 1950 3800
 Wire Wire Line
-	2200 3500 1950 3500
+	2200 3900 1950 3900
 Text Label 2000 4900 0    50   ~ 0
 Dleft
 Text Label 2000 5000 0    50   ~ 0
 Dup
-Text Label 2000 3400 0    50   ~ 0
+Text Label 2000 3800 0    50   ~ 0
 Dright
-Text Label 2000 3500 0    50   ~ 0
+Text Label 2000 3900 0    50   ~ 0
 Ddown
 $Comp
 L Switch:SW_DIP_x01 SW8
@@ -835,21 +835,17 @@ F 3 "~" H 800 3950 50  0001 C CNN
 $EndComp
 Text Label 1950 4700 0    50   ~ 0
 Stick_x_filt
-Text Label 1950 3600 0    50   ~ 0
+Text Label 1950 3400 0    50   ~ 0
 RX
-Text Label 1950 3800 0    50   ~ 0
-Motor
-Wire Wire Line
-	2200 3800 1950 3800
 $Comp
 L Connector:Conn_01x01_Male J4
 U 1 1 61CB4987
-P 600 4350
-F 0 "J4" H 708 4531 50  0000 C CNN
-F 1 "Conn_01x01_Male" H 708 4440 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 600 4350 50  0001 C CNN
-F 3 "~" H 600 4350 50  0001 C CNN
-	1    600  4350
+P 600 3800
+F 0 "J4" H 708 3981 50  0000 C CNN
+F 1 "Conn_01x01_Male" H 708 3890 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 600 3800 50  0001 C CNN
+F 3 "~" H 600 3800 50  0001 C CNN
+	1    600  3800
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -915,16 +911,15 @@ D-
 Text Label 4500 1700 0    50   ~ 0
 D+
 Wire Wire Line
-	2200 3600 1850 3600
-Text Label 2000 3700 0    50   ~ 0
+	2200 3400 1850 3400
+Text Label 2000 3500 0    50   ~ 0
 TX
 Wire Wire Line
-	2200 3700 1950 3700
+	2200 3500 1950 3500
 Wire Wire Line
 	800  4100 800  4350
 Wire Wire Line
 	800  4350 1150 4350
-Connection ~ 800  4350
 Wire Wire Line
 	800  3800 1150 3800
 Text Label 900  3800 0    50   ~ 0
@@ -1146,4 +1141,13 @@ Text Label 1800 6650 0    50   ~ 0
 Stick_y
 Text Label 1000 6650 0    50   ~ 0
 Stick_x
+Wire Wire Line
+	1950 3500 1950 3700
+Wire Wire Line
+	1950 3700 2200 3700
+Wire Wire Line
+	1850 3400 1850 3600
+Wire Wire Line
+	1850 3600 2200 3600
+Connection ~ 800  3800
 $EndSCHEMATC
