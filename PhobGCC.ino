@@ -23,7 +23,7 @@ using namespace Eigen;
 #define FIT_ADDRESS 0
 
 #define GC_FREQUENCY 1000000
-#define ADC_VAR 130
+#define ADC_VAR 50
 
 union Buttons{
 	uint8_t arr[10];
@@ -157,8 +157,8 @@ void setup() {
 	//EEPROM.put( FIT_ADDRESS, fitCoeffs );
 	EEPROM.get( FIT_ADDRESS, fitCoeffs );
 	lastMicros = micros();
-	xAccelVar = 0.00000000001;
-	yAccelVar = 0.00000000001;
+	xAccelVar = 0.000000000001;
+	yAccelVar = 0.000000000001;
 	damping = 0.001;
 	writeQueue = 0;
 	
@@ -312,9 +312,15 @@ void readSticks(){
 			btn.Ay = (uint8_t) yState[0];
 	}
 	
-	//Serial.print(xState[0],10);
-	//Serial.print(',');
-	//Serial.println(btn.Ax);
+	Serial.print(millis());
+	Serial.print(',');
+	Serial.print(xZ[0],0);
+	Serial.print(',');
+	Serial.print(xState[0],0);
+	Serial.print(',');
+	Serial.print(xState[1]*100000);
+	Serial.print(',');
+	Serial.println(btn.Ax);
 
 	//btn.Ax = (uint8_t) xZ[0];
 	//btn.Ay = (uint8_t) yZ[0];
@@ -577,7 +583,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//print_mtxf(H)
 	
 	MatrixXf xR(1,1);
-	xR << abs(ADC_VAR-(xZ[0]-128));
+	float offset = xZ[0]-128;
+	xR << ADC_VAR/(offset*offset/1000+1);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(xP);
