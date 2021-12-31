@@ -23,7 +23,10 @@ using namespace Eigen;
 #define FIT_ADDRESS 0
 
 #define GC_FREQUENCY 1000000
-#define ADC_VAR 50
+#define ADC_VAR_PEAK 50
+#define ADC_VAR_SPREAD 1000
+
+#define GATE_REGIONS 8
 
 union Buttons{
 	uint8_t arr[10];
@@ -88,10 +91,10 @@ union Buttons{
 float AStickHX;
 float AStickHY;
 int writeQueue;
-//double xCoeffs[FIT_ORDER+1] = {0,0,1,0};
-//double yCoeffs[FIT_ORDER+1] = {0,0,1,0};
-//double xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
-//double yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
+//float xCoeffs[FIT_ORDER+1] = {0,0,1,0};
+//float yCoeffs[FIT_ORDER+1] = {0,0,1,0};
+//float xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
+//float yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
 //float fitCoeffs[(FIT_ORDER+1)*2] = {0,0,0,0.03125,0,  0,0,0,0.03125,0};
 double fitCoeffs[(FIT_ORDER+1)*2] = {0,0,0.03125,0,  0,0,0.03125,0};
 int calStep;
@@ -112,6 +115,15 @@ MatrixXf yQ(2,2);
 float xAccelVar;
 float yAccelVar;
 float damping;
+float storedAffineCoeffs[GATE_REGIONS][6] = {1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,
+																			 1,0,0,0,1,0,};
+float angles[GATE_REGIONS] = {0,M_PI/4,M_PI/2,3*M_PI/4,M_PI,5*M_PI/4,3*M_PI/2,7*M_PI/4};
 
 
 static uint8_t probeResponse[CMD_LENGTH_LONG] = {
@@ -159,7 +171,7 @@ void setup() {
 	lastMicros = micros();
 	xAccelVar = 0.000000000001;
 	yAccelVar = 0.000000000001;
-	damping = 0.001;
+	damping = 0.0005;
 	writeQueue = 0;
 	
 	xState << 0,0;
@@ -304,23 +316,48 @@ void readSticks(){
 	//Serial.print(',');
 	//Serial.println(xState[1],10);
 	
+	float angle = atan2f((yZ[0]-128),(xZ[0]-128));
+
+	if(angle < angles[0]){
+		angle += M_PI*2;
+	}
+	
+	int region = 7;
+	for(int i = 1; i < GATE_REGIONS; i++){
+		if(angle < angles[i]){
+			region = i-1;
+			break;
+		}
+	}
+	Serial.print(angle);
+	Serial.print(',');
+	Serial.println(region);
+	
+	VectorXf pos(2);
+	pos << xState[0],yState[0];
+	
+	MatrixXf A(2,3);
+	A << storedAffineCoeffs[region][0],storedAffineCoeffs[region][1],storedAffineCoeffs[region][2],
+			 storedAffineCoeffs[region][3],storedAffineCoeffs[region][4],storedAffineCoeffs[region][5],
+	pos = A*pos;
+	
 	if((xState[1] < 0.0002) && (xState[1] > -0.0002)){
-			btn.Ax = (uint8_t) xState[0];
+			btn.Ax = (uint8_t) pos[0];
 	}
 	
 	if((yState[1] < 0.0002) && (yState[1] > -0.0002)){
-			btn.Ay = (uint8_t) yState[0];
+			btn.Ay = (uint8_t) pos[1];
 	}
 	
-	Serial.print(millis());
-	Serial.print(',');
-	Serial.print(xZ[0],0);
-	Serial.print(',');
-	Serial.print(xState[0],0);
-	Serial.print(',');
-	Serial.print(xState[1]*100000);
-	Serial.print(',');
-	Serial.println(btn.Ax);
+	//Serial.print(millis());
+	//Serial.print(',');
+	//Serial.print(xZ[0],0);
+	//Serial.print(',');
+	//Serial.print(xState[0],0);
+	//Serial.print(',');
+	//Serial.print(xState[1]*100000);
+	//Serial.print(',');
+	//Serial.println(btn.Ax);
 
 	//btn.Ax = (uint8_t) xZ[0];
 	//btn.Ay = (uint8_t) yZ[0];
@@ -467,7 +504,7 @@ void calibrate(){
 		(calPointsX[0]+calPointsX[2]+calPointsX[4]+calPointsX[6]+calPointsX[8]+calPointsX[10]+calPointsX[12]+calPointsX[14]+calPointsX[16])/9.0,
 		(calPointsX[3]+calPointsX[15])/2.0,
 		calPointsX[1]};
-		//double x_output[5] = {-100,-70.71,0,70.71,100};
+		//float x_output[5] = {-100,-70.71,0,70.71,100};
 		double x_output[5] = {28,57.29,128,198.71,228};
 		
 		Serial.println("x inputs are:");
@@ -487,7 +524,7 @@ void calibrate(){
 		(calPointsY[0]+calPointsY[2]+calPointsY[4]+calPointsY[6]+calPointsY[8]+calPointsY[10]+calPointsY[12]+calPointsY[14]+calPointsY[16])/9.0,
 		(calPointsY[3]+calPointsY[7])/2.0,
 		calPointsY[5]};
-		//double y_output[5] = {-100,-70.71,0,70.71,100};
+		//float y_output[5] = {-100,-70.71,0,70.71,100};
 		double y_output[5] = {28,57.29,128,198.71,228};	
 
 		Serial.println("y inputs are:");
@@ -504,9 +541,38 @@ void calibrate(){
 		//fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
 		//fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
 		
-		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, fitCoeffs);
+		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1,  fitCoeffs);
 		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, &fitCoeffs[FIT_ORDER+1]);
 		
+		float xZeroError = 128 -(fitCoeffs[0]*(x_input[2]*x_input[2]*x_input[2]) + fitCoeffs[1]*(x_input[2]*x_input[2]) + fitCoeffs[2]*x_input[2] + fitCoeffs[3]);
+		float yZeroError = 128 -(fitCoeffs[4]*(y_input[2]*y_input[2]*y_input[2]) + fitCoeffs[5]*(y_input[2]*y_input[2]) + fitCoeffs[6]*y_input[2] + fitCoeffs[7]);
+		
+		//Adjust the fit so that the stick zero position is exactly 128
+		fitCoeffs[3] -= xZeroError;
+		fitCoeffs[7] -= yZeroError;
+		
+		float xPointsCleaned[9];
+		float yPointsCleaned[9];
+		xPointsCleaned[0] = x_input[2];
+		yPointsCleaned[0] = y_input[2];
+		for(int i = 1; i<9; i++){
+			xPointsCleaned[i] = calPointsX[i*2-1];
+			yPointsCleaned[i] = calPointsY[i*2-1];
+		}
+
+		float xLinearized[9];
+		float yLinearized[9];
+		
+		for(int i = 0; i<9; i++){
+			xLinearized[i] = fitCoeffs[0]*(xPointsCleaned[i]*xPointsCleaned[i]*xPointsCleaned[i]) + fitCoeffs[1]*(xPointsCleaned[i]*xPointsCleaned[i]) + fitCoeffs[2]*xPointsCleaned[i] + fitCoeffs[3];
+			yLinearized[i] = fitCoeffs[4]*(yPointsCleaned[i]*yPointsCleaned[i]*yPointsCleaned[i]) + fitCoeffs[5]*(yPointsCleaned[i]*yPointsCleaned[i]) + fitCoeffs[6]*yPointsCleaned[i] + fitCoeffs[7];
+		}
+
+		float xNotchPoints[9] = {128,228,198.71,128,57.29,28,57.29,128,198.71};
+		float yNotchPoints[9] = {128,128,198.71,228,198.71,128,57.29,28,57.29};
+		
+		
+		notchCalibrate(xLinearized,yLinearized,xNotchPoints,yNotchPoints,GATE_REGIONS,storedAffineCoeffs,angles);
 /* 		
 		MatrixXf xX(5,5);
 		MatrixXf yX(5,5);
@@ -563,8 +629,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	unsigned int thisMicros = micros();
 	unsigned int dT = thisMicros-lastMicros;
 	lastMicros = thisMicros;
-	//Serial.print("the loop time is: ");
-	//Serial.println(dT);
+	Serial.print("the loop time is: ");
+	Serial.println(dT);
 	
 	
 	//MatrixXf tryF(2);
@@ -583,8 +649,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//print_mtxf(H)
 	
 	MatrixXf xR(1,1);
-	float offset = xZ[0]-128;
-	xR << ADC_VAR/(offset*offset/1000+1);
+	float offset_squared = (xZ[0]-128)*(xZ[0]-128)+(yZ[0]-128)*(yZ[0]-128);
+	xR << ADC_VAR_PEAK/(offset_squared/ADC_VAR_SPREAD+1);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(xP);
@@ -636,7 +702,31 @@ void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
 	//print_mtxf(P);
 }
 
-
+void notchCalibrate(float* xIn, float* yIn, float* xOut, float* yOut, int regions, float allAffineCoeffs[][6], float regionAngles[]){
+	for(int i = 1; i < regions; i++){
+		MatrixXf system(6,6);
+		system << xIn[0],yIn[0],0,0,1,0,
+				 0,0,xIn[0],yIn[0],0,1,
+				 xIn[i],yIn[i],0,0,1,0,
+				 0,0,xIn[i],yIn[i],0,1,
+				 xIn[i+1],yIn[i+1],0,0,1,0,
+				 0,0,xIn[i+1],yIn[i+1],0,1;
+		
+		VectorXf transformed(6);
+		transformed << xOut[0],yOut[0],xOut[i],yOut[i],xOut[i+1],yOut[i+1];
+		
+		VectorXf affineCoeffs(6);
+		affineCoeffs = system.colPivHouseholderQr().solve(transformed);
+		for(int j = 0; j <6;j++){
+			allAffineCoeffs[i-1][j] = affineCoeffs[j];
+		}
+		regionAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
+		//unwrap the angles so that the first has the smallest value
+		if(regionAngles[i-1] < regionAngles[0]){
+			regionAngles[i-1] += M_PI*2;
+		}
+	}
+}
 void print_mtxf(const Eigen::MatrixXf& X)  
 {
    int i, j, nrow, ncol;
