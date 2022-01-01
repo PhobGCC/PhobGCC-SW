@@ -20,7 +20,7 @@ using namespace Eigen;
 #define HALY 20
 
 #define FIT_ORDER 3
-#define FIT_ADDRESS 0
+
 
 #define GC_FREQUENCY 1000000
 #define ADC_VAR_PEAK 50
@@ -96,7 +96,7 @@ int writeQueue;
 //float xCoeffs[FIT_ORDER+1] = {-0.01,-1.41,236};
 //float yCoeffs[FIT_ORDER+1] = {-0.01,3.11,-68.38};
 //float fitCoeffs[(FIT_ORDER+1)*2] = {0,0,0,0.03125,0,  0,0,0,0.03125,0};
-double fitCoeffs[(FIT_ORDER+1)*2] = {0,0,0.03125,0,  0,0,0.03125,0};
+float fitCoeffs[(FIT_ORDER+1)*2] = {0,0,0.03125,0,  0,0,0.03125,0};
 int calStep;
 unsigned int startBtnSince;
 int lastStartBtn;
@@ -167,7 +167,15 @@ void setup() {
 	watchingStart = 0;
 	calStep = -1;
 	//EEPROM.put( FIT_ADDRESS, fitCoeffs );
-	EEPROM.get( FIT_ADDRESS, fitCoeffs );
+	//float eepromTemp[(FIT_ORDER+1)*2 + GATE_REGIONS*7];
+	
+	//first (FIT_ORDER+1)*2*4 bytes are the fit coefficients
+	EEPROM.get( 0, fitCoeffs );
+	//next GATE_REGIONS*6*4 bytes are the affine transformation coefficients
+	EEPROM.get( (FIT_ORDER+1)*2*4, storedAffineCoeffs );
+	//and last is the angles for the different gate regions
+	EEPROM.get( (FIT_ORDER+1)*2*4+GATE_REGIONS*6*4, angles );
+	
 	lastMicros = micros();
 	xAccelVar = 0.000000000001;
 	yAccelVar = 0.000000000001;
@@ -329,9 +337,9 @@ void readSticks(){
 			break;
 		}
 	}
-	Serial.print(angle);
-	Serial.print(',');
-	Serial.println(region);
+	//Serial.print(angle);
+	//Serial.print(',');
+	//Serial.println(region);
 	
 	VectorXf pos(2);
 	pos << xState[0],yState[0];
@@ -540,9 +548,15 @@ void calibrate(){
 		
 		//fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1, xCoeffs);
 		//fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, yCoeffs);
+		double tempXCoeffs[FIT_ORDER+1];
+		double tempYCoeffs[FIT_ORDER+1];
+		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1,  tempXCoeffs);
+		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, tempYCoeffs);
 		
-		fitCurve(FIT_ORDER, 5, x_input, x_output, FIT_ORDER+1,  fitCoeffs);
-		fitCurve(FIT_ORDER, 5, y_input, y_output, FIT_ORDER+1, &fitCoeffs[FIT_ORDER+1]);
+		for(int i = 0; i<= FIT_ORDER; i++){
+			fitCoeffs[i] = tempXCoeffs[i];
+			fitCoeffs[i+FIT_ORDER+1] = tempYCoeffs[i];
+		}
 		
 		float xZeroError = 128 -(fitCoeffs[0]*(x_input[2]*x_input[2]*x_input[2]) + fitCoeffs[1]*(x_input[2]*x_input[2]) + fitCoeffs[2]*x_input[2] + fitCoeffs[3]);
 		float yZeroError = 128 -(fitCoeffs[4]*(y_input[2]*y_input[2]*y_input[2]) + fitCoeffs[5]*(y_input[2]*y_input[2]) + fitCoeffs[6]*y_input[2] + fitCoeffs[7]);
@@ -608,7 +622,14 @@ void calibrate(){
 			Serial.println(fitCoeffs[i+FIT_ORDER+1],12);
 		}
 
-		EEPROM.put(FIT_ADDRESS,fitCoeffs);
+		//EEPROM.put(FIT_ADDRESS,fitCoeffs);
+		
+		//first (FIT_ORDER+1)*2*4 bytes are the fit coefficients
+		EEPROM.put( 0, fitCoeffs );
+		//next GATE_REGIONS*6*4 bytes are the affine transformation coefficients
+		EEPROM.put( (FIT_ORDER+1)*2*4, storedAffineCoeffs );
+		//and last is the angles for the different gate regions
+		EEPROM.put( (FIT_ORDER+1)*2*4+GATE_REGIONS*6*4, angles );
 		
 		calStep = -1;
 	}
@@ -629,8 +650,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	unsigned int thisMicros = micros();
 	unsigned int dT = thisMicros-lastMicros;
 	lastMicros = thisMicros;
-	Serial.print("the loop time is: ");
-	Serial.println(dT);
+	//Serial.print("the loop time is: ");
+	//Serial.println(dT);
 	
 	
 	//MatrixXf tryF(2);
@@ -704,7 +725,7 @@ void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
 
 void notchCalibrate(float* xIn, float* yIn, float* xOut, float* yOut, int regions, float allAffineCoeffs[][6], float regionAngles[]){
 	for(int i = 1; i < regions; i++){
-		MatrixXf system(6,6);
+/* 		MatrixXf system(6,6);
 		system << xIn[0],yIn[0],0,0,1,0,
 				 0,0,xIn[0],yIn[0],0,1,
 				 xIn[i],yIn[i],0,0,1,0,
@@ -712,19 +733,55 @@ void notchCalibrate(float* xIn, float* yIn, float* xOut, float* yOut, int region
 				 xIn[i+1],yIn[i+1],0,0,1,0,
 				 0,0,xIn[i+1],yIn[i+1],0,1;
 		
+		Serial.println("The system to solve is:");
+		print_mtxf(system);
+		
 		VectorXf transformed(6);
 		transformed << xOut[0],yOut[0],xOut[i],yOut[i],xOut[i+1],yOut[i+1];
 		
+		Serial.println("The desired points (after transformation) are:");
+		print_mtxf(transformed);
+		
 		VectorXf affineCoeffs(6);
 		affineCoeffs = system.colPivHouseholderQr().solve(transformed);
+		
+		Serial.println("The vector with the solved coefficients is:");
+		print_mtxf(affineCoeffs);
+		
+		Serial.println("The affince transformation coordinates are:");
 		for(int j = 0; j <6;j++){
 			allAffineCoeffs[i-1][j] = affineCoeffs[j];
+			Serial.print(allAffineCoeffs[i-1][j]);
+			Serial.print(",");
+		} */
+		MatrixXf pointsIn(3,3);
+		pointsIn << xIn[0],xIn[i],xIn[i+1],
+								yIn[0],yIn[i],yIn[i+1],
+								1,1,1;
+		MatrixXf pointsOut(3,3);
+		pointsOut << xOut[0],xOut[i],xOut[i+1],
+								 yOut[0],yOut[i],yOut[i+1],
+								 1,1,1;
+		
+		MatrixXf A(3,3);
+		A = pointsOut*pointsIn.inverse();
+		
+		for(int j = 0; j <2;j++){
+			for(int k = 0; k<3;k++){
+				allAffineCoeffs[i-1][j*3+k] = A(j,k);
+				Serial.print(allAffineCoeffs[i-1][j*3+k]);
+				Serial.print(",");
+			}
 		}
+		
+		Serial.println();
+		Serial.println("The angle defining this  regions is:");
 		regionAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
 		//unwrap the angles so that the first has the smallest value
 		if(regionAngles[i-1] < regionAngles[0]){
 			regionAngles[i-1] += M_PI*2;
 		}
+		Serial.println(regionAngles[i-1]);
 	}
 }
 void print_mtxf(const Eigen::MatrixXf& X)  
