@@ -9,6 +9,18 @@
 #include <Eigen/Dense>
 
 using namespace Eigen;
+#define X_ADC_VAR_PEAK 50
+#define X_ADC_VAR_SPREAD 1000
+#define X_DAMPING 0.0005
+#define X_ACCEL_VAR 0.000000000001
+#define X_VEL_THRESH 
+
+//#define Y_ADC_VAR_PEAK 50
+//#define Y_ADC_VAR_SPREAD 1000
+#define Y_DAMPING 0.0005
+#define Y_ACCEL_VAR 0.000000000001
+#define Y_VEL_THRESH 
+
 
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
@@ -22,9 +34,9 @@ using namespace Eigen;
 #define FIT_ORDER 3
 
 
-#define GC_FREQUENCY 1000000
-#define ADC_VAR_PEAK 50
-#define ADC_VAR_SPREAD 1000
+#define GC_FREQUENCY 1250000
+#define PC_FREQUENCY 1000000
+#define PULSE_FREQ_CUTOFF 291666
 
 #define GATE_REGIONS 8
 
@@ -51,40 +63,21 @@ union Buttons{
 		uint8_t R : 1;
 		uint8_t L : 1;
 		uint8_t high : 1;
-/* 	// byte 0
-	uint8_t errS : 1;
-	uint8_t errL : 1;
-	uint8_t orig : 1;
-	uint8_t S : 1;
-	uint8_t Y : 1;
-	uint8_t X : 1;
-	uint8_t B : 1;
-	uint8_t A : 1;
 
-	// byte 1
-	uint8_t high : 1;
-	uint8_t L : 1;
-	uint8_t R : 1;
-	uint8_t Z : 1;
-	uint8_t Du : 1;
-	uint8_t Dd : 1;
-	uint8_t Dr : 1;
-	uint8_t Dl : 1; */
+		//byte 2-7
+		uint8_t Ax : 8;
+		uint8_t Ay : 8;
+		uint8_t Cx : 8;
+		uint8_t Cy : 8;
+		uint8_t La : 8;
+		uint8_t Ra : 8;
 
-	//byte 2-7
-	uint8_t Ax : 8;
-	uint8_t Ay : 8;
-	uint8_t Cx : 8;
-	uint8_t Cy : 8;
-	uint8_t La : 8;
-	uint8_t Ra : 8;
-
-	// magic byte 8 & 9 (only used in origin cmd)
-	// have something to do with rumble motor status???
-	// ignore these, they are magic numbers needed
-	// to make a cmd response work
-	uint8_t magic1 : 8;
-	uint8_t magic2 : 8;
+		// magic byte 8 & 9 (only used in origin cmd)
+		// have something to do with rumble motor status???
+		// ignore these, they are magic numbers needed
+		// to make a cmd response work
+		uint8_t magic1 : 8;
+		uint8_t magic2 : 8;
 	};
 }btn;
 
@@ -104,6 +97,7 @@ int watchingStart;
 float calPointsX[CALIBRATION_POINTS];
 float calPointsY[CALIBRATION_POINTS];
 unsigned int lastMicros;
+bool running;
 
 VectorXf xState(2);
 VectorXf yState(2);
@@ -141,7 +135,7 @@ volatile uint8_t pollResponse[POLL_LENGTH] = {
 0x08,0x08,0xEF,0xEF,
 0x08,0x08,0xEF,0xEF,
 0xFF};
-volatile uint8_t originResponse[ORIGIN_LENGTH] = {
+static uint8_t originResponse[ORIGIN_LENGTH] = {
 	0x08,0x08,0x08,0x08,
 	0x0F,0x08,0x08,0x08,
 	0x08,0x08,0xEF,0xEF,
@@ -158,10 +152,54 @@ int cmd[CMD_LENGTH_LONG];
 uint8_t cmdByte;
 
 void setup() {
+	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
+	noInterrupts();
+	unsigned int counter = 0;
+	unsigned int start = 0;
+	unsigned int duration = 0;
+	ARM_DEMCR |= ARM_DEMCR_TRCENA;
+	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+	//attempt to count a bunch of 0 bits (will also catch some stop bits which are short, will skew the results)
+	for(int i = 0; i<64;i++){
+		//wait for the pause between pulses
+		start = ARM_DWT_CYCCNT;
+		duration = 0;
+		while(duration<960){
+			if(digitalReadFast(0)){
+				duration = ARM_DWT_CYCCNT-start;
+			}
+			else{
+				start = ARM_DWT_CYCCNT;
+				duration = 0;
+			}
+		}
+		
+		//measure the clock cycles of the first 0 bit
+		while(digitalReadFast(0)){}
+		start = ARM_DWT_CYCCNT;
+		while(!digitalReadFast(0)){}
+		counter += ARM_DWT_CYCCNT-start;
+	}
+	counter = counter>>6;
+	pulseWidthFreq = F_CPU/counter;
+	int serialFreq;
+	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
+	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
+		serialFreq = PC_FREQUENCY;
+	}
+	else{
+		serialFreq = GC_FREQUENCY;
+	}
+	interrupts();
+	
+	
+	running = false;
 	btn.errS = 0;
 	btn.errL = 0;
 	btn.orig = 0;
 	btn.high = 1;
+	btn.Ax = 128;
+	btn.Ay = 128;
 	startBtnSince = millis();
 	lastStartBtn = 0;
 	watchingStart = 0;
@@ -177,9 +215,11 @@ void setup() {
 	EEPROM.get( (FIT_ORDER+1)*2*4+GATE_REGIONS*6*4, angles );
 	
 	lastMicros = micros();
-	xAccelVar = 0.000000000001;
-	yAccelVar = 0.000000000001;
-	damping = 0.0005;
+	xAccelVar = X_ACCEL_VAR;
+	yAccelVar = Y_ACCEL_VAR;
+	xDamping = X_DAMPING;
+	yDamping = X_DAMPING;
+	
 	writeQueue = 0;
 	
 	xState << 0,0;
@@ -187,43 +227,32 @@ void setup() {
 	xP << 1000,0,0,1000;
 	yP << 1000,0,0,1000;
 	
-	analogReadResolution(13);
+	adc->adc0->setAveraging(8); // set number of averages
+  adc->adc0->setResolution(13); // set bits of resolution
+  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED ); // change the conversion speed
+  adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
+	
 	setPinModes();
+	
 	//start USB serial
 	Serial.begin(57600);
-	//Serial.begin(9600);
-	/* Serial.println("starting");
-	Serial.println("x coefficients are:");
-	Serial.print(fitCoeffs[0],10);
-	Serial.print(',');
-	Serial.print(fitCoeffs[1],10);
-	Serial.print(',');
-	Serial.print(fitCoeffs[2],10);
-	Serial.print(',');
-	Serial.println(fitCoeffs[3],10);
-	Serial.println("y coefficients are:");
-	Serial.print(fitCoeffs[4],10);
-	Serial.print(',');
-	Serial.print(fitCoeffs[5],10);
-	Serial.print(',');
-	Serial.print(fitCoeffs[6],10);
-	Serial.print(',');
-	Serial.println(fitCoeffs[7],10); */
 	//start hardware serail
-	Serial1.begin(GC_FREQUENCY);
+	Serial1.begin(serialFreq);
 	attachInterrupt(0, communicate, FALLING);
 }
 
 void loop() {
-	//communicate();
 	readButtons();
-	//communicate();
+	if(btn.A){
+		running=true;
+	}
 	readSticks();
-	//communicate();
 	if(calStep >=0){
 		calibrate();
 	}
-	setPole();
+	if(running){
+		setPole();
+	}
 }
 
 //void serialEvent1() {
@@ -383,6 +412,7 @@ void setPole(){
 		//Serial.println();
 		//Serial.println("newcommand");
 		//Serial.println(btn.arr[i],BIN);
+		noInterrupts();
 		for(int j = 0; j < 4; j++){
 		//Serial.println(btn.arr[i]>>(6-j*2),BIN);
 	  int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
@@ -412,6 +442,7 @@ void setPole(){
 				break;
 			}
 		}
+		interrupts();
 	}
 	 //Serial.println();
 	 //delay(1);
@@ -655,8 +686,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	
 	
 	//MatrixXf tryF(2);
-	Fmat << 1,dT-damping/2*dT*dT,
-			 0,1-damping*dT;
+	Fmat << 1,dT-xDamping/2*dT*dT,
+			 0,1-xDamping*dT;
 
 	xQ << (dT*dT*dT*dT>>2), (dT*dT*dT>>1),
 			 (dT*dT*dT>>1), (dT*dT);
@@ -670,8 +701,10 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//print_mtxf(H)
 	
 	MatrixXf xR(1,1);
+	//MatrixXf yR(1,1);
 	float offset_squared = (xZ[0]-128)*(xZ[0]-128)+(yZ[0]-128)*(yZ[0]-128);
-	xR << ADC_VAR_PEAK/(offset_squared/ADC_VAR_SPREAD+1);
+	xR << X_ADC_VAR_PEAK/(offset_squared/X_ADC_VAR_SPREAD+1);
+	
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(xP);
