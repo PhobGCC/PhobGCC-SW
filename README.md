@@ -1,5 +1,5 @@
 # PhobGCC
-Test to get a teensy to pretend to be a gamecube controller using hardware UART
+Gamecube controller motherboard using a teensy as the microcontroller. Aim is to make an accessible and consistent controller. Has the option of using hall effect sensors instead of potentiometers, stick calibration, snapback filtering, emulated PODE. Early stages, I do not recommend trying to make one yet.
 
 Current board version:
 <img src="/Documentation/Front.png" alt="V1"/>
