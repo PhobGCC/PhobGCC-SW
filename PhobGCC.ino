@@ -7,6 +7,7 @@
 #include <eigen.h>
 #include <Eigen/LU>
 #include <Eigen/Dense>
+#include <ADC.h>
 
 using namespace Eigen;
 #define X_ADC_VAR_PEAK 50
@@ -39,6 +40,8 @@ using namespace Eigen;
 #define PULSE_FREQ_CUTOFF 291666
 
 #define GATE_REGIONS 8
+
+ADC *adc = new ADC();
 
 union Buttons{
 	uint8_t arr[10];
@@ -108,7 +111,8 @@ MatrixXf xQ(2,2);
 MatrixXf yQ(2,2);
 float xAccelVar;
 float yAccelVar;
-float damping;
+float xDamping;
+float yDamping;
 float storedAffineCoeffs[GATE_REGIONS][6] = {1,0,0,0,1,0,
 																			 1,0,0,0,1,0,
 																			 1,0,0,0,1,0,
@@ -161,7 +165,7 @@ void setup() {
 	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 	//attempt to count a bunch of 0 bits (will also catch some stop bits which are short, will skew the results)
 	for(int i = 0; i<64;i++){
-		//wait for the pause between pulses
+		//wait for the pause between pulses (
 		start = ARM_DWT_CYCCNT;
 		duration = 0;
 		while(duration<960){
@@ -181,7 +185,7 @@ void setup() {
 		counter += ARM_DWT_CYCCNT-start;
 	}
 	counter = counter>>6;
-	pulseWidthFreq = F_CPU/counter;
+	int pulseWidthFreq = F_CPU/counter;
 	int serialFreq;
 	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
 	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
@@ -310,19 +314,19 @@ void readButtons(){
 	lastStartBtn = btn.Dl;
 }
 void readSticks(){
-	//btn.Ax = analogRead(18);
-	//btn.Ay = analogRead(19);
+	//btn.Ax = adc->adc0->analogRead(18);
+	//btn.Ay = adc->adc0->analogRead(19);
 
-	btn.La = analogRead(22)>>5;
-	btn.Ra = analogRead(15)>>5;
+	btn.La = adc->adc0->analogRead(22)>>5;
+	btn.Ra = adc->adc0->analogRead(15)>>5;
 	
 	//Serial.print("L Trigger");
 	//Serial.println(btn.La,DEC);
 	//Serial.print("R Trigger");
 	//Serial.println(btn.Ra,DEC);
 	
-	AStickHX = analogRead(HALX)/8192.0;
-	AStickHY = analogRead(HALY)/8192.0;
+	AStickHX = adc->adc0->analogRead(HALX)/8192.0;
+	AStickHY = adc->adc0->analogRead(HALY)/8192.0;
 	
 	
 	//btn.Ax = (uint8_t) (xCoeffs[0]*pow(,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
@@ -399,8 +403,8 @@ void readSticks(){
 	//btn.Ax = (uint8_t) xZ[0];
 	//btn.Ay = (uint8_t) yZ[0];
 	
-	btn.Cx = analogRead(17)>>5;//note it looks like these are swapped from what I thought
-	btn.Cy = analogRead(16)>>5;
+	btn.Cx = adc->adc0->analogRead(17)>>5;//note it looks like these are swapped from what I thought
+	btn.Cy = adc->adc0->analogRead(16)>>5;
 	
 	//Serial.print("C X = ");
 	//Serial.println(btn.Cx);
