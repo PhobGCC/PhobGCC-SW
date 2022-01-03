@@ -251,11 +251,11 @@ void loop() {
 		running=true;
 	}
 	readSticks();
-	if(calStep >=0){
-		calibrate();
-	}
 	if(running){
 		setPole();
+	}
+		if(calStep >=0){
+		calibrate();
 	}
 }
 
@@ -413,61 +413,55 @@ void readSticks(){
 }
 void setPole(){
 	for(int i = 0; i < 8; i++){
-		//Serial.println();
-		//Serial.println("newcommand");
-		//Serial.println(btn.arr[i],BIN);
+		//we don't want to send data while we're updating the stick and button states, so we turn off interrupts
 		noInterrupts();
+		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
 		for(int j = 0; j < 4; j++){
-		//Serial.println(btn.arr[i]>>(6-j*2),BIN);
-	  int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
-		//Serial.print(these2bits,BIN);
-	  //Serial.print(these2bits>>1,BIN);
-		//Serial.print(these2bits&1,BIN);
+			//this could probably be done better but we need to take 2 bits at a time to put into one serial byte
+			//for details on this read here: http://www.qwertymodo.com/hardware-projects/n64/n64-controller
+			int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
 			switch(these2bits){
 				case 0:
 				pollResponse[(i<<2)+j] = 0x08;
-				//Serial.print(pollResponse[i+j],HEX);
-				//originResponse[i] = 0x08;
 				break;
 				case 1:
 				pollResponse[(i<<2)+j] = 0xE8;
-				//Serial.print(pollResponse[i+j],HEX);
-				//originResponse[i] = 0xE8;
 				break;
 				case 2:
 				pollResponse[(i<<2)+j] = 0x0F;
-				//Serial.print(pollResponse[i+j],HEX);
-				//originResponse[i] = 0x0F;
 				break;
 				case 3:
 				pollResponse[(i<<2)+j] = 0xEF;
-				//Serial.print(pollResponse[i+j],HEX);
-				//originResponse[i] = 0xEF;
 				break;
 			}
 		}
+		//turn the interrupt back on so we can start communicating again
 		interrupts();
 	}
-	 //Serial.println();
-	 //delay(1);
 }
 void communicate(){
 	//Serial.println("communicating");
-	//clear any commands from the last write
+	//clear any commands from the last write, once the write queue is empty then any new data is from the master
+	//this is needed because the RX pin is connected to the TX pin through the diode
 	while(Serial1.available() && (writeQueue > 0)){
 		Serial1.read();
 		writeQueue --;
 	}
-	//check if a command has started (bytes available on the serial line)
+	
+	//check if a full byte is available from the master yet, if its not the exit
 	if (Serial1.available()){
 		//wait for the first 5 bytes of the command to arrive
+		//we need to do this because the interrupt is not necissarily fast enough, so we wait here for all the data so we can respond as soon as possible
 		while(Serial1.available()<CMD_LENGTH_SHORT){}
 		//read those 5 bytes
+		//may be possible to speed things up by reading just 4 bytes and then clearing the last one after
 		for(int i = 0; i <CMD_LENGTH_SHORT; i++){
 			cmd[i] = Serial1.read();
 		}
 
-		//parse first 4 bytes of the command
+		//parse first 4 bytes of the command, we don't care about the rest of it
+		//the mapping here is a little strange because of how we are using the serial connection, see this for details:
+		//http://www.qwertymodo.com/hardware-projects/n64/n64-controller
 		for(int i = 0; i <CMD_LENGTH_SHORT-1; i++){
 			switch(cmd[i]){
 			case 0x08:
@@ -487,34 +481,41 @@ void communicate(){
 				cmdByte = -1;
 			}
 		}
-	//print the command byte over the USB serial connection
+	//print the command byte over the USB serial  for debugging
 	//Serial.println(cmdByte,HEX);
 	
 	//decide what to do based on the command
 	switch(cmdByte){
+		//this is the poll command, it will be what is sent continually after a connection is made
 		case 0x40:
+			//the poll command is longer, but we don't care about any of the other data
+			//wait until we get a stop bit, then we know we can start sending data again
 		  while(Serial1.read() != 0xFF){}
+			//write the pre-prepared poll response out byte by byte
 		  for(int i = 0; i <POLL_LENGTH; i++){
 				Serial1.write(pollResponse[i]);
+				//print to USB serial for debugging
 				//Serial.print(pollResponse[i],HEX);
 		  }
+			//set the write queue so that we will ignore all the data we are sending out
 			writeQueue = POLL_LENGTH;
-		  //Serial.println();
-		  //while(Serial1.read() != 0xFF){}
 		  break;
 		case 0x00:
+			//this is the probe command, its what the master will send out continually when nothing is connected
+			//write the pre-prepared probe resonse out byte by byte
 		  for(int i = 0; i <CMD_LENGTH_LONG; i++){
 				Serial1.write(probeResponse[i]);
 		  }
+			//set the write queue so that we will ignore all the data we are sending out
 			writeQueue = CMD_LENGTH_LONG;
-		  //while(Serial1.read() != 0xFF){}
 		  break;
 		case 0x41:
+			//this is the origin command, it gets sent out a few times after a connection is made before switching to polling, may be related to zeroing the analog sticks and triggers?
 		  for(int i = 0; i <ORIGIN_LENGTH; i++){
 				Serial1.write(originResponse[i]);
 		  }
+			//set the write queue so that we will ignore all the data we are sending out
 			writeQueue = ORIGIN_LENGTH;
-		  //while(Serial1.read() != 0xFF){}
 		  break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
