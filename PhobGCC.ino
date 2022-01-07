@@ -12,7 +12,7 @@
 using namespace Eigen;
 #define X_ADC_VAR_PEAK 50
 #define X_ADC_VAR_SPREAD 1000
-#define X_DAMPING 0.0005
+#define X_DAMPING 0.5
 #define X_ACCEL_VAR 0.000000000001
 #define X_VEL_THRESH 
 
@@ -29,8 +29,10 @@ using namespace Eigen;
 #define POLL_LENGTH 33
 #define CALIBRATION_POINTS 17
 
-#define HALX 21
-#define HALY 20
+#define HALX 15
+#define HALY 14
+#define RX 9
+#define TX 10
 
 #define FIT_ORDER 3
 
@@ -40,6 +42,22 @@ using namespace Eigen;
 #define PULSE_FREQ_CUTOFF 291666
 
 #define GATE_REGIONS 8
+
+
+const float xAccelVarFast = 1.0;
+const float xAccelVarSlow = 0.000001;
+const float yAccelVarFast = 1.0;
+const float yAccelVarSlow = 0.000001;
+const float xADCVarFast = 0.1;
+const float xADCVarSlow = 0.2;
+const float yADCVarFast = 1;
+const float yADCVarSlow = 2;
+const float x1 = 100;
+const float x6 = 1e+12;
+const float A = (xADCVarFast - xADCVarSlow)/x6;
+const float B = xADCVarSlow;
+const float D = xAccelVarSlow;
+const float C = (xAccelVarFast - xAccelVarSlow)/x6;
 
 ADC *adc = new ADC();
 
@@ -132,22 +150,22 @@ static uint8_t probeResponse[CMD_LENGTH_LONG] = {
 volatile uint8_t pollResponse[POLL_LENGTH] = {
 0x08,0x08,0x08,0x08,
 0x0F,0x08,0x08,0x08,
-0x08,0x08,0xEF,0xEF,
-0x08,0x08,0xEF,0xEF,
-0x08,0x08,0xEF,0xEF,
-0x08,0x08,0xEF,0xEF,
-0x08,0x08,0xEF,0xEF,
-0x08,0x08,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
+0xE8,0xEF,0xEF,0xEF,
 0xFF};
 static uint8_t originResponse[ORIGIN_LENGTH] = {
 	0x08,0x08,0x08,0x08,
 	0x0F,0x08,0x08,0x08,
-	0x08,0x08,0xEF,0xEF,
-	0x08,0x08,0xEF,0xEF,
-	0x08,0x08,0xEF,0xEF,
-	0x08,0x08,0xEF,0xEF,
-	0x08,0x08,0xEF,0xEF,
-	0x08,0x08,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
+	0xE8,0xEF,0xEF,0xEF,
 	0x08,0x08,0x08,0x08,
 	0x08,0x08,0x08,0x08,
 	0xFF};
@@ -156,8 +174,15 @@ int cmd[CMD_LENGTH_LONG];
 uint8_t cmdByte;
 
 void setup() {
+	
+	//start USB serial
+	Serial.begin(57600);
+	Serial.println("test");
+	delay(1000);
 	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
+		int serialFreq = PC_FREQUENCY;
 	noInterrupts();
+	pinMode(RX,INPUT);
 	unsigned int counter = 0;
 	unsigned int start = 0;
 	unsigned int duration = 0;
@@ -169,7 +194,7 @@ void setup() {
 		start = ARM_DWT_CYCCNT;
 		duration = 0;
 		while(duration<960){
-			if(digitalReadFast(0)){
+			if(digitalReadFast(RX)){
 				duration = ARM_DWT_CYCCNT-start;
 			}
 			else{
@@ -179,14 +204,16 @@ void setup() {
 		}
 		
 		//measure the clock cycles of the first 0 bit
-		while(digitalReadFast(0)){}
+		while(digitalReadFast(RX)){}
 		start = ARM_DWT_CYCCNT;
-		while(!digitalReadFast(0)){}
+		while(!digitalReadFast(RX)){}
 		counter += ARM_DWT_CYCCNT-start;
 	}
 	counter = counter>>6;
+
 	int pulseWidthFreq = F_CPU/counter;
-	int serialFreq;
+	Serial.print("measured pulse width freq:");
+	Serial.println(pulseWidthFreq);
 	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
 	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
 		serialFreq = PC_FREQUENCY;
@@ -196,6 +223,7 @@ void setup() {
 	}
 	interrupts();
 	
+
 	
 	running = false;
 	btn.errS = 0;
@@ -232,70 +260,76 @@ void setup() {
 	yP << 1000,0,0,1000;
 	
 	adc->adc0->setAveraging(8); // set number of averages
-  adc->adc0->setResolution(13); // set bits of resolution
+  adc->adc0->setResolution(12); // set bits of resolution
   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED ); // change the conversion speed
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
 	
 	setPinModes();
 	
-	//start USB serial
-	Serial.begin(57600);
+	Serial.print("starting hw serial at freq:");
+	Serial.println(serialFreq);
 	//start hardware serail
-	Serial1.begin(serialFreq);
-	attachInterrupt(0, communicate, FALLING);
+	Serial2.begin(serialFreq);
+	attachInterrupt(RX, communicate, FALLING);
 }
 
 void loop() {
 	readButtons();
-	if(btn.A){
+	if(btn.B && !running){
+		Serial.println("Starting to report values");
 		running=true;
 	}
 	readSticks();
+	if(calStep >=0){
+		calibrate();
+	}
 	if(running){
 		setPole();
 	}
-		if(calStep >=0){
-		calibrate();
-	}
+
 }
 
 //void serialEvent1() {
 //	communicate();
 //}
 void setPinModes(){
-	pinMode(9,INPUT_PULLUP);
-	pinMode(7,INPUT_PULLUP);
-	pinMode(10,INPUT_PULLUP);
-	pinMode(12,INPUT_PULLUP);
-	pinMode(11,INPUT_PULLUP);
-	pinMode(6,INPUT_PULLUP);
-	pinMode(13,INPUT_PULLUP);
-	pinMode(8,INPUT_PULLUP);
+	pinMode(0,INPUT_PULLUP);
+	pinMode(1,INPUT_PULLUP);
+	pinMode(2,INPUT_PULLUP);
 	pinMode(3,INPUT_PULLUP);
 	pinMode(4,INPUT_PULLUP);
-	pinMode(2,INPUT_PULLUP);
-	pinMode(5,INPUT_PULLUP);
+	pinMode(6,INPUT_PULLUP);
+	pinMode(11,INPUT_PULLUP);
+	pinMode(12,INPUT_PULLUP);
+	pinMode(13,INPUT_PULLUP);
+	pinMode(17,INPUT_PULLUP);
+	pinMode(18,INPUT_PULLUP);
+	pinMode(19,INPUT_PULLUP);
 
-	pinMode(18,INPUT);
-	pinMode(19,INPUT);
-	pinMode(21,INPUT);
-	pinMode(20,INPUT);
-	pinMode(17,INPUT);
+	pinMode(7,INPUT_PULLUP);
+	pinMode(8,INPUT_PULLUP);
+	//pinMode(9,INPUT);
+	//pinMode(10,INPUT);
+	pinMode(14,INPUT);
+	pinMode(15,INPUT);
 	pinMode(16,INPUT);
+	pinMode(21,INPUT);
+	pinMode(22,INPUT);
+	pinMode(23,INPUT);
 }
 void readButtons(){
-	btn.A = !digitalRead(9);
-	btn.B = !digitalRead(7);
-	btn.X = !digitalRead(10);
-	btn.Y = !digitalRead(12);
-	btn.Z = !digitalRead(11);
-	btn.S = !digitalRead(6);
-	btn.L = !digitalRead(13); //note, need to cut and reroute this trace, was to pin 1
-	btn.R = !digitalRead(8);
-	btn.Du = !digitalRead(3);
-	btn.Dd = !digitalRead(4);
-	btn.Dl = !digitalRead(2);
-	btn.Dr = !digitalRead(5);
+	btn.A = !digitalRead(4);
+	btn.B = !digitalRead(6);
+	btn.X = !digitalRead(1);
+	btn.Y = !digitalRead(2);
+	btn.Z = !digitalRead(0);
+	btn.S = !digitalRead(19);
+	btn.L = !digitalRead(13);
+	btn.R = !digitalRead(3);
+	btn.Du = !digitalRead(18);
+	btn.Dd = !digitalRead(8);
+	btn.Dl = !digitalRead(17);
+	btn.Dr = !digitalRead(7);
 	
 	if(btn.Dl && !lastStartBtn){
 		startBtnSince = millis();
@@ -317,16 +351,21 @@ void readSticks(){
 	//btn.Ax = adc->adc0->analogRead(18);
 	//btn.Ay = adc->adc0->analogRead(19);
 
-	btn.La = adc->adc0->analogRead(22)>>5;
-	btn.Ra = adc->adc0->analogRead(15)>>5;
+	btn.La = adc->adc0->analogRead(16)>>4;
+	btn.Ra = adc->adc0->analogRead(23)>>4;
 	
 	//Serial.print("L Trigger");
 	//Serial.println(btn.La,DEC);
 	//Serial.print("R Trigger");
 	//Serial.println(btn.Ra,DEC);
 	
-	AStickHX = adc->adc0->analogRead(HALX)/8192.0;
-	AStickHY = adc->adc0->analogRead(HALY)/8192.0;
+	AStickHX = adc->adc0->analogRead(HALX)/4096.0;
+	AStickHY = adc->adc0->analogRead(HALY)/4096.0;
+	
+	//Serial.print(AStickHX,10);
+	//Serial.print(",");
+	//Serial.print(AStickHY,10);
+  //Serial.print(",");
 	
 	
 	//btn.Ax = (uint8_t) (xCoeffs[0]*pow(,3) + xCoeffs[1]*pow(AStickHX,2) + xCoeffs[2]*pow(AStickHX,1) + xCoeffs[2]*AStickHX) + 128;
@@ -345,20 +384,24 @@ void readSticks(){
 	
 	xZ << (fitCoeffs[0]*(AStickHX*AStickHX*AStickHX) + fitCoeffs[1]*(AStickHX*AStickHX) + fitCoeffs[2]*AStickHX + fitCoeffs[3]);
 	yZ << (fitCoeffs[4]*(AStickHY*AStickHY*AStickHY) + fitCoeffs[5]*(AStickHY*AStickHY) + fitCoeffs[6]*AStickHY + fitCoeffs[7]);
-
-	//Serial.print(xZ[0],10);
+  
+  Serial.println();
+	Serial.print(xZ[0],10);
+	Serial.print(',');
+	///Serial.print(yZ[0],10);
 	//Serial.print(',');
-	//Serial.println(xZ[1],10);
-	//Serial.println(yZ[0]);
 	
 	runKalman(xZ,yZ);
 	
-	//Serial.print(xState[0],10);
-	//Serial.print(',');
-	//Serial.println(xState[1],10);
+	Serial.print(xState[0],10);
+	Serial.print(',');
+	Serial.print(xState[1],10);
+  Serial.print(',');
 	
-	float angle = atan2f((yZ[0]-128),(xZ[0]-128));
-
+	float angle = atan2f((yZ[0]-128.5),(xZ[0]-128.5));
+  //Serial.print(angle,10);
+  //Serial.print(',');
+  
 	if(angle < angles[0]){
 		angle += M_PI*2;
 	}
@@ -372,7 +415,8 @@ void readSticks(){
 	}
 	//Serial.print(angle);
 	//Serial.print(',');
-	//Serial.println(region);
+	//Serial.print(region);
+  //Serial.print(',');
 	
 	VectorXf pos(2);
 	pos << xState[0],yState[0];
@@ -381,14 +425,20 @@ void readSticks(){
 	A << storedAffineCoeffs[region][0],storedAffineCoeffs[region][1],storedAffineCoeffs[region][2],
 			 storedAffineCoeffs[region][3],storedAffineCoeffs[region][4],storedAffineCoeffs[region][5],
 	pos = A*pos;
-	
-	if((xState[1] < 0.0002) && (xState[1] > -0.0002)){
-			btn.Ax = (uint8_t) pos[0];
+	//Serial.print(pos[0],10);
+  //Serial.print(',');
+  //Serial.print(pos[1],10);
+  //Serial.println();
+  
+	if((xState[1] < 0.1) && (xState[1] > -0.1)){
+			btn.Ax = (uint8_t) xState[0];
 	}
 	
-	if((yState[1] < 0.0002) && (yState[1] > -0.0002)){
-			btn.Ay = (uint8_t) pos[1];
+	if((yState[1] < 0.1) && (yState[1] > -0.1)){
+			btn.Ay = (uint8_t) yState[0];
 	}
+ //btn.Ax = (uint8_t) xState[0];
+ //btn.Ay = (uint8_t) yState[0];
 	
 	//Serial.print(millis());
 	//Serial.print(',');
@@ -403,8 +453,8 @@ void readSticks(){
 	//btn.Ax = (uint8_t) xZ[0];
 	//btn.Ay = (uint8_t) yZ[0];
 	
-	btn.Cx = adc->adc0->analogRead(17)>>5;//note it looks like these are swapped from what I thought
-	btn.Cy = adc->adc0->analogRead(16)>>5;
+	btn.Cx = adc->adc0->analogRead(21)>>4;//note it looks like these are swapped from what I thought
+	btn.Cy = adc->adc0->analogRead(22)>>4;
 	
 	//Serial.print("C X = ");
 	//Serial.println(btn.Cx);
@@ -443,20 +493,20 @@ void communicate(){
 	//Serial.println("communicating");
 	//clear any commands from the last write, once the write queue is empty then any new data is from the master
 	//this is needed because the RX pin is connected to the TX pin through the diode
-	while(Serial1.available() && (writeQueue > 0)){
-		Serial1.read();
+	while(Serial2.available() && (writeQueue > 0)){
+		Serial2.read();
 		writeQueue --;
 	}
 	
 	//check if a full byte is available from the master yet, if its not the exit
-	if (Serial1.available()){
+	if (Serial2.available()){
 		//wait for the first 5 bytes of the command to arrive
 		//we need to do this because the interrupt is not necissarily fast enough, so we wait here for all the data so we can respond as soon as possible
-		while(Serial1.available()<CMD_LENGTH_SHORT){}
+		while(Serial2.available()<CMD_LENGTH_SHORT){}
 		//read those 5 bytes
 		//may be possible to speed things up by reading just 4 bytes and then clearing the last one after
 		for(int i = 0; i <CMD_LENGTH_SHORT; i++){
-			cmd[i] = Serial1.read();
+			cmd[i] = Serial2.read();
 		}
 
 		//parse first 4 bytes of the command, we don't care about the rest of it
@@ -490,10 +540,10 @@ void communicate(){
 		case 0x40:
 			//the poll command is longer, but we don't care about any of the other data
 			//wait until we get a stop bit, then we know we can start sending data again
-		  while(Serial1.read() != 0xFF){}
+		  while(Serial2.read() != 0xFF){}
 			//write the pre-prepared poll response out byte by byte
 		  for(int i = 0; i <POLL_LENGTH; i++){
-				Serial1.write(pollResponse[i]);
+				Serial2.write(pollResponse[i]);
 				//print to USB serial for debugging
 				//Serial.print(pollResponse[i],HEX);
 		  }
@@ -504,7 +554,7 @@ void communicate(){
 			//this is the probe command, its what the master will send out continually when nothing is connected
 			//write the pre-prepared probe resonse out byte by byte
 		  for(int i = 0; i <CMD_LENGTH_LONG; i++){
-				Serial1.write(probeResponse[i]);
+				Serial2.write(probeResponse[i]);
 		  }
 			//set the write queue so that we will ignore all the data we are sending out
 			writeQueue = CMD_LENGTH_LONG;
@@ -512,14 +562,14 @@ void communicate(){
 		case 0x41:
 			//this is the origin command, it gets sent out a few times after a connection is made before switching to polling, may be related to zeroing the analog sticks and triggers?
 		  for(int i = 0; i <ORIGIN_LENGTH; i++){
-				Serial1.write(originResponse[i]);
+				Serial2.write(originResponse[i]);
 		  }
 			//set the write queue so that we will ignore all the data we are sending out
 			writeQueue = ORIGIN_LENGTH;
 		  break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
-		  while(Serial1.read() != 0xFF){}
+		  while(Serial2.read() != 0xFF){}
 			writeQueue = 0;
 	  }
 	}
@@ -530,14 +580,14 @@ void calibrate(){
 	if(calStep >= (CALIBRATION_POINTS)){
 		Serial.println("the x calibration points are:");
 		for(int i = 0; i < CALIBRATION_POINTS; i++){
-			Serial.print(calPointsX[i]);
+			Serial.print(calPointsX[i],8);
 			Serial.print(',');
 		}
 		Serial.println();
 		
 		Serial.println("the y calibration points are:");
 		for(int i = 0; i < CALIBRATION_POINTS; i++){
-			Serial.print(calPointsY[i]);
+			Serial.print(calPointsY[i],8);
 			Serial.print(',');
 		}
 		Serial.println();
@@ -549,7 +599,7 @@ void calibrate(){
 		(calPointsX[3]+calPointsX[15])/2.0,
 		calPointsX[1]};
 		//float x_output[5] = {-100,-70.71,0,70.71,100};
-		double x_output[5] = {28,57.29,128,198.71,228};
+		double x_output[5] = {28.5,57.79,128.5,199.21,228.5};
 		
 		Serial.println("x inputs are:");
 		Serial.print(x_input[0]);
@@ -569,7 +619,7 @@ void calibrate(){
 		(calPointsY[3]+calPointsY[7])/2.0,
 		calPointsY[5]};
 		//float y_output[5] = {-100,-70.71,0,70.71,100};
-		double y_output[5] = {28,57.29,128,198.71,228};	
+		double y_output[5] = {28.5,57.79,128.5,199.21,228.5};	
 
 		Serial.println("y inputs are:");
 		Serial.print(y_input[0]);
@@ -593,14 +643,20 @@ void calibrate(){
 			fitCoeffs[i] = tempXCoeffs[i];
 			fitCoeffs[i+FIT_ORDER+1] = tempYCoeffs[i];
 		}
-		
-		float xZeroError = 128 -(fitCoeffs[0]*(x_input[2]*x_input[2]*x_input[2]) + fitCoeffs[1]*(x_input[2]*x_input[2]) + fitCoeffs[2]*x_input[2] + fitCoeffs[3]);
-		float yZeroError = 128 -(fitCoeffs[4]*(y_input[2]*y_input[2]*y_input[2]) + fitCoeffs[5]*(y_input[2]*y_input[2]) + fitCoeffs[6]*y_input[2] + fitCoeffs[7]);
-		
-		//Adjust the fit so that the stick zero position is exactly 128
-		fitCoeffs[3] -= xZeroError;
-		fitCoeffs[7] -= yZeroError;
-		
+
+    Serial.println("xZeroError:");
+    
+		float xZeroError = 128.5 -(fitCoeffs[0]*(x_input[2]*x_input[2]*x_input[2]) + fitCoeffs[1]*(x_input[2]*x_input[2]) + fitCoeffs[2]*x_input[2] + fitCoeffs[3]);
+		float yZeroError = 128.5 -(fitCoeffs[4]*(y_input[2]*y_input[2]*y_input[2]) + fitCoeffs[5]*(y_input[2]*y_input[2]) + fitCoeffs[6]*y_input[2] + fitCoeffs[7]);
+		Serial.println(xZeroError);
+		//Adjust the fit so that the stick zero position is exactly 128.5
+		fitCoeffs[3] = fitCoeffs[3] + xZeroError;
+		fitCoeffs[7] = fitCoeffs[7] + yZeroError;
+
+    xZeroError = 128.5 -(fitCoeffs[0]*(x_input[2]*x_input[2]*x_input[2]) + fitCoeffs[1]*(x_input[2]*x_input[2]) + fitCoeffs[2]*x_input[2] + fitCoeffs[3]);
+    yZeroError = 128.5 -(fitCoeffs[4]*(y_input[2]*y_input[2]*y_input[2]) + fitCoeffs[5]*(y_input[2]*y_input[2]) + fitCoeffs[6]*y_input[2] + fitCoeffs[7]);
+    Serial.println(xZeroError);
+    
 		float xPointsCleaned[9];
 		float yPointsCleaned[9];
 		xPointsCleaned[0] = x_input[2];
@@ -618,37 +674,12 @@ void calibrate(){
 			yLinearized[i] = fitCoeffs[4]*(yPointsCleaned[i]*yPointsCleaned[i]*yPointsCleaned[i]) + fitCoeffs[5]*(yPointsCleaned[i]*yPointsCleaned[i]) + fitCoeffs[6]*yPointsCleaned[i] + fitCoeffs[7];
 		}
 
-		float xNotchPoints[9] = {128,228,198.71,128,57.29,28,57.29,128,198.71};
-		float yNotchPoints[9] = {128,128,198.71,228,198.71,128,57.29,28,57.29};
+		float xNotchPoints[9] = {128.5,228.5,199.21,128.5,57.79,28.5,57.79,128.5,199.21};
+		float yNotchPoints[9] = {128.5,128.5,199.21,228.5,199.21,128.5,57.79,28.5,57.79};
 		
 		
 		notchCalibrate(xLinearized,yLinearized,xNotchPoints,yNotchPoints,GATE_REGIONS,storedAffineCoeffs,angles);
-/* 		
-		MatrixXf xX(5,5);
-		MatrixXf yX(5,5);
-		VectorXf out(5);
-		VectorXf yY(5);
-		
-		xX << x_input[0]*x_input[0]*x_input[0]*x_input[0],  x_input[0]*x_input[0]*x_input[0],  x_input[0]*x_input[0], x_input[0],1,
-				x_input[1]*x_input[1]*x_input[1]*x_input[1],  x_input[1]*x_input[1]*x_input[1],  x_input[1]*x_input[1], x_input[1],1,
-        x_input[2]*x_input[2]*x_input[2]*x_input[2],  x_input[2]*x_input[2]*x_input[2],  x_input[2]*x_input[2], x_input[2],1,
-				x_input[3]*x_input[3]*x_input[3]*x_input[3],  x_input[3]*x_input[3]*x_input[3],  x_input[3]*x_input[3], x_input[3],1,
-        x_input[4]*x_input[4]*x_input[4]*x_input[4],  x_input[4]*x_input[4]*x_input[4],  x_input[4]*x_input[4], x_input[4],1;
-				
-		yX << y_input[0]*y_input[0]*y_input[0]*y_input[0],  y_input[0]*y_input[0]*y_input[0],  y_input[0]*y_input[0], y_input[0],1,
-				y_input[1]*y_input[1]*y_input[1]*y_input[1],  y_input[1]*y_input[1]*y_input[1],  y_input[1]*y_input[1], y_input[1],1,
-        y_input[2]*y_input[2]*y_input[2]*y_input[2],  y_input[2]*y_input[2]*y_input[2],  y_input[2]*y_input[2], y_input[2],1,
-				y_input[3]*y_input[3]*y_input[3]*y_input[3],  y_input[3]*y_input[3]*y_input[3],  y_input[3]*y_input[3], y_input[3],1,
-        y_input[4]*y_input[4]*y_input[4]*y_input[4],  y_input[4]*y_input[4]*y_input[4],  y_input[4]*y_input[4], y_input[4],1;
-				
-		out << 28,57.29,128,198.71,228;
-		
-		VectorXf xCoeffs(5);
-		VectorXf yCoeffs(5);
-		xCoeffs = xX.colPivHouseholderQr().solve(out);
-		yCoeffs = yX.colPivHouseholderQr().solve(out);
-		 */
-		 
+
 		Serial.println("x,y coefficients are:");
 		for(int i = 0; i <= FIT_ORDER; i++){
 			//fitCoeffs[i] = xCoeffs[i];
@@ -657,9 +688,6 @@ void calibrate(){
 			Serial.print(',');
 			Serial.println(fitCoeffs[i+FIT_ORDER+1],12);
 		}
-
-		//EEPROM.put(FIT_ADDRESS,fitCoeffs);
-		
 		//first (FIT_ORDER+1)*2*4 bytes are the fit coefficients
 		EEPROM.put( 0, fitCoeffs );
 		//next GATE_REGIONS*6*4 bytes are the affine transformation coefficients
@@ -684,7 +712,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//Serial.println("Running Kalman");
 	
 	unsigned int thisMicros = micros();
-	unsigned int dT = thisMicros-lastMicros;
+	float dT = (thisMicros-lastMicros)/1000.0;
 	lastMicros = thisMicros;
 	//Serial.print("the loop time is: ");
 	//Serial.println(dT);
@@ -694,10 +722,19 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	Fmat << 1,dT-xDamping/2*dT*dT,
 			 0,1-xDamping*dT;
 
-	xQ << (dT*dT*dT*dT>>2), (dT*dT*dT>>1),
-			 (dT*dT*dT>>1), (dT*dT);
-	yQ = xQ * yAccelVar;
-	xQ = xQ * xAccelVar;
+  //float R2 = (xZ[0]-128.5)*(xZ[0]-128.5)+(yZ[0]-128.5)*(yZ[0]-128.5);
+  float R2 = (xZ[0]-128.5)*(xZ[0]-128.5);
+  if(R2 > 10000){
+    R2 = 10000;
+  }
+  float accelVar = C*(R2*R2*R2) + D;
+
+  //Serial.print(accelVar,10);
+  //Serial.print(',');
+	xQ << (dT*dT*dT*dT/4), (dT*dT*dT/2),
+			 (dT*dT*dT/2), (dT*dT);
+	yQ = xQ * accelVar;
+	xQ = xQ * accelVar;
 	
 	MatrixXf sharedH(1,2);
 	sharedH << 1,0;
@@ -707,9 +744,11 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	
 	MatrixXf xR(1,1);
 	//MatrixXf yR(1,1);
-	float offset_squared = (xZ[0]-128)*(xZ[0]-128)+(yZ[0]-128)*(yZ[0]-128);
-	xR << X_ADC_VAR_PEAK/(offset_squared/X_ADC_VAR_SPREAD+1);
 	
+	//xR << X_ADC_VAR_PEAK/(offset_squared/X_ADC_VAR_SPREAD+1);
+  xR << A*(R2*R2*R2) + B;
+
+  //Serial.println(xR(0,0),10);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(xP);
@@ -741,7 +780,7 @@ void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
 	//Serial.println("Updating Kalman");
 	
 	int sizeState = X.size();
-	int sizeMeas = Z.size();
+	//int sizeMeas = Z.size();
 	MatrixXf A(1,2);
 	A = P*H.transpose();
 	MatrixXf B(1,1);
@@ -751,7 +790,7 @@ void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
 	//print_mtxf(K);
 	//K = MatrixXf::Identity(sizeState,sizeState);
 	MatrixXf C(1,1); 
-	C = Z - H*X;
+	//C = Z - H*X;
 	X = X + K*(Z - H*X);
 	//X = X + K*(measX-X[0]);
 	
@@ -762,7 +801,7 @@ void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
 }
 
 void notchCalibrate(float* xIn, float* yIn, float* xOut, float* yOut, int regions, float allAffineCoeffs[][6], float regionAngles[]){
-	for(int i = 1; i < regions; i++){
+	for(int i = 1; i <= regions; i++){
 /* 		MatrixXf system(6,6);
 		system << xIn[0],yIn[0],0,0,1,0,
 				 0,0,xIn[0],yIn[0],0,1,
@@ -793,17 +832,27 @@ void notchCalibrate(float* xIn, float* yIn, float* xOut, float* yOut, int region
 			Serial.print(",");
 		} */
 		MatrixXf pointsIn(3,3);
+    MatrixXf pointsOut(3,3);
+    if(i == regions){
+      pointsIn << xIn[0],xIn[i],xIn[1],
+                yIn[0],yIn[i],yIn[1],
+                1,1,1;
+      pointsOut << xOut[0],xOut[i],xOut[1],
+                   yOut[0],yOut[i],yOut[1],
+                   1,1,1;
+    }
+    else{
 		pointsIn << xIn[0],xIn[i],xIn[i+1],
 								yIn[0],yIn[i],yIn[i+1],
 								1,1,1;
-		MatrixXf pointsOut(3,3);
 		pointsOut << xOut[0],xOut[i],xOut[i+1],
 								 yOut[0],yOut[i],yOut[i+1],
 								 1,1,1;
-		
+    }
 		MatrixXf A(3,3);
 		A = pointsOut*pointsIn.inverse();
-		
+
+    Serial.println("The affine transform coefficients for this region are:");
 		for(int j = 0; j <2;j++){
 			for(int k = 0; k<3;k++){
 				allAffineCoeffs[i-1][j*3+k] = A(j,k);
