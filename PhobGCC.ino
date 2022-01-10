@@ -6,12 +6,9 @@
 #include <eigen.h>
 #include <Eigen/LU>
 #include <ADC.h>
+#include <Bounce2.h>
 
 using namespace Eigen;
-
-#define X_DAMPING 1.0
-#define Y_DAMPING 0.0005
-
 
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
@@ -19,26 +16,25 @@ using namespace Eigen;
 #define POLL_LENGTH 33
 #define CALIBRATION_POINTS 17
 
-#define HALX 15
-#define HALY 14
-#define RX 9
-#define TX 10
-
-
 #define GC_FREQUENCY 1250000
 #define PC_FREQUENCY 1000000
 #define PULSE_FREQ_CUTOFF 291666
 
-#define GATE_REGIONS 8
 
 const int _pinL = 16;
 const int _pinR = 23;
 const int _pinAx = 15;
 const int _pinAy = 14;
-const int _pinCx = 21;
-const int _pinCy = 22;
+//const int _pinCx = 21;
+//const int _pinCy = 22;
+const int _pinCx = 22;
+const int _pinCy = 21;
 const int _pinRX = 9;
 const int _pinTX = 10;
+const int _pinDr = 7;
+const int _pinDu = 18;
+const int _pinDl = 17;
+const int _pinDd = 8;
 
 const float _xAccelVarFast = 0.5;
 const float _xAccelVarSlow = 0.000001;
@@ -90,6 +86,10 @@ const int _eepromCPointsY = _eepromCPointsX+_calibrationPointsNotched*_bytesPerF
 const int _eepromNotched = _eepromCPointsY+_calibrationPoints*_bytesPerFloat;
 
 
+Bounce bounceDr = Bounce();
+Bounce bounceDu = Bounce(); 
+Bounce bounceDl = Bounce(); 
+Bounce bounceDd = Bounce(); 
 
 ADC *adc = new ADC();
 
@@ -148,6 +148,7 @@ int _lastDPad;
 int _watchingDPad;
 unsigned int _lastMicros;
 bool _running = false;
+int wiggleCount = 0;
 
 VectorXf _xState(2);
 VectorXf _yState(2);
@@ -200,7 +201,7 @@ void setup() {
 	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
 	int serialFreq = PC_FREQUENCY;
 	noInterrupts();
-	pinMode(RX,INPUT);
+	pinMode(_pinRX,INPUT);
 	unsigned int counter = 0;
 	unsigned int start = 0;
 	unsigned int duration = 0;
@@ -212,7 +213,7 @@ void setup() {
 		start = ARM_DWT_CYCCNT;
 		duration = 0;
 		while(duration<960){
-			if(digitalReadFast(RX)){
+			if(digitalReadFast(_pinRX)){
 				duration = ARM_DWT_CYCCNT-start;
 			}
 			else{
@@ -222,9 +223,9 @@ void setup() {
 		}
 		
 		//measure the clock cycles of the first 0 bit
-		while(digitalReadFast(RX)){}
+		while(digitalReadFast(_pinRX)){}
 		start = ARM_DWT_CYCCNT;
-		while(!digitalReadFast(RX)){}
+		while(!digitalReadFast(_pinRX)){}
 		counter += ARM_DWT_CYCCNT-start;
 	}
 	counter = counter>>6;
@@ -261,7 +262,7 @@ void setup() {
 	_lastDPad = 0;
 	_watchingDPad = 0;
 	_currentCalStep = -1;
-
+	
 
 
 	_lastMicros = micros();
@@ -277,12 +278,21 @@ void setup() {
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
 	
 	setPinModes();
+	bounceDr.attach(_pinDr);
+	bounceDr.interval(1000);
+	bounceDu.attach(_pinDu);
+	bounceDu.interval(1000);
+	bounceDl.attach(_pinDl);
+	bounceDl.interval(1000);
+	bounceDd.attach(_pinDd);
+	bounceDd.interval(1000);
 	
+		
 	Serial.print("starting hw serial at freq:");
 	Serial.println(serialFreq);
 	//start hardware serail
 	Serial2.begin(serialFreq);
-	attachInterrupt(RX, communicate, FALLING);
+	attachInterrupt(_pinRX, communicate, FALLING);
 }
 
 void loop() {
@@ -343,7 +353,25 @@ void readButtons(){
 	btn.Dl = !digitalRead(17);
 	btn.Dr = !digitalRead(7);
 	
+	bounceDr.update();
+	bounceDu.update();
+	bounceDl.update();
+	bounceDd.update();
 	
+	if(bounceDr.fell()){
+		if(_currentCalStep == -1){
+			_calAStick = false;
+		}
+		_currentCalStep ++;
+	}
+	else if(bounceDl.fell()){
+		if(_currentCalStep == -1){
+			_calAStick = true;
+		}
+		_currentCalStep ++;
+	}
+
+	/* 
 	bool dPad = (btn.Dl || btn.Dr);
 	
 	if(dPad && !_lastDPad){
@@ -367,7 +395,7 @@ void readButtons(){
 			Serial.println(_currentCalStep);
 		}
 	}
-	_lastDPad = dPad;
+	_lastDPad = dPad; */
 }
 void readSticks(){
 	//read the L and R sliders
