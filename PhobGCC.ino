@@ -21,8 +21,10 @@ using namespace Eigen;
 #define PULSE_FREQ_CUTOFF 291666
 
 
-const int _pinL = 16;
-const int _pinR = 23;
+const int _pinLa = 16;
+const int _pinRa = 23;
+const int _pinL = 13;
+const int _pinR = 3;
 const int _pinAx = 15;
 const int _pinAy = 14;
 //const int _pinCx = 21;
@@ -35,19 +37,31 @@ const int _pinDr = 7;
 const int _pinDu = 18;
 const int _pinDl = 17;
 const int _pinDd = 8;
+const int _pinX = 1;
+const int _pinY = 2;
+const int _pinA = 4;
+const int _pinB = 6;
+const int _pinZ = 0;
+const int _pinS = 19;
+int _pinZSwappable = _pinZ;
+int _pinXSwappable = _pinX;
+int _pinYSwappable = _pinY;
+int _jumpConfig = 0;
 
 const float _xAccelVarFast = 0.5;
 const float _xAccelVarSlow = 0.000001;
 const float _yAccelVarFast = 0.5;
 const float _yAccelVarSlow = 0.000001;
 const float _xADCVarFast = 0.1;
-const float _xADCVarSlow = 0.2;
+float _xADCVarSlow = 0.2;
+const float _xADCVarMax = 10;
+const float _xADCVarMin = 0.1;
 const float _yADCVarFast = 0.1;
 const float _yADCVarSlow = 0.2;
 const float _x1 = 100;
 const float _x6 = _x1*_x1*_x1*_x1*_x1*_x1;
-const float _aADCVar = (_xADCVarFast - _xADCVarSlow)/_x6;
-const float _bADCVar = _xADCVarSlow;
+float _aADCVar = (_xADCVarFast - _xADCVarSlow)/_x6;
+float _bADCVar = _xADCVarSlow;
 const float _aAccelVar = (_xAccelVarFast - _xAccelVarSlow)/_x6;
 const float _bAccelVar = _xAccelVarSlow;
 float _xDamping = 1;
@@ -84,6 +98,8 @@ const int _eepromAPointsY = _eepromAPointsX+_calibrationPointsNotched*_bytesPerF
 const int _eepromCPointsX = _eepromAPointsY+_calibrationPointsNotched*_bytesPerFloat;
 const int _eepromCPointsY = _eepromCPointsX+_calibrationPointsNotched*_bytesPerFloat;
 const int _eepromNotched = _eepromCPointsY+_calibrationPoints*_bytesPerFloat;
+const int _eepromADCVar = _eepromNotched+_bytesPerFloat;
+const int _eepromJump = _eepromADCVar+_bytesPerFloat;
 
 
 Bounce bounceDr = Bounce();
@@ -245,6 +261,24 @@ void setup() {
 	//get the calibration points from EEPROM memory and find all the coefficients
 	//Analog Stick
 	//EEPROM.get(_eepromNotched, _notched);
+	EEPROM.get(_eepromJump, _jumpConfig);
+	setJump(_jumpConfig);
+	EEPROM.get(_eepromADCVar, _xADCVarSlow);
+	Serial.print("the _xADCVarSlow value from eeprom is:");
+	Serial.println(_xADCVarSlow);
+	if(std::isnan(_xADCVarSlow)){
+		_xADCVarSlow = _xADCVarMin;
+		Serial.print("the _xADCVarSlow value was adjusted to:");
+		Serial.println(_xADCVarSlow);
+	}
+	if(_xADCVarSlow >_xADCVarMax){
+		_xADCVarSlow = _xADCVarMax;
+	}
+	else if(_xADCVarSlow < _xADCVarMin){
+		_xADCVarSlow = _xADCVarMin;
+	}
+	setADCVar(&_aADCVar, &_bADCVar, _xADCVarSlow);
+	
 	EEPROM.get(_eepromAPointsX, _cleanedPointsX);
 	EEPROM.get(_eepromAPointsY, _cleanedPointsY);
 	stickCal(_cleanedPointsX,_cleanedPointsY,_notched,_aFitCoeffsX,_aFitCoeffsY,_aAffineCoeffs,_aBoundaryAngles);
@@ -340,18 +374,18 @@ void setPinModes(){
 	pinMode(23,INPUT);
 }
 void readButtons(){
-	btn.A = !digitalRead(4);
-	btn.B = !digitalRead(6);
-	btn.X = !digitalRead(1);
-	btn.Y = !digitalRead(2);
-	btn.Z = !digitalRead(0);
-	btn.S = !digitalRead(19);
-	btn.L = !digitalRead(13);
-	btn.R = !digitalRead(3);
-	btn.Du = !digitalRead(18);
-	btn.Dd = !digitalRead(8);
-	btn.Dl = !digitalRead(17);
-	btn.Dr = !digitalRead(7);
+	btn.A = !digitalRead(_pinA);
+	btn.B = !digitalRead(_pinB);
+	btn.X = !digitalRead(_pinXSwappable);
+	btn.Y = !digitalRead(_pinYSwappable);
+	btn.Z = !digitalRead(_pinZSwappable);
+	btn.S = !digitalRead(_pinS);
+	btn.L = !digitalRead(_pinL);
+	btn.R = !digitalRead(_pinR);
+	btn.Du = !digitalRead(_pinDu);
+	btn.Dd = !digitalRead(_pinDd);
+	btn.Dl = !digitalRead(_pinDl);
+	btn.Dr = !digitalRead(_pinDr);
 	
 	bounceDr.update();
 	bounceDu.update();
@@ -370,7 +404,12 @@ void readButtons(){
 		}
 		_currentCalStep ++;
 	}
-
+	else if(bounceDu.fell()){
+		adjustSnapback(btn.Cy);
+	}
+	else if(bounceDd.fell()){
+		readJumpConfig();
+	}
 	/* 
 	bool dPad = (btn.Dl || btn.Dr);
 	
@@ -397,10 +436,70 @@ void readButtons(){
 	}
 	_lastDPad = dPad; */
 }
+void adjustSnapback(int cStick){
+	Serial.println("adjusting snapback filtering");
+	if(cStick > 127+50){
+		_xADCVarSlow = _xADCVarSlow*1.1;
+		Serial.print("filtering increased to:");
+		Serial.println(_xADCVarSlow);
+	}
+	else if(cStick < 127-50){
+		_xADCVarSlow = _xADCVarSlow*0.9;
+		Serial.print("filtering decreased to:");
+		Serial.println(_xADCVarSlow);
+	}
+	if(_xADCVarSlow >_xADCVarMax){
+		_xADCVarSlow = _xADCVarMax;
+	}
+	else if(_xADCVarSlow < _xADCVarMin){
+		_xADCVarSlow = _xADCVarMin;
+	}
+	setADCVar(&_aADCVar, &_bADCVar, _xADCVarSlow);
+	EEPROM.put(_eepromADCVar,_xADCVarSlow);
+}
+void readJumpConfig(){
+	Serial.print("setting jump to: ");
+	if(!digitalRead(_pinX)){
+		_jumpConfig = 1;
+		Serial.println("X<->Z");
+	}
+	else if(!digitalRead(_pinY)){
+		_jumpConfig = 2;
+		Serial.println("Y<->Z");
+	}
+	else{
+		Serial.println("normal");
+		_jumpConfig = 0;
+	}
+	EEPROM.put(_eepromJump,_jumpConfig);
+	setJump(_jumpConfig);
+}
+void setJump(int jumpConfig){
+	switch(jumpConfig){
+			case 1:
+				_pinZSwappable = _pinX;
+				_pinXSwappable = _pinZ;
+				_pinYSwappable = _pinY;
+				break;				
+			case 2:
+				_pinZSwappable = _pinY;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinZ;
+				break;
+			default:
+				_pinZSwappable = _pinZ;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinY;
+	}
+}
+void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
+	*aADCVar = (_xADCVarFast - ADCVarSlow)/_x6;
+	*bADCVar = ADCVarSlow;
+}
 void readSticks(){
 	//read the L and R sliders
-	btn.La = adc->adc0->analogRead(_pinL)>>4;
-	btn.Ra = adc->adc0->analogRead(_pinR)>>4;
+	btn.La = adc->adc0->analogRead(_pinLa)>>4;
+	btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 	
 	//read the C stick
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
