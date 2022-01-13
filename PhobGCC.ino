@@ -20,7 +20,7 @@ using namespace Eigen;
 #define PC_FREQUENCY 1000000
 #define PULSE_FREQ_CUTOFF 291666
 
-
+/////defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;
 const int _pinL = 13;
@@ -48,48 +48,46 @@ int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 
-const float _xAccelVarFast = 0.5;
-const float _xAccelVarSlow = 0.000001;
-const float _yAccelVarFast = 0.5;
-const float _yAccelVarSlow = 0.000001;
-const float _xADCVarFast = 0.1;
-float _xADCVarSlow = 0.2;
-const float _xADCVarMax = 10;
-const float _xADCVarMin = 0.1;
-const float _yADCVarFast = 0.1;
-const float _yADCVarSlow = 0.2;
-const float _x1 = 100;
-const float _x6 = _x1*_x1*_x1*_x1*_x1*_x1;
-float _aADCVar = (_xADCVarFast - _xADCVarSlow)/_x6;
-float _bADCVar = _xADCVarSlow;
-const float _aAccelVar = (_xAccelVarFast - _xAccelVarSlow)/_x6;
-const float _bAccelVar = _xAccelVarSlow;
-float _xDamping = 1;
-float _yDamping = 1;
+///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
+const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+const float _accelVarSlow = 0.000001; //governs the acceleration variation with the stick centered, higher value means less filtering
+const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
+const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
+const float _ADCVarMin = 0.1; //minimum allowable value for the ADC variation
+const float _x1 = 100; //maximum stick distance from center
+const float _x6 = _x1*_x1*_x1*_x1*_x1*_x1; //maximum distance to the 6th power
+const float _aAccelVar = (_accelVarFast - _accelVarSlow)/_x6; //first coefficient used to calculate the actual acceleration variation
+const float _bAccelVar = _accelVarSlow; //Second coefficient used to calculate the actual acceleration variation
+const float _damping = 1; //amount of damping used in the stick model
+//ADC variance is used to compensate for differing amounts of snapback, so it is not a constant, can be set by user
+float _ADCVarSlow = 0.2; //default value
+float _aADCVar = (_ADCVarFast - _ADCVarSlow)/_x6; //first coefficient used to calculate the actual ADC variation
+float _bADCVar = _ADCVarSlow; //second coefficient used to calculate the actual ADC variation
 
-//values used to determine how much large of a region will count as being "in a notch"
-const float _marginAngle = 5.0/100.0;
-const float _tightAngle = 0.1/100.0;
+//////values used to determine how much large of a region will count as being "in a notch"
 
-//values used for calibration
-bool	_calAStick = true;
-int _currentCalStep;
-bool _notched = false;
-const int _calibrationPoints = 9;
-const int _calibrationPointsNotched = 17;
-float _cleanedPointsX[17];
-float _cleanedPointsY[17];
-const int _fitOrder = 3;
-float _aFitCoeffsX[_fitOrder+1];
-float _aFitCoeffsY[_fitOrder+1];
-float _cFitCoeffsX[_fitOrder+1];
-float _cFitCoeffsY[_fitOrder+1];
-float _aAffineCoeffs[_calibrationPointsNotched-1][6];
-float _cAffineCoeffs[_calibrationPointsNotched-1][6];
-float _aBoundaryAngles[_calibrationPointsNotched-1];
-float _cBoundaryAngles[_calibrationPointsNotched-1];
-float _tempCalPointsX[(_calibrationPointsNotched-1)*2];
-float _tempCalPointsY[(_calibrationPointsNotched-1)*2];
+const float _marginAngle = 5.0/100.0; //angle range(+/-) in radians that will be collapsed down to the ideal angle
+const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
+
+//////values used for calibration
+bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
+int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
+bool _notched = false; //keeps track of whether or not the controller has firefox notches
+const int _calibrationPoints = 9; //number of calibration points for the c-stick and a-stick for a controller without notches
+const int _calibrationPointsNotched = 17; //number of calibration points for thea-stick for a controller with notches
+float _cleanedPointsX[17]; //array to hold the x coordinates of the calibration points
+float _cleanedPointsY[17]; //array to hold the y coordinates of the calibration points
+const int _fitOrder = 3; //fit order used in the linearization step
+float _aFitCoeffsX[_fitOrder+1]; //coefficients for linearizing the X axis of the a-stick
+float _aFitCoeffsY[_fitOrder+1]; //coefficients for linearizing the Y axis of the a-stick
+float _cFitCoeffsX[_fitOrder+1]; //coefficients for linearizing the Y axis of the c-stick
+float _cFitCoeffsY[_fitOrder+1]; //coefficients for linearizing the Y axis of the c-stick
+float _aAffineCoeffs[_calibrationPointsNotched-1][6]; //affine transformation coefficients for all regions of the a-stick
+float _cAffineCoeffs[_calibrationPointsNotched-1][6]; //affine transformation coefficients for all regions of the c-stick
+float _aBoundaryAngles[_calibrationPointsNotched-1]; //angles at the boundaries between regions of the a-stick
+float _cBoundaryAngles[_calibrationPointsNotched-1]; //angles at the boundaries between regions of the c-stick
+float _tempCalPointsX[(_calibrationPointsNotched-1)*2]; //temporary storage for the x coordinate points collected during calibration before the are cleaned and put into _cleanedPointsX
+float _tempCalPointsY[(_calibrationPointsNotched-1)*2]; //temporary storage for the y coordinate points collected during calibration before the are cleaned and put into _cleanedPointsY
 
 //index values to store data into eeprom
 const int _bytesPerFloat = 4;
@@ -158,13 +156,9 @@ float _cStickY;
 volatile int _writeQueue = 0;
 
 
-bool calAStick = true;
-unsigned int _dPadSince;
-int _lastDPad;
-int _watchingDPad;
+
 unsigned int _lastMicros;
 bool _running = false;
-int wiggleCount = 0;
 
 VectorXf _xState(2);
 VectorXf _yState(2);
@@ -263,21 +257,21 @@ void setup() {
 	//EEPROM.get(_eepromNotched, _notched);
 	EEPROM.get(_eepromJump, _jumpConfig);
 	setJump(_jumpConfig);
-	EEPROM.get(_eepromADCVar, _xADCVarSlow);
-	Serial.print("the _xADCVarSlow value from eeprom is:");
-	Serial.println(_xADCVarSlow);
-	if(std::isnan(_xADCVarSlow)){
-		_xADCVarSlow = _xADCVarMin;
-		Serial.print("the _xADCVarSlow value was adjusted to:");
-		Serial.println(_xADCVarSlow);
+	EEPROM.get(_eepromADCVar, _ADCVarSlow);
+	Serial.print("the _ADCVarSlow value from eeprom is:");
+	Serial.println(_ADCVarSlow);
+	if(std::isnan(_ADCVarSlow)){
+		_ADCVarSlow = _ADCVarMin;
+		Serial.print("the _ADCVarSlow value was adjusted to:");
+		Serial.println(_ADCVarSlow);
 	}
-	if(_xADCVarSlow >_xADCVarMax){
-		_xADCVarSlow = _xADCVarMax;
+	if(_ADCVarSlow >_ADCVarMax){
+		_ADCVarSlow = _ADCVarMax;
 	}
-	else if(_xADCVarSlow < _xADCVarMin){
-		_xADCVarSlow = _xADCVarMin;
+	else if(_ADCVarSlow < _ADCVarMin){
+		_ADCVarSlow = _ADCVarMin;
 	}
-	setADCVar(&_aADCVar, &_bADCVar, _xADCVarSlow);
+	setADCVar(&_aADCVar, &_bADCVar, _ADCVarSlow);
 	
 	EEPROM.get(_eepromAPointsX, _cleanedPointsX);
 	EEPROM.get(_eepromAPointsY, _cleanedPointsY);
@@ -439,23 +433,23 @@ void readButtons(){
 void adjustSnapback(int cStick){
 	Serial.println("adjusting snapback filtering");
 	if(cStick > 127+50){
-		_xADCVarSlow = _xADCVarSlow*1.1;
+		_ADCVarSlow = _ADCVarSlow*1.1;
 		Serial.print("filtering increased to:");
-		Serial.println(_xADCVarSlow);
+		Serial.println(_ADCVarSlow);
 	}
 	else if(cStick < 127-50){
-		_xADCVarSlow = _xADCVarSlow*0.9;
+		_ADCVarSlow = _ADCVarSlow*0.9;
 		Serial.print("filtering decreased to:");
-		Serial.println(_xADCVarSlow);
+		Serial.println(_ADCVarSlow);
 	}
-	if(_xADCVarSlow >_xADCVarMax){
-		_xADCVarSlow = _xADCVarMax;
+	if(_ADCVarSlow >_ADCVarMax){
+		_ADCVarSlow = _ADCVarMax;
 	}
-	else if(_xADCVarSlow < _xADCVarMin){
-		_xADCVarSlow = _xADCVarMin;
+	else if(_ADCVarSlow < _ADCVarMin){
+		_ADCVarSlow = _ADCVarMin;
 	}
-	setADCVar(&_aADCVar, &_bADCVar, _xADCVarSlow);
-	EEPROM.put(_eepromADCVar,_xADCVarSlow);
+	setADCVar(&_aADCVar, &_bADCVar, _ADCVarSlow);
+	EEPROM.put(_eepromADCVar,_ADCVarSlow);
 }
 void readJumpConfig(){
 	Serial.print("setting jump to: ");
@@ -493,7 +487,7 @@ void setJump(int jumpConfig){
 	}
 }
 void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
-	*aADCVar = (_xADCVarFast - ADCVarSlow)/_x6;
+	*aADCVar = (_ADCVarFast - ADCVarSlow)/_x6;
 	*bADCVar = ADCVarSlow;
 }
 void readSticks(){
@@ -1065,8 +1059,8 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	
 	
 	//MatrixXf tryF(2);
-	Fmat << 1,dT-_xDamping/2*dT*dT,
-			 0,1-_xDamping*dT;
+	Fmat << 1,dT-_damping/2*dT*dT,
+			 0,1-_damping*dT;
 
   float R2 = xZ[0]*xZ[0]+yZ[0]*yZ[0];
   //float R2 = (xZ[0]-128.5)*(xZ[0]-128.5);
