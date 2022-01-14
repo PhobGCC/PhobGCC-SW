@@ -70,6 +70,7 @@ const float _marginAngle = 5.0/100.0; //angle range(+/-) in radians that will be
 const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
 
 //////values used for calibration
+const int _notCalibrating = -1;
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
@@ -164,11 +165,6 @@ VectorXf _xState(2);
 VectorXf _yState(2);
 MatrixXf _xP(2,2);
 MatrixXf _yP(2,2);
-MatrixXf Fmat(2,2);
-MatrixXf xQ(2,2);
-MatrixXf yQ(2,2);
-float xAccelVar;
-float yAccelVar;
 
 
 static uint8_t probeResponse[CMD_LENGTH_LONG] = {
@@ -208,49 +204,6 @@ void setup() {
 	Serial.begin(57600);
 	Serial.println("test");
 	delay(1000);
-	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
-	int serialFreq = PC_FREQUENCY;
-	noInterrupts();
-	pinMode(_pinRX,INPUT);
-	unsigned int counter = 0;
-	unsigned int start = 0;
-	unsigned int duration = 0;
-	ARM_DEMCR |= ARM_DEMCR_TRCENA;
-	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
-	//attempt to count a bunch of 0 bits (will also catch some stop bits which are short, will skew the results)
-	for(int i = 0; i<64;i++){
-		//wait for the pause between pulses (
-		start = ARM_DWT_CYCCNT;
-		duration = 0;
-		while(duration<960){
-			if(digitalReadFast(_pinRX)){
-				duration = ARM_DWT_CYCCNT-start;
-			}
-			else{
-				start = ARM_DWT_CYCCNT;
-				duration = 0;
-			}
-		}
-		
-		//measure the clock cycles of the first 0 bit
-		while(digitalReadFast(_pinRX)){}
-		start = ARM_DWT_CYCCNT;
-		while(!digitalReadFast(_pinRX)){}
-		counter += ARM_DWT_CYCCNT-start;
-	}
-	counter = counter>>6;
-
-	int pulseWidthFreq = F_CPU/counter;
-	Serial.print("measured pulse width freq:");
-	Serial.println(pulseWidthFreq);
-	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
-	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
-		serialFreq = PC_FREQUENCY;
-	}
-	else{
-		serialFreq = GC_FREQUENCY;
-	}
-	interrupts();
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
 	//Analog Stick
@@ -282,23 +235,21 @@ void setup() {
 	EEPROM.get(_eepromCPointsY, _cleanedPointsY);
 	stickCal(_cleanedPointsX,_cleanedPointsY,false,_cFitCoeffsX,_cFitCoeffsY,_cAffineCoeffs,_cBoundaryAngles);
 	
+	//set some of the unused values in the message response
 	btn.errS = 0;
 	btn.errL = 0;
 	btn.orig = 0;
 	btn.high = 1;
-	_dPadSince = millis();
-	_lastDPad = 0;
-	_watchingDPad = 0;
-	_currentCalStep = -1;
 	
+	//
+	_currentCalStep = _notCalibrating;
 
-
-	_lastMicros = micros();
 	
 	_xState << 0,0;
 	_yState << 0,0;
 	_xP << 1000,0,0,1000;
 	_yP << 1000,0,0,1000;
+	_lastMicros = micros();
 	
 	adc->adc0->setAveraging(8); // set number of averages
   adc->adc0->setResolution(12); // set bits of resolution
@@ -306,42 +257,82 @@ void setup() {
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
 	
 	setPinModes();
-	bounceDr.attach(_pinDr);
-	bounceDr.interval(1000);
-	bounceDu.attach(_pinDu);
-	bounceDu.interval(1000);
-	bounceDl.attach(_pinDl);
-	bounceDl.interval(1000);
-	bounceDd.attach(_pinDd);
-	bounceDd.interval(1000);
 	
-		
+	int serialFreq = findFreq();
 	Serial.print("starting hw serial at freq:");
 	Serial.println(serialFreq);
 	//start hardware serail
 	Serial2.begin(serialFreq);
+	//attach the interrupt which will call the communicate function when the data line transitions from high to low
 	attachInterrupt(_pinRX, communicate, FALLING);
 }
 
 void loop() {
+	//read the controllers buttons
 	readButtons();
+	//read the analog inputs
+	readSticks();
+	//check to see if we are calibrating
+	if(_currentCalStep >= 0){
+			calibrate(_calAStick);
+	}
+	//check if we should be reporting values yet
 	if(btn.B && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
-	readSticks();
-	if(_currentCalStep >=0){
-			calibrate(_calAStick);
-	}
+	//update the pole message so new data will be sent to the gamecube
 	if(_running){
 		setPole();
 	}
 
 }
+int findFreq() {
+	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
+	int serialFreq = PC_FREQUENCY;
+	noInterrupts();
+	pinMode(_pinRX,INPUT);
+	unsigned int counter = 0;
+	unsigned int start = 0;
+	unsigned int duration = 0;
+	ARM_DEMCR |= ARM_DEMCR_TRCENA;
+	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+	//attempt to count a bunch of 0 bits (may also catch some stop bits which are short, will skew the results)
+	for(int i = 0; i<64;i++){
+		//wait for the pause between pulses (
+		start = ARM_DWT_CYCCNT;
+		duration = 0;
+		while(duration < (F_CPU*0.00001)){
+			if(digitalReadFast(_pinRX)){
+				duration = ARM_DWT_CYCCNT-start;
+			}
+			else {
+				start = ARM_DWT_CYCCNT;
+				duration = 0;
+			}
+		}
+		
+		//measure the clock cycles of the first 0 bit
+		while(digitalReadFast(_pinRX)){}
+		start = ARM_DWT_CYCCNT;
+		while(!digitalReadFast(_pinRX)){}
+		counter += ARM_DWT_CYCCNT-start;
+	}
+	counter = counter>>6;
 
-//void serialEvent1() {
-//	communicate();
-//}
+	int pulseWidthFreq = F_CPU/counter;
+	Serial.print("measured pulse width freq:");
+	Serial.println(pulseWidthFreq);
+	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
+	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
+		serialFreq = PC_FREQUENCY;
+	}
+	else{
+		serialFreq = GC_FREQUENCY;
+	}
+	interrupts();
+	return serialFreq;
+}
 void setPinModes(){
 	pinMode(0,INPUT_PULLUP);
 	pinMode(1,INPUT_PULLUP);
@@ -366,6 +357,15 @@ void setPinModes(){
 	pinMode(21,INPUT);
 	pinMode(22,INPUT);
 	pinMode(23,INPUT);
+	
+	bounceDr.attach(_pinDr);
+	bounceDr.interval(1000);
+	bounceDu.attach(_pinDu);
+	bounceDu.interval(1000);
+	bounceDl.attach(_pinDl);
+	bounceDl.interval(1000);
+	bounceDd.attach(_pinDd);
+	bounceDd.interval(1000);
 }
 void readButtons(){
 	btn.A = !digitalRead(_pinA);
@@ -564,7 +564,7 @@ void readSticks(){
 }
 /*******************
 	notchRemap
-	Remaps the stick position using affine transforms to the correct not positions
+	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
 void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoeffs[][6], float regionAngles[], int regions){
 	//determine the angle between the x unit vector and the current position vector
@@ -783,7 +783,7 @@ int collectCalPoints(bool aStick, float valX, float valY, int numberOfPoints, in
 			Serial.print(",");
 			Serial.println(cleanedPointsY[i]);
 		}
-		currentStep = -1;
+		currentStep = _notCalibrating;
 		return 1;
 	}
 	//if not then store the next point
@@ -1057,8 +1057,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//Serial.print("the loop time is: ");
 	//Serial.println(dT);
 	
-	
-	//MatrixXf tryF(2);
+	MatrixXf Fmat(2,2);
 	Fmat << 1,dT-_damping/2*dT*dT,
 			 0,1-_damping*dT;
 
@@ -1068,13 +1067,13 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
     R2 = 10000;
   }
   float accelVar = _aAccelVar*(R2*R2*R2) + _bAccelVar;
-
+	
+	MatrixXf Q(2,2);
   //Serial.print(accelVar,10);
   //Serial.print(',');
-	xQ << (dT*dT*dT*dT/4), (dT*dT*dT/2),
+	Q << (dT*dT*dT*dT/4), (dT*dT*dT/2),
 			 (dT*dT*dT/2), (dT*dT);
-	yQ = xQ * accelVar;
-	xQ = xQ * accelVar;
+	Q = Q * accelVar;
 	
 	MatrixXf sharedH(1,2);
 	sharedH << 1,0;
@@ -1092,11 +1091,11 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(_xP);
-	kPredict(_xState,Fmat,_xP,xQ);
+	kPredict(_xState,Fmat,_xP,Q);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	
-	kPredict(_yState,Fmat,_yP,yQ);
+	kPredict(_yState,Fmat,_yP,Q);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	
