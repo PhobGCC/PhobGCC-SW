@@ -179,7 +179,7 @@ R
 Text Label 5050 3750 0    50   ~ 0
 Z
 Wire Wire Line
-	2200 3300 1950 3300
+	2200 5200 1950 5200
 Wire Wire Line
 	2200 2900 1950 2900
 Wire Wire Line
@@ -187,12 +187,12 @@ Wire Wire Line
 Wire Wire Line
 	2200 5100 1950 5100
 Wire Wire Line
-	2200 4500 1950 4500
+	2200 3900 1950 3900
 Wire Wire Line
 	2200 3000 1950 3000
 Text Label 2000 3100 0    50   ~ 0
 A
-Text Label 2000 3300 0    50   ~ 0
+Text Label 2000 5200 0    50   ~ 0
 B
 Text Label 2000 2800 0    50   ~ 0
 X
@@ -389,16 +389,16 @@ Wire Wire Line
 Wire Wire Line
 	2200 5000 1950 5000
 Wire Wire Line
-	2200 3800 1950 3800
+	2200 3300 1950 3300
 Wire Wire Line
-	2200 3900 1950 3900
+	2200 3800 1950 3800
 Text Label 2000 4900 0    50   ~ 0
 Dleft
 Text Label 2000 5000 0    50   ~ 0
 Dup
-Text Label 2000 3800 0    50   ~ 0
+Text Label 2000 3300 0    50   ~ 0
 Dright
-Text Label 2000 3900 0    50   ~ 0
+Text Label 2000 3800 0    50   ~ 0
 Ddown
 $Comp
 L Switch:SW_DIP_x01 SW8
@@ -516,7 +516,7 @@ U 1 1 6154C933
 P 3200 3950
 F 0 "U1" H 3200 5587 60  0000 C CNN
 F 1 "Teensy3.2" H 3200 5481 60  0000 C CNN
-F 2 "Teensy:Teensy30_31_32_USB" H 3200 3200 60  0000 C CNN
+F 2 "teensy:Teensy30_31_32_USB" H 3200 3200 60  0000 C CNN
 F 3 "" H 3200 3200 60  0000 C CNN
 	1    3200 3950
 	1    0    0    -1  
@@ -820,19 +820,8 @@ F 3 "" H 2200 1000 50  0001 C CNN
 	1    2200 1000
 	1    0    0    -1  
 $EndComp
-Text Label 2000 4500 0    50   ~ 0
+Text Label 2000 3900 0    50   ~ 0
 L
-$Comp
-L Device:D_Schottky D1
-U 1 1 61C761F4
-P 800 3950
-F 0 "D1" V 846 3871 50  0000 R CNN
-F 1 "D_Schottky" V 755 3871 50  0000 R CNN
-F 2 "Diode_SMD:D_SOD-523" H 800 3950 50  0001 C CNN
-F 3 "~" H 800 3950 50  0001 C CNN
-	1    800  3950
-	0    -1   -1   0   
-$EndComp
 Text Label 1950 4700 0    50   ~ 0
 Stick_x_filt
 Text Label 1950 3400 0    50   ~ 0
@@ -1149,5 +1138,17 @@ Wire Wire Line
 	1850 3400 1850 3600
 Wire Wire Line
 	1850 3600 2200 3600
+Connection ~ 800  4350
+$Comp
+L Device:D_Schottky D1
+U 1 1 61C761F4
+P 800 3950
+F 0 "D1" V 846 3871 50  0000 R CNN
+F 1 "D_Schottky" V 755 3871 50  0000 R CNN
+F 2 "Gamecube MB:D_SOD-523_large_pads" H 800 3950 50  0001 C CNN
+F 3 "~" H 800 3950 50  0001 C CNN
+	1    800  3950
+	0    -1   -1   0   
+$EndComp
 Connection ~ 800  3800
 $EndSCHEMATC
