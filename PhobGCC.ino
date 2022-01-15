@@ -16,10 +16,11 @@ using namespace Eigen;
 #define POLL_LENGTH 33
 #define CALIBRATION_POINTS 17
 
-#define GC_FREQUENCY 1250000
+#define GC_FREQUENCY 1200000
 #define PC_FREQUENCY 1000000
 #define PULSE_FREQ_CUTOFF 291666
 
+const float pulseWidthCutoff = 0.0000035;
 /////defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;
@@ -298,10 +299,11 @@ int findFreq() {
 	ARM_DEMCR |= ARM_DEMCR_TRCENA;
 	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 	//attempt to count a bunch of 0 bits (may also catch some stop bits which are short, will skew the results)
-	for(int i = 0; i<64;i++){
-		//wait for the pause between pulses (
+	for(int i = 0; i<128;i++){
+		
 		start = ARM_DWT_CYCCNT;
 		duration = 0;
+		//wait for the pause between pulses (at least 10 us)
 		while(duration < (F_CPU*0.00001)){
 			if(digitalReadFast(_pinRX)){
 				duration = ARM_DWT_CYCCNT-start;
@@ -316,20 +318,27 @@ int findFreq() {
 		while(digitalReadFast(_pinRX)){}
 		start = ARM_DWT_CYCCNT;
 		while(!digitalReadFast(_pinRX)){}
+		while(digitalReadFast(_pinRX)){}
 		counter += ARM_DWT_CYCCNT-start;
 	}
-	counter = counter>>6;
+	//counter = counter>>6;
+	
 
-	int pulseWidthFreq = F_CPU/counter;
-	Serial.print("measured pulse width freq:");
-	Serial.println(pulseWidthFreq);
-	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us, this should check directly between them
-	if(pulseWidthFreq < PULSE_FREQ_CUTOFF){
+	Serial.print("the measured counts are:");
+	Serial.println(counter);
+	double pulseWidth = counter/(float)F_CPU/128.0;
+	Serial.print("measured pulse width:");
+	Serial.println(pulseWidth,10);
+	//Serial.print("the cutoff pulse width is:");
+	//Serial.println(pulseWidthCutoff,10);
+	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us
+	serialFreq = (int) 1/(pulseWidth/5.0);
+/* 	if(pulseWidth > pulseWidthCutoff){
 		serialFreq = PC_FREQUENCY;
 	}
 	else{
 		serialFreq = GC_FREQUENCY;
-	}
+	} */
 	interrupts();
 	return serialFreq;
 }
@@ -1051,18 +1060,21 @@ float linearize(float point, float coefficients[0]){
 void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//Serial.println("Running Kalman");
 	
+	
+	//get the time delta since the kalman filter was last run
 	unsigned int thisMicros = micros();
 	float dT = (thisMicros-_lastMicros)/1000.0;
 	_lastMicros = thisMicros;
 	//Serial.print("the loop time is: ");
 	//Serial.println(dT);
 	
+	//generate the state transition matrix, note the damping term
 	MatrixXf Fmat(2,2);
 	Fmat << 1,dT-_damping/2*dT*dT,
 			 0,1-_damping*dT;
 
+	//generate the acceleration variance for this filtering step, the further from the origin the higher it will be
   float R2 = xZ[0]*xZ[0]+yZ[0]*yZ[0];
-  //float R2 = (xZ[0]-128.5)*(xZ[0]-128.5);
   if(R2 > 10000){
     R2 = 10000;
   }
@@ -1084,25 +1096,30 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	MatrixXf xR(1,1);
 	//MatrixXf yR(1,1);
 	
-
+	//generate the measurement variance (i've called it ADC var) for this time step, the further from the origin the lower it will be
   xR << _aADCVar*(R2*R2*R2) + _bADCVar;
 
   //Serial.println(xR(0,0),10);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	//print_mtxf(_xP);
+	
+	//run the prediciton step for the x-axis
 	kPredict(_xState,Fmat,_xP,Q);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	
+	//run the prediciton step for the y-axis
 	kPredict(_yState,Fmat,_yP,Q);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	
+	//run the update step for the x-axis
 	kUpdate(_xState,xZ,_xP,sharedH,xR);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 	
+	//run the update step for the y-axis
 	kUpdate(_yState,yZ,_yP,sharedH,xR);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
