@@ -6,6 +6,7 @@
 #include <eigen.h>
 #include <Eigen/LU>
 #include <ADC.h>
+#include <VREF.h>
 #include <Bounce2.h>
 
 using namespace Eigen;
@@ -71,6 +72,7 @@ const float _marginAngle = 5.0/100.0; //angle range(+/-) in radians that will be
 const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
 
 //////values used for calibration
+float ADCScale = 1;
 const int _notCalibrating = -1;
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
@@ -203,7 +205,7 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("test");
+	Serial.println("Software version 0.11 (hopefully Phobos rememberd to update this message)");
 	delay(1000);
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
@@ -252,17 +254,42 @@ void setup() {
 	_yP << 1000,0,0,1000;
 	_lastMicros = micros();
 	
+	//analogReference(1);
+	
+
 	adc->adc0->setAveraging(8); // set number of averages
   adc->adc0->setResolution(12); // set bits of resolution
-  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED ); // change the conversion speed
+  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-	
+
+  adc->adc1->setAveraging(32); // set number of averages
+  adc->adc1->setResolution(16); // set bits of resolution
+  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_LOW_SPEED ); // change the conversion speed
+  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
+  
 	setPinModes();
 	
+
+	VREF::start();
+		
+	double refVoltage = 0;
+	for(int i = 0; i < 512; i++){
+		int value = adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+		double volts = value*3.3/(float)adc->adc1->getMaxValue();
+		refVoltage += volts;
+	}
+	refVoltage = refVoltage/512.0;
+	
+
+	Serial.print("the reference voltage read was:");
+	Serial.println(refVoltage,8);
+	ADCScale = 1.2/refVoltage;
+	
 	int serialFreq = findFreq();
+  //serialFreq = 950000;
 	Serial.print("starting hw serial at freq:");
 	Serial.println(serialFreq);
-	//start hardware serail
+	//start hardware serial
 	Serial2.begin(serialFreq);
 	//attach the interrupt which will call the communicate function when the data line transitions from high to low
 	attachInterrupt(_pinRX, communicate, FALLING);
@@ -299,7 +326,7 @@ int findFreq() {
 	ARM_DEMCR |= ARM_DEMCR_TRCENA;
 	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 	//attempt to count a bunch of 0 bits (may also catch some stop bits which are short, will skew the results)
-	for(int i = 0; i<128;i++){
+	for(int i = 0; i<64;i++){
 		
 		start = ARM_DWT_CYCCNT;
 		duration = 0;
@@ -326,13 +353,13 @@ int findFreq() {
 
 	Serial.print("the measured counts are:");
 	Serial.println(counter);
-	double pulseWidth = counter/(float)F_CPU/128.0;
+	double pulseWidth = counter/(float)F_CPU/64.0;
 	Serial.print("measured pulse width:");
 	Serial.println(pulseWidth,10);
 	//Serial.print("the cutoff pulse width is:");
 	//Serial.println(pulseWidthCutoff,10);
-	//pulse widths on my usb adapter are ~4us, gamecube/wii's are supposed to be 3us
-	serialFreq = (int) 1/(pulseWidth/5.0);
+	//4.95 fudge factor to make it work consistently on gamecube, wii, and adapter
+	serialFreq = (int) 1/(pulseWidth/4.95);
 /* 	if(pulseWidth > pulseWidthCutoff){
 		serialFreq = PC_FREQUENCY;
 	}
@@ -507,10 +534,12 @@ void readSticks(){
 	//read the C stick
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
 	//btn.Cy = adc->adc0->analogRead(pinCy)>>4;
-	
+
+  //ADCScale = 1.2/(adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT)*3.3/(float)adc->adc1->getMaxValue());
+
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
-	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0;
-	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0;
+	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*ADCScale;
+	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*ADCScale;
 	
 	//read the c stick, scale it down so that we don't get huge values when we linearize 
 	_cStickX = adc->adc0->analogRead(_pinCx)/4096.0;
@@ -570,6 +599,15 @@ void readSticks(){
 	btn.Ay = (uint8_t) (posAy+127.5);
 	btn.Cx = (uint8_t) (posCx+127.5);
 	btn.Cy = (uint8_t) (posCy+127.5);
+	
+	//Serial.println();
+	//Serial.print(_aStickX,8);
+	//Serial.print(",");
+	//Serial.print(_aStickY,8);
+	//Serial.print(",");
+	//Serial.print(btn.Ax);
+	//Serial.print(",");
+	//Serial.print(btn.Ay);
 }
 /*******************
 	notchRemap
@@ -679,7 +717,7 @@ void communicate(){
 			}
 		}
 	//print the command byte over the USB serial  for debugging
-	//Serial.println(cmdByte,HEX);
+	Serial.println(cmdByte,HEX);
 	
 	//decide what to do based on the command
 	switch(cmdByte){
