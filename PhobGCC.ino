@@ -73,6 +73,7 @@ const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margi
 
 //////values used for calibration
 float ADCScale = 1;
+float ADCScaleFactor = 1;
 const int _notCalibrating = -1;
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
@@ -81,6 +82,12 @@ const int _calibrationPoints = 9; //number of calibration points for the c-stick
 const int _calibrationPointsNotched = 17; //number of calibration points for thea-stick for a controller with notches
 float _cleanedPointsX[17]; //array to hold the x coordinates of the calibration points
 float _cleanedPointsY[17]; //array to hold the y coordinates of the calibration points
+int _aNotchActive[16];
+int _cNotchActive[16];
+float _aNotchPointsX[17];
+float _aNotchPointsY[17];
+float _cNotchPointsX[17];
+float _cNotchPointsY[17];
 const int _fitOrder = 3; //fit order used in the linearization step
 float _aFitCoeffsX[_fitOrder+1]; //coefficients for linearizing the X axis of the a-stick
 float _aFitCoeffsY[_fitOrder+1]; //coefficients for linearizing the Y axis of the a-stick
@@ -205,7 +212,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("Software version 0.11 (hopefully Phobos rememberd to update this message)");
+	//Serial.println("Software version  (hopefully Phobos remembered to update this message)");
+	Serial.println("This is not a stable version");
 	delay(1000);
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
@@ -284,6 +292,13 @@ void setup() {
 	Serial.print("the reference voltage read was:");
 	Serial.println(refVoltage,8);
 	ADCScale = 1.2/refVoltage;
+	
+	adc->adc1->setAveraging(4); // set number of averages
+  adc->adc1->setResolution(12); // set bits of resolution
+  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
+  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
+	
+	ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
 	
 	int serialFreq = findFreq();
   //serialFreq = 950000;
@@ -535,15 +550,15 @@ void readSticks(){
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
 	//btn.Cy = adc->adc0->analogRead(pinCy)>>4;
 
-  //ADCScale = 1.2/(adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT)*3.3/(float)adc->adc1->getMaxValue());
+  ADCScale = ADCScale*0.999 + ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
 	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*ADCScale;
 	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*ADCScale;
 	
 	//read the c stick, scale it down so that we don't get huge values when we linearize 
-	_cStickX = adc->adc0->analogRead(_pinCx)/4096.0;
-	_cStickY = adc->adc0->analogRead(_pinCy)/4096.0;
+	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
+	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
 	
 	//create the measurement vector to be used in the kalman filter
 	VectorXf xZ(1);
@@ -717,7 +732,7 @@ void communicate(){
 			}
 		}
 	//print the command byte over the USB serial  for debugging
-	Serial.println(cmdByte,HEX);
+	//Serial.println(cmdByte,HEX);
 	
 	//decide what to do based on the command
 	switch(cmdByte){
@@ -1103,7 +1118,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	unsigned int thisMicros = micros();
 	float dT = (thisMicros-_lastMicros)/1000.0;
 	_lastMicros = thisMicros;
-	//Serial.print("the loop time is: ");
+	//Serial.print("loop time: ");
 	//Serial.println(dT);
 	
 	//generate the state transition matrix, note the damping term
