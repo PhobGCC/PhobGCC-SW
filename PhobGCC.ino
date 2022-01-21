@@ -8,6 +8,7 @@
 #include <ADC.h>
 #include <VREF.h>
 #include <Bounce2.h>
+#include "TeensyTimerTool.h"
 
 using namespace Eigen;
 
@@ -20,6 +21,7 @@ using namespace Eigen;
 #define GC_FREQUENCY 1200000
 #define PC_FREQUENCY 1000000
 #define PULSE_FREQ_CUTOFF 291666
+TeensyTimerTool::OneShotTimer timer1;
 
 const float pulseWidthCutoff = 0.0000035;
 /////defining which pin is what on the teensy
@@ -308,6 +310,7 @@ void setup() {
 	Serial2.begin(serialFreq);
 	//attach the interrupt which will call the communicate function when the data line transitions from high to low
 	attachInterrupt(_pinRX, communicate, FALLING);
+	timer1.begin(resetFreq);
 }
 
 void loop() {
@@ -384,6 +387,17 @@ int findFreq() {
 	interrupts();
 	return serialFreq;
 }
+void resetFreq(){
+			int mybaud = 1000000;
+			int mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
+			UART1_BDH = (mydivisor >> 13) & 0x1F;
+			UART1_BDL = (mydivisor >> 5) & 0xFF;
+			UART1_C4 = mydivisor & 0x1F;
+			_writeQueue = 0;
+			Serial2.clear();
+			//Serial.println(Serial2.available());
+			digitalWriteFast(12,HIGH);
+}
 void setPinModes(){
 	pinMode(0,INPUT_PULLUP);
 	pinMode(1,INPUT_PULLUP);
@@ -392,7 +406,8 @@ void setPinModes(){
 	pinMode(4,INPUT_PULLUP);
 	pinMode(6,INPUT_PULLUP);
 	pinMode(11,INPUT_PULLUP);
-	pinMode(12,INPUT_PULLUP);
+	//pinMode(12,INPUT_PULLUP);
+	pinMode(12,OUTPUT);
 	pinMode(13,INPUT_PULLUP);
 	pinMode(17,INPUT_PULLUP);
 	pinMode(18,INPUT_PULLUP);
@@ -693,13 +708,19 @@ void communicate(){
 	//Serial.println("communicating");
 	//clear any commands from the last write, once the write queue is empty then any new data is from the master
 	//this is needed because the RX pin is connected to the TX pin through the diode
-	while(Serial2.available() && (_writeQueue > 0)){
-		Serial2.read();
-		_writeQueue --;
-	}
+	
+/* 	while(Serial2.available() && (_writeQueue > 0)){
+		if(Serial2.read() == 0xFF){
+			//mybaud = 1000000;
+			_writeQueue = 0;
+		}
+	} */
+	int mybaud;
+	int mydivisor;
+
 	
 	//check if a full byte is available from the master yet, if its not the exit
-	if (Serial2.available()){
+	if (Serial2.available() && !_writeQueue){
 		//wait for the first 5 bytes of the command to arrive
 		//we need to do this because the interrupt is not necissarily fast enough, so we wait here for all the data so we can respond as soon as possible
 		while(Serial2.available()<CMD_LENGTH_SHORT){}
@@ -732,7 +753,7 @@ void communicate(){
 			}
 		}
 	//print the command byte over the USB serial  for debugging
-	//Serial.println(cmdByte,HEX);
+	Serial.println(cmdByte,BIN);
 	
 	//decide what to do based on the command
 	switch(cmdByte){
@@ -741,6 +762,17 @@ void communicate(){
 			//the poll command is longer, but we don't care about any of the other data
 			//wait until we get a stop bit, then we know we can start sending data again
 		  while(Serial2.read() != 0xFF){}
+			digitalWriteFast(12,LOW);
+			mybaud = 1250000;
+			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
+			UART1_BDH = (mydivisor >> 13) & 0x1F;
+			UART1_BDL = (mydivisor >> 5) & 0xFF;
+			UART1_C4 = mydivisor & 0x1F;
+			digitalWriteFast(12,HIGH);
+			timer1.trigger(400);
+			digitalWriteFast(12,LOW);
+			//Serial.println(Serial2.available());
+			
 			//write the pre-prepared poll response out byte by byte
 		  for(int i = 0; i <POLL_LENGTH; i++){
 				Serial2.write(pollResponse[i]);
@@ -748,30 +780,55 @@ void communicate(){
 				//Serial.print(pollResponse[i],HEX);
 		  }
 			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = POLL_LENGTH;
+			_writeQueue = POLL_LENGTH-1;
 		  break;
 		case 0x00:
 			//this is the probe command, its what the master will send out continually when nothing is connected
 			//write the pre-prepared probe resonse out byte by byte
+			
+			mybaud = 1250000;
+			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
+			UART1_BDH = (mydivisor >> 13) & 0x1F;
+			UART1_BDL = (mydivisor >> 5) & 0xFF;
+			UART1_C4 = mydivisor & 0x1F;
+			digitalWriteFast(12,HIGH);
+			timer1.trigger(400);
+			digitalWriteFast(12,LOW);
+			//Serial.println(Serial2.available());
 		  for(int i = 0; i <CMD_LENGTH_LONG; i++){
 				Serial2.write(probeResponse[i]);
 		  }
 			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = CMD_LENGTH_LONG;
+			_writeQueue = CMD_LENGTH_LONG-1;
+			Serial.println("probe");
 		  break;
 		case 0x41:
 			//this is the origin command, it gets sent out a few times after a connection is made before switching to polling, may be related to zeroing the analog sticks and triggers?
-		  for(int i = 0; i <ORIGIN_LENGTH; i++){
+		  digitalWriteFast(12,LOW);
+			mybaud = 1250000;
+			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
+			UART1_BDH = (mydivisor >> 13) & 0x1F;
+			UART1_BDL = (mydivisor >> 5) & 0xFF;
+			UART1_C4 = mydivisor & 0x1F;
+			digitalWriteFast(12,HIGH);
+			timer1.trigger(350);
+			digitalWriteFast(12,LOW);
+			//Serial.println(Serial2.available());
+			for(int i = 0; i <ORIGIN_LENGTH; i++){
 				Serial2.write(originResponse[i]);
 		  }
 			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = ORIGIN_LENGTH;
+			_writeQueue = ORIGIN_LENGTH-1;
+			Serial.println("origin");
 		  break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
 		  while(Serial2.read() != 0xFF){}
 			_writeQueue = 0;
 	  }
+		digitalWriteFast(12,HIGH);
+		delayMicroseconds(1);
+		digitalWriteFast(12,LOW);
 	}
 }
 /*******************
