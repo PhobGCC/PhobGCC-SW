@@ -24,8 +24,6 @@ using namespace Eigen;
 #define PULSE_FREQ_CUTOFF 291666
 
 TeensyTimerTool::OneShotTimer timer1;
-TeensyTimerTool::OneShotTimer timer2;
-TeensyTimerTool::OneShotTimer timer3;
 
 ////Serial bitbanging settings
 const int _fastBaud = 1250000;
@@ -326,10 +324,10 @@ void setup() {
 	
 	ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
 	
-	//int serialFreq = findFreq();
+	//_slowBaud = findFreq();
   //serialFreq = 950000;
-	Serial.print("starting hw serial at freq:");
-	//Serial.println(serialFreq);
+	//Serial.print("starting hw serial at freq:");
+	//Serial.println(_slowBaud);
 	//start hardware serial
 	Serial2.begin(1000000);
 	//UART1_C2 &= ~UART_C2_RE;
@@ -768,17 +766,27 @@ void communicate(){
 		
 		switch(cmdByte){
 		case 0x00:
-			Serial2.write(probeResponse,PROBE_LENGTH);
-			timer1.trigger(PROBE_LENGTH*8+10);
+			timer1.trigger(PROBE_LENGTH*8);
+			//Serial2.write(probeResponse,PROBE_LENGTH);
+			for(int i = 0; i< PROBE_LENGTH; i++){
+				Serial2.write(probeResponse[i]);
+			}
+			Serial.println("probe");
+			_writeQueue = 9+(PROBE_LENGTH-1)*2+1;
 			_commStatus = _commWrite;
 		break;
 		case 0x41:
-			Serial2.write(originResponse,ORIGIN_LENGTH);
-			timer1.trigger(ORIGIN_LENGTH*8+10);
+			timer1.trigger(ORIGIN_LENGTH*8);
+			//Serial2.write(originResponse,ORIGIN_LENGTH);
+			for(int i = 0; i< ORIGIN_LENGTH; i++){
+				Serial2.write(originResponse[i]);
+			}
+			Serial.println("origin");
+			_writeQueue = 9+(ORIGIN_LENGTH-1)*2+1;
 			_commStatus = _commWrite;
 		  break;
 		case 0x40:
-			timer1.trigger(7*8);
+			timer1.trigger(56);
 			_commStatus = _commPoll;
 			break;
 		default:
@@ -802,12 +810,15 @@ void communicate(){
 		for(int i = 0; i< POLL_LENGTH; i++){
 			Serial2.write(pollResponse[i]);
 		}
-		timer1.trigger(180);
+		timer1.trigger(135);
+		_writeQueue = 25+(POLL_LENGTH-1)*2+1;
 		_commStatus = _commWrite;
 		digitalWriteFast(12,HIGH);
 	}
 	else if(_commStatus == _commWrite){
 		digitalWriteFast(12,LOW);
+ 		while(_writeQueue > _bitCount){}
+		
 		UART1_BDH = _slowBDH;
 		UART1_BDL = _slowBDL;
 		UART1_C4 = _slowC4;
@@ -815,6 +826,7 @@ void communicate(){
 		Serial2.clear();
 		_bitCount = 0;
 		_commStatus = _commIdle;
+		_writeQueue = 0;
 		digitalWriteFast(12,HIGH);
 	}
 }
@@ -1164,7 +1176,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	float dT = (thisMicros-_lastMicros)/1000.0;
 	_lastMicros = thisMicros;
 	//Serial.print("loop time: ");
-	Serial.println(dT);
+	//Serial.println(dT);
 	
 	//generate the state transition matrix, note the damping term
 	MatrixXf Fmat(2,2);
