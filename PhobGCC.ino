@@ -14,6 +14,7 @@ using namespace Eigen;
 
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
+#define PROBE_LENGTH 13
 #define ORIGIN_LENGTH 41
 #define POLL_LENGTH 33
 #define CALIBRATION_POINTS 17
@@ -21,7 +22,22 @@ using namespace Eigen;
 #define GC_FREQUENCY 1200000
 #define PC_FREQUENCY 1000000
 #define PULSE_FREQ_CUTOFF 291666
+
 TeensyTimerTool::OneShotTimer timer1;
+TeensyTimerTool::OneShotTimer timer2;
+TeensyTimerTool::OneShotTimer timer3;
+
+////Serial bitbanging settings
+const int _fastBaud = 1250000;
+const int _slowBaud = 1000000;
+const int _fastDivider = (((F_CPU * 2) + ((1250000) >> 1)) / (1250000));
+const int _slowDivider = (((F_CPU * 2) + ((1000000) >> 1)) / (1000000));
+const int _fastBDH = (_fastDivider >> 13) & 0x1F;
+const int _slowBDH = (_slowDivider >> 13) & 0x1F;
+const int _fastBDL = (_fastDivider >> 5) & 0xFF;
+const int _slowBDL = (_slowDivider >> 5) & 0xFF;
+const int _fastC4 = _fastDivider & 0x1F;
+const int _slowC4 = _slowBaud & 0x1F;
 
 const float pulseWidthCutoff = 0.0000035;
 /////defining which pin is what on the teensy
@@ -70,7 +86,7 @@ float _bADCVar = _ADCVarSlow; //second coefficient used to calculate the actual 
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
-const float _marginAngle = 5.0/100.0; //angle range(+/-) in radians that will be collapsed down to the ideal angle
+const float _marginAngle = 1.50/100.0; //angle range(+/-) in radians that will be collapsed down to the ideal angle
 const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
 
 //////values used for calibration
@@ -179,12 +195,12 @@ MatrixXf _xP(2,2);
 MatrixXf _yP(2,2);
 
 
-static uint8_t probeResponse[CMD_LENGTH_LONG] = {
+const char probeResponse[PROBE_LENGTH] = {
 	0x08,0x08,0x0F,0xE8,
 	0x08,0x08,0x08,0x08,
 	0x08,0x08,0x08,0xEF,
 	0xFF};
-volatile uint8_t pollResponse[POLL_LENGTH] = {
+volatile char pollResponse[POLL_LENGTH] = {
 0x08,0x08,0x08,0x08,
 0x0F,0x08,0x08,0x08,
 0xE8,0xEF,0xEF,0xEF,
@@ -194,7 +210,7 @@ volatile uint8_t pollResponse[POLL_LENGTH] = {
 0x08,0xEF,0xEF,0x08,
 0x08,0xEF,0xEF,0x08,
 0xFF};
-static uint8_t originResponse[ORIGIN_LENGTH] = {
+const char originResponse[ORIGIN_LENGTH] = {
 	0x08,0x08,0x08,0x08,
 	0x0F,0x08,0x08,0x08,
 	0xE8,0xEF,0xEF,0xEF,
@@ -209,6 +225,14 @@ static uint8_t originResponse[ORIGIN_LENGTH] = {
 
 int cmd[CMD_LENGTH_LONG];
 uint8_t cmdByte;
+volatile char _bitCount = 0;
+volatile bool _probe = false;
+volatile bool _pole = false;
+volatile int _commStatus = 0;
+static int _commIdle = 0;
+static int _commRead = 1;
+static int _commPoll = 2;
+static int _commWrite = 3;
 
 void setup() {
 	
@@ -302,15 +326,23 @@ void setup() {
 	
 	ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
 	
-	int serialFreq = findFreq();
+	//int serialFreq = findFreq();
   //serialFreq = 950000;
 	Serial.print("starting hw serial at freq:");
-	Serial.println(serialFreq);
+	//Serial.println(serialFreq);
 	//start hardware serial
-	Serial2.begin(serialFreq);
+	Serial2.begin(1000000);
+	//UART1_C2 &= ~UART_C2_RE;
 	//attach the interrupt which will call the communicate function when the data line transitions from high to low
-	attachInterrupt(_pinRX, communicate, FALLING);
-	timer1.begin(resetFreq);
+
+	timer1.begin(communicate);
+	//timer2.begin(checkCmd);
+	//timer3.begin(writePole);
+	digitalWriteFast(12,HIGH);
+	//ARM_DEMCR |= ARM_DEMCR_TRCENA;
+	//ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+	attachInterrupt(_pinRX, bitCounter, FALLING);
+	NVIC_SET_PRIORITY(IRQ_PORTC, 0);
 }
 
 void loop() {
@@ -341,8 +373,7 @@ int findFreq() {
 	unsigned int counter = 0;
 	unsigned int start = 0;
 	unsigned int duration = 0;
-	ARM_DEMCR |= ARM_DEMCR_TRCENA;
-	ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+
 	//attempt to count a bunch of 0 bits (may also catch some stop bits which are short, will skew the results)
 	for(int i = 0; i<64;i++){
 		
@@ -387,17 +418,7 @@ int findFreq() {
 	interrupts();
 	return serialFreq;
 }
-void resetFreq(){
-			int mybaud = 1000000;
-			int mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
-			UART1_BDH = (mydivisor >> 13) & 0x1F;
-			UART1_BDL = (mydivisor >> 5) & 0xFF;
-			UART1_C4 = mydivisor & 0x1F;
-			_writeQueue = 0;
-			Serial2.clear();
-			//Serial.println(Serial2.available());
-			digitalWriteFast(12,HIGH);
-}
+
 void setPinModes(){
 	pinMode(0,INPUT_PULLUP);
 	pinMode(1,INPUT_PULLUP);
@@ -675,7 +696,7 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 void setPole(){
 	for(int i = 0; i < 8; i++){
 		//we don't want to send data while we're updating the stick and button states, so we turn off interrupts
-		noInterrupts();
+		//noInterrupts();
 		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
 		for(int j = 0; j < 4; j++){
 			//this could probably be done better but we need to take 2 bits at a time to put into one serial byte
@@ -697,140 +718,107 @@ void setPole(){
 			}
 		}
 		//turn the interrupt back on so we can start communicating again
-		interrupts();
+		//interrupts();
 	}
 }
 /*******************
 	communicate
 	try to communicate with the gamecube/wii
 *******************/
-void communicate(){
-	//Serial.println("communicating");
-	//clear any commands from the last write, once the write queue is empty then any new data is from the master
-	//this is needed because the RX pin is connected to the TX pin through the diode
-	
-/* 	while(Serial2.available() && (_writeQueue > 0)){
-		if(Serial2.read() == 0xFF){
-			//mybaud = 1000000;
-			_writeQueue = 0;
-		}
-	} */
-	int mybaud;
-	int mydivisor;
-
-	
-	//check if a full byte is available from the master yet, if its not the exit
-	if (Serial2.available() && !_writeQueue){
-		//wait for the first 5 bytes of the command to arrive
-		//we need to do this because the interrupt is not necissarily fast enough, so we wait here for all the data so we can respond as soon as possible
-		while(Serial2.available()<CMD_LENGTH_SHORT){}
-		//read those 5 bytes
-		//may be possible to speed things up by reading just 4 bytes and then clearing the last one after
-		for(int i = 0; i <CMD_LENGTH_SHORT; i++){
-			cmd[i] = Serial2.read();
-		}
-
-		//parse first 4 bytes of the command, we don't care about the rest of it
-		//the mapping here is a little strange because of how we are using the serial connection, see this for details:
-		//http://www.qwertymodo.com/hardware-projects/n64/n64-controller
-		for(int i = 0; i <CMD_LENGTH_SHORT-1; i++){
-			switch(cmd[i]){
-			case 0x08:
-				cmdByte = (cmdByte<<2);
-				break;
-			case 0xE8:
-				cmdByte = (cmdByte<<2)+1;
-				break;
-			case 0x0F:
-				cmdByte = (cmdByte<<2)+2;
-				break;
-			case 0xEF:
-				cmdByte = (cmdByte<<2)+3;
-				break;
-			default:
-				//got garbage data or a stop bit where it shouldn't be
-				cmdByte = -1;
-			}
-		}
-	//print the command byte over the USB serial  for debugging
-	Serial.println(cmdByte,BIN);
-	
-	//decide what to do based on the command
-	switch(cmdByte){
-		//this is the poll command, it will be what is sent continually after a connection is made
-		case 0x40:
-			//the poll command is longer, but we don't care about any of the other data
-			//wait until we get a stop bit, then we know we can start sending data again
-		  while(Serial2.read() != 0xFF){}
-			digitalWriteFast(12,LOW);
-			mybaud = 1250000;
-			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
-			UART1_BDH = (mydivisor >> 13) & 0x1F;
-			UART1_BDL = (mydivisor >> 5) & 0xFF;
-			UART1_C4 = mydivisor & 0x1F;
-			digitalWriteFast(12,HIGH);
-			timer1.trigger(400);
-			digitalWriteFast(12,LOW);
-			//Serial.println(Serial2.available());
-			
-			//write the pre-prepared poll response out byte by byte
-		  for(int i = 0; i <POLL_LENGTH; i++){
-				Serial2.write(pollResponse[i]);
-				//print to USB serial for debugging
-				//Serial.print(pollResponse[i],HEX);
-		  }
-			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = POLL_LENGTH-1;
-		  break;
-		case 0x00:
-			//this is the probe command, its what the master will send out continually when nothing is connected
-			//write the pre-prepared probe resonse out byte by byte
-			
-			mybaud = 1250000;
-			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
-			UART1_BDH = (mydivisor >> 13) & 0x1F;
-			UART1_BDL = (mydivisor >> 5) & 0xFF;
-			UART1_C4 = mydivisor & 0x1F;
-			digitalWriteFast(12,HIGH);
-			timer1.trigger(400);
-			digitalWriteFast(12,LOW);
-			//Serial.println(Serial2.available());
-		  for(int i = 0; i <CMD_LENGTH_LONG; i++){
-				Serial2.write(probeResponse[i]);
-		  }
-			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = CMD_LENGTH_LONG-1;
-			Serial.println("probe");
-		  break;
-		case 0x41:
-			//this is the origin command, it gets sent out a few times after a connection is made before switching to polling, may be related to zeroing the analog sticks and triggers?
-		  digitalWriteFast(12,LOW);
-			mybaud = 1250000;
-			mydivisor = (((F_CPU * 2) + ((mybaud) >> 1)) / (mybaud));
-			UART1_BDH = (mydivisor >> 13) & 0x1F;
-			UART1_BDL = (mydivisor >> 5) & 0xFF;
-			UART1_C4 = mydivisor & 0x1F;
-			digitalWriteFast(12,HIGH);
-			timer1.trigger(350);
-			digitalWriteFast(12,LOW);
-			//Serial.println(Serial2.available());
-			for(int i = 0; i <ORIGIN_LENGTH; i++){
-				Serial2.write(originResponse[i]);
-		  }
-			//set the write queue so that we will ignore all the data we are sending out
-			_writeQueue = ORIGIN_LENGTH-1;
-			Serial.println("origin");
-		  break;
-		default:
-		  //got something strange, try waiting for a stop bit to syncronize
-		  while(Serial2.read() != 0xFF){}
-			_writeQueue = 0;
-	  }
-		digitalWriteFast(12,HIGH);
-		delayMicroseconds(1);
-		digitalWriteFast(12,LOW);
+void bitCounter(){
+	_bitCount ++;
+	//digitalWriteFast(12,!(_bitCount%2));
+	if(_bitCount == 1){
+		timer1.trigger((CMD_LENGTH_SHORT-1)*10);
+		_commStatus = _commRead;
 	}
 }
+void communicate(){
+	if(_commStatus == _commRead){
+		digitalWriteFast(12,LOW);
+		while(Serial2.available() < (CMD_LENGTH_SHORT-1)){}
+			for(int i = 0; i < CMD_LENGTH_SHORT-1; i++){
+				cmd[i] = Serial2.read();
+				switch(cmd[i]){
+				case 0x08:
+					cmdByte = (cmdByte<<2);
+					break;
+				case 0xE8:
+					cmdByte = (cmdByte<<2)+1;
+					break;
+				case 0x0F:
+					cmdByte = (cmdByte<<2)+2;
+					break;
+				case 0xEF:
+					cmdByte = (cmdByte<<2)+3;
+					break;
+				default:
+					//got garbage data or a stop bit where it shouldn't be
+					cmdByte = -1;
+					if(cmdByte == -1){
+						break;
+					}
+				}
+			}
+		
+		UART1_BDH = _fastBDH;
+		UART1_BDL = _fastBDL;
+		UART1_C4 = _fastC4;
+		UART1_C2 &= ~UART_C2_RE;
+		
+		switch(cmdByte){
+		case 0x00:
+			Serial2.write(probeResponse,PROBE_LENGTH);
+			timer1.trigger(PROBE_LENGTH*8+10);
+			_commStatus = _commWrite;
+		break;
+		case 0x41:
+			Serial2.write(originResponse,ORIGIN_LENGTH);
+			timer1.trigger(ORIGIN_LENGTH*8+10);
+			_commStatus = _commWrite;
+		  break;
+		case 0x40:
+			timer1.trigger(7*8);
+			_commStatus = _commPoll;
+			break;
+		default:
+		  //got something strange, try waiting for a stop bit to syncronize
+			//resetFreq();
+			
+			UART1_BDH = _slowBDH;
+			UART1_BDL = _slowBDL;
+			UART1_C4 = _slowC4;
+			UART1_C2 |= UART_C2_RE;
+		  while(Serial2.read() != 0xFF){}
+			Serial2.clear();
+			_bitCount = 0;
+	  }
+		digitalWriteFast(12,HIGH);
+	}
+	else if(_commStatus == _commPoll){
+		digitalWriteFast(12,LOW);
+		while(_bitCount<25){}
+		//Serial2.write((const char*)pollResponse,POLL_LENGTH);
+		for(int i = 0; i< POLL_LENGTH; i++){
+			Serial2.write(pollResponse[i]);
+		}
+		timer1.trigger(180);
+		_commStatus = _commWrite;
+		digitalWriteFast(12,HIGH);
+	}
+	else if(_commStatus == _commWrite){
+		digitalWriteFast(12,LOW);
+		UART1_BDH = _slowBDH;
+		UART1_BDL = _slowBDL;
+		UART1_C4 = _slowC4;
+		UART1_C2 |= UART_C2_RE;
+		Serial2.clear();
+		_bitCount = 0;
+		_commStatus = _commIdle;
+		digitalWriteFast(12,HIGH);
+	}
+}
+
 /*******************
 	calibrate
 	run the calibration procedure
@@ -1176,7 +1164,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	float dT = (thisMicros-_lastMicros)/1000.0;
 	_lastMicros = thisMicros;
 	//Serial.print("loop time: ");
-	//Serial.println(dT);
+	Serial.println(dT);
 	
 	//generate the state transition matrix, note the damping term
 	MatrixXf Fmat(2,2);
