@@ -68,7 +68,7 @@ int _jumpConfig = 0;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
 const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
-const float _accelVarSlow = 0.000001; //governs the acceleration variation with the stick centered, higher value means less filtering
+const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
 const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
 const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
 const float _ADCVarMin = 0.1; //minimum allowable value for the ADC variation
@@ -78,9 +78,12 @@ const float _aAccelVar = (_accelVarFast - _accelVarSlow)/_x6; //first coefficien
 const float _bAccelVar = _accelVarSlow; //Second coefficient used to calculate the actual acceleration variation
 const float _damping = 1; //amount of damping used in the stick model
 //ADC variance is used to compensate for differing amounts of snapback, so it is not a constant, can be set by user
-float _ADCVarSlow = 0.2; //default value
-float _aADCVar = (_ADCVarFast - _ADCVarSlow)/_x6; //first coefficient used to calculate the actual ADC variation
-float _bADCVar = _ADCVarSlow; //second coefficient used to calculate the actual ADC variation
+float _ADCVarSlowX = 0.2; //default value
+float _ADCVarSlowY = 0.2; //default value
+float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to calculate the actual ADC variation
+float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
+float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
+float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
@@ -123,8 +126,10 @@ const int _eepromAPointsY = _eepromAPointsX+_calibrationPointsNotched*_bytesPerF
 const int _eepromCPointsX = _eepromAPointsY+_calibrationPointsNotched*_bytesPerFloat;
 const int _eepromCPointsY = _eepromCPointsX+_calibrationPointsNotched*_bytesPerFloat;
 const int _eepromNotched = _eepromCPointsY+_calibrationPoints*_bytesPerFloat;
-const int _eepromADCVar = _eepromNotched+_bytesPerFloat;
-const int _eepromJump = _eepromADCVar+_bytesPerFloat;
+const int _eepromADCVarX = _eepromNotched+_bytesPerFloat;
+const int _eepromADCVarY = _eepromADCVarX+_bytesPerFloat;
+const int _eepromJump = _eepromADCVarY+_bytesPerFloat;
+
 
 
 Bounce bounceDr = Bounce();
@@ -245,21 +250,37 @@ void setup() {
 	//EEPROM.get(_eepromNotched, _notched);
 	EEPROM.get(_eepromJump, _jumpConfig);
 	setJump(_jumpConfig);
-	EEPROM.get(_eepromADCVar, _ADCVarSlow);
-	Serial.print("the _ADCVarSlow value from eeprom is:");
-	Serial.println(_ADCVarSlow);
-	if(std::isnan(_ADCVarSlow)){
-		_ADCVarSlow = _ADCVarMin;
-		Serial.print("the _ADCVarSlow value was adjusted to:");
-		Serial.println(_ADCVarSlow);
+	EEPROM.get(_eepromADCVarX, _ADCVarSlowX);
+	Serial.print("the _ADCVarSlowX value from eeprom is:");
+	Serial.println(_ADCVarSlowX);
+	if(std::isnan(_ADCVarSlowX)){
+		_ADCVarSlowX = _ADCVarMin;
+		Serial.print("the _ADCVarSlowX value was adjusted to:");
+		Serial.println(_ADCVarSlowX);
 	}
-	if(_ADCVarSlow >_ADCVarMax){
-		_ADCVarSlow = _ADCVarMax;
+	if(_ADCVarSlowX >_ADCVarMax){
+		_ADCVarSlowX = _ADCVarMax;
 	}
-	else if(_ADCVarSlow < _ADCVarMin){
-		_ADCVarSlow = _ADCVarMin;
+	else if(_ADCVarSlowX < _ADCVarMin){
+		_ADCVarSlowX = _ADCVarMin;
 	}
-	setADCVar(&_aADCVar, &_bADCVar, _ADCVarSlow);
+	
+	EEPROM.get(_eepromADCVarY, _ADCVarSlowY);
+	Serial.print("the _ADCVarSlowY value from eeprom is:");
+	Serial.println(_ADCVarSlowY);
+	if(std::isnan(_ADCVarSlowY)){
+		_ADCVarSlowY = _ADCVarMin;
+		Serial.print("the _ADCVarSlowY value was adjusted to:");
+		Serial.println(_ADCVarSlowY);
+	}
+	if(_ADCVarSlowY >_ADCVarMax){
+		_ADCVarSlowY = _ADCVarMax;
+	}
+	else if(_ADCVarSlowY < _ADCVarMin){
+		_ADCVarSlowY = _ADCVarMin;
+	}
+	
+	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
 	
 	EEPROM.get(_eepromAPointsX, _cleanedPointsX);
 	EEPROM.get(_eepromAPointsY, _cleanedPointsY);
@@ -484,7 +505,7 @@ void readButtons(){
 		_currentCalStep ++;
 	}
 	else if(bounceDu.fell()){
-		adjustSnapback(btn.Cy);
+		adjustSnapback(btn.Cx,btn.Cy);
 	}
 	else if(bounceDd.fell()){
 		readJumpConfig();
@@ -515,26 +536,48 @@ void readButtons(){
 	}
 	_lastDPad = dPad; */
 }
-void adjustSnapback(int cStick){
+void adjustSnapback(int cStickX, int cStickY){
 	Serial.println("adjusting snapback filtering");
-	if(cStick > 127+50){
-		_ADCVarSlow = _ADCVarSlow*1.1;
-		Serial.print("filtering increased to:");
-		Serial.println(_ADCVarSlow);
+	if(cStickX > 127+50){
+		_ADCVarSlowX = _ADCVarSlowX*1.1;
+		Serial.print("X filtering increased to:");
+		Serial.println(_ADCVarSlowX);
 	}
-	else if(cStick < 127-50){
-		_ADCVarSlow = _ADCVarSlow*0.9;
-		Serial.print("filtering decreased to:");
-		Serial.println(_ADCVarSlow);
+	else if(cStickX < 127-50){
+		_ADCVarSlowX = _ADCVarSlowX*0.9;
+		Serial.print("X filtering decreased to:");
+		Serial.println(_ADCVarSlowX);
 	}
-	if(_ADCVarSlow >_ADCVarMax){
-		_ADCVarSlow = _ADCVarMax;
+	if(_ADCVarSlowX >_ADCVarMax){
+		_ADCVarSlowX = _ADCVarMax;
 	}
-	else if(_ADCVarSlow < _ADCVarMin){
-		_ADCVarSlow = _ADCVarMin;
+	else if(_ADCVarSlowX < _ADCVarMin){
+		_ADCVarSlowX = _ADCVarMin;
 	}
-	setADCVar(&_aADCVar, &_bADCVar, _ADCVarSlow);
-	EEPROM.put(_eepromADCVar,_ADCVarSlow);
+	
+	if(cStickY > 127+50){
+		_ADCVarSlowY = _ADCVarSlowY*1.1;
+		Serial.print("Y filtering increased to:");
+		Serial.println(_ADCVarSlowY);
+	}
+	else if(cStickY < 127-50){
+		_ADCVarSlowY = _ADCVarSlowY*0.9;
+		Serial.print("Y filtering decreased to:");
+		Serial.println(_ADCVarSlowY);
+	}
+	if(_ADCVarSlowY >_ADCVarMax){
+		_ADCVarSlowY = _ADCVarMax;
+	}
+	else if(_ADCVarSlowY < _ADCVarMin){
+		_ADCVarSlowY = _ADCVarMin;
+	}
+	
+	
+	setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
+	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
+	
+	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
+	EEPROM.put(_eepromADCVarY,_ADCVarSlowY);
 }
 void readJumpConfig(){
 	Serial.print("setting jump to: ");
@@ -1204,10 +1247,11 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//print_mtxf(H)
 	
 	MatrixXf xR(1,1);
-	//MatrixXf yR(1,1);
+	MatrixXf yR(1,1);
 	
 	//generate the measurement variance (i've called it ADC var) for this time step, the further from the origin the lower it will be
-  xR << _aADCVar*(R2*R2*R2) + _bADCVar;
+  xR << _aADCVarX*(R2*R2*R2) + _bADCVarX;
+	yR << _aADCVarY*(R2*R2*R2) + _bADCVarY;
 
   //Serial.println(xR(0,0),10);
 	//dT = micros()-lastMicros;
@@ -1230,7 +1274,7 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//Serial.println(dT);
 	
 	//run the update step for the y-axis
-	kUpdate(_yState,yZ,_yP,sharedH,xR);
+	kUpdate(_yState,yZ,_yP,sharedH,yR);
 	//dT = micros()-lastMicros;
 	//Serial.println(dT);
 }
