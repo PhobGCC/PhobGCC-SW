@@ -124,7 +124,10 @@ const int _eepromNotched = _eepromCPointsY+_calibrationPoints*_bytesPerFloat;
 const int _eepromADCVarX = _eepromNotched+_bytesPerFloat;
 const int _eepromADCVarY = _eepromADCVarX+_bytesPerFloat;
 const int _eepromJump = _eepromADCVarY+_bytesPerFloat;
-
+const int _eepromANotchPointsX = _eepromJump+_calibrationPointsNotched*_bytesPerFloat;
+const int _eepromANotchPointsY = _eepromANotchPointsX+_calibrationPointsNotched*_bytesPerFloat;
+const int _eepromCNotchPointsX = _eepromANotchPointsY+_calibrationPointsNotched*_bytesPerFloat;
+const int _eepromCNotchPointsY = _eepromCNotchPointsX+_calibrationPointsNotched*_bytesPerFloat;
 
 
 Bounce bounceDr = Bounce();
@@ -236,8 +239,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("Software version 0.13 (hopefully Phobos remembered to update this message)");
-	//Serial.println("This is not a stable version");
+	//Serial.println("Software version 0.13 (hopefully Phobos remembered to update this message)");
+	Serial.println("This is not a stable version");
 	delay(1000);
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
@@ -659,8 +662,9 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	//go through the region boundaries from lowest angle to highest, checking if the current position vector is in that region
 	//if the region is not found then it must be between the first and the last boundary, ie the last region
 	//we check GATE_REGIONS*2 because each notch has its own very small region we use to make notch values more consistent
-	int region = regions*2-1;
-	for(int i = 1; i < regions*2; i++){
+	//int region = regions*2-1;
+	int region = regions-1;
+	for(int i = 1; i < regions; i++){
 		if(angle < regionAngles[i]){
 			region = i-1;
 			break;
@@ -1146,7 +1150,8 @@ void stickCal(float cleanedPointsX[],float cleanedPointsY[], bool notched,float 
 	}
 	
 	//perform the notch calibration using all the points generated above
-	notchCalibrate(linearizedSnapX,linearizedSnapY,notchPointsSnapX,notchPointsSnapY,pointsCountSnap-1,affineTransCoeffs,boundaryAngles);
+	//notchCalibrate(linearizedSnapX,linearizedSnapY,notchPointsSnapX,notchPointsSnapY,pointsCountSnap-1,affineTransCoeffs,boundaryAngles);
+	notchCalibrate(linearizedX,linearizedY,notchPointsX,notchPointsY,pointsCount-1,affineTransCoeffs,boundaryAngles);
 	
 }
 float linearize(float point, float coefficients[0]){

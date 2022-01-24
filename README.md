@@ -7,8 +7,6 @@ Check out the wiki for some info about how the phobGCC works: https://github.com
 
 Build Guide (Work in Progress): https://docs.google.com/presentation/d/1LcwiV0j9Wl79WmxCeX1okrVXH2PBrWv2zAe5m7BEGlU/edit#slide=id.g10e392c88b8_0_0
 
-I've started adding some explanatory pages to the wiki talking about how everything works, not done yet but have a look: https://github.com/Phobos132/PhobGCC/wiki/1---Hall-Effect-Sensors
-
 Current board version:
 <img src="/Documentation/Front.png" alt="V1"/>
 
