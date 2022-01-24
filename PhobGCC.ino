@@ -19,10 +19,6 @@ using namespace Eigen;
 #define POLL_LENGTH 33
 #define CALIBRATION_POINTS 17
 
-#define GC_FREQUENCY 1200000
-#define PC_FREQUENCY 1000000
-#define PULSE_FREQ_CUTOFF 291666
-
 TeensyTimerTool::OneShotTimer timer1;
 
 ////Serial bitbanging settings
@@ -37,7 +33,6 @@ const int _slowBDL = (_slowDivider >> 5) & 0xFF;
 const int _fastC4 = _fastDivider & 0x1F;
 const int _slowC4 = _slowBaud & 0x1F;
 
-const float pulseWidthCutoff = 0.0000035;
 /////defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;
@@ -241,8 +236,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	//Serial.println("Software version  (hopefully Phobos remembered to update this message)");
-	Serial.println("This is not a stable version");
+	Serial.println("Software version 0.13 (hopefully Phobos remembered to update this message)");
+	//Serial.println("This is not a stable version");
 	delay(1000);
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
@@ -383,59 +378,6 @@ void loop() {
 		setPole();
 	}
 
-}
-int findFreq() {
-	//try to determine the speed the hardware serial needs to run at by counting the probe command pulse widths
-	int serialFreq = PC_FREQUENCY;
-	noInterrupts();
-	pinMode(_pinRX,INPUT);
-	unsigned int counter = 0;
-	unsigned int start = 0;
-	unsigned int duration = 0;
-
-	//attempt to count a bunch of 0 bits (may also catch some stop bits which are short, will skew the results)
-	for(int i = 0; i<64;i++){
-		
-		start = ARM_DWT_CYCCNT;
-		duration = 0;
-		//wait for the pause between pulses (at least 10 us)
-		while(duration < (F_CPU*0.00001)){
-			if(digitalReadFast(_pinRX)){
-				duration = ARM_DWT_CYCCNT-start;
-			}
-			else {
-				start = ARM_DWT_CYCCNT;
-				duration = 0;
-			}
-		}
-		
-		//measure the clock cycles of the first 0 bit
-		while(digitalReadFast(_pinRX)){}
-		start = ARM_DWT_CYCCNT;
-		while(!digitalReadFast(_pinRX)){}
-		while(digitalReadFast(_pinRX)){}
-		counter += ARM_DWT_CYCCNT-start;
-	}
-	//counter = counter>>6;
-	
-
-	Serial.print("the measured counts are:");
-	Serial.println(counter);
-	double pulseWidth = counter/(float)F_CPU/64.0;
-	Serial.print("measured pulse width:");
-	Serial.println(pulseWidth,10);
-	//Serial.print("the cutoff pulse width is:");
-	//Serial.println(pulseWidthCutoff,10);
-	//4.95 fudge factor to make it work consistently on gamecube, wii, and adapter
-	serialFreq = (int) 1/(pulseWidth/4.95);
-/* 	if(pulseWidth > pulseWidthCutoff){
-		serialFreq = PC_FREQUENCY;
-	}
-	else{
-		serialFreq = GC_FREQUENCY;
-	} */
-	interrupts();
-	return serialFreq;
 }
 
 void setPinModes(){
