@@ -6,6 +6,8 @@
 *.kicad_pcb-bak
 *.sch-bak
 *~
+*.kicad_prl
+*-backups*
 _autosave-*
 *.tmp
 *-save.pro
@@ -13,7 +15,7 @@ _autosave-*
 fp-info-cache
 # Netlist files (exported from Eeschema)
 *.net
+*.xml
 # Autorouter files (exported from Pcbnew)
 *.dsn
 *.ses
-*.rar

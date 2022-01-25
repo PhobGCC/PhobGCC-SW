@@ -674,6 +674,13 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	//Apply the affine transformation using the coefficients found during calibration
 	*xOut = affineCoeffs[region][0]*xIn + affineCoeffs[region][1]*yIn + affineCoeffs[region][2];
 	*yOut = affineCoeffs[region][3]*xIn + affineCoeffs[region][4]*yIn + affineCoeffs[region][5];
+	
+	if((abs(*xOut)<3) && (abs(*yOut)>95)){
+		*xOut = 0;
+	}
+	if((abs(*yOut)<3) && (abs(*xOut)>95)){
+		*yOut = 0;
+	}
 }
 /*******************
 	setPole
@@ -998,11 +1005,11 @@ void stickCal(float cleanedPointsX[],float cleanedPointsY[], bool notched,float 
 		notchPointsY[8] = 30;
 		notchPointsY[9] = 0;
 		notchPointsY[10] = -30;
-		notchPointsY[11] = -67.5;
+		notchPointsY[11] = -67.0;
 		notchPointsY[12] = -95.393920141;
 		notchPointsY[13] = -100;
 		notchPointsY[14] = -95.393920141;
-		notchPointsY[15] = -67.5;
+		notchPointsY[15] = -67.0;
 		notchPointsY[16] = -30;
 	}
 	else{

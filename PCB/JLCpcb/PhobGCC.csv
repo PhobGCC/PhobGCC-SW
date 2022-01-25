@@ -1,0 +1,7 @@
+Comment,Designator,Footprint,LCSC
+"2200p","C1,C2,C3,C4,C5,C6,C7","Capacitors_SMD:C_0603_HandSoldering","C1604"
+"1u","C8,C9,C10,C11,C12","Capacitors_SMD:C_0603_HandSoldering","C15849"
+"D_Schottky","D1","Gamecube MB:D_SOD-523_large_pads","C151333"
+"10118194-0001LF","J6","digikeyUSB:USB_Micro_B_Female_10118194-0001LF","C132563"
+"10k","R1,R2","Resistor_SMD:R_0603_1608Metric","C25804"
+"XC6220B331MR","U3","Package_TO_SOT_SMD:SOT-23_Handsoldering","C236704"
