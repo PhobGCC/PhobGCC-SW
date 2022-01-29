@@ -23,15 +23,16 @@ TeensyTimerTool::OneShotTimer timer1;
 
 ////Serial bitbanging settings
 const int _fastBaud = 1250000;
+//const int _slowBaud = 1000000;
 const int _slowBaud = 1000000;
-const int _fastDivider = (((F_CPU * 2) + ((1250000) >> 1)) / (1250000));
-const int _slowDivider = (((F_CPU * 2) + ((1000000) >> 1)) / (1000000));
+const int _fastDivider = (((F_CPU * 2) + ((_fastBaud) >> 1)) / (_fastBaud));
+const int _slowDivider = (((F_CPU * 2) + ((_slowBaud) >> 1)) / (_slowBaud));
 const int _fastBDH = (_fastDivider >> 13) & 0x1F;
 const int _slowBDH = (_slowDivider >> 13) & 0x1F;
 const int _fastBDL = (_fastDivider >> 5) & 0xFF;
 const int _slowBDL = (_slowDivider >> 5) & 0xFF;
 const int _fastC4 = _fastDivider & 0x1F;
-const int _slowC4 = _slowBaud & 0x1F;
+const int _slowC4 = _slowDivider & 0x1F;
 
 /////defining which pin is what on the teensy
 const int _pinLa = 16;
@@ -225,7 +226,7 @@ const char originResponse[ORIGIN_LENGTH] = {
 	0xFF};
 
 int cmd[CMD_LENGTH_LONG];
-uint8_t cmdByte;
+int cmdByte;
 volatile char _bitCount = 0;
 volatile bool _probe = false;
 volatile bool _pole = false;
@@ -278,6 +279,7 @@ void setup() {
 		_ADCVarSlowY = _ADCVarMin;
 	}
 	
+	setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
 	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
 	
 	EEPROM.get(_eepromAPointsX, _cleanedPointsX);
@@ -348,7 +350,7 @@ void setup() {
 	//Serial.print("starting hw serial at freq:");
 	//Serial.println(_slowBaud);
 	//start hardware serial
-	Serial2.begin(1000000);
+	Serial2.begin(_slowBaud);
 	//UART1_C2 &= ~UART_C2_RE;
 	//attach the interrupt which will call the communicate function when the data line transitions from high to low
 
@@ -675,10 +677,10 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	*xOut = affineCoeffs[region][0]*xIn + affineCoeffs[region][1]*yIn + affineCoeffs[region][2];
 	*yOut = affineCoeffs[region][3]*xIn + affineCoeffs[region][4]*yIn + affineCoeffs[region][5];
 	
-	if((abs(*xOut)<3) && (abs(*yOut)>95)){
+	if((abs(*xOut)<5) && (abs(*yOut)>95)){
 		*xOut = 0;
 	}
-	if((abs(*yOut)<3) && (abs(*xOut)>95)){
+	if((abs(*yOut)<5) && (abs(*xOut)>95)){
 		*yOut = 0;
 	}
 }
@@ -728,11 +730,15 @@ void bitCounter(){
 	}
 }
 void communicate(){
+	//Serial.println(_commStatus,DEC);
 	if(_commStatus == _commRead){
-		digitalWriteFast(12,LOW);
+		//digitalWriteFast(12,LOW);
+		//Serial.println(Serial2.available(),DEC);
 		while(Serial2.available() < (CMD_LENGTH_SHORT-1)){}
+			cmdByte = 0;
 			for(int i = 0; i < CMD_LENGTH_SHORT-1; i++){
 				cmd[i] = Serial2.read();
+				//Serial.println(cmd[i],BIN);
 				switch(cmd[i]){
 				case 0x08:
 					cmdByte = (cmdByte<<2);
@@ -740,21 +746,40 @@ void communicate(){
 				case 0xE8:
 					cmdByte = (cmdByte<<2)+1;
 					break;
+ 				case 0xC8:
+					cmdByte = (cmdByte<<2)+1;
+					break;
 				case 0x0F:
+					cmdByte = (cmdByte<<2)+2;
+					break;
+				case 0x0E:
 					cmdByte = (cmdByte<<2)+2;
 					break;
 				case 0xEF:
 					cmdByte = (cmdByte<<2)+3;
 					break;
+				case 0xCF:
+					cmdByte = (cmdByte<<2)+3;
+					break;
+				case 0xEE:
+					cmdByte = (cmdByte<<2)+3;
+					break;
+				case 0xCE:
+					cmdByte = (cmdByte<<2)+3;
+					break;
 				default:
 					//got garbage data or a stop bit where it shouldn't be
+					Serial.println(cmd[i],BIN);
 					cmdByte = -1;
-					if(cmdByte == -1){
-						break;
-					}
+					//Serial.println('o');
+				}
+				if(cmdByte == -1){
+					Serial.println('b');
+					break;
 				}
 			}
 		
+		//Serial.println(cmdByte,HEX);
 		UART1_BDH = _fastBDH;
 		UART1_BDL = _fastBDL;
 		UART1_C4 = _fastC4;
@@ -762,6 +787,7 @@ void communicate(){
 		
 		switch(cmdByte){
 		case 0x00:
+			//digitalWriteFast(12,LOW);
 			timer1.trigger(PROBE_LENGTH*8);
 			//Serial2.write(probeResponse,PROBE_LENGTH);
 			for(int i = 0; i< PROBE_LENGTH; i++){
@@ -770,6 +796,7 @@ void communicate(){
 			Serial.println("probe");
 			_writeQueue = 9+(PROBE_LENGTH-1)*2+1;
 			_commStatus = _commWrite;
+			//digitalWriteFast(12,HIGH);
 		break;
 		case 0x41:
 			timer1.trigger(ORIGIN_LENGTH*8);
@@ -788,16 +815,29 @@ void communicate(){
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
 			//resetFreq();
+			digitalWriteFast(12,LOW);
+			Serial.println("error");
+			Serial.println(_bitCount,DEC);
 			
 			UART1_BDH = _slowBDH;
 			UART1_BDL = _slowBDL;
 			UART1_C4 = _slowC4;
 			UART1_C2 |= UART_C2_RE;
-		  while(Serial2.read() != 0xFF){}
 			Serial2.clear();
+			
+			uint8_t thisbyte = 0;
+		  while(thisbyte != 0xFF){
+				while(!Serial2.available());
+				thisbyte = Serial2.read();
+				Serial.println(thisbyte,BIN);
+			}
+			//Serial2.clear();
+			_commStatus = _commIdle;
 			_bitCount = 0;
+			_writeQueue = 0;
+			digitalWriteFast(12,HIGH);
 	  }
-		digitalWriteFast(12,HIGH);
+		//digitalWriteFast(12,HIGH);
 	}
 	else if(_commStatus == _commPoll){
 		digitalWriteFast(12,LOW);
@@ -809,24 +849,28 @@ void communicate(){
 		timer1.trigger(135);
 		_writeQueue = 25+(POLL_LENGTH-1)*2+1;
 		_commStatus = _commWrite;
-		digitalWriteFast(12,HIGH);
+		//digitalWriteFast(12,HIGH);
 	}
 	else if(_commStatus == _commWrite){
-		digitalWriteFast(12,LOW);
+		//digitalWriteFast(12,LOW);
  		while(_writeQueue > _bitCount){}
 		
 		UART1_BDH = _slowBDH;
 		UART1_BDL = _slowBDL;
 		UART1_C4 = _slowC4;
 		UART1_C2 |= UART_C2_RE;
-		Serial2.clear();
+		
 		_bitCount = 0;
 		_commStatus = _commIdle;
 		_writeQueue = 0;
 		digitalWriteFast(12,HIGH);
+		Serial2.clear();
 	}
+	else{
+		Serial.println('a');
+	}
+	//Serial.println(_commStatus,DEC);
 }
-
 /*******************
 	calibrate
 	run the calibration procedure
