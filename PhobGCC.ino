@@ -240,8 +240,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	//Serial.println("Software version 0.13 (hopefully Phobos remembered to update this message)");
-	Serial.println("This is not a stable version");
+	Serial.println("Software version 0.14 (hopefully Phobos remembered to update this message)");
+	//Serial.println("This is not a stable version");
 	delay(1000);
 	
 	//get the calibration points from EEPROM memory and find all the coefficients
