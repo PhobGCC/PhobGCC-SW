@@ -1075,35 +1075,35 @@ void stickCal(float cleanedPointsX[],float cleanedPointsY[], bool notched,float 
 		
 		notchPointsX[0] = 0;
 		notchPointsX[1] = 100;
-		notchPointsX[2] = 70.7106781187;
+		notchPointsX[2] = 76.2572566;
 		notchPointsX[3] = 0;
-		notchPointsX[4] = -70.7106781187;
+		notchPointsX[4] = -76.2572566;
 		notchPointsX[5] = -100;
-		notchPointsX[6] = -70.7106781187;
+		notchPointsX[6] = -76.2572566;
 		notchPointsX[7] = 0;
-		notchPointsX[8] = 70.7106781187;
+		notchPointsX[8] = 76.2572566;
 		
     notchPointsY[0] = 0;
 		notchPointsY[1] = 0;
-		notchPointsY[2] = 70.7106781187;
+		notchPointsY[2] = 76.2572566;
 		notchPointsY[3] = 100;
-		notchPointsY[4] = 70.7106781187;
+		notchPointsY[4] = 76.2572566;
 		notchPointsY[5] = 0;
-		notchPointsY[6] = -67.5;
+		notchPointsY[6] = -76.2572566;
 		notchPointsY[7] = -100;
-		notchPointsY[8] = -67.5;
+		notchPointsY[8] = -76.2572566;
 	}
 	
 	//////determine the coefficients needed to linearize the stick
 	//create the expected output, what we want our curve to be fit too
-	double x_output[5] = {27.5,56.7893218813,127.5,198.210678119,227.5};
-	double y_output[5] = {27.5,56.7893218813,127.5,198.210678119,227.5};
+	double x_output[5] = {27.5,51.2427434,127.5,203.7572566,227.5};
+	double y_output[5] = {27.5,51.2427434,127.5,203.7572566,227.5};
 	
 	Serial.println("The fit input points are (x,y):");
 	for(int i = 0; i < 5; i++){
-		Serial.print(fitPointsX[i]);
+		Serial.print(fitPointsX[i],8);
 		Serial.print(",");
-		Serial.println(fitPointsY[i]);
+		Serial.println(fitPointsY[i],8);
 	}
 	
 	Serial.println("The corresponding fit output points are (x,y):");
