@@ -253,8 +253,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("Software version 0.16 (hopefully Phobos remembered to update this message)");
-	//Serial.println("This is not a stable version");
+	//Serial.println("Software version 0.16 (hopefully Phobos remembered to update this message)");
+	Serial.println("This is not a stable version");
 	delay(1000);
 
 	readEEPROM();
@@ -537,7 +537,7 @@ void readButtons(){
 			_currentCalStep ++;
 		}
 		else if (!_calAStick){
-			collectCalPoints(true, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
+			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
 			
 			if(_currentCalStep >= _noOfNotches*2){
@@ -567,7 +567,7 @@ void readButtons(){
 			}
 		}
 		else if (_calAStick){
-			collectCalPoints(true, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
+			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
 			
 			if(_currentCalStep >= _noOfNotches*2){
@@ -1073,7 +1073,7 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 		float deltaX = cleanedPointsX[i+1] - cleanedPointsX[0];
 		float deltaY = cleanedPointsY[i+1] - cleanedPointsY[0];
 		float mag = sqrt(deltaX*deltaX + deltaY*deltaY);
-		if(mag < 0.01){
+		if(mag < 0.02){
 			int prevIndex = (i-1+_noOfNotches) % _noOfNotches+1;
 			int nextIndex = (i+1) % _noOfNotches+1;
 			
