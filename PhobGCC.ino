@@ -37,7 +37,7 @@ const int _slowC4 = _slowDivider & 0x1F;
 /////defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;
-const int _pinL = 13;
+const int _pinL = 12;
 const int _pinR = 3;
 const int _pinAx = 15;
 const int _pinAy = 14;
@@ -47,14 +47,14 @@ const int _pinCx = 22;
 const int _pinCy = 21;
 const int _pinRX = 9;
 const int _pinTX = 10;
-const int _pinDr = 7;
+const int _pinDr = 6;
 const int _pinDu = 18;
 const int _pinDl = 17;
-const int _pinDd = 8;
+const int _pinDd = 11;
 const int _pinX = 1;
 const int _pinY = 2;
 const int _pinA = 4;
-const int _pinB = 6;
+const int _pinB = 20;
 const int _pinZ = 0;
 const int _pinS = 19;
 int _pinZSwappable = _pinZ;
@@ -276,20 +276,21 @@ void setup() {
 	
 	//analogReference(1);
 	
-
+	adc->adc0->setReference(ADC_REFERENCE::REF_EXT);
 	adc->adc0->setAveraging(8); // set number of averages
   adc->adc0->setResolution(12); // set bits of resolution
   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-
+/* 
   adc->adc1->setAveraging(32); // set number of averages
   adc->adc1->setResolution(16); // set bits of resolution
   adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_LOW_SPEED ); // change the conversion speed
   adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-  
+   */
 	setPinModes();
 	
-
+	
+/* 
 	VREF::start();
 		
 	double refVoltage = 0;
@@ -310,7 +311,7 @@ void setup() {
   adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
   adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
 	
-	_ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
+	_ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3; */
 	
 	//_slowBaud = findFreq();
   //serialFreq = 950000;
@@ -475,30 +476,20 @@ void resetDefaults(){
 	
 }
 void setPinModes(){
-	pinMode(0,INPUT_PULLUP);
-	pinMode(1,INPUT_PULLUP);
-	pinMode(2,INPUT_PULLUP);
-	pinMode(3,INPUT_PULLUP);
-	pinMode(4,INPUT_PULLUP);
-	pinMode(6,INPUT_PULLUP);
-	pinMode(11,INPUT_PULLUP);
-	//pinMode(12,INPUT_PULLUP);
-	pinMode(12,OUTPUT);
-	pinMode(13,INPUT_PULLUP);
-	pinMode(17,INPUT_PULLUP);
-	pinMode(18,INPUT_PULLUP);
-	pinMode(19,INPUT_PULLUP);
+	
+	pinMode(_pinL,INPUT_PULLUP);
+	pinMode(_pinR,INPUT_PULLUP);
+	pinMode(_pinDr,INPUT_PULLUP);
+	pinMode(_pinDu,INPUT_PULLUP);
+	pinMode(_pinDl,INPUT_PULLUP);
+	pinMode(_pinDd,INPUT_PULLUP);
+	pinMode(_pinX,INPUT_PULLUP);
+	pinMode(_pinY,INPUT_PULLUP);
+	pinMode(_pinA,INPUT_PULLUP);
+	pinMode(_pinB,INPUT_PULLUP);
+	pinMode(_pinZ,INPUT_PULLUP);
+	pinMode(_pinS,INPUT_PULLUP);
 
-	pinMode(7,INPUT_PULLUP);
-	pinMode(8,INPUT_PULLUP);
-	//pinMode(9,INPUT);
-	//pinMode(10,INPUT);
-	//pinMode(14,INPUT);
-	//pinMode(15,INPUT);
-	//pinMode(16,INPUT);
-	//pinMode(21,INPUT);
-	//pinMode(22,INPUT);
-	//pinMode(23,INPUT);
 	
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
@@ -722,11 +713,18 @@ void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
 	*bADCVar = ADCVarSlow;
 }
 void readSticks(){
-	 _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+	 //_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
-	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+	//_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+	//_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0;
+	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0;
+/* 	Serial.print(_aStickX);
+	Serial.print(",");
+	Serial.print(_aStickY);
+	Serial.print(",");
+	Serial.println(_ADCScale); */
 	
 	
 	//read the L and R sliders
@@ -1143,9 +1141,11 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 	
 	for(int i = 0; i < 128; i++){
 		if(aStick){
-			_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
-			X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-			Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+			//_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+			//X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+			//Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+			X += adc->adc0->analogRead(_pinAx)/4096.0;
+			Y += adc->adc0->analogRead(_pinAy)/4096.0;
 		}
 		else{
 			X += adc->adc0->analogRead(_pinCx)/4096.0;
