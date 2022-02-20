@@ -7,6 +7,8 @@ Check out the wiki for some info about how the phobGCC works: https://github.com
 
 Build Guide (Work in Progress): https://docs.google.com/presentation/d/1LcwiV0j9Wl79WmxCeX1okrVXH2PBrWv2zAe5m7BEGlU/edit#slide=id.g10e392c88b8_0_0
 
+Settup Guide: https://docs.google.com/document/d/1lB7bE-KEneM3xCtgxsYjDxQeL24X8SkM33M0NE3Pnig/edit?usp=sharing
+
 Current board version:
 <img src="/Documentation/Front.png" alt="V1"/>
 
