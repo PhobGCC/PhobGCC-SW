@@ -63,7 +63,8 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+//const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+const float _accelVarFast = 0.1;
 const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
 const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
 const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
@@ -82,6 +83,10 @@ float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to 
 float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
 float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
 float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
+float _podeThreshX = 0.5;
+float _podeThreshY = 0.5;
+float _velFilterX = 0;
+float _velFilterY = 0;
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
@@ -192,7 +197,9 @@ union Buttons{
 }btn;
 
 float _aStickX;
+float _aStickLastX;
 float _aStickY;
+float _aStickLastY;
 float _cStickX;
 float _cStickY;
 
@@ -253,8 +260,8 @@ void setup() {
 	
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("Software version 0.17 (hopefully Phobos remembered to update this message)");
-	//Serial.println("This is not a stable version");
+	//Serial.println("Software version 0.17 (hopefully Phobos remembered to update this message)");
+	Serial.println("This is not a stable version");
 	delay(1000);
 
 	readEEPROM();
@@ -775,18 +782,22 @@ void readSticks(){
 	notchRemap(_xState[0],_yState[0], &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 	
-//	if((xState[1] < 0.1) && (xState[1] > -0.1)){
-//			btn.Ax = (uint8_t) xState[0];
-//	}
-//	
-//	if((_yState[1] < 0.1) && (_yState[1] > -0.1)){
-//			btn.Ay = (uint8_t) _yState[0];
-//	}
-
+	float filterWeight = 0.8;
+	_velFilterX = filterWeight*_velFilterX + (1-filterWeight)*(posAx-_aStickLastX)/_dT;
+	_velFilterY = filterWeight*_velFilterY + (1-filterWeight)*(posAy-_aStickLastY)/_dT;
 	//assign the remapped values to the button struct
 	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
+		
+		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
+			btn.Ax = (uint8_t) (posAx+127.5);
+		}
+		
+		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
+			btn.Ay = (uint8_t) (posAy+127.5);
+		}
+	
+		//btn.Ax = (uint8_t) (posAx+127.5);
+		//btn.Ay = (uint8_t) (posAy+127.5);
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
@@ -798,12 +809,23 @@ void readSticks(){
 		btn.Cy = 127;
 	}
 	
-	//Serial.println();
-	//Serial.print(_aStickX,8);
+	_aStickLastX = posAx;
+	_aStickLastY = posAy;
+	
+	Serial.println();
+	Serial.print(_dT/16.7);
+	Serial.print(",");
+	Serial.print(xZ[0],8);
+	Serial.print(",");
+	Serial.print(_velFilterX*10,8);
 	//Serial.print(",");
-	//Serial.print(_aStickY,8);
+	//Serial.print(yZ[0],8);
+	Serial.print(",");
+	Serial.print((posAx+127.5),8);
 	//Serial.print(",");
-	//Serial.print(btn.Ax);
+	//Serial.print((posAy+127.5),8);
+	Serial.print(",");
+	Serial.print(btn.Ax);
 	//Serial.print(",");
 	//Serial.print(btn.Ay);
 }
