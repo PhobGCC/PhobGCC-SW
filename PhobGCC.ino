@@ -539,7 +539,7 @@ void readButtons(){
 			_currentCalStep ++;
 			
 			if(_currentCalStep >= _noOfNotches*2){
-				Serial.println("finished collecting the calibration points for the A stick");
+				Serial.println("finished collecting the calibration points for the C stick");
 				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
 				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
 				EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
@@ -788,16 +788,16 @@ void readSticks(){
 	//assign the remapped values to the button struct
 	if(_running){
 		
-		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
+/* 		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
 			btn.Ax = (uint8_t) (posAx+127.5);
 		}
 		
 		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
 			btn.Ay = (uint8_t) (posAy+127.5);
-		}
+		} */
 	
-		//btn.Ax = (uint8_t) (posAx+127.5);
-		//btn.Ay = (uint8_t) (posAy+127.5);
+		btn.Ax = (uint8_t) (posAx+127.5);
+		btn.Ay = (uint8_t) (posAy+127.5);
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
@@ -812,20 +812,20 @@ void readSticks(){
 	_aStickLastX = posAx;
 	_aStickLastY = posAy;
 	
-	Serial.println();
-	Serial.print(_dT/16.7);
-	Serial.print(",");
-	Serial.print(xZ[0],8);
-	Serial.print(",");
-	Serial.print(_velFilterX*10,8);
+	//Serial.println();
+	//Serial.print(_dT/16.7);
+	//Serial.print(",");
+	//Serial.print(xZ[0],8);
+	//Serial.print(",");
+	//Serial.print(_velFilterX*10,8);
 	//Serial.print(",");
 	//Serial.print(yZ[0],8);
-	Serial.print(",");
-	Serial.print((posAx+127.5),8);
+	//Serial.print(",");
+	//Serial.print((posAx+127.5),8);
 	//Serial.print(",");
 	//Serial.print((posAy+127.5),8);
-	Serial.print(",");
-	Serial.print(btn.Ax);
+	//Serial.print(",");
+	//Serial.print(btn.Ax);
 	//Serial.print(",");
 	//Serial.print(btn.Ay);
 }
