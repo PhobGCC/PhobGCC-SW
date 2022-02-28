@@ -63,7 +63,7 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+const float _accelVarFast = 0.1; //governs the acceleration variation around the edge of the gate, higher value means less filtering
 const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
 const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
 const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
@@ -82,6 +82,10 @@ float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to 
 float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
 float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
 float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
+float _podeThreshX = 0.2;
+float _podeThreshY = 0.2;
+float _velFilterX = 0;
+float _velFilterY = 0;												 
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
@@ -192,7 +196,9 @@ union Buttons{
 }btn;
 
 float _aStickX;
+float _posALastX;						 
 float _aStickY;
+float _posALastY;								 
 float _cStickX;
 float _cStickY;
 
@@ -475,30 +481,19 @@ void resetDefaults(){
 	
 }
 void setPinModes(){
-	pinMode(0,INPUT_PULLUP);
-	pinMode(1,INPUT_PULLUP);
-	pinMode(2,INPUT_PULLUP);
-	pinMode(3,INPUT_PULLUP);
-	pinMode(4,INPUT_PULLUP);
-	pinMode(6,INPUT_PULLUP);
-	pinMode(11,INPUT_PULLUP);
-	//pinMode(12,INPUT_PULLUP);
-	pinMode(12,OUTPUT);
-	pinMode(13,INPUT_PULLUP);
-	pinMode(17,INPUT_PULLUP);
-	pinMode(18,INPUT_PULLUP);
-	pinMode(19,INPUT_PULLUP);
-
-	pinMode(7,INPUT_PULLUP);
-	pinMode(8,INPUT_PULLUP);
-	//pinMode(9,INPUT);
-	//pinMode(10,INPUT);
-	//pinMode(14,INPUT);
-	//pinMode(15,INPUT);
-	//pinMode(16,INPUT);
-	//pinMode(21,INPUT);
-	//pinMode(22,INPUT);
-	//pinMode(23,INPUT);
+	pinMode(_pinL,INPUT_PULLUP);
+	pinMode(_pinR,INPUT_PULLUP);
+	pinMode(_pinDr,INPUT_PULLUP);
+	pinMode(_pinDu,INPUT_PULLUP);
+	pinMode(_pinDl,INPUT_PULLUP);
+	pinMode(_pinDd,INPUT_PULLUP);
+	pinMode(_pinX,INPUT_PULLUP);
+	pinMode(_pinY,INPUT_PULLUP);
+										
+	pinMode(_pinA,INPUT_PULLUP);
+	pinMode(_pinB,INPUT_PULLUP);
+	pinMode(_pinZ,INPUT_PULLUP);
+	pinMode(_pinS,INPUT_PULLUP);
 	
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
@@ -777,18 +772,21 @@ void readSticks(){
 	notchRemap(_xState[0],_yState[0], &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 	
-//	if((xState[1] < 0.1) && (xState[1] > -0.1)){
-//			btn.Ax = (uint8_t) xState[0];
-//	}
-//	
-//	if((_yState[1] < 0.1) && (_yState[1] > -0.1)){
-//			btn.Ay = (uint8_t) _yState[0];
-//	}
-
+	
+	float filterWeight = 0.6;
+	_velFilterX = filterWeight*_velFilterX + (1-filterWeight)*(posAx-_posALastX)/_dT;
+	_velFilterY = filterWeight*_velFilterY + (1-filterWeight)*(posAy-_posALastY)/_dT;
 	//assign the remapped values to the button struct
 	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
+		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
+			btn.Ax = (uint8_t) (posAx+127.5);
+		}
+		
+		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
+			btn.Ay = (uint8_t) (posAy+127.5);
+		}
+		//btn.Ax = (uint8_t) (posAx+127.5);
+		//btn.Ay = (uint8_t) (posAy+127.5);
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
@@ -800,12 +798,22 @@ void readSticks(){
 		btn.Cy = 127;
 	}
 	
-	//Serial.println();
-	//Serial.print(_aStickX,8);
+	_posALastX = posAx;
+	_posALastY = posAy;
+	Serial.println();
+	Serial.print(_dT/16.7);
+	Serial.print(",");
+	Serial.print(xZ[0],8);
+	Serial.print(",");
+	Serial.print(_velFilterX*10,8);
 	//Serial.print(",");
-	//Serial.print(_aStickY,8);
+	//Serial.print(yZ[0],8);
+	Serial.print(",");
+	Serial.print((posAx+127.5),8);
 	//Serial.print(",");
-	//Serial.print(btn.Ax);
+	//Serial.print((posAy+127.5),8);
+	Serial.print(",");
+	Serial.print(btn.Ax);
 	//Serial.print(",");
 	//Serial.print(btn.Ay);
 }
