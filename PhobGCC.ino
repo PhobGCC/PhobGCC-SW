@@ -63,7 +63,7 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-const float _accelVarFast = 0.1; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+const float _accelVarFast = 0.05; //governs the acceleration variation around the edge of the gate, higher value means less filtering
 const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
 const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
 const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
@@ -82,8 +82,8 @@ float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to 
 float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
 float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
 float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
-float _podeThreshX = 0.2;
-float _podeThreshY = 0.2;
+float _podeThreshX = 9999.0;
+float _podeThreshY = 9999.0;
 float _velFilterX = 0;
 float _velFilterY = 0;												 
 
@@ -776,14 +776,21 @@ void readSticks(){
 	float filterWeight = 0.6;
 	_velFilterX = filterWeight*_velFilterX + (1-filterWeight)*(posAx-_posALastX)/_dT;
 	_velFilterY = filterWeight*_velFilterY + (1-filterWeight)*(posAy-_posALastY)/_dT;
+	float hystVal = 0.5;
 	//assign the remapped values to the button struct
 	if(_running){
 		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
-			btn.Ax = (uint8_t) (posAx+127.5);
+			float diffAx = (posAx+127.5)-btn.Ax;
+			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+				btn.Ax = (uint8_t) (posAx+127.5);
+			}
 		}
 		
 		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
-			btn.Ay = (uint8_t) (posAy+127.5);
+			float diffAy = (posAy+127.5)-btn.Ay;
+			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+				btn.Ay = (uint8_t) (posAy+127.5);
+			}
 		}
 		//btn.Ax = (uint8_t) (posAx+127.5);
 		//btn.Ay = (uint8_t) (posAy+127.5);
@@ -800,20 +807,20 @@ void readSticks(){
 	
 	_posALastX = posAx;
 	_posALastY = posAy;
-	Serial.println();
-	Serial.print(_dT/16.7);
-	Serial.print(",");
-	Serial.print(xZ[0],8);
-	Serial.print(",");
-	Serial.print(_velFilterX*10,8);
+	//Serial.println();
+	//Serial.print(_dT/16.7);
+	//Serial.print(",");
+	//Serial.print(xZ[0],8);
+	//Serial.print(",");
+	//Serial.print(_velFilterX*10,8);
 	//Serial.print(",");
 	//Serial.print(yZ[0],8);
-	Serial.print(",");
-	Serial.print((posAx+127.5),8);
+	//Serial.print(",");
+	//Serial.print((posAx+127.5),8);
 	//Serial.print(",");
 	//Serial.print((posAy+127.5),8);
-	Serial.print(",");
-	Serial.print(btn.Ax);
+	//Serial.print(",");
+	//Serial.print(btn.Ax);
 	//Serial.print(",");
 	//Serial.print(btn.Ay);
 }
@@ -1060,8 +1067,9 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 	cleanedPointsX[0] = 0;
 	cleanedPointsY[0] = 0;
 	
+	Serial.println("The notch points are:");
 	for(int i = 0; i < _noOfNotches; i++){
-			//add the origin values toe the first x,y point
+			//add the origin values to the first x,y point
 			cleanedPointsX[0] += calPointsX[i*2];
 			cleanedPointsY[0] += calPointsY[i*2];
 			
@@ -1070,6 +1078,12 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 			cleanedPointsY[i+1] = calPointsY[i*2+1];
 			
 			calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
+			notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
+			notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
+			
+			Serial.print(notchPointsX[i+1]);
+			Serial.print(",");
+			Serial.println(notchPointsY[i+1]);
 		}
 		
 
