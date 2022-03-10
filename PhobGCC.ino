@@ -1078,8 +1078,10 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 			cleanedPointsY[i+1] = calPointsY[i*2+1];
 			
 			calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
-			notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
-			notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
+			//notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
+			//notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
+			notchPointsX[i+1] = round(notchPointsX[i+1]);
+			notchPointsY[i+1] = round(notchPointsY[i+1]);
 			
 			Serial.print(notchPointsX[i+1]);
 			Serial.print(",");
