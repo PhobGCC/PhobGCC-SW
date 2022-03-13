@@ -98,6 +98,8 @@ const float _maxStickAngle = 0.67195176201;
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 bool _advanceCal = false;
 bool _advanceCalPressed = false;
+bool _undoCal = false;
+bool _undoCalPressed = false;
 int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
 const int _calibrationPoints = _noOfNotches+1; //number of calibration points for the c-stick and a-stick for a controller without notches
@@ -255,7 +257,7 @@ void setup() {
 
 	//start USB serial
 	Serial.begin(57600);
-	Serial.println("Software version 0.17f2 (hopefully Frost remembered to update this message)");
+	Serial.println("Software version 0.17f3 (hopefully Frost remembered to update this message)");
 	Serial.println("This is not a stable version");
 	delay(1000);
 
@@ -559,13 +561,28 @@ void readButtons(){
 		readJumpConfig();
 	}
 
+	//Undo Calibration using B-button
+	if(btn.B && _undoCal && !_undoCalPressed) {
+		_undoCalPressed = true;
+		if(_currentCalStep % 2 == 0 && _currentCalStep != 32 && _currentCalStep != 0) {
+			_currentCalStep --;
+			_currentCalStep --;
+		}
+	} else if(!btn.B) {
+		_undoCalPressed = false;
+	}
+
 	//Advance Calibration Using A-button
 	if(btn.A && _advanceCal && !_advanceCalPressed){
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
-
+			if(_currentCalStep >= 2) {
+				_undoCal = true;
+			} else {
+				_undoCal = false;
+			}
 			if(_currentCalStep >= _noOfNotches*2){
 				Serial.println("finished collecting the calibration points for the C stick");
 				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
@@ -584,7 +601,11 @@ void readButtons(){
 		else if (_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
-
+			if(_currentCalStep >= 2) {
+				_undoCal = true;
+			} else {
+				_undoCal = false;
+			}
 			if(_currentCalStep >= _noOfNotches*2){
 				Serial.println("finished collecting the calibration points for the A stick");
 				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
