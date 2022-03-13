@@ -61,6 +61,8 @@ int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
+int _lConfig = 0;
+int _rConfig = 0;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
 const float _accelVarFast = 0.05; //governs the acceleration variation around the edge of the gate, higher value means less filtering
@@ -146,7 +148,8 @@ const int _eepromADCVarY = _eepromADCVarX+_bytesPerFloat;
 const int _eepromJump = _eepromADCVarY+_bytesPerFloat;
 const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
 const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
-
+const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
+const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -260,7 +263,7 @@ void setup() {
 
 	//start USB serial
 	Serial.begin(57600);
-	//Serial.println("Software version 0.17f4 (hopefully Frost remembered to update this message)");
+	//Serial.println("Software version 0.17f5 (hopefully Frost remembered to update this message)");
 	Serial.println("This is not a stable version");
 	delay(1000);
 
@@ -372,6 +375,20 @@ void readEEPROM(){
 	}
 	setJump(_jumpConfig);
 
+	//get the L setting
+	EEPROM.get(_eepromLToggle, _lConfig);
+	if(std::isnan(_lConfig)) {
+		_lConfig = 0;
+	}
+	setLRToggle(0, _lConfig, false);
+
+	//get the R setting
+	EEPROM.get(_eepromRToggle, _rConfig);
+	if(std::isnan(_rConfig)) {
+		_rConfig = 0;
+	}
+	setLRToggle(1, _rConfig, false);
+
 	//get the x-axis snapback filter settings
 	EEPROM.get(_eepromADCVarX, _ADCVarSlowX);
 	Serial.print("the _ADCVarSlowX value from eeprom is:");
@@ -436,6 +453,13 @@ void resetDefaults(){
 	_jumpConfig = 0;
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
+
+	_lConfig = 0;
+	_rConfig = 0;
+	EEPROM.put(_eepromLToggle, _lConfig);
+	EEPROM.put(_eepromRToggle, _rConfig);
+	setLRToggle(0, _lConfig, false);
+	setLRToggle(1, _rConfig, false);
 
 	_ADCVarSlowX = _ADCVarMin;
 	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
@@ -590,7 +614,14 @@ void readButtons(){
 		adjustSnapback(btn.Cx,btn.Cy, _filterAdjustmentGranularity);
 	}
 	else if(bounceDd.fell()){
-		readJumpConfig();
+		if(btn.L) {
+			setLRToggle(0, 0, true);
+		} else if(btn.R) {
+			setLRToggle(1, 0, true);
+		} else {
+			readJumpConfig();
+		}
+
 	}
 	/*
 	bool dPad = (btn.Dl || btn.Dr);
@@ -720,6 +751,41 @@ void setJump(int jumpConfig){
 				_pinYSwappable = _pinY;
 	}
 }
+/*
+* setLRToggle handles the current state of the L and R Triggers and whether or not they should be enabled or not.
+* int targetTrigger handles identifying the trigger, L = 0  and R = 1.
+* if it is 0, it should read out an actual analog value. If it is 1, it shouldn't.
+* config handles incoming values from the EEPROM. takes the state and sets it.
+* changeTrigger handles whether or not the current configuration of the targetTrigger should be swapped or not.
+* TODO: Create variables for the states and triggers.
+*/
+void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
+	if(changeTrigger) {
+		if(targetTrigger == 0) {
+			if(_lConfig == 0) {
+				_lConfig = 1;
+			} else {
+				_lConfig = 0;
+			}
+			EEPROM.put(_eepromLToggle, _lConfig);
+		} else {
+			if(_rConfig == 0) {
+				_rConfig = 1;
+			} else {
+				_rConfig = 0;
+			}
+			EEPROM.put(_eepromRToggle, _rConfig);
+		}
+	} else {
+		if(targetTrigger == 0) {
+			_lConfig = config;
+			EEPROM.put(_eepromLToggle, _lConfig);
+		} else {
+			_rConfig = config;
+			EEPROM.put(_eepromRToggle, _rConfig);
+		}
+	}
+}
 void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
 	*aADCVar = (_ADCVarFast - ADCVarSlow)/_x6;
 	*bADCVar = ADCVarSlow;
@@ -733,8 +799,17 @@ void readSticks(){
 
 
 	//read the L and R sliders
-	btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	if(_lConfig == 0) {
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+	} else {
+			btn.La = (uint8_t) 0;
+	}
+
+	if(_rConfig == 0) {
+		btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	} else {
+			btn.Ra = (uint8_t) 0;
+	}
 
 	//read the C stick
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
