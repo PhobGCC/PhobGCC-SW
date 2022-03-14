@@ -63,6 +63,9 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 int _lConfig = 0;
 int _rConfig = 0;
+int _lTrigger = 0;
+int _rTrigger = 1;
+bool _changeTrigger = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
 const float _accelVarFast = 0.05; //governs the acceleration variation around the edge of the gate, higher value means less filtering
@@ -263,7 +266,7 @@ void setup() {
 
 	//start USB serial
 	Serial.begin(57600);
-	//Serial.println("Software version 0.17f5 (hopefully Frost remembered to update this message)");
+	//Serial.println("Software version 0.17 (hopefully Phobos remembered to update this message)");
 	Serial.println("This is not a stable version");
 	delay(1000);
 
@@ -380,14 +383,14 @@ void readEEPROM(){
 	if(std::isnan(_lConfig)) {
 		_lConfig = 0;
 	}
-	setLRToggle(0, _lConfig, false);
+	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
 	if(std::isnan(_rConfig)) {
 		_rConfig = 0;
 	}
-	setLRToggle(1, _rConfig, false);
+	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
 	//get the x-axis snapback filter settings
 	EEPROM.get(_eepromADCVarX, _ADCVarSlowX);
@@ -458,8 +461,8 @@ void resetDefaults(){
 	_rConfig = 0;
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
-	setLRToggle(0, _lConfig, false);
-	setLRToggle(1, _rConfig, false);
+	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
+	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
 	_ADCVarSlowX = _ADCVarMin;
 	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
@@ -615,9 +618,9 @@ void readButtons(){
 	}
 	else if(bounceDd.fell()){
 		if(btn.L) {
-			setLRToggle(0, 0, true);
+			setLRToggle(_lTrigger, 0, _changeTrigger);
 		} else if(btn.R) {
-			setLRToggle(1, 0, true);
+			setLRToggle(_rTrigger, 0, _changeTrigger);
 		} else {
 			readJumpConfig();
 		}
@@ -761,7 +764,7 @@ void setJump(int jumpConfig){
 */
 void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 	if(changeTrigger) {
-		if(targetTrigger == 0) {
+		if(targetTrigger == _lTrigger) {
 			if(_lConfig == 0) {
 				_lConfig = 1;
 			} else {
@@ -777,7 +780,7 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 			EEPROM.put(_eepromRToggle, _rConfig);
 		}
 	} else {
-		if(targetTrigger == 0) {
+		if(targetTrigger == _lTrigger) {
 			_lConfig = config;
 			EEPROM.put(_eepromLToggle, _lConfig);
 		} else {
