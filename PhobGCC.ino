@@ -659,6 +659,7 @@ void readButtons(){
 	} else if(!btn.A) {
 		_advanceCalPressed = false;
 	}
+
 	/*
 	bool dPad = (btn.Dl || btn.Dr);
 
