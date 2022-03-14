@@ -61,9 +61,14 @@ int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
+int _lConfig = 0;
+int _rConfig = 0;
+int _lTrigger = 0;
+int _rTrigger = 1;
+bool _changeTrigger = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-const float _accelVarFast = 0.5; //governs the acceleration variation around the edge of the gate, higher value means less filtering
+const float _accelVarFast = 0.05; //governs the acceleration variation around the edge of the gate, higher value means less filtering
 const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
 const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
 const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
@@ -82,6 +87,11 @@ float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to 
 float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
 float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
 float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
+float _podeThreshX = 9999.0;
+float _podeThreshY = 9999.0;
+float _velFilterX = 0;
+float _velFilterY = 0;
+int _filterAdjustmentGranularity;
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
@@ -145,7 +155,8 @@ const int _eepromADCVarY = _eepromADCVarX+_bytesPerFloat;
 const int _eepromJump = _eepromADCVarY+_bytesPerFloat;
 const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
 const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
-
+const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
+const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -196,7 +207,9 @@ union Buttons{
 }btn;
 
 float _aStickX;
+float _posALastX;
 float _aStickY;
+float _posALastY;
 float _cStickX;
 float _cStickY;
 
@@ -369,6 +382,20 @@ void readEEPROM(){
 	}
 	setJump(_jumpConfig);
 
+	//get the L setting
+	EEPROM.get(_eepromLToggle, _lConfig);
+	if(std::isnan(_lConfig)) {
+		_lConfig = 0;
+	}
+	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
+
+	//get the R setting
+	EEPROM.get(_eepromRToggle, _rConfig);
+	if(std::isnan(_rConfig)) {
+		_rConfig = 0;
+	}
+	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
+
 	//get the x-axis snapback filter settings
 	EEPROM.get(_eepromADCVarX, _ADCVarSlowX);
 	Serial.print("the _ADCVarSlowX value from eeprom is:");
@@ -434,6 +461,13 @@ void resetDefaults(){
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
+	_lConfig = 0;
+	_rConfig = 0;
+	EEPROM.put(_eepromLToggle, _lConfig);
+	EEPROM.put(_eepromRToggle, _rConfig);
+	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
+	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
+
 	_ADCVarSlowX = _ADCVarMin;
 	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
 	_ADCVarSlowY = _ADCVarMin;
@@ -479,30 +513,19 @@ void resetDefaults(){
 
 }
 void setPinModes(){
-	pinMode(0,INPUT_PULLUP);
-	pinMode(1,INPUT_PULLUP);
-	pinMode(2,INPUT_PULLUP);
-	pinMode(3,INPUT_PULLUP);
-	pinMode(4,INPUT_PULLUP);
-	pinMode(6,INPUT_PULLUP);
-	pinMode(11,INPUT_PULLUP);
-	//pinMode(12,INPUT_PULLUP);
-	pinMode(12,OUTPUT);
-	pinMode(13,INPUT_PULLUP);
-	pinMode(17,INPUT_PULLUP);
-	pinMode(18,INPUT_PULLUP);
-	pinMode(19,INPUT_PULLUP);
+	pinMode(_pinL,INPUT_PULLUP);
+	pinMode(_pinR,INPUT_PULLUP);
+	pinMode(_pinDr,INPUT_PULLUP);
+	pinMode(_pinDu,INPUT_PULLUP);
+	pinMode(_pinDl,INPUT_PULLUP);
+	pinMode(_pinDd,INPUT_PULLUP);
+	pinMode(_pinX,INPUT_PULLUP);
+	pinMode(_pinY,INPUT_PULLUP);
 
-	pinMode(7,INPUT_PULLUP);
-	pinMode(8,INPUT_PULLUP);
-	//pinMode(9,INPUT);
-	//pinMode(10,INPUT);
-	//pinMode(14,INPUT);
-	//pinMode(15,INPUT);
-	//pinMode(16,INPUT);
-	//pinMode(21,INPUT);
-	//pinMode(22,INPUT);
-	//pinMode(23,INPUT);
+	pinMode(_pinA,INPUT_PULLUP);
+	pinMode(_pinB,INPUT_PULLUP);
+	pinMode(_pinZ,INPUT_PULLUP);
+	pinMode(_pinS,INPUT_PULLUP);
 
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
@@ -532,6 +555,7 @@ void readButtons(){
 	bounceDl.update();
 	bounceDd.update();
 
+
 	//check the dpad buttons to change the controller settings
 	if(bounceDr.fell()){
 		if(_currentCalStep == -1){
@@ -555,12 +579,23 @@ void readButtons(){
 		}
 	}
 	else if(bounceDu.fell()){
-		adjustSnapback(btn.Cx,btn.Cy);
+		if(btn.Z) {
+			_filterAdjustmentGranularity = 3;
+		} else {
+			_filterAdjustmentGranularity = 1;
+		}
+		adjustSnapback(btn.Cx,btn.Cy, _filterAdjustmentGranularity);
 	}
 	else if(bounceDd.fell()){
-		readJumpConfig();
-	}
+		if(btn.L) {
+			setLRToggle(_lTrigger, 0, _changeTrigger);
+		} else if(btn.R) {
+			setLRToggle(_rTrigger, 0, _changeTrigger);
+		} else {
+			readJumpConfig();
+		}
 
+	}
 	//Undo Calibration using B-button
 	if(btn.B && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
@@ -650,40 +685,42 @@ void readButtons(){
 	}
 	_lastDPad = dPad; */
 }
-void adjustSnapback(int cStickX, int cStickY){
+void adjustSnapback(int cStickX, int cStickY, int steps){
 	Serial.println("adjusting snapback filtering");
-	if(cStickX > 127+50){
-		_ADCVarSlowX = _ADCVarSlowX*1.1;
-		Serial.print("X filtering increased to:");
-		Serial.println(_ADCVarSlowX);
-	}
-	else if(cStickX < 127-50){
-		_ADCVarSlowX = _ADCVarSlowX*0.90909090909;
-		Serial.print("X filtering decreased to:");
-		Serial.println(_ADCVarSlowX);
-	}
-	if(_ADCVarSlowX >_ADCVarMax){
-		_ADCVarSlowX = _ADCVarMax;
-	}
-	else if(_ADCVarSlowX < _ADCVarMin){
-		_ADCVarSlowX = _ADCVarMin;
-	}
+	for(int i = 0; i < steps; i++) {
+		if(cStickX > 127+50){
+			_ADCVarSlowX = _ADCVarSlowX*1.1;
+			Serial.print("X filtering increased to:");
+			Serial.println(_ADCVarSlowX);
+		}
+		else if(cStickX < 127-50){
+			_ADCVarSlowX = _ADCVarSlowX*0.90909090909;
+			Serial.print("X filtering decreased to:");
+			Serial.println(_ADCVarSlowX);
+		}
+		if(_ADCVarSlowX >_ADCVarMax){
+			_ADCVarSlowX = _ADCVarMax;
+		}
+		else if(_ADCVarSlowX < _ADCVarMin){
+			_ADCVarSlowX = _ADCVarMin;
+		}
 
-	if(cStickY > 127+50){
-		_ADCVarSlowY = _ADCVarSlowY*1.1;
-		Serial.print("Y filtering increased to:");
-		Serial.println(_ADCVarSlowY);
-	}
-	else if(cStickY < 127-50){
-		_ADCVarSlowY = _ADCVarSlowY*0.9;
-		Serial.print("Y filtering decreased to:");
-		Serial.println(_ADCVarSlowY);
-	}
-	if(_ADCVarSlowY >_ADCVarMax){
-		_ADCVarSlowY = _ADCVarMax;
-	}
-	else if(_ADCVarSlowY < _ADCVarMin){
-		_ADCVarSlowY = _ADCVarMin;
+		if(cStickY > 127+50){
+			_ADCVarSlowY = _ADCVarSlowY*1.1;
+			Serial.print("Y filtering increased to:");
+			Serial.println(_ADCVarSlowY);
+		}
+		else if(cStickY < 127-50){
+			_ADCVarSlowY = _ADCVarSlowY*0.9;
+			Serial.print("Y filtering decreased to:");
+			Serial.println(_ADCVarSlowY);
+		}
+		if(_ADCVarSlowY >_ADCVarMax){
+			_ADCVarSlowY = _ADCVarMax;
+		}
+		else if(_ADCVarSlowY < _ADCVarMin){
+			_ADCVarSlowY = _ADCVarMin;
+		}
 	}
 
 	Serial.println("Var scale parameters");
@@ -750,6 +787,41 @@ void setJump(int jumpConfig){
 				_pinYSwappable = _pinY;
 	}
 }
+/*
+* setLRToggle handles the current state of the L and R Triggers and whether or not they should be enabled or not.
+* int targetTrigger handles identifying the trigger, L = 0  and R = 1.
+* if it is 0, it should read out an actual analog value. If it is 1, it shouldn't.
+* config handles incoming values from the EEPROM. takes the state and sets it.
+* changeTrigger handles whether or not the current configuration of the targetTrigger should be swapped or not.
+* TODO: Create variables for the states and triggers.
+*/
+void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
+	if(changeTrigger) {
+		if(targetTrigger == _lTrigger) {
+			if(_lConfig == 0) {
+				_lConfig = 1;
+			} else {
+				_lConfig = 0;
+			}
+			EEPROM.put(_eepromLToggle, _lConfig);
+		} else {
+			if(_rConfig == 0) {
+				_rConfig = 1;
+			} else {
+				_rConfig = 0;
+			}
+			EEPROM.put(_eepromRToggle, _rConfig);
+		}
+	} else {
+		if(targetTrigger == _lTrigger) {
+			_lConfig = config;
+			EEPROM.put(_eepromLToggle, _lConfig);
+		} else {
+			_rConfig = config;
+			EEPROM.put(_eepromRToggle, _rConfig);
+		}
+	}
+}
 void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
 	*aADCVar = (_ADCVarFast - ADCVarSlow)/_x6;
 	*bADCVar = ADCVarSlow;
@@ -763,8 +835,17 @@ void readSticks(){
 
 
 	//read the L and R sliders
-	btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	if(_lConfig == 0) {
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+	} else {
+			btn.La = (uint8_t) 0;
+	}
+
+	if(_rConfig == 0) {
+		btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	} else {
+			btn.Ra = (uint8_t) 0;
+	}
 
 	//read the C stick
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
@@ -810,18 +891,28 @@ void readSticks(){
 	notchRemap(_xState[0],_yState[0], &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
-//	if((xState[1] < 0.1) && (xState[1] > -0.1)){
-//			btn.Ax = (uint8_t) xState[0];
-//	}
-//
-//	if((_yState[1] < 0.1) && (_yState[1] > -0.1)){
-//			btn.Ay = (uint8_t) _yState[0];
-//	}
 
+	float filterWeight = 0.6;
+	_velFilterX = filterWeight*_velFilterX + (1-filterWeight)*(posAx-_posALastX)/_dT;
+	_velFilterY = filterWeight*_velFilterY + (1-filterWeight)*(posAy-_posALastY)/_dT;
+	float hystVal = 0.5;
 	//assign the remapped values to the button struct
 	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
+		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
+			float diffAx = (posAx+127.5)-btn.Ax;
+			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+				btn.Ax = (uint8_t) (posAx+127.5);
+			}
+		}
+
+		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
+			float diffAy = (posAy+127.5)-btn.Ay;
+			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+				btn.Ay = (uint8_t) (posAy+127.5);
+			}
+		}
+		//btn.Ax = (uint8_t) (posAx+127.5);
+		//btn.Ay = (uint8_t) (posAy+127.5);
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
@@ -833,10 +924,20 @@ void readSticks(){
 		btn.Cy = 127;
 	}
 
+	_posALastX = posAx;
+	_posALastY = posAy;
 	//Serial.println();
-	//Serial.print(_aStickX,8);
+	//Serial.print(_dT/16.7);
 	//Serial.print(",");
-	//Serial.print(_aStickY,8);
+	//Serial.print(xZ[0],8);
+	//Serial.print(",");
+	//Serial.print(_velFilterX*10,8);
+	//Serial.print(",");
+	//Serial.print(yZ[0],8);
+	//Serial.print(",");
+	//Serial.print((posAx+127.5),8);
+	//Serial.print(",");
+	//Serial.print((posAy+127.5),8);
 	//Serial.print(",");
 	//Serial.print(btn.Ax);
 	//Serial.print(",");
@@ -1085,8 +1186,9 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 	cleanedPointsX[0] = 0;
 	cleanedPointsY[0] = 0;
 
+	Serial.println("The notch points are:");
 	for(int i = 0; i < _noOfNotches; i++){
-			//add the origin values toe the first x,y point
+			//add the origin values to the first x,y point
 			cleanedPointsX[0] += calPointsX[i*2];
 			cleanedPointsY[0] += calPointsY[i*2];
 
@@ -1095,6 +1197,14 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 			cleanedPointsY[i+1] = calPointsY[i*2+1];
 
 			calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
+			//notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
+			//notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
+			notchPointsX[i+1] = round(notchPointsX[i+1]);
+			notchPointsY[i+1] = round(notchPointsY[i+1]);
+
+			Serial.print(notchPointsX[i+1]);
+			Serial.print(",");
+			Serial.println(notchPointsY[i+1]);
 		}
 
 
