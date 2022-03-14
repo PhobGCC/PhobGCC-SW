@@ -106,6 +106,10 @@ float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
 const float _maxStickAngle = 0.67195176201;
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
+bool _advanceCal = false;
+bool _advanceCalPressed = false;
+bool _undoCal = false;
+bool _undoCalPressed = false;
 int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
 const int _calibrationPoints = _noOfNotches+1; //number of calibration points for the c-stick and a-stick for a controller without notches
@@ -558,24 +562,7 @@ void readButtons(){
 			Serial.println("Calibrating the C stick");
 			_calAStick = false;
 			_currentCalStep ++;
-		}
-		else if (!_calAStick){
-			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
-			_currentCalStep ++;
-
-			if(_currentCalStep >= _noOfNotches*2){
-				Serial.println("finished collecting the calibration points for the A stick");
-				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
-				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
-				EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
-				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_cNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
-				Serial.println("calibration points cleaned");
-				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_cFitCoeffsX,_cFitCoeffsY);
-				Serial.println("C stick linearized");
-				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
-				_currentCalStep = -1;
-			}
+			_advanceCal = true;
 		}
 	}
 	else if(bounceDl.fell()){
@@ -587,24 +574,7 @@ void readButtons(){
 				Serial.println("Calibrating the A stick");
 				_calAStick = true;
 				_currentCalStep ++;
-			}
-		}
-		else if (_calAStick){
-			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
-			_currentCalStep ++;
-
-			if(_currentCalStep >= _noOfNotches*2){
-				Serial.println("finished collecting the calibration points for the A stick");
-				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
-				EEPROM.put(_eepromAPointsY,_tempCalPointsY);
-				EEPROM.put(_eepromANotchAngles,_aNotchAngles);
-				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_aNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
-				Serial.println("calibration points cleaned");
-				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_aFitCoeffsX,_aFitCoeffsY);
-				Serial.println("A stick linearized");
-				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
-				_currentCalStep = -1;
+				_advanceCal = true;
 			}
 		}
 	}
@@ -626,6 +596,70 @@ void readButtons(){
 		}
 
 	}
+	//Undo Calibration using B-button
+	if(btn.B && _undoCal && !_undoCalPressed) {
+		_undoCalPressed = true;
+		if(_currentCalStep % 2 == 0 && _currentCalStep != 32 && _currentCalStep != 0) {
+			_currentCalStep --;
+			_currentCalStep --;
+		}
+	} else if(!btn.B) {
+		_undoCalPressed = false;
+	}
+
+	//Advance Calibration Using A-button
+	if(btn.A && _advanceCal && !_advanceCalPressed){
+		_advanceCalPressed = true;
+		if (!_calAStick){
+			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
+			_currentCalStep ++;
+			if(_currentCalStep >= 2) {
+				_undoCal = true;
+			} else {
+				_undoCal = false;
+			}
+			if(_currentCalStep >= _noOfNotches*2){
+				Serial.println("finished collecting the calibration points for the C stick");
+				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
+				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
+				EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
+				Serial.println("calibration points stored in EEPROM");
+				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_cNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+				Serial.println("calibration points cleaned");
+				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_cFitCoeffsX,_cFitCoeffsY);
+				Serial.println("C stick linearized");
+				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				_currentCalStep = -1;
+				_advanceCal = false;
+			}
+		}
+		else if (_calAStick){
+			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
+			_currentCalStep ++;
+			if(_currentCalStep >= 2) {
+				_undoCal = true;
+			} else {
+				_undoCal = false;
+			}
+			if(_currentCalStep >= _noOfNotches*2){
+				Serial.println("finished collecting the calibration points for the A stick");
+				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
+				EEPROM.put(_eepromAPointsY,_tempCalPointsY);
+				EEPROM.put(_eepromANotchAngles,_aNotchAngles);
+				Serial.println("calibration points stored in EEPROM");
+				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_aNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+				Serial.println("calibration points cleaned");
+				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_aFitCoeffsX,_aFitCoeffsY);
+				Serial.println("A stick linearized");
+				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				_currentCalStep = -1;
+				_advanceCal = false;
+			}
+		}
+	} else if(!btn.A) {
+		_advanceCalPressed = false;
+	}
+
 	/*
 	bool dPad = (btn.Dl || btn.Dr);
 
