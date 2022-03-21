@@ -1,4 +1,4 @@
 (sym_lib_table
-  (lib (name GCC)(type Legacy)(uri "D:/owncloud/Projects/000-028_Game_Cube_Controller/PhobGCC/PCB/Gamecube MB-cache.lib")(options "")(descr ""))
-  (lib (name Regulator)(type Legacy)(uri D:/owncloud/Projects/000-028_Game_Cube_Controller/PhobGCC/PCB/Models/KiCAD/2022-01-16_21-22-26/2022-01-16_21-22-26.lib)(options "")(descr ""))
+  (lib (name "GCC")(type "KiCad")(uri "${KIPRJMOD}/Gamecube MB-cache.kicad_sym")(options "")(descr ""))
+  (lib (name "Gamecube MB")(type "KiCad")(uri "${KIPRJMOD}/Gamecube MB.kicad_sym")(options "")(descr ""))
 )
