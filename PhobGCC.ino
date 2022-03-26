@@ -93,6 +93,56 @@ float _velFilterX = 0;
 float _velFilterY = 0;
 int _filterAdjustmentGranularity;
 
+//New snapback Kalman filter parameters.
+struct FilterGains {
+    //What's the max stick distance from the center
+    float maxStick;
+    //Integral error correction. Probably don't tweak either of these.
+    //how much of the current position disagreement to accumulate
+    float xErrorIntGain;//0.05 default at 1.2ms timesteps, larger for bigger timesteps
+    float yErrorIntGain;
+    //anti-windup threshold
+    float xMaxErrorInt;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
+    float yMaxErrorInt;
+    //filtered velocity terms
+    //how fast the filtered velocity falls off in the absence of stick movement.
+    //Probably don't touch this.
+    float xVelDecay;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
+    float yVelDecay;
+    //how much the current position disagreement impacts the filtered velocity.
+    //Probably don't touch this.
+    float xVelPosFactor;//0.01 default for 1.2ms timesteps, larger for bigger timesteps
+    float yVelPosFactor;
+    //how much to ignore filtered velocity when computing the new stick position.
+    //DO CHANGE THIS
+    //Higher gives shorter rise times and slower fall times (more pode, less snapback)
+    float xVelDamp;//0.125 default for 1.2ms timesteps, smaller for bigger timesteps
+    float yVelDamp;
+    //speed and accel thresholds below which we try to follow the stick better
+    //These may need tweaking according to how noisy the signal is
+    //If it's noisier, we may need to add additional filtering
+    //If the timesteps are *really small* then it may need to be increased to get
+    //  above the noise floor. Or some combination of filtering and playing with
+    //  the thresholds.
+    float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
+    float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
+};
+FilterGains _gains {
+    .maxStick = 100,
+    .xErrorIntGain = 0.05,//these values are actually timestep-compensated for in runKalman
+    .yErrorIntGain = 0.05,
+    .xMaxErrorInt = 0.1,
+    .yMaxErrorInt = 0.1,
+    .xVelDecay = 0.1,
+    .yVelDecay = 0.1,
+    .xVelPosFactor = 0.01,
+    .yVelPosFactor = 0.01,
+    .xVelDamp = 0.125,
+    .yVelDamp = 0.125,
+    .velThresh = 1.0,
+    .accelThresh = 5.0
+};
+
 //////values used to determine how much large of a region will count as being "in a notch"
 
 const float _marginAngle = 1.50/100.0; //angle range(+/-) in radians that will be collapsed down to the ideal angle
@@ -221,10 +271,23 @@ unsigned int _lastMicros;
 float _dT;
 bool _running = false;
 
+/* old kalman filter state variables
 VectorXf _xState(2);
 VectorXf _yState(2);
 MatrixXf _xP(2,2);
 MatrixXf _yP(2,2);
+*/
+//new kalman filter state variables
+float _xPos;//input of kalman filter
+float _yPos;//input of kalman filter
+float _xPosFilt;//output of kalman filter
+float _yPosFilt;//output of kalman filter
+float _xVel;
+float _yVel;
+float _xVelFilt;
+float _yVelFilt;
+float _xErrorInt;
+float _yErrorInt;
 
 
 const char probeResponse[PROBE_LENGTH] = {
@@ -284,11 +347,23 @@ void setup() {
 
 	_currentCalStep = _notCalibrating;
 
-
+    /*
 	_xState << 0,0;
 	_yState << 0,0;
 	_xP << 1000,0,0,1000;
 	_yP << 1000,0,0,1000;
+    */
+    _xPos = 0;
+    _yPos = 0;
+    _xPosFilt = 0;
+    _yPosFilt = 0;
+    _xVel = 0;
+    _yVel = 0;
+    _xVelFilt = 0;
+    _yVelFilt = 0;
+    _xErrorInt = 0;
+    _yErrorInt = 0;
+
 	_lastMicros = micros();
 
 	//analogReference(1);
@@ -858,15 +933,15 @@ void readSticks(){
 	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
 
 	//create the measurement vector to be used in the kalman filter
-	VectorXf xZ(1);
-	VectorXf yZ(1);
+	float xZ;
+	float yZ;
 
 	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
 	//store in the measurement vectors
 	//xZ << (_aFitCoeffsX[0]*(_aStickX*_aStickX*_aStickX) + _aFitCoeffsX[1]*(_aStickX*_aStickX) + _aFitCoeffsX[2]*_aStickX + _aFitCoeffsX[3]);
 	//yZ << (_aFitCoeffsY[0]*(_aStickY*_aStickY*_aStickY) + _aFitCoeffsY[1]*(_aStickY*_aStickY) + _aFitCoeffsY[2]*_aStickY + _aFitCoeffsY[3]);
-	xZ << linearize(_aStickX,_aFitCoeffsX);
-	yZ << linearize(_aStickY,_aFitCoeffsY);
+	xZ = linearize(_aStickX,_aFitCoeffsX);
+	yZ = linearize(_aStickY,_aFitCoeffsY);
 
 	//float posCx = (_cFitCoeffsX[0]*(_cStickX*_cStickX*_cStickX) + _cFitCoeffsX[1]*(_cStickX*_cStickX) + _cFitCoeffsX[2]*_cStickX + _cFitCoeffsX[3]);
 	//float posCy = (_aFitCoeffsY[1]*(_cStickY*_cStickY*_cStickY) + _aFitCoeffsY[1]*(_cStickY*_cStickY) + _aFitCoeffsY[2]*_cStickY + _aFitCoeffsY[3]);
@@ -889,7 +964,7 @@ void readSticks(){
 	//float posCx;
 	//float posCy;
 
-	notchRemap(_xState[0],_yState[0], &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
+	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
 
@@ -1458,9 +1533,8 @@ void notchCalibrate(float xIn[], float yIn[], float xOut[], float yOut[], int re
 float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
 }
-void runKalman(VectorXf& xZ,VectorXf& yZ){
+void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
-
 
 	//get the time delta since the kalman filter was last run
 	unsigned int thisMicros = micros();
@@ -1469,94 +1543,111 @@ void runKalman(VectorXf& xZ,VectorXf& yZ){
 	//Serial.print("loop time: ");
 	//Serial.println(_dT);
 
-	//generate the state transition matrix, note the damping term
-	MatrixXf Fmat(2,2);
-	Fmat << 1,_dT-_damping/2*_dT*_dT,
-			 0,1-_damping*_dT;
+    //set up gains according to the time delta.
+    //The reference time delta used to tune was 1.2 ms.
+    FilterGains g;
+    const float timeFactor = _dT / 1.2;
+    const float timeDivisor = 1.2 / _dT;
+    g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
+    g.xErrorIntGain = _gains.xErrorIntGain  * timeFactor;
+    g.yErrorIntGain = _gains.yErrorIntGain  * timeFactor;
+    g.xMaxErrorInt  = _gains.xMaxErrorInt   * timeFactor;
+    g.yMaxErrorInt  = _gains.yMaxErrorInt   * timeFactor;
+    g.xVelDecay     = _gains.xVelDecay      * timeFactor;
+    g.yVelDecay     = _gains.yVelDecay      * timeFactor;
+    g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
+    g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
+    g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
+    g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
+    g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
+    g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
 
-	//generate the acceleration variance for this filtering step, the further from the origin the higher it will be
-  float R2 = xZ[0]*xZ[0]+yZ[0]*yZ[0];
-  if(R2 > 10000){
-    R2 = 10000;
-  }
-  float accelVar = _aAccelVar*(R2*R2*R2) + _bAccelVar;
+    //save previous values of state
+    //float _xPos;//input of kalman filter
+    //float _yPos;//input of kalman filter
+    const float oldXPos = _xPos;
+    const float oldYPos = _yPos;
+    //float _xPosFilt;//output of kalman filter
+    //float _yPosFilt;//output of kalman filter
+    const float oldXPosFilt = _xPosFilt;
+    const float oldYPosFilt = _yPosFilt;
+    //float _xVel;
+    //float _yVel;
+    const float oldXVel = _xVel;
+    const float oldYVel = _yVel;
+    //float _xVelFilt;
+    //float _yVelFilt;
+    const float oldXVelFilt = _xVelFilt;
+    const float oldYVelFilt = _yVelFilt;
 
-	MatrixXf Q(2,2);
-  //Serial.print(accelVar,10);
-  //Serial.print(',');
-	Q << (_dT*_dT*_dT*_dT/4), (_dT*_dT*_dT/2),
-			 (_dT*_dT*_dT/2), (_dT*_dT);
-	Q = Q * accelVar;
+    //compute new (more trivial) state
+    _xPos = xZ;
+    _yPos = yZ;
+    _xVel = _xPos - oldXPos;
+    _yVel = _yPos - oldYPos;
+    const float xVelSmooth = 0.5*(_xVel + oldXVel);
+    const float yVelSmooth = 0.5*(_yVel + oldYVel);
+    const float xAccel = _xVel - oldXVel;
+    const float yAccel = _yVel - oldYVel;
+    const float oldXPosDiff = oldXPos - oldXPosFilt;
+    const float oldYPosDiff = oldYPos - oldYPosFilt;
 
-	MatrixXf sharedH(1,2);
-	sharedH << 1,0;
+    //compute stick position exponents for weights
+    const float stickDistance2 = min(g.maxStick, _xPos*_xPos + _yPos*_yPos)/g.maxStick;//0-1
+    const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
-	//Serial.println('H');
-	//print_mtxf(H)
+    //the current velocity weight for the filtered velocity is the stick r^2
+    const float velWeight1 = stickDistance2;
+    const float velWeight2 = 1-velWeight1;
 
-	MatrixXf xR(1,1);
-	MatrixXf yR(1,1);
+    //modified velocity to feed into our kalman filter.
+    //We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
+    //term 1: weight current velocity according to r^2
+    //term 2: the previous filtered velocity, weighted the opposite and also set to decay
+    //term 3: a corrective factor based on the disagreement between real and filtered position
+    _xVelFilt = velWeight1*_xVel + (1-g.xVelDecay)*velWeight2*oldXVelFilt + g.xVelPosFactor*oldXPosDiff;
+    _yVelFilt = velWeight1*_yVel + (1-g.yVelDecay)*velWeight2*oldYVelFilt + g.yVelPosFactor*oldYPosDiff;
 
-	//generate the measurement variance (i've called it ADC var) for this time step, the further from the origin the lower it will be
-  xR << _aADCVarX*(R2*R2*R2) + _bADCVarX;
-	yR << _aADCVarY*(R2*R2*R2) + _bADCVarY;
+    //Integral correction for position to throw on top of the kalman filter to suppress steady-state
+    //  error at small stick displacements.
+    //It's not part of a normal Kalman filter because we *know* stick position and we want to fudge it,
+    //  unlike a real kalman filter where we don't know real position and we want to find it.
+    //It gets clamped as an anti-windup measure.
+    _xErrorInt = max(-g.xMaxErrorInt, min(g.xMaxErrorInt,
+                     _xErrorInt + g.xErrorIntGain*oldXPosDiff));
+    _yErrorInt = max(-g.yMaxErrorInt, min(g.yMaxErrorInt,
+                     _yErrorInt + g.yErrorIntGain*oldYPosDiff));
 
-  //Serial.println(xR(0,0),10);
-	//_dT = micros()-lastMicros;
-	//Serial.println(_dT);
-	//print_mtxf(_xP);
+    //the current position weight used for the filtered position is whatever is larger of
+    //  a) the square of the smaller of
+    //    1) 1 minus the smoothed velocity divided by the velocity threshold
+    //    2) 1 minus the acceleration divided by the accel threshold
+    //  b) stick r^6
+    //When the stick is moving slowly, we want to weight it highly, in order to achieve
+    //  quick control for inputs such as tilts. We lock out using both velocity and
+    //  acceleration in order to rule out snapback.
+    //When the stick is near the rim, we also want instant response, and we know snapback
+    //  doesn't reach the rim.
+    const float xPosWeightVelAcc = min(1, max(0, min(1 - abs(xVelSmooth)*g.velThresh, 1 - abs(xAccel)*g.accelThresh)));
+    const float xPosWeight1 = max(xPosWeightVelAcc*xPosWeightVelAcc, stickDistance6);
+    const float xPosWeight2 = 1-xPosWeight1;
+    const float yPosWeightVelAcc = min(1, max(0, min(1 - abs(yVelSmooth)*g.velThresh, 1 - abs(yAccel)*g.accelThresh)));
+    const float yPosWeight1 = max(yPosWeightVelAcc*yPosWeightVelAcc, stickDistance6);
+    const float yPosWeight2 = 1-yPosWeight1;
 
-	//run the prediciton step for the x-axis
-	kPredict(_xState,Fmat,_xP,Q);
-	//_dT = micros()-lastMicros;
-	//Serial.println(_dT);
-
-	//run the prediciton step for the y-axis
-	kPredict(_yState,Fmat,_yP,Q);
-	//_dT = micros()-lastMicros;
-	//Serial.println(_dT);
-
-	//run the update step for the x-axis
-	kUpdate(_xState,xZ,_xP,sharedH,xR);
-	//_dT = micros()-lastMicros;
-	//Serial.println(_dT);
-
-	//run the update step for the y-axis
-	kUpdate(_yState,yZ,_yP,sharedH,yR);
-	//_dT = micros()-lastMicros;
-	//Serial.println(_dT);
+    //In calculating the filtered stick position, we have the following components
+    //term 1: current position, weighted according to the above weight
+    //term 2: a predicted position based on the filtered velocity and previous filtered position,
+    //  with the filtered velocity damped, and the overall term weighted inverse of the previous term
+    //term 3: the integral error correction term
+    _xPosFilt = xPosWeight1*_xPos +
+                xPosWeight2*(oldXPosFilt + (1-g.xVelDamp)*_xVelFilt) +
+                _xErrorInt;
+    _yPosFilt = yPosWeight1*_yPos +
+                yPosWeight2*(oldYPosFilt + (1-g.yVelDamp)*_yVelFilt) +
+                _yErrorInt;
 }
-void kPredict(VectorXf& X, MatrixXf& F, MatrixXf& P, MatrixXf& Q){
-	//Serial.println("Predicting Kalman");
 
-	X = F*X;
-	P = F*P*F.transpose() + Q;
-
-}
-void kUpdate(VectorXf& X, VectorXf& Z, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
-//void kUpdate(VectorXf& X, float measX, MatrixXf& P, MatrixXf& H,  MatrixXf& R){
-	//Serial.println("Updating Kalman");
-
-	int sizeState = X.size();
-	//int sizeMeas = Z.size();
-	MatrixXf A(1,2);
-	A = P*H.transpose();
-	MatrixXf B(1,1);
-	B = H*A+R;
-	MatrixXf K(2,1);
-	K = A*B.inverse();
-	//print_mtxf(K);
-	//K = MatrixXf::Identity(sizeState,sizeState);
-	MatrixXf C(1,1);
-	//C = Z - H*X;
-	X = X + K*(Z - H*X);
-	//X = X + K*(measX-X[0]);
-
-	MatrixXf D = MatrixXf::Identity(sizeState,sizeState) - K*H;
-	P = D*P*D.transpose() + K*R*K.transpose();
-
-	//print_mtxf(P);
-}
 
 void print_mtxf(const Eigen::MatrixXf& X){
    int i, j, nrow, ncol;
