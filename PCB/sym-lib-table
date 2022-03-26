@@ -1,4 +1,0 @@
-(sym_lib_table
-  (lib (name "GCC")(type "KiCad")(uri "${KIPRJMOD}/Gamecube MB-cache.kicad_sym")(options "")(descr ""))
-  (lib (name "Gamecube MB")(type "KiCad")(uri "${KIPRJMOD}/Gamecube MB.kicad_sym")(options "")(descr ""))
-)
