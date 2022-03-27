@@ -1306,7 +1306,7 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 		Serial.println(notchPointsY[i]);
 	}
 }
-void adjustNotch(int currentStep, int loopDelta, bool CW, int CCW, bool calibratingAStick, float notchAngles[], int notchStatus[]){
+void adjustNotch(int currentStep, float loopDelta, bool CW, int CCW, bool calibratingAStick, float notchAngles[], int notchStatus[]){
 	float X = 0;
 	float Y = 0;
 	//don't run on center steps
