@@ -1542,6 +1542,8 @@ void runKalman(const float xZ,const float yZ){
     g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
     g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
     g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
+    g.velThresh     = g.velThresh*g.velThresh;//square it because it's used squared
+    g.accelThresh   = g.accelThresh*g.accelThresh;
 
     //save previous values of state
     //float _xPos;//input of kalman filter
@@ -1599,11 +1601,11 @@ void runKalman(const float xZ,const float yZ){
     //  acceleration in order to rule out snapback.
     //When the stick is near the rim, we also want instant response, and we know snapback
     //  doesn't reach the rim.
-    const float xPosWeightVelAcc = min(1, max(0, min(1 - abs(xVelSmooth)*g.velThresh, 1 - abs(xAccel)*g.accelThresh)));
-    const float xPosWeight1 = max(xPosWeightVelAcc*xPosWeightVelAcc, stickDistance6);
+    const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*g.velThresh + xAccel*xAccel*g.accelThresh);
+    const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
     const float xPosWeight2 = 1-xPosWeight1;
-    const float yPosWeightVelAcc = min(1, max(0, min(1 - abs(yVelSmooth)*g.velThresh, 1 - abs(yAccel)*g.accelThresh)));
-    const float yPosWeight1 = max(yPosWeightVelAcc*yPosWeightVelAcc, stickDistance6);
+    const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*g.velThresh + yAccel*yAccel*g.accelThresh);
+    const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
     const float yPosWeight2 = 1-yPosWeight1;
 
     //In calculating the filtered stick position, we have the following components
