@@ -97,13 +97,6 @@ int _filterAdjustmentGranularity;
 struct FilterGains {
     //What's the max stick distance from the center
     float maxStick;
-    //Integral error correction. Probably don't tweak either of these.
-    //how much of the current position disagreement to accumulate
-    float xErrorIntGain;//0.05 default at 1.2ms timesteps, larger for bigger timesteps
-    float yErrorIntGain;
-    //anti-windup threshold
-    float xMaxErrorInt;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
-    float yMaxErrorInt;
     //filtered velocity terms
     //how fast the filtered velocity falls off in the absence of stick movement.
     //Probably don't touch this.
@@ -127,12 +120,8 @@ struct FilterGains {
     float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
     float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
 };
-FilterGains _gains {
+FilterGains _gains {//these values are actually timestep-compensated for in runKalman
     .maxStick = 100,
-    .xErrorIntGain = 0.05,//these values are actually timestep-compensated for in runKalman
-    .yErrorIntGain = 0.05,
-    .xMaxErrorInt = 0.1,
-    .yMaxErrorInt = 0.1,
     .xVelDecay = 0.1,
     .yVelDecay = 0.1,
     .xVelPosFactor = 0.01,
@@ -286,8 +275,6 @@ float _xVel;
 float _yVel;
 float _xVelFilt;
 float _yVelFilt;
-float _xErrorInt;
-float _yErrorInt;
 
 
 const char probeResponse[PROBE_LENGTH] = {
@@ -361,8 +348,6 @@ void setup() {
     _yVel = 0;
     _xVelFilt = 0;
     _yVelFilt = 0;
-    _xErrorInt = 0;
-    _yErrorInt = 0;
 
 	_lastMicros = micros();
 
@@ -1549,10 +1534,6 @@ void runKalman(const float xZ,const float yZ){
     const float timeFactor = _dT / 1.2;
     const float timeDivisor = 1.2 / _dT;
     g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
-    g.xErrorIntGain = _gains.xErrorIntGain  * timeFactor;
-    g.yErrorIntGain = _gains.yErrorIntGain  * timeFactor;
-    g.xMaxErrorInt  = _gains.xMaxErrorInt   * timeFactor;
-    g.yMaxErrorInt  = _gains.yMaxErrorInt   * timeFactor;
     g.xVelDecay     = _gains.xVelDecay      * timeFactor;
     g.yVelDecay     = _gains.yVelDecay      * timeFactor;
     g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
@@ -1561,6 +1542,8 @@ void runKalman(const float xZ,const float yZ){
     g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
     g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
     g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
+    g.velThresh     = g.velThresh*g.velThresh;//square it because it's used squared
+    g.accelThresh   = g.accelThresh*g.accelThresh;
 
     //save previous values of state
     //float _xPos;//input of kalman filter
@@ -1608,16 +1591,6 @@ void runKalman(const float xZ,const float yZ){
     _xVelFilt = velWeight1*_xVel + (1-g.xVelDecay)*velWeight2*oldXVelFilt + g.xVelPosFactor*oldXPosDiff;
     _yVelFilt = velWeight1*_yVel + (1-g.yVelDecay)*velWeight2*oldYVelFilt + g.yVelPosFactor*oldYPosDiff;
 
-    //Integral correction for position to throw on top of the kalman filter to suppress steady-state
-    //  error at small stick displacements.
-    //It's not part of a normal Kalman filter because we *know* stick position and we want to fudge it,
-    //  unlike a real kalman filter where we don't know real position and we want to find it.
-    //It gets clamped as an anti-windup measure.
-    _xErrorInt = max(-g.xMaxErrorInt, min(g.xMaxErrorInt,
-                     _xErrorInt + g.xErrorIntGain*oldXPosDiff));
-    _yErrorInt = max(-g.yMaxErrorInt, min(g.yMaxErrorInt,
-                     _yErrorInt + g.yErrorIntGain*oldYPosDiff));
-
     //the current position weight used for the filtered position is whatever is larger of
     //  a) the square of the smaller of
     //    1) 1 minus the smoothed velocity divided by the velocity threshold
@@ -1628,11 +1601,11 @@ void runKalman(const float xZ,const float yZ){
     //  acceleration in order to rule out snapback.
     //When the stick is near the rim, we also want instant response, and we know snapback
     //  doesn't reach the rim.
-    const float xPosWeightVelAcc = min(1, max(0, min(1 - abs(xVelSmooth)*g.velThresh, 1 - abs(xAccel)*g.accelThresh)));
-    const float xPosWeight1 = max(xPosWeightVelAcc*xPosWeightVelAcc, stickDistance6);
+    const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*g.velThresh + xAccel*xAccel*g.accelThresh);
+    const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
     const float xPosWeight2 = 1-xPosWeight1;
-    const float yPosWeightVelAcc = min(1, max(0, min(1 - abs(yVelSmooth)*g.velThresh, 1 - abs(yAccel)*g.accelThresh)));
-    const float yPosWeight1 = max(yPosWeightVelAcc*yPosWeightVelAcc, stickDistance6);
+    const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*g.velThresh + yAccel*yAccel*g.accelThresh);
+    const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
     const float yPosWeight2 = 1-yPosWeight1;
 
     //In calculating the filtered stick position, we have the following components
@@ -1641,11 +1614,9 @@ void runKalman(const float xZ,const float yZ){
     //  with the filtered velocity damped, and the overall term weighted inverse of the previous term
     //term 3: the integral error correction term
     _xPosFilt = xPosWeight1*_xPos +
-                xPosWeight2*(oldXPosFilt + (1-g.xVelDamp)*_xVelFilt) +
-                _xErrorInt;
+                xPosWeight2*(oldXPosFilt + (1-g.xVelDamp)*_xVelFilt);
     _yPosFilt = yPosWeight1*_yPos +
-                yPosWeight2*(oldYPosFilt + (1-g.yVelDamp)*_yVelFilt) +
-                _yErrorInt;
+                yPosWeight2*(oldYPosFilt + (1-g.yVelDamp)*_yVelFilt);
 }
 
 
