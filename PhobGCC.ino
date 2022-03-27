@@ -68,30 +68,17 @@ int _rTrigger = 1;
 bool _changeTrigger = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-const float _accelVarFast = 0.05; //governs the acceleration variation around the edge of the gate, higher value means less filtering
-const float _accelVarSlow = 0.01; //governs the acceleration variation with the stick centered, higher value means less filtering
-const float _ADCVarFast = 0.1; //governs the ADC variation around the edge of the gate, higher vaule means more filtering
-const float _ADCVarMax = 10; //maximum allowable value for the ADC variation
-const float _ADCVarMin = 0.1; //minimum allowable value for the ADC variation
-const float _varScale = 0.1;
-const float _varOffset = 0;
-const float _x1 = 100; //maximum stick distance from center
-const float _x6 = _x1*_x1*_x1*_x1*_x1*_x1; //maximum distance to the 6th power
-const float _aAccelVar = (_accelVarFast - _accelVarSlow)/_x6; //first coefficient used to calculate the actual acceleration variation
-const float _bAccelVar = _accelVarSlow; //Second coefficient used to calculate the actual acceleration variation
-const float _damping = 1; //amount of damping used in the stick model
-//ADC variance is used to compensate for differing amounts of snapback, so it is not a constant, can be set by user
-float _ADCVarSlowX = 0.2; //default value
-float _ADCVarSlowY = 0.2; //default value
-float _aADCVarX = (_ADCVarFast - _ADCVarSlowX)/_x6; //first coefficient used to calculate the actual ADC variation
-float _bADCVarX = _ADCVarSlowX; //second coefficient used to calculate the actual ADC variation
-float _aADCVarY = (_ADCVarFast - _ADCVarSlowY)/_x6; //first coefficient used to calculate the actual ADC variation
-float _bADCVarY = _ADCVarSlowY; //second coefficient used to calculate the actual ADC variation
 float _podeThreshX = 9999.0;
 float _podeThreshY = 9999.0;
 float _velFilterX = 0;
 float _velFilterY = 0;
 int _filterAdjustmentGranularity;
+
+float _velDampMin = 0.125;
+float _velDampMax = .5;
+const float _varScale = 0.1;
+const float _varOffset = 0;
+
 
 //New snapback Kalman filter parameters.
 struct FilterGains {
@@ -189,9 +176,9 @@ const int _eepromAPointsX = 0;
 const int _eepromAPointsY = _eepromAPointsX+_noOfCalibrationPoints*_bytesPerFloat;
 const int _eepromCPointsX = _eepromAPointsY+_noOfCalibrationPoints*_bytesPerFloat;
 const int _eepromCPointsY = _eepromCPointsX+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromADCVarX = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromADCVarY = _eepromADCVarX+_bytesPerFloat;
-const int _eepromJump = _eepromADCVarY+_bytesPerFloat;
+const int _eepromxVelDamp = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
+const int _eepromyVelDamp = _eepromxVelDamp+_bytesPerFloat;
+const int _eepromJump = _eepromyVelDamp+_bytesPerFloat;
 const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
 const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
 const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
@@ -456,41 +443,35 @@ void readEEPROM(){
 	}
 	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
-	//get the x-axis snapback filter settings
-	EEPROM.get(_eepromADCVarX, _ADCVarSlowX);
-	Serial.print("the _ADCVarSlowX value from eeprom is:");
-	Serial.println(_ADCVarSlowX);
-	if(std::isnan(_ADCVarSlowX)){
-		_ADCVarSlowX = _ADCVarMin;
-		Serial.print("the _ADCVarSlowX value was adjusted to:");
-		Serial.println(_ADCVarSlowX);
+  //get the x-axis velocity dampening
+  EEPROM.get(_eepromxVelDamp, _gains.xVelDamp);
+  Serial.print("the xVelDamp value from eeprom is:");
+  Serial.println(_gains.xVelDamp);
+  if(std::isnan(_gains.xVelDamp)){
+		_gains.xVelDamp = _velDampMin;
+		Serial.print("the xVelDamp value was adjusted to:");
+		Serial.println(_gains.xVelDamp);
 	}
-	if(_ADCVarSlowX >_ADCVarMax){
-		_ADCVarSlowX = _ADCVarMax;
-	}
-	else if(_ADCVarSlowX < _ADCVarMin){
-		_ADCVarSlowX = _ADCVarMin;
-	}
+  if (_gains.xVelDamp > _velDampMax) {
+    _gains.xVelDamp = _velDampMax;
+  } else if (_gains.xVelDamp < _velDampMin) {
+    _gains.xVelDamp = _velDampMin;
+  }
 
-	//get the y-axis snapback fitler settings
-	EEPROM.get(_eepromADCVarY, _ADCVarSlowY);
-	Serial.print("the _ADCVarSlowY value from eeprom is:");
-	Serial.println(_ADCVarSlowY);
-	if(std::isnan(_ADCVarSlowY)){
-		_ADCVarSlowY = _ADCVarMin;
-		Serial.print("the _ADCVarSlowY value was adjusted to:");
-		Serial.println(_ADCVarSlowY);
+  //get the y-axis velocity dampening
+  EEPROM.get(_eepromyVelDamp, _gains.yVelDamp);
+  Serial.print("the yVelDamp value from eeprom is:");
+  Serial.println(_gains.yVelDamp);
+  if(std::isnan(_gains.yVelDamp)){
+		_gains.yVelDamp = _velDampMin;
+		Serial.print("the yVelDamp value was adjusted to:");
+		Serial.println(_gains.yVelDamp);
 	}
-	if(_ADCVarSlowY >_ADCVarMax){
-		_ADCVarSlowY = _ADCVarMax;
-	}
-	else if(_ADCVarSlowY < _ADCVarMin){
-		_ADCVarSlowY = _ADCVarMin;
-	}
-
-	//set the snapback filtering
-	setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
-	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
+  if (_gains.yVelDamp > _velDampMax) {
+    _gains.yVelDamp = _velDampMax;
+  } else if (_gains.yVelDamp < _velDampMin) {
+    _gains.yVelDamp = _velDampMin;
+  }
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
@@ -528,13 +509,10 @@ void resetDefaults(){
 	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
 	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
-	_ADCVarSlowX = _ADCVarMin;
-	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
-	_ADCVarSlowY = _ADCVarMin;
-	EEPROM.put(_eepromADCVarY,_ADCVarSlowY);
-
-	setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
-	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
+  _gains.xVelDamp = _velDampMin;
+  EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
+  _gains.yVelDamp = _velDampMin;
+  EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -750,37 +728,37 @@ void adjustSnapback(int cStickX, int cStickY, int steps){
 	Serial.println("adjusting snapback filtering");
 	for(int i = 0; i < steps; i++) {
 		if(cStickX > 127+50){
-			_ADCVarSlowX = _ADCVarSlowX*1.1;
+			_gains.xVelDamp = _gains.xVelDamp*1.2599;
 			Serial.print("X filtering increased to:");
-			Serial.println(_ADCVarSlowX);
+			Serial.println(_gains.xVelDamp);
 		}
 		else if(cStickX < 127-50){
-			_ADCVarSlowX = _ADCVarSlowX*0.90909090909;
+			_gains.xVelDamp = _gains.xVelDamp*0.7937;
 			Serial.print("X filtering decreased to:");
-			Serial.println(_ADCVarSlowX);
+			Serial.println(_gains.xVelDamp);
 		}
-		if(_ADCVarSlowX >_ADCVarMax){
-			_ADCVarSlowX = _ADCVarMax;
+		if(_gains.xVelDamp > _velDampMax){
+			_gains.xVelDamp = _velDampMax;
 		}
-		else if(_ADCVarSlowX < _ADCVarMin){
-			_ADCVarSlowX = _ADCVarMin;
+		else if(_gains.xVelDamp < _velDampMin){
+			_gains.xVelDamp = _velDampMin;
 		}
 
 		if(cStickY > 127+50){
-			_ADCVarSlowY = _ADCVarSlowY*1.1;
+			_gains.yVelDamp = _gains.yVelDamp*1.2599;
 			Serial.print("Y filtering increased to:");
-			Serial.println(_ADCVarSlowY);
+			Serial.println(_gains.yVelDamp);
 		}
 		else if(cStickY < 127-50){
-			_ADCVarSlowY = _ADCVarSlowY*0.9;
+			_gains.yVelDamp = _gains.yVelDamp*0.7937;
 			Serial.print("Y filtering decreased to:");
-			Serial.println(_ADCVarSlowY);
+			Serial.println(_gains.yVelDamp);
 		}
-		if(_ADCVarSlowY >_ADCVarMax){
-			_ADCVarSlowY = _ADCVarMax;
+		if(_gains.yVelDamp >_velDampMax){
+			_gains.yVelDamp = _velDampMax;
 		}
-		else if(_ADCVarSlowY < _ADCVarMin){
-			_ADCVarSlowY = _ADCVarMin;
+		else if(_gains.yVelDamp < _velDampMin){
+			_gains.yVelDamp = _velDampMin;
 		}
 	}
 
@@ -788,8 +766,8 @@ void adjustSnapback(int cStickX, int cStickY, int steps){
 	Serial.println(_varScale);
 	Serial.println(_varOffset);
 
-	float xVarDisplay = 10*(log( _varScale*_ADCVarSlowX + _varOffset)+4.60517);
-	float yVarDisplay = 10*(log( _varScale*_ADCVarSlowY + _varOffset)+4.60517);
+	float xVarDisplay = 10*(log( _varScale*_gains.xVelDamp + _varOffset)+4.60517);
+	float yVarDisplay = 10*(log( _varScale*_gains.yVelDamp + _varOffset)+4.60517);
 
 	Serial.println("Var display results");
 		Serial.println(xVarDisplay);
@@ -807,11 +785,11 @@ void adjustSnapback(int cStickX, int cStickY, int steps){
 		delta = millis() - startTime;
 	}
 
-	setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
-	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);
+	/*setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
+	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);*/
 
-	EEPROM.put(_eepromADCVarX,_ADCVarSlowX);
-	EEPROM.put(_eepromADCVarY,_ADCVarSlowY);
+	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
+	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
 }
 void readJumpConfig(){
 	Serial.print("setting jump to: ");
@@ -882,10 +860,6 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 			EEPROM.put(_eepromRToggle, _rConfig);
 		}
 	}
-}
-void setADCVar(float* aADCVar,float* bADCVar, float ADCVarSlow){
-	*aADCVar = (_ADCVarFast - ADCVarSlow)/_x6;
-	*bADCVar = ADCVarSlow;
 }
 void readSticks(){
 	 _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
