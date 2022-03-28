@@ -116,7 +116,7 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .xVelDamp = 0.125,
     .yVelDamp = 0.125,
     .velThresh = 1.0,
-    .accelThresh = 5.0
+    .accelThresh = 3.0
 };
 
 //////values used to determine how much large of a region will count as being "in a notch"
