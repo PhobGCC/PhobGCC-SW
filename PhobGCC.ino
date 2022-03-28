@@ -766,8 +766,8 @@ void adjustSnapback(int cStickX, int cStickY, int steps){
 	Serial.println(_varScale);
 	Serial.println(_varOffset);
 
-	float xVarDisplay = 10*(log( _varScale*_gains.xVelDamp + _varOffset)+4.60517);
-	float yVarDisplay = 10*(log( _varScale*_gains.yVelDamp + _varOffset)+4.60517);
+  float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
+  float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
 
 	Serial.println("Var display results");
 		Serial.println(xVarDisplay);
