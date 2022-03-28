@@ -1592,9 +1592,9 @@ void runKalman(const float xZ,const float yZ){
     _yVelFilt = velWeight1*_yVel + (1-g.yVelDecay)*velWeight2*oldYVelFilt + g.yVelPosFactor*oldYPosDiff;
 
     //the current position weight used for the filtered position is whatever is larger of
-    //  a) the square of the smaller of
-    //    1) 1 minus the smoothed velocity divided by the velocity threshold
-    //    2) 1 minus the acceleration divided by the accel threshold
+    //  a) 1 minus the sum of the squares of
+    //    1) the smoothed velocity divided by the velocity threshold
+    //    2) the acceleration divided by the accel threshold
     //  b) stick r^6
     //When the stick is moving slowly, we want to weight it highly, in order to achieve
     //  quick control for inputs such as tilts. We lock out using both velocity and
