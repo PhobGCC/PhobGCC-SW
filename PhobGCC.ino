@@ -72,12 +72,9 @@ float _podeThreshX = 9999.0;
 float _podeThreshY = 9999.0;
 float _velFilterX = 0;
 float _velFilterY = 0;
-int _filterAdjustmentGranularity;
 
 float _velDampMin = 0.125;
 float _velDampMax = .5;
-const float _varScale = 0.1;
-const float _varOffset = 0;
 
 
 //New snapback Kalman filter parameters.
@@ -617,12 +614,7 @@ void readButtons(){
 		}
 	}
 	else if(bounceDu.fell()){
-		if(btn.Z) {
-			_filterAdjustmentGranularity = 3;
-		} else {
-			_filterAdjustmentGranularity = 1;
-		}
-		adjustSnapback(btn.Cx,btn.Cy, _filterAdjustmentGranularity);
+		adjustSnapback(btn.Cx,btn.Cy);
 	}
 	else if(bounceDd.fell()){
 		if(btn.L) {
@@ -724,47 +716,41 @@ void readButtons(){
 	}
 	_lastDPad = dPad; */
 }
-void adjustSnapback(int cStickX, int cStickY, int steps){
+void adjustSnapback(int cStickX, int cStickY){
 	Serial.println("adjusting snapback filtering");
-	for(int i = 0; i < steps; i++) {
-		if(cStickX > 127+50){
-			_gains.xVelDamp = _gains.xVelDamp*1.2599;
-			Serial.print("X filtering increased to:");
-			Serial.println(_gains.xVelDamp);
-		}
-		else if(cStickX < 127-50){
-			_gains.xVelDamp = _gains.xVelDamp*0.7937;
-			Serial.print("X filtering decreased to:");
-			Serial.println(_gains.xVelDamp);
-		}
-		if(_gains.xVelDamp > _velDampMax){
-			_gains.xVelDamp = _velDampMax;
-		}
-		else if(_gains.xVelDamp < _velDampMin){
-			_gains.xVelDamp = _velDampMin;
-		}
-
-		if(cStickY > 127+50){
-			_gains.yVelDamp = _gains.yVelDamp*1.2599;
-			Serial.print("Y filtering increased to:");
-			Serial.println(_gains.yVelDamp);
-		}
-		else if(cStickY < 127-50){
-			_gains.yVelDamp = _gains.yVelDamp*0.7937;
-			Serial.print("Y filtering decreased to:");
-			Serial.println(_gains.yVelDamp);
-		}
-		if(_gains.yVelDamp >_velDampMax){
-			_gains.yVelDamp = _velDampMax;
-		}
-		else if(_gains.yVelDamp < _velDampMin){
-			_gains.yVelDamp = _velDampMin;
-		}
+	if(cStickX > 127+50){
+		_gains.xVelDamp = _gains.xVelDamp*1.2599;
+		Serial.print("X filtering increased to:");
+		Serial.println(_gains.xVelDamp);
+	}
+	else if(cStickX < 127-50){
+		_gains.xVelDamp = _gains.xVelDamp*0.7937;
+		Serial.print("X filtering decreased to:");
+		Serial.println(_gains.xVelDamp);
+	}
+	if(_gains.xVelDamp > _velDampMax){
+		_gains.xVelDamp = _velDampMax;
+	}
+	else if(_gains.xVelDamp < _velDampMin){
+		_gains.xVelDamp = _velDampMin;
 	}
 
-	Serial.println("Var scale parameters");
-	Serial.println(_varScale);
-	Serial.println(_varOffset);
+	if(cStickY > 127+50){
+		_gains.yVelDamp = _gains.yVelDamp*1.2599;
+		Serial.print("Y filtering increased to:");
+		Serial.println(_gains.yVelDamp);
+	}
+	else if(cStickY < 127-50){
+		_gains.yVelDamp = _gains.yVelDamp*0.7937;
+		Serial.print("Y filtering decreased to:");
+		Serial.println(_gains.yVelDamp);
+	}
+	if(_gains.yVelDamp >_velDampMax){
+		_gains.yVelDamp = _velDampMax;
+	}
+	else if(_gains.yVelDamp < _velDampMin){
+		_gains.yVelDamp = _velDampMin;
+	}
 
   float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
   float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
@@ -784,9 +770,6 @@ void adjustSnapback(int cStickX, int cStickY, int steps){
 	while(delta < 2000){
 		delta = millis() - startTime;
 	}
-
-	/*setADCVar(&_aADCVarX, &_bADCVarX, _ADCVarSlowX);
-	setADCVar(&_aADCVarY, &_bADCVarY, _ADCVarSlowY);*/
 
 	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
 	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
