@@ -10,6 +10,10 @@
 #include <Bounce2.h>
 #include "TeensyTimerTool.h"
 
+//Uncomment the appropriate include line for your hardware.
+//#include "src/Phob1_0Teensy3_2.h"
+//#include "src/Phob1_1Teensy3_2.h"
+
 using namespace Eigen;
 
 #define CMD_LENGTH_SHORT 5
@@ -34,29 +38,7 @@ const int _slowBDL = (_slowDivider >> 5) & 0xFF;
 const int _fastC4 = _fastDivider & 0x1F;
 const int _slowC4 = _slowDivider & 0x1F;
 
-/////defining which pin is what on the teensy
-const int _pinLa = 16;
-const int _pinRa = 23;
-const int _pinL = 13;
-const int _pinR = 3;
-const int _pinAx = 15;
-const int _pinAy = 14;
-//const int _pinCx = 21;
-//const int _pinCy = 22;
-const int _pinCx = 22;
-const int _pinCy = 21;
-const int _pinRX = 9;
-const int _pinTX = 10;
-const int _pinDr = 7;
-const int _pinDu = 18;
-const int _pinDl = 17;
-const int _pinDd = 8;
-const int _pinX = 1;
-const int _pinY = 2;
-const int _pinA = 4;
-const int _pinB = 6;
-const int _pinZ = 0;
-const int _pinS = 19;
+//defining control configuration
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
@@ -244,12 +226,6 @@ unsigned int _lastMicros;
 float _dT;
 bool _running = false;
 
-/* old kalman filter state variables
-VectorXf _xState(2);
-VectorXf _yState(2);
-MatrixXf _xP(2,2);
-MatrixXf _yP(2,2);
-*/
 //new kalman filter state variables
 float _xPos;//input of kalman filter
 float _yPos;//input of kalman filter
@@ -335,43 +311,9 @@ void setup() {
 
 	_lastMicros = micros();
 
-	//analogReference(1);
+    setPinModes();
 
-
-	adc->adc0->setAveraging(8); // set number of averages
-  adc->adc0->setResolution(12); // set bits of resolution
-  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
-  adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-
-  adc->adc1->setAveraging(32); // set number of averages
-  adc->adc1->setResolution(16); // set bits of resolution
-  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_LOW_SPEED ); // change the conversion speed
-  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-
-	setPinModes();
-
-
-	VREF::start();
-
-	double refVoltage = 0;
-	for(int i = 0; i < 512; i++){
-		int value = adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
-		double volts = value*3.3/(float)adc->adc1->getMaxValue();
-		refVoltage += volts;
-	}
-	refVoltage = refVoltage/512.0;
-
-
-	Serial.print("the reference voltage read was:");
-	Serial.println(refVoltage,8);
-	_ADCScale = 1.2/refVoltage;
-
-	adc->adc1->setAveraging(4); // set number of averages
-  adc->adc1->setResolution(12); // set bits of resolution
-  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED ); // change the conversion speed
-  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED ); // change the sampling speed
-
-	_ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
+    boardSpecificSetup(adc, _ADCScale, _ADCScaleFactor);
 
 	//_slowBaud = findFreq();
   //serialFreq = 950000;
@@ -845,7 +787,10 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 	}
 }
 void readSticks(){
-	 _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+#ifdef USEADCSCALE
+    _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+#endif
+    // otherwise _ADCScale is 1
 
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
 	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
@@ -1304,7 +1249,10 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 
 	for(int i = 0; i < 128; i++){
 		if(aStick){
-			_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+#ifdef USEADCSCALE
+            _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+#endif
+            //otherwise _ADCScale is 1
 			X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
 			Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
 		}
