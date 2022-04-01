@@ -50,10 +50,6 @@ int _rTrigger = 1;
 bool _changeTrigger = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
-float _podeThreshX = 9999.0;
-float _podeThreshY = 9999.0;
-float _velFilterX = 0;
-float _velFilterY = 0;
 
 float _velDampMin = 0.125;
 float _velDampMax = .5;
@@ -854,28 +850,10 @@ void readSticks(){
 	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
-
-	float filterWeight = 0.6;
-	_velFilterX = filterWeight*_velFilterX + (1-filterWeight)*(posAx-_posALastX)/_dT;
-	_velFilterY = filterWeight*_velFilterY + (1-filterWeight)*(posAy-_posALastY)/_dT;
-	float hystVal = 0.5;
 	//assign the remapped values to the button struct
 	if(_running){
-		if((_velFilterX < _podeThreshX) && (_velFilterX > -_podeThreshX)){
-			float diffAx = (posAx+127.5)-btn.Ax;
-			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-				btn.Ax = (uint8_t) (posAx+127.5);
-			}
-		}
-
-		if((_velFilterY < _podeThreshY) && (_velFilterY > -_podeThreshY)){
-			float diffAy = (posAy+127.5)-btn.Ay;
-			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-				btn.Ay = (uint8_t) (posAy+127.5);
-			}
-		}
-		//btn.Ax = (uint8_t) (posAx+127.5);
-		//btn.Ay = (uint8_t) (posAy+127.5);
+		btn.Ax = (uint8_t) (posAx+127.5);
+		btn.Ay = (uint8_t) (posAy+127.5);
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
