@@ -11,7 +11,7 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-//#include "src/Phob1_0Teensy3_2.h"
+#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 
 using namespace Eigen;
@@ -213,6 +213,10 @@ float _aStickY;
 float _posALastY;
 float _cStickX;
 float _cStickY;
+uint16_t aBinsX[4096];
+uint16_t aBinsY[4096];
+uint16_t cBinsX[4096];
+uint16_t cBinsY[4096];
 
 volatile int _writeQueue = 0;
 
@@ -290,20 +294,14 @@ void setup() {
 
 	_currentCalStep = _notCalibrating;
 
-    /*
-	_xState << 0,0;
-	_yState << 0,0;
-	_xP << 1000,0,0,1000;
-	_yP << 1000,0,0,1000;
-    */
-    _xPos = 0;
-    _yPos = 0;
-    _xPosFilt = 0;
-    _yPosFilt = 0;
-    _xVel = 0;
-    _yVel = 0;
-    _xVelFilt = 0;
-    _yVelFilt = 0;
+  _xPos = 0;
+  _yPos = 0;
+  _xPosFilt = 0;
+  _yPosFilt = 0;
+  _xVel = 0;
+  _yVel = 0;
+  _xVelFilt = 0;
+  _yVelFilt = 0;
 
 	_lastMicros = micros();
 
@@ -789,8 +787,8 @@ void readSticks(){
     // otherwise _ADCScale is 1
 
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
-	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+	//_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+	//_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
 
 
 	//read the L and R sliders
@@ -809,12 +807,125 @@ void readSticks(){
 	//read the C stick
 	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
 	//btn.Cy = adc->adc0->analogRead(pinCy)>>4;
-
-
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
 	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
+	
+	//get the time delta since the kalman filter was last run
+	unsigned int thisMicros;
+	unsigned int adcCount = 0;
+	unsigned int cXSum = 0;
+	unsigned int cYSum = 0;
+	unsigned int aXSum = 0;
+	unsigned int aYSum = 0;
+	/*
+	unsigned int cXVal = 0;
+	unsigned int cYVal = 0;
+	unsigned int aXVal = 0;
+	unsigned int aYVal = 0;
+	
+	unsigned int cXMax = 0;
+	unsigned int cYMax = 0;
+	unsigned int aXMax = 0;
+	unsigned int aYMax = 0;
+	
+	unsigned int cXMin = 4096;
+	unsigned int cYMin = 4096;
+	unsigned int aXMin = 4096;
+	unsigned int aYMin = 4096;
+	
+	
+	int i = 0;
+	int bsum = 0;
+	
+	memset(aBinsX, 0, 4096);
+	memset(aBinsY, 0, 4096);
+	memset(cBinsX, 0, 4096);
+	memset(cBinsY, 0, 4096);
+	
+	do{
+		adcCount++;
+		aXVal = adc->adc0->analogRead(_pinAx);
+		aXMin = min(aXVal,aXMin);
+		aBinsX[aXVal]++;
+		
+		aYVal = adc->adc0->analogRead(_pinAy);
+		aYMin = min(aYVal,aYMin);
+		aBinsY[aYVal]++;
+		
+		cXVal = adc->adc0->analogRead(_pinCx);
+		cXMin = min(cXVal,cXMin);
+		cBinsX[cXVal]++;
+		
+		cYVal = adc->adc0->analogRead(_pinCy);
+		cYMin = min(cYVal,cYMin);
+		cBinsY[cYVal]++;
+	}
+	while((micros()-_lastMicros) < 1000);
+	
 
+	
+	_dT = (micros() - _lastMicros);
+	_lastMicros = micros();
+	//Serial.println(_dT);
+	//Serial.println(adcCount);
+	_dT = _dT/1000.0;
+	
+	i = aXMin;
+	//Serial.println(i);
+	bsum = 0;
+	do {
+    bsum += aBinsX[i];
+    i++;
+  }  while (bsum < (adcCount / 2));
+	_aStickX = (i-1)/4096.0;
+	Serial.println(i-1);
+	
+	i = aYMin;
+	bsum = 0;
+	do {
+    bsum += aBinsY[i];
+    i++;
+  }  while (bsum < (adcCount / 2));
+	_aStickY = (i-1)/4096.0;
+	
+	i = cXMin;
+	bsum = 0;
+	do {
+    bsum += cBinsX[i];
+    i++;
+  }  while (bsum < (adcCount / 2));
+	_cStickX = (i-1)/4096.0;
+	
+	i = cYMin;
+	bsum = 0;
+	do {
+    bsum += cBinsY[i];
+    i++;
+  }  while (bsum < (adcCount / 2));
+	_cStickY = (i-1)/4096.0;
+	*/
+	
+	do{
+		adcCount++;
+		aXSum += adc->adc0->analogRead(_pinAx);
+		aYSum += adc->adc0->analogRead(_pinAy);
+	}
+	while((micros()-_lastMicros) < 1000);
+	
+
+	_aStickX = aXSum/(float)adcCount;
+	//Serial.print(_aStickX);
+	//Serial.print(',');
+	_aStickX = _aStickX/4096.0*_ADCScale;
+	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
+	
+	_dT = (micros() - _lastMicros);
+	_lastMicros = micros();
+	Serial.println(_dT);
+	//Serial.println(adcCount);
+	_dT = _dT/1000.0;
+	
 	//create the measurement vector to be used in the kalman filter
 	float xZ;
 	float yZ;
@@ -830,9 +941,10 @@ void readSticks(){
 	//float posCy = (_aFitCoeffsY[1]*(_cStickY*_cStickY*_cStickY) + _aFitCoeffsY[1]*(_cStickY*_cStickY) + _aFitCoeffsY[2]*_cStickY + _aFitCoeffsY[3]);
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
-
+	
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
+	
 /* 	Serial.println();
 	Serial.print(xZ[0]);
 	Serial.print(",");
@@ -849,11 +961,21 @@ void readSticks(){
 
 	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
-
+	
+	float hystVal = 0.5;
 	//assign the remapped values to the button struct
+	//Serial.println(posAx);
 	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
+		//btn.Ax = (uint8_t) (posAx+127.5);
+		float diffAx = (posAx+127.5)-btn.Ax;
+			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+				btn.Ax = (uint8_t) (posAx+127.5);
+			}
+		//btn.Ay = (uint8_t) (posAy+127.5);
+		float diffAy = (posAy+127.5)-btn.Ay;
+			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+				btn.Ay = (uint8_t) (posAy+127.5);
+			}
 		btn.Cx = (uint8_t) (posCx+127.5);
 		btn.Cy = (uint8_t) (posCy+127.5);
 	}
@@ -1404,12 +1526,7 @@ float linearize(float point, float coefficients[]){
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
 
-	//get the time delta since the kalman filter was last run
-	unsigned int thisMicros = micros();
-	_dT = (thisMicros-_lastMicros)/1000.0;
-	_lastMicros = thisMicros;
-	//Serial.print("loop time: ");
-	//Serial.println(_dT);
+	
 
     //set up gains according to the time delta.
     //The reference time delta used to tune was 1.2 ms.
