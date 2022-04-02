@@ -11,7 +11,7 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-#include "src/Phob1_0Teensy3_2.h"
+//#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 
 using namespace Eigen;
@@ -90,8 +90,8 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .yVelPosFactor = 0.01,
     .xVelDamp = 0.125,
     .yVelDamp = 0.125,
-    .velThresh = 1.0,
-    .accelThresh = 3.0
+    .velThresh = 2.00,
+    .accelThresh = 0.10
 };
 
 //////values used to determine how much large of a region will count as being "in a notch"
@@ -213,10 +213,6 @@ float _aStickY;
 float _posALastY;
 float _cStickX;
 float _cStickY;
-uint16_t aBinsX[4096];
-uint16_t aBinsY[4096];
-uint16_t cBinsX[4096];
-uint16_t cBinsY[4096];
 
 volatile int _writeQueue = 0;
 
@@ -225,6 +221,15 @@ volatile int _writeQueue = 0;
 unsigned int _lastMicros;
 float _dT;
 bool _running = false;
+
+//The median filter can be either length 3, 4, or 5.
+#define MEDIANLEN 3
+//Or just comment this define to disable it entirely.
+#define USEMEDIAN
+float _xPosList[MEDIANLEN];//for median filtering
+float _yPosList[MEDIANLEN];//for median filtering
+unsigned int _xMedianIndex;
+unsigned int _yMedianIndex;
 
 //new kalman filter state variables
 float _xPos;//input of kalman filter
@@ -294,14 +299,21 @@ void setup() {
 
 	_currentCalStep = _notCalibrating;
 
-  _xPos = 0;
-  _yPos = 0;
-  _xPosFilt = 0;
-  _yPosFilt = 0;
-  _xVel = 0;
-  _yVel = 0;
-  _xVelFilt = 0;
-  _yVelFilt = 0;
+    for (int i = 0; i < MEDIANLEN; i++){
+        _xPosList[i] = 0;
+        _yPosList[i] = 0;
+    }
+    _xMedianIndex = 0;
+    _yMedianIndex = 0;
+
+    _xPos = 0;
+    _yPos = 0;
+    _xPosFilt = 0;
+    _yPosFilt = 0;
+    _xVel = 0;
+    _yVel = 0;
+    _xVelFilt = 0;
+    _yVelFilt = 0;
 
 	_lastMicros = micros();
 
@@ -804,107 +816,13 @@ void readSticks(){
 			btn.Ra = (uint8_t) 0;
 	}
 
-	//read the C stick
-	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
-	//btn.Cy = adc->adc0->analogRead(pinCy)>>4;
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
 	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
 	
-	//get the time delta since the kalman filter was last run
-	unsigned int thisMicros;
 	unsigned int adcCount = 0;
-	unsigned int cXSum = 0;
-	unsigned int cYSum = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
-	/*
-	unsigned int cXVal = 0;
-	unsigned int cYVal = 0;
-	unsigned int aXVal = 0;
-	unsigned int aYVal = 0;
-	
-	unsigned int cXMax = 0;
-	unsigned int cYMax = 0;
-	unsigned int aXMax = 0;
-	unsigned int aYMax = 0;
-	
-	unsigned int cXMin = 4096;
-	unsigned int cYMin = 4096;
-	unsigned int aXMin = 4096;
-	unsigned int aYMin = 4096;
-	
-	
-	int i = 0;
-	int bsum = 0;
-	
-	memset(aBinsX, 0, 4096);
-	memset(aBinsY, 0, 4096);
-	memset(cBinsX, 0, 4096);
-	memset(cBinsY, 0, 4096);
-	
-	do{
-		adcCount++;
-		aXVal = adc->adc0->analogRead(_pinAx);
-		aXMin = min(aXVal,aXMin);
-		aBinsX[aXVal]++;
-		
-		aYVal = adc->adc0->analogRead(_pinAy);
-		aYMin = min(aYVal,aYMin);
-		aBinsY[aYVal]++;
-		
-		cXVal = adc->adc0->analogRead(_pinCx);
-		cXMin = min(cXVal,cXMin);
-		cBinsX[cXVal]++;
-		
-		cYVal = adc->adc0->analogRead(_pinCy);
-		cYMin = min(cYVal,cYMin);
-		cBinsY[cYVal]++;
-	}
-	while((micros()-_lastMicros) < 1000);
-	
-
-	
-	_dT = (micros() - _lastMicros);
-	_lastMicros = micros();
-	//Serial.println(_dT);
-	//Serial.println(adcCount);
-	_dT = _dT/1000.0;
-	
-	i = aXMin;
-	//Serial.println(i);
-	bsum = 0;
-	do {
-    bsum += aBinsX[i];
-    i++;
-  }  while (bsum < (adcCount / 2));
-	_aStickX = (i-1)/4096.0;
-	Serial.println(i-1);
-	
-	i = aYMin;
-	bsum = 0;
-	do {
-    bsum += aBinsY[i];
-    i++;
-  }  while (bsum < (adcCount / 2));
-	_aStickY = (i-1)/4096.0;
-	
-	i = cXMin;
-	bsum = 0;
-	do {
-    bsum += cBinsX[i];
-    i++;
-  }  while (bsum < (adcCount / 2));
-	_cStickX = (i-1)/4096.0;
-	
-	i = cYMin;
-	bsum = 0;
-	do {
-    bsum += cBinsY[i];
-    i++;
-  }  while (bsum < (adcCount / 2));
-	_cStickY = (i-1)/4096.0;
-	*/
 	
 	do{
 		adcCount++;
@@ -913,65 +831,45 @@ void readSticks(){
 	}
 	while((micros()-_lastMicros) < 1000);
 	
-
-	_aStickX = aXSum/(float)adcCount;
-	//Serial.print(_aStickX);
-	//Serial.print(',');
-	_aStickX = _aStickX/4096.0*_ADCScale;
+	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
 	
-	_dT = (micros() - _lastMicros);
+	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
-	Serial.println(_dT);
-	//Serial.println(adcCount);
-	_dT = _dT/1000.0;
 	
-	//create the measurement vector to be used in the kalman filter
+	//create the measurement value to be used in the kalman filter
 	float xZ;
 	float yZ;
 
 	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
-	//store in the measurement vectors
-	//xZ << (_aFitCoeffsX[0]*(_aStickX*_aStickX*_aStickX) + _aFitCoeffsX[1]*(_aStickX*_aStickX) + _aFitCoeffsX[2]*_aStickX + _aFitCoeffsX[3]);
-	//yZ << (_aFitCoeffsY[0]*(_aStickY*_aStickY*_aStickY) + _aFitCoeffsY[1]*(_aStickY*_aStickY) + _aFitCoeffsY[2]*_aStickY + _aFitCoeffsY[3]);
 	xZ = linearize(_aStickX,_aFitCoeffsX);
 	yZ = linearize(_aStickY,_aFitCoeffsY);
 
-	//float posCx = (_cFitCoeffsX[0]*(_cStickX*_cStickX*_cStickX) + _cFitCoeffsX[1]*(_cStickX*_cStickX) + _cFitCoeffsX[2]*_cStickX + _cFitCoeffsX[3]);
-	//float posCy = (_aFitCoeffsY[1]*(_cStickY*_cStickY*_cStickY) + _aFitCoeffsY[1]*(_cStickY*_cStickY) + _aFitCoeffsY[2]*_cStickY + _aFitCoeffsY[3]);
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
-	
+
+    //Run a median filter to reduce noise
+#ifdef USEMEDIAN
+    runMedian(xZ, _xPosList, _xMedianIndex);
+    runMedian(yZ, _yPosList, _yMedianIndex);
+#endif
+
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
-	
-/* 	Serial.println();
-	Serial.print(xZ[0]);
-	Serial.print(",");
-	Serial.print(yZ[0]);
-	Serial.print(",");
-	Serial.print(_xState[0]);
-	Serial.print(",");
-	Serial.print(_yState[0]);
- */
+
 	float posAx;
 	float posAy;
-	//float posCx;
-	//float posCy;
 
 	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
-	
-	float hystVal = 0.5;
+
+	float hystVal = 0.3;
 	//assign the remapped values to the button struct
-	//Serial.println(posAx);
 	if(_running){
-		//btn.Ax = (uint8_t) (posAx+127.5);
 		float diffAx = (posAx+127.5)-btn.Ax;
 			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
 				btn.Ax = (uint8_t) (posAx+127.5);
 			}
-		//btn.Ay = (uint8_t) (posAy+127.5);
 		float diffAy = (posAy+127.5)-btn.Ay;
 			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
 				btn.Ay = (uint8_t) (posAy+127.5);
@@ -989,22 +887,6 @@ void readSticks(){
 
 	_posALastX = posAx;
 	_posALastY = posAy;
-	//Serial.println();
-	//Serial.print(_dT/16.7);
-	//Serial.print(",");
-	//Serial.print(xZ[0],8);
-	//Serial.print(",");
-	//Serial.print(_velFilterX*10,8);
-	//Serial.print(",");
-	//Serial.print(yZ[0],8);
-	//Serial.print(",");
-	//Serial.print((posAx+127.5),8);
-	//Serial.print(",");
-	//Serial.print((posAy+127.5),8);
-	//Serial.print(",");
-	//Serial.print(btn.Ax);
-	//Serial.print(",");
-	//Serial.print(btn.Ay);
 }
 /*******************
 	notchRemap
@@ -1523,10 +1405,39 @@ void notchCalibrate(float xIn[], float yIn[], float xOut[], float yOut[], int re
 float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
 }
+void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex){
+    //takes the value, inserts it into the value array, and then
+    // writes the median back to the value
+    valArray[medianIndex] = val;
+    medianIndex = (medianIndex + 1) % MEDIANLEN;
+
+    //We'll hardcode different sort versions according to how long the median is
+    //These are derived from RawTherapee's median.h.
+#if MEDIANLEN == 3
+    val = max(min(valArray[0], valArray[1]), min(valArray[2], max(valArray[0], valArray[1])));
+#elif MEDIANLEN == 4
+    float maximin = max(min(valArray[0], valArray[1]), min(valArray[2], valArray[3]));
+    float minimax = min(max(valArray[0], valArray[1]), max(valArray[2], valArray[3]));
+    val = (maximin + minimax) / 2.0f;
+#else //MEDIANLEN == 5
+    float tmpArray[MEDIANLEN];
+    float tmp;
+    tmp         = min(valArray[0], valArray[1]);
+    tmpArray[1] = max(valArray[0], valArray[1]);
+    tmpArray[0] = tmp;
+    tmp         = min(valArray[3], valArray[4]);
+    tmpArray[4] = max(valArray[3], valArray[4]);
+    tmpArray[3] = max(tmpArray[0], tmp);
+    tmpArray[1] = min(tmpArray[1], tmpArray[4]);
+    tmp         = min(tmpArray[1], valArray[2]);
+    tmpArray[2] = max(tmpArray[1], valArray[2]);
+    tmpArray[1] = tmp;
+    tmp         = min(tmpArray[2], tmpArray[3]);
+    val         = max(tmpArray[1], tmp);
+#endif
+}
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
-
-	
 
     //set up gains according to the time delta.
     //The reference time delta used to tune was 1.2 ms.
