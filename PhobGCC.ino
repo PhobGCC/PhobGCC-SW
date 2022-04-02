@@ -222,6 +222,15 @@ unsigned int _lastMicros;
 float _dT;
 bool _running = false;
 
+//The median filter can be either length 3, 4, or 5.
+#define MEDIANLEN 5
+//Or just comment this define to disable it entirely.
+//#define USEMEDIAN
+float _xPosList[MEDIANLEN];//for median filtering
+float _yPosList[MEDIANLEN];//for median filtering
+unsigned int _xMedianIndex;
+unsigned int _yMedianIndex;
+
 //new kalman filter state variables
 float _xPos;//input of kalman filter
 float _yPos;//input of kalman filter
@@ -290,12 +299,13 @@ void setup() {
 
 	_currentCalStep = _notCalibrating;
 
-    /*
-	_xState << 0,0;
-	_yState << 0,0;
-	_xP << 1000,0,0,1000;
-	_yP << 1000,0,0,1000;
-    */
+    for (int i = 0; i < MEDIANLEN; i++){
+        _xPosList[i] = 0;
+        _yPosList[i] = 0;
+    }
+    _xMedianIndex = 0;
+    _yMedianIndex = 0;
+
     _xPos = 0;
     _yPos = 0;
     _xPosFilt = 0;
@@ -815,7 +825,7 @@ void readSticks(){
 	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
 	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
 
-	//create the measurement vector to be used in the kalman filter
+	//create the measurement value to be used in the kalman filter
 	float xZ;
 	float yZ;
 
@@ -830,6 +840,12 @@ void readSticks(){
 	//float posCy = (_aFitCoeffsY[1]*(_cStickY*_cStickY*_cStickY) + _aFitCoeffsY[1]*(_cStickY*_cStickY) + _aFitCoeffsY[2]*_cStickY + _aFitCoeffsY[3]);
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
+
+    //Run a median filter to reduce noise
+#ifdef USEMEDIAN
+    runMedian(xZ, _xPosList, _xMedianIndex);
+    runMedian(yZ, _yPosList, _yMedianIndex);
+#endif
 
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
@@ -1400,6 +1416,37 @@ void notchCalibrate(float xIn[], float yIn[], float xOut[], float yOut[], int re
 }
 float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
+}
+void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex){
+    //takes the value, inserts it into the value array, and then
+    // writes the median back to the value
+    valArray[medianIndex] = val;
+    medianIndex = (medianIndex + 1) % MEDIANLEN;
+
+    //We'll hardcode different sort versions according to how long the median is
+    //These are derived from RawTherapee's median.h.
+#if MEDIANLEN == 3
+    val = max(min(valArray[0], valArray[1]), min(valArray[2], max(valArray[0], valArray[1])));
+#elif MEDIANLEN == 4
+    float maximin = max(min(valArray[0], valArray[1]), min(valArray[2], valArray[3]));
+    float minimax = min(max(valArray[0], valArray[1]), max(valArray[2], valArray[3]));
+    val = (maximin + minimax) / 2.0f;
+#else //MEDIANLEN == 5
+    float tmpArray[MEDIANLEN];
+    float tmp;
+    tmp         = min(valArray[0], valArray[1]);
+    tmpArray[1] = max(valArray[0], valArray[1]);
+    tmpArray[0] = tmp;
+    tmp         = min(valArray[3], valArray[4]);
+    tmpArray[4] = max(valArray[3], valArray[4]);
+    tmpArray[3] = max(tmpArray[0], tmp);
+    tmpArray[1] = min(tmpArray[1], tmpArray[4]);
+    tmp         = min(tmpArray[1], valArray[2]);
+    tmpArray[2] = max(tmpArray[1], valArray[2]);
+    tmpArray[1] = tmp;
+    tmp         = min(tmpArray[2], tmpArray[3]);
+    val         = max(tmpArray[1], tmp);
+#endif
 }
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
