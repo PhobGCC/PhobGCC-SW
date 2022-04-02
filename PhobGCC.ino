@@ -90,7 +90,7 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .yVelPosFactor = 0.01,
     .xVelDamp = 0.125,
     .yVelDamp = 0.125,
-    .velThresh = 2.00,
+    .velThresh = 1.00,
     .accelThresh = 0.10
 };
 
