@@ -11,7 +11,7 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-//#include "src/Phob1_0Teensy3_2.h"
+#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 
 using namespace Eigen;
@@ -1226,26 +1226,34 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 
 	Serial.print("Collecting cal point for step: ");
 	Serial.println(currentStep);
-	float X = 0;
-	float Y = 0;
-
-	for(int i = 0; i < 128; i++){
-		if(aStick){
+	float X;
+	float Y;
+	
+	for(int j = 0; j < MEDIANLEN; j++){
+		X = 0;
+		Y = 0;
+		for(int i = 0; i < 128; i++){
+			if(aStick){
 #ifdef USEADCSCALE
-            _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+							_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
-            //otherwise _ADCScale is 1
-			X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-			Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+							//otherwise _ADCScale is 1
+				X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+				Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+			}
+			else{
+				X += adc->adc0->analogRead(_pinCx)/4096.0;
+				Y += adc->adc0->analogRead(_pinCy)/4096.0;
+			}
 		}
-		else{
-			X += adc->adc0->analogRead(_pinCx)/4096.0;
-			Y += adc->adc0->analogRead(_pinCy)/4096.0;
-		}
+		X = X/128.0;
+		Y = Y/128.0;
+		runMedian(X, _xPosList, _xMedianIndex);
+    runMedian(Y, _yPosList, _yMedianIndex);
 	}
 
-	calPointsX[currentStep] = X/128.0;
-	calPointsY[currentStep] = Y/128.0;
+	calPointsX[currentStep] = X;
+	calPointsY[currentStep] = Y;
 
 	Serial.println("The collected coordinates are: ");
 	Serial.println(calPointsX[currentStep],8);
