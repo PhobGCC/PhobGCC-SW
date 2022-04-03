@@ -91,7 +91,7 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .xVelDamp = 0.125,
     .yVelDamp = 0.125,
     .velThresh = 1.00,
-    .accelThresh = 0.10
+    .accelThresh = 3.00
 };
 
 //////values used to determine how much large of a region will count as being "in a notch"
@@ -848,19 +848,22 @@ void readSticks(){
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
 
-    //Run a median filter to reduce noise
-#ifdef USEMEDIAN
-    runMedian(xZ, _xPosList, _xMedianIndex);
-    runMedian(yZ, _yPosList, _yMedianIndex);
-#endif
+
 
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
 
-	float posAx;
-	float posAy;
 
-	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
+	float posAx = _xPosFilt;
+	float posAy = _yPosFilt;
+	
+	    //Run a median filter to reduce noise
+#ifdef USEMEDIAN
+    runMedian(posAx, _xPosList, _xMedianIndex);
+    runMedian(posAy, _yPosList, _yMedianIndex);
+#endif
+
+	notchRemap(posAx, posAy, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
 	float hystVal = 0.3;
