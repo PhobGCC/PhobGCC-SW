@@ -5,6 +5,7 @@
 #include <VREF.h>
 
 //Hardware-specific code for PhobGCC board revision 1.0 with a Teensy 3.2
+#define TEENSY3_2
 
 //defining which pin is what on the teensy
 const int _pinLa = 16;
@@ -32,11 +33,14 @@ const int _pinS = 19;
 
 #define USEADCSCALE
 
-void boardSpecificSetup(ADC * adc,
-                        float & ADCScale,
-                        float & ADCScaleFactor) {
+void serialSetup() {
+    Serial.begin(57600);
     Serial.println("This is the header for board revision 1.0 with a Teensy 3.2.");
+}
 
+void ADCSetup(ADC * adc,
+              float & ADCScale,
+              float & ADCScaleFactor) {
     adc->adc0->setAveraging(1);
     adc->adc0->setResolution(12);
     adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
