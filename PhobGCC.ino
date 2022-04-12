@@ -29,6 +29,9 @@ int _rConfig = 0;
 int _lTrigger = 0;
 int _rTrigger = 1;
 bool _changeTrigger = true;
+int _cXOffset = 0;
+int _cYOffset = 0;
+bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
 
@@ -139,6 +142,8 @@ const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
 const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
 const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
 const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
+const int _eepromcXOffset = _eepromRToggle+_bytesPerFloat;
+const int _eepromcYOffset = _eepromcXOffset+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -202,9 +207,9 @@ float _dT;
 bool _running = false;
 
 //The median filter can be either length 3, 4, or 5.
-#define MEDIANLEN 3
+#define MEDIANLEN 5
 //Or just comment this define to disable it entirely.
-#define USEMEDIAN
+//#define USEMEDIAN
 float _xPosList[MEDIANLEN];//for median filtering
 float _yPosList[MEDIANLEN];//for median filtering
 unsigned int _xMedianIndex;
@@ -617,6 +622,18 @@ void readEEPROM(){
 	}
 	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
+  //get the C-stick X offset
+  EEPROM.get(_eepromcXOffset, _cXOffset);
+  if(std::isnan(_cXOffset)) {
+    _cXOffset = 0;
+  }
+
+  //get the C-stick Y offset
+  EEPROM.get(_eepromcYOffset, _cYOffset);
+  if(std::isnan(_cYOffset)) {
+    _cYOffset = 0;
+  }
+
   //get the x-axis velocity dampening
   EEPROM.get(_eepromxVelDamp, _gains.xVelDamp);
   Serial.print("the xVelDamp value from eeprom is:");
@@ -682,6 +699,11 @@ void resetDefaults(){
 	EEPROM.put(_eepromRToggle, _rConfig);
 	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
 	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
+
+  _cXOffset = 0;
+  _cYOffset = 0;
+  EEPROM.put(_eepromcXOffset, _cXOffset);
+  EEPROM.put(_eepromcYOffset, _cYOffset);
 
   _gains.xVelDamp = _velDampMin;
   EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
@@ -773,40 +795,65 @@ void readButtons(){
 
 
 	//check the dpad buttons to change the controller settings
-	if(bounceDr.fell()){
-		if(_currentCalStep == -1){
-			Serial.println("Calibrating the C stick");
-			_calAStick = false;
-			_currentCalStep ++;
-			_advanceCal = true;
-		}
-	}
-	else if(bounceDl.fell()){
-		if(_currentCalStep == -1){
-			if(btn.S == true){
-				resetDefaults();
-			}
-			else{
-				Serial.println("Calibrating the A stick");
-				_calAStick = true;
-				_currentCalStep ++;
-				_advanceCal = true;
-			}
-		}
-	}
-	else if(bounceDu.fell()){
-		adjustSnapback(btn.Cx,btn.Cy);
-	}
-	else if(bounceDd.fell()){
-		if(btn.L) {
-			setLRToggle(_lTrigger, 0, _changeTrigger);
-		} else if(btn.R) {
-			setLRToggle(_rTrigger, 0, _changeTrigger);
-		} else {
-			readJumpConfig();
-		}
+  if(!_safeMode) {
 
-	}
+  	if(bounceDr.fell()){
+  		if(_currentCalStep == -1){
+  			Serial.println("Calibrating the C stick");
+  			_calAStick = false;
+  			_currentCalStep ++;
+  			_advanceCal = true;
+  		}
+  	}
+  	else if(bounceDl.fell()){
+  		if(_currentCalStep == -1){
+  			if(btn.S && btn.X && btn.Y){
+  				resetDefaults();
+  			}
+  			else{
+  				Serial.println("Calibrating the A stick");
+  				_calAStick = true;
+  				_currentCalStep ++;
+  				_advanceCal = true;
+  			}
+  		}
+  	}
+  	else if(bounceDu.fell()){
+  		adjustSnapback(btn.Cx,btn.Cy);
+  	}
+    else if(bounceDd.fell() && !_safeMode){
+      if(btn.S) {
+        _safeMode = true;
+      } else if(btn.L) {
+  			setLRToggle(_lTrigger, 0, _changeTrigger);
+  		} else if(btn.R) {
+  			setLRToggle(_rTrigger, 0, _changeTrigger);
+      } else if(btn.A) {
+        if(btn.X) {
+          _cXOffset++;
+          EEPROM.put(_eepromcXOffset, _cXOffset);
+        } else if (btn.Y) {
+          _cYOffset++;
+          EEPROM.put(_eepromcYOffset, _cYOffset);
+        }
+      } else if(btn.B) {
+        if(btn.X) {
+          _cXOffset--;
+          EEPROM.put(_eepromcXOffset, _cXOffset);
+        } else if (btn.Y) {
+          _cYOffset--;
+          EEPROM.put(_eepromcYOffset, _cYOffset);
+        }
+  		} else {
+  			readJumpConfig();
+  		}
+  	}
+  } else if(bounceDd.fell()) {
+    if(btn.S) {
+      _safeMode = false;
+    }
+  }
+
 	//Undo Calibration using B-button
 	if(btn.B && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
@@ -996,7 +1043,6 @@ void setJump(int jumpConfig){
 * if it is 0, it should read out an actual analog value. If it is 1, it shouldn't.
 * config handles incoming values from the EEPROM. takes the state and sets it.
 * changeTrigger handles whether or not the current configuration of the targetTrigger should be swapped or not.
-* TODO: Create variables for the states and triggers.
 */
 void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 	if(changeTrigger) {
@@ -1069,7 +1115,6 @@ void readSticks(){
 	
 	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
-	
 	//create the measurement value to be used in the kalman filter
 	float xZ;
 	float yZ;
@@ -1080,7 +1125,6 @@ void readSticks(){
 
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
-
 
 
 	//Run the kalman filter to eliminate snapback
