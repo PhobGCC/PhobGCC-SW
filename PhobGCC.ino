@@ -11,9 +11,9 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-//#include "src/Phob1_0Teensy3_2.h"
+#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
-#include "src/Phob1_1Teensy4_0.h"
+//#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
 
@@ -1096,22 +1096,29 @@ void readSticks(){
 	}
 
 	//read the c stick, scale it down so that we don't get huge values when we linearize
-	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
-	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
+	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
+	//_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
 	
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
+	unsigned int cXSum = 0;
+	unsigned int cYSum = 0;
 	
 	do{
 		adcCount++;
 		aXSum += adc->adc0->analogRead(_pinAx);
 		aYSum += adc->adc0->analogRead(_pinAy);
+		cXSum += adc->adc0->analogRead(_pinCx);
+		cYSum += adc->adc0->analogRead(_pinCy);
 	}
 	while((micros()-_lastMicros) < 1000);
 	
+	Serial.println(adcCount);
 	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
+	_cStickX = (_cStickX + cXSum/(float)adcCount/4096.0)*0.5;
+	_cStickY = (_cStickY + cYSum/(float)adcCount/4096.0)*0.5;
 	
 	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
@@ -1537,8 +1544,11 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 		}
 		X = X/128.0;
 		Y = Y/128.0;
+
+#ifdef USEMEDIAN
 		runMedian(X, _xPosList, _xMedianIndex);
     runMedian(Y, _yPosList, _yMedianIndex);
+#endif
 	}
 
 	calPointsX[currentStep] = X;
