@@ -11,9 +11,9 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-#include "src/Phob1_0Teensy3_2.h"
+//#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
-//#include "src/Phob1_1Teensy4_0.h"
+#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
 
@@ -399,30 +399,30 @@ void setup() {
 }
 
 void loop() {
-	//read the controllers buttons
-	readButtons();
-	//read the analog inputs
-	readSticks();
-	//check to see if we are calibrating
-	if(_currentCalStep >= 0){
-		if(_calAStick){
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
-		}
-		else{
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
-		}
-
-	}
 	//check if we should be reporting values yet
 	if(btn.B && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
-	//update the pole message so new data will be sent to the gamecube
-	//if(_running){
-	setPole();
-	//}
-
+	
+	//read the controllers buttons
+	readButtons();
+	
+	//check to see if we are calibrating
+	if(_currentCalStep >= 0){
+		if(_calAStick){
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
+			readSticks(true,false,true);
+		}
+		else{
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
+			readSticks(false,true,true);
+		}
+	}
+	else{
+		//if not calibrating read the sticks normally
+		readSticks(true,true,_running);
+	}
 }
 
 #ifdef TEENSY4_0
@@ -444,9 +444,9 @@ void commInt() {
 				for(int i = 0; i < _bitQueue+1; i++){
 					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
 				}
-				Serial.print("Sent: ");
-				Serial.write(myBuffer,_bitQueue+1);
-				Serial.println();
+				//Serial.print("Sent: ");
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
 			}
 
 			//flush and clear the any remaining data just to be sure
@@ -472,8 +472,8 @@ void commInt() {
 				for(int i = 0; i < _bitQueue+1; i++){
 					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
 				}
-				Serial.write(myBuffer,_bitQueue+1);
-				Serial.println();
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
 			}
 
 			//clear any remaining data
@@ -521,12 +521,12 @@ void commInt() {
 			}
 
 			//if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
-			if(_reportCount==0){
-				Serial.print("Received: ");
-				Serial.println(_cmdByte,BIN);
-				Serial.print("Error Count:");
-				Serial.println(_errorCount);
-			}
+			//if(_reportCount==0){
+				//Serial.print("Received: ");
+				//Serial.println(_cmdByte,BIN);
+				//Serial.print("Error Count:");
+				//Serial.println(_errorCount);
+			//}
 
 			//if the command byte is all 0s it is probe command, we will send a probe response
 			if(_cmdByte == 0b00000000){
@@ -580,6 +580,7 @@ void commInt() {
 			else if(_cmdByte == 0b01000000){
 				_waiting = true;
 				_bitQueue = 16;
+				setPole();
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -991,7 +992,7 @@ void adjustSnapback(int cStickX, int cStickY){
 	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
 	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
 
-	setPole();
+	//setPole();
 
 	int startTime = millis();
 	int delta = 0;
@@ -1071,7 +1072,7 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 		}
 	}
 }
-void readSticks(){
+void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
     _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
@@ -1114,7 +1115,7 @@ void readSticks(){
 	}
 	while((micros()-_lastMicros) < 1000);
 	
-	Serial.println(adcCount);
+	//Serial.println(adcCount);
 	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
 	_cStickX = (_cStickX + cXSum/(float)adcCount/4096.0)*0.5;
@@ -1153,16 +1154,26 @@ void readSticks(){
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(_running){
-		float diffAx = (posAx+127.5)-btn.Ax;
+		if(readA){
+			float diffAx = (posAx+127.5)-btn.Ax;
 			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
 				btn.Ax = (uint8_t) (posAx+127.5);
 			}
-		float diffAy = (posAy+127.5)-btn.Ay;
+			float diffAy = (posAy+127.5)-btn.Ay;
 			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
 				btn.Ay = (uint8_t) (posAy+127.5);
 			}
-		btn.Cx = (uint8_t) (posCx+127.5);
-		btn.Cy = (uint8_t) (posCy+127.5);
+		}
+		if(readC){
+			float diffCx = (posCx+127.5)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (posCx+127.5);
+			}
+			float diffCy = (posCy+127.5)-btn.Cy;
+			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+				btn.Cy = (uint8_t) (posCy+127.5);
+			}
+		}
 	}
 	else
 	{
@@ -1343,6 +1354,7 @@ void communicate(){
 		case 0x40:
 			timer1.trigger(56);
 			_commStatus = _commPoll;
+			setPole();
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
