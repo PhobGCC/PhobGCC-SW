@@ -11,7 +11,7 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate include line for your hardware.
-//#include "src/Phob1_0Teensy3_2.h"
+#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 
 using namespace Eigen;
@@ -367,7 +367,7 @@ void loop() {
 	}
 	//update the pole message so new data will be sent to the gamecube
 	//if(_running){
-	setPole();
+	//setPole();
 	//}
 
 }
@@ -1106,6 +1106,7 @@ void communicate(){
 		case 0x40:
 			timer1.trigger(56);
 			_commStatus = _commPoll;
+			setPole();
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
