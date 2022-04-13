@@ -346,30 +346,30 @@ void setup() {
 }
 
 void loop() {
-	//read the controllers buttons
-	readButtons();
-	//read the analog inputs
-	readSticks();
-	//check to see if we are calibrating
-	if(_currentCalStep >= 0){
-		if(_calAStick){
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
-		}
-		else{
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
-		}
-
-	}
 	//check if we should be reporting values yet
 	if(btn.B && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
-	//update the pole message so new data will be sent to the gamecube
-	//if(_running){
-	//setPole();
-	//}
-
+	
+	//read the controllers buttons
+	readButtons();
+	
+	//check to see if we are calibrating
+	if(_currentCalStep >= 0){
+		if(_calAStick){
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
+			readSticks(true,false,true);
+		}
+		else{
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
+			readSticks(false,true,true);
+		}
+	}
+	else{
+		//if not calibrating read the sticks normally
+		readSticks(true,true,_running);
+	}
 }
 void readEEPROM(){
 	//get the jump setting
@@ -838,7 +838,7 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 		}
 	}
 }
-void readSticks(){
+void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
     _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
@@ -913,11 +913,15 @@ void readSticks(){
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
 	//assign the remapped values to the button struct
-	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
-		btn.Cx = (uint8_t) (posCx+127.5 + _cXOffset);
-		btn.Cy = (uint8_t) (posCy+127.5 + _cYOffset);
+	if(running){
+		if(readA){
+			btn.Ax = (uint8_t) (posAx+127.5);
+			btn.Ay = (uint8_t) (posAy+127.5);
+		}
+		if(readC){
+			btn.Cx = (uint8_t) (posCx+127.5 + _cXOffset);
+			btn.Cy = (uint8_t) (posCy+127.5 + _cYOffset);
+		}
 	}
 	else
 	{
