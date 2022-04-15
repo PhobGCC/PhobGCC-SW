@@ -5,6 +5,7 @@
 #include <VREF.h>
 
 //Hardware-specific code for PhobGCC board revision 1.0 with a Teensy 3.2
+#define TEENSY3_2
 
 //defining which pin is what on the teensy
 const int _pinLa = 16;
@@ -32,15 +33,18 @@ const int _pinS = 19;
 
 #define USEADCSCALE
 
-void boardSpecificSetup(ADC * adc,
-                        float & ADCScale,
-                        float & ADCScaleFactor) {
+void serialSetup() {
+    Serial.begin(57600);
     Serial.println("This is the header for board revision 1.0 with a Teensy 3.2.");
+}
 
-    adc->adc0->setAveraging(8);
+void ADCSetup(ADC * adc,
+              float & ADCScale,
+              float & ADCScaleFactor) {
+    adc->adc0->setAveraging(1);
     adc->adc0->setResolution(12);
-    adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
-    adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED);
+    adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
+    adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED);
     
     adc->adc1->setAveraging(32);
     adc->adc1->setResolution(16);
@@ -62,10 +66,10 @@ void boardSpecificSetup(ADC * adc,
     Serial.print("ADCScale: ");
     Serial.println(ADCScale);
 
-    adc->adc1->setAveraging(4);
+    adc->adc1->setAveraging(1);
     adc->adc1->setResolution(12);
-    adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
-    adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED);
+    adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
+    adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED);
 
     ADCScaleFactor = 0.001*1.2*adc->adc1->getMaxValue()/3.3;
     Serial.print("ADCScaleFactor: ");

@@ -13,30 +13,11 @@
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
+//#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
 
-#define CMD_LENGTH_SHORT 5
-#define CMD_LENGTH_LONG 13
-#define PROBE_LENGTH 13
-#define ORIGIN_LENGTH 41
-#define POLL_LENGTH 33
-#define CALIBRATION_POINTS 17
-
 TeensyTimerTool::OneShotTimer timer1;
-
-////Serial bitbanging settings
-const int _fastBaud = 1250000;
-//const int _slowBaud = 1000000;
-const int _slowBaud = 1000000;
-const int _fastDivider = (((F_CPU * 2) + ((_fastBaud) >> 1)) / (_fastBaud));
-const int _slowDivider = (((F_CPU * 2) + ((_slowBaud) >> 1)) / (_slowBaud));
-const int _fastBDH = (_fastDivider >> 13) & 0x1F;
-const int _slowBDH = (_slowDivider >> 13) & 0x1F;
-const int _fastBDL = (_fastDivider >> 5) & 0xFF;
-const int _slowBDL = (_slowDivider >> 5) & 0xFF;
-const int _fastC4 = _fastDivider & 0x1F;
-const int _slowC4 = _slowDivider & 0x1F;
 
 //defining control configuration
 int _pinZSwappable = _pinZ;
@@ -93,8 +74,8 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .yVelPosFactor = 0.01,
     .xVelDamp = 0.125,
     .yVelDamp = 0.125,
-    .velThresh = 1.0,
-    .accelThresh = 3.0
+    .velThresh = 1.00,
+    .accelThresh = 3.00
 };
 
 //////values used to determine how much large of a region will count as being "in a notch"
@@ -219,8 +200,6 @@ float _posALastY;
 float _cStickX;
 float _cStickY;
 
-volatile int _writeQueue = 0;
-
 
 
 unsigned int _lastMicros;
@@ -246,34 +225,54 @@ float _yVel;
 float _xVelFilt;
 float _yVelFilt;
 
+#ifdef TEENSY3_2
+#define CMD_LENGTH_SHORT 5
+#define CMD_LENGTH_LONG 13
+#define PROBE_LENGTH 13
+#define ORIGIN_LENGTH 41
+#define POLL_LENGTH 33
+
+////Serial bitbanging settings
+const int _fastBaud = 1250000;
+//const int _slowBaud = 1000000;
+const int _slowBaud = 1000000;
+const int _fastDivider = (((F_CPU * 2) + ((_fastBaud) >> 1)) / (_fastBaud));
+const int _slowDivider = (((F_CPU * 2) + ((_slowBaud) >> 1)) / (_slowBaud));
+const int _fastBDH = (_fastDivider >> 13) & 0x1F;
+const int _slowBDH = (_slowDivider >> 13) & 0x1F;
+const int _fastBDL = (_fastDivider >> 5) & 0xFF;
+const int _slowBDL = (_slowDivider >> 5) & 0xFF;
+const int _fastC4 = _fastDivider & 0x1F;
+const int _slowC4 = _slowDivider & 0x1F;
+volatile int _writeQueue = 0;
 
 const char probeResponse[PROBE_LENGTH] = {
-	0x08,0x08,0x0F,0xE8,
-	0x08,0x08,0x08,0x08,
-	0x08,0x08,0x08,0xEF,
-	0xFF};
+    0x08,0x08,0x0F,0xE8,
+    0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0xEF,
+    0xFF};
 volatile char pollResponse[POLL_LENGTH] = {
-0x08,0x08,0x08,0x08,
-0x0F,0x08,0x08,0x08,
-0xE8,0xEF,0xEF,0xEF,
-0xE8,0xEF,0xEF,0xEF,
-0xE8,0xEF,0xEF,0xEF,
-0xE8,0xEF,0xEF,0xEF,
-0x08,0xEF,0xEF,0x08,
-0x08,0xEF,0xEF,0x08,
-0xFF};
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
+    0xFF};
 const char originResponse[ORIGIN_LENGTH] = {
-	0x08,0x08,0x08,0x08,
-	0x0F,0x08,0x08,0x08,
-	0xE8,0xEF,0xEF,0xEF,
-	0xE8,0xEF,0xEF,0xEF,
-	0xE8,0xEF,0xEF,0xEF,
-	0xE8,0xEF,0xEF,0xEF,
-	0x08,0xEF,0xEF,0x08,
-	0x08,0xEF,0xEF,0x08,
-	0x08,0x08,0x08,0x08,
-	0x08,0x08,0x08,0x08,
-	0xFF};
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0x08,
+    0xFF};
 
 int cmd[CMD_LENGTH_LONG];
 int cmdByte;
@@ -285,14 +284,59 @@ static int _commIdle = 0;
 static int _commRead = 1;
 static int _commPoll = 2;
 static int _commWrite = 3;
+#endif // TEENSY3_2
+
+#ifdef TEENSY4_0
+////Serial settings
+bool _writing = false;
+bool _waiting = false;
+int _bitQueue = 8;
+int _waitQueue = 0;
+int _writeQueue = 0;
+uint8_t _cmdByte = 0;
+const int _fastBaud = 2500000;
+const int _slowBaud = 2000000;
+const int _probeLength = 25;
+const int _originLength = 81;
+const int _pollLength = 65;
+static char _serialBuffer[128];
+int _errorCount = 0;
+int _reportCount = 0;
+
+const char _probeResponse[_probeLength] = {
+    0,0,0,0, 1,0,0,1,
+    0,0,0,0, 0,0,0,0,
+    0,0,0,0, 0,0,1,1,
+    1};
+const char _originResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+volatile char _pollResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+#endif // TEENSY4_0
 
 void setup() {
-
-	//start USB serial
-	Serial.begin(57600);
-	Serial.println("Software version 0.18 for use with 1.0 and 1.1 boards using a teensy 3.2");
-	//Serial.println("This is not a stable version");
-	delay(1000);
+    serialSetup();
+    //Serial.println("Software version 0.17 (hopefully Phobos remembered to update this message)");
+    Serial.println("This is not a stable version");
+    delay(1000);
 
 	readEEPROM();
 
@@ -324,17 +368,25 @@ void setup() {
 
     setPinModes();
 
-    boardSpecificSetup(adc, _ADCScale, _ADCScaleFactor);
+    ADCSetup(adc, _ADCScale, _ADCScaleFactor);
+
+#ifdef TEENSY4_0
+    attachInterrupt(9, commInt, RISING);
+#endif // TEENSY4_0
 
 	//_slowBaud = findFreq();
   //serialFreq = 950000;
 	//Serial.print("starting hw serial at freq:");
 	//Serial.println(_slowBaud);
 	//start hardware serial
+#ifdef TEENSY4_0
+    Serial2.addMemoryForRead(_serialBuffer,128);
+#endif // TEENSY4_0
 	Serial2.begin(_slowBaud);
 	//UART1_C2 &= ~UART_C2_RE;
 	//attach the interrupt which will call the communicate function when the data line transitions from high to low
 
+#ifdef TEENSY3_2
 	timer1.begin(communicate);
 	//timer2.begin(checkCmd);
 	//timer3.begin(writePole);
@@ -343,34 +395,212 @@ void setup() {
 	//ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 	attachInterrupt(_pinRX, bitCounter, FALLING);
 	NVIC_SET_PRIORITY(IRQ_PORTC, 0);
+#endif // TEENSY3_2
 }
 
 void loop() {
-	//read the controllers buttons
-	readButtons();
-	//read the analog inputs
-	readSticks();
-	//check to see if we are calibrating
-	if(_currentCalStep >= 0){
-		if(_calAStick){
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
-		}
-		else{
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
-		}
-
-	}
 	//check if we should be reporting values yet
 	if(btn.B && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
-	//update the pole message so new data will be sent to the gamecube
-	//if(_running){
-	setPole();
-	//}
-
+	
+	//read the controllers buttons
+	readButtons();
+	
+	//check to see if we are calibrating
+	if(_currentCalStep >= 0){
+		if(_calAStick){
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
+			readSticks(true,false,true);
+		}
+		else{
+			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
+			readSticks(false,true,true);
+		}
+	}
+	else{
+		//if not calibrating read the sticks normally
+		readSticks(true,true,_running);
+	}
 }
+
+#ifdef TEENSY4_0
+//commInt() will be called on every rising edge of a pulse that we receive
+//we will check if we have the expected amount of serial data yet, if we do we will do something with it, if we don't we will do nothing and wait for the next rising edge to check again
+void commInt() {
+	//check to see if we have the expected amount of data yet
+	if(Serial2.available() >= _bitQueue){
+		//check to see if we have been writing data, if have then we need to clear it and set the serial port back to low speed to be ready to receive the next command
+		if(_writing){
+			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
+			digitalWriteFast(13,LOW);
+			//wait for the stop bit to be read
+
+			while(Serial2.available() <= _bitQueue){}
+			//check to see if we just reset reportCount to 0, if we have then we will report the data we just sent over to the PC over serial
+			if(_reportCount == 0){
+				char myBuffer[128];
+				for(int i = 0; i < _bitQueue+1; i++){
+					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
+				}
+				//Serial.print("Sent: ");
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
+			}
+
+			//flush and clear the any remaining data just to be sure
+			Serial2.flush();
+			Serial2.clear();
+
+			//turn the writing flag off, set the serial port to low speed, and set our expected bit queue to 8 to be ready to receive our next command
+			_writing = false;
+			Serial2.begin(2000000);
+			_bitQueue = 8;
+		}
+		//if we are not writing, check to see if we were waiting for a poll command to finish
+		//if we are, we need to clear the data and send our poll response
+		else if(_waiting){
+			digitalWriteFast(13,LOW);
+			//wait for the stop bit to be received
+			while(Serial2.available() <= _bitQueue){}
+			digitalWriteFast(13,HIGH);
+			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
+			if(_reportCount == 0){
+				Serial.print("Poll: ");
+				char myBuffer[128];
+				for(int i = 0; i < _bitQueue+1; i++){
+					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
+				}
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
+			}
+
+			//clear any remaining data
+			Serial2.clear();
+
+			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
+			Serial2.clear();
+			_waiting = false;
+			Serial2.begin(2500000);
+
+			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
+			_writing = true;
+			_bitQueue = _pollLength-1;
+
+			//write the poll response
+			for(int i = 0; i<_pollLength; i++){
+				if(_pollResponse[i]){
+					//short low period = 1
+					Serial2.write(0b11111100);
+				}
+				else{
+					//long low period = 0
+					Serial2.write(0b11000000);
+				}
+			}
+		}
+		else{
+			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
+			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
+			digitalWriteFast(13,LOW);
+
+			//increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
+			_reportCount++;
+			if(_reportCount > 64){
+				_reportCount = 0;
+			}
+
+			//clear the command byte of previous data
+			_cmdByte = 0;
+
+			//write the new data from the serial buffer into the command byte
+			for(int i = 0; i<8; i++){
+				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
+
+			}
+
+			//if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
+			//if(_reportCount==0){
+				//Serial.print("Received: ");
+				//Serial.println(_cmdByte,BIN);
+				//Serial.print("Error Count:");
+				//Serial.println(_errorCount);
+			//}
+
+			//if the command byte is all 0s it is probe command, we will send a probe response
+			if(_cmdByte == 0b00000000){
+				//wait for the stop bit to be received and clear it
+				while(!Serial2.available()){}
+				Serial2.clear();
+
+				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
+				Serial2.begin(2500000);
+				_writing = true;
+				_bitQueue = _probeLength-1;
+
+				//write the probe response
+				for(int i = 0; i<_probeLength; i++){
+					if(_probeResponse[i]){
+						//short low period = 1
+						Serial2.write(0b11111100);
+					}
+					else{
+						//long low period = 0
+						Serial2.write(0b11000000);
+					}
+				}
+			}
+			//if the command byte is 01000001 it is an origin command, we will send an origin response
+			else if(_cmdByte == 0b01000001){
+				//wait for the stop bit to be received and clear it
+				while(!Serial2.available()){}
+				Serial2.clear();
+
+				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
+				Serial2.begin(2500000);
+				_writing = true;
+				_bitQueue = _originLength-1;
+
+				//write the origin response
+				for(int i = 0; i<_originLength; i++){
+					if(_originResponse[i]){
+						//short low period = 1
+						Serial2.write(0b11111100);
+					}
+					else{
+						//long low period = 0
+						Serial2.write(0b11000000);
+					}
+				}
+			}
+
+			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
+			//to do this we will set our expected bit queue to the remaining length of the poll command, and wait until it is finished
+			else if(_cmdByte == 0b01000000){
+				_waiting = true;
+				_bitQueue = 16;
+				setPole();
+			}
+			//if we got something else then something went wrong, print the command we got and increase the error count
+			else{
+				Serial.print("error: ");
+				Serial.println(_cmdByte,BIN);
+				_errorCount ++;
+
+				//we don't know for sure what state things are in, so clear, flush, and restart the serial port at low speed to be ready to receive a command
+				Serial2.clear();
+				Serial2.flush();
+				Serial2.begin(2000000);
+				//set our expected bit queue to 8, which will collect the first byte of any command we receive
+				_bitQueue = 8;
+			}
+		}
+	}
+	//turn the LED back on to indicate we are not stuck
+	digitalWriteFast(13,HIGH);
+}
+#endif // TEENSY4_0
 void readEEPROM(){
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
@@ -531,6 +761,10 @@ void setPinModes(){
 	pinMode(_pinB,INPUT_PULLUP);
 	pinMode(_pinZ,INPUT_PULLUP);
 	pinMode(_pinS,INPUT_PULLUP);
+#ifdef TEENSY4_0
+    pinMode(9,    INPUT_PULLUP);
+    pinMode(13,   OUTPUT);
+#endif // TEENSY4_0
 
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
@@ -758,7 +992,7 @@ void adjustSnapback(int cStickX, int cStickY){
 	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
 	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
 
-	setPole();
+	//setPole();
 
 	int startTime = millis();
 	int delta = 0;
@@ -838,15 +1072,15 @@ void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
 		}
 	}
 }
-void readSticks(){
+void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
     _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
     // otherwise _ADCScale is 1
 
 	//read the analog stick, scale it down so that we don't get huge values when we linearize
-	_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-	_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+	//_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+	//_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
 
 
 	//read the L and R sliders
@@ -862,62 +1096,84 @@ void readSticks(){
 			btn.Ra = (uint8_t) 0;
 	}
 
-	//read the C stick
-	//btn.Cx = adc->adc0->analogRead(pinCx)>>4;
-	//btn.Cy = adc->adc0->analogRead(pinCy)>>4;
-
-
 	//read the c stick, scale it down so that we don't get huge values when we linearize
-	_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
-	_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
-
+	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
+	//_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
+	
+	unsigned int adcCount = 0;
+	unsigned int aXSum = 0;
+	unsigned int aYSum = 0;
+	unsigned int cXSum = 0;
+	unsigned int cYSum = 0;
+	
+	do{
+		adcCount++;
+		aXSum += adc->adc0->analogRead(_pinAx);
+		aYSum += adc->adc0->analogRead(_pinAy);
+		cXSum += adc->adc0->analogRead(_pinCx);
+		cYSum += adc->adc0->analogRead(_pinCy);
+	}
+	while((micros()-_lastMicros) < 1000);
+	
+	//Serial.println(adcCount);
+	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
+	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
+	_cStickX = (_cStickX + cXSum/(float)adcCount/4096.0)*0.5;
+	_cStickY = (_cStickY + cYSum/(float)adcCount/4096.0)*0.5;
+	
+	_dT = (micros() - _lastMicros)/1000.0;
+	_lastMicros = micros();
 	//create the measurement value to be used in the kalman filter
 	float xZ;
 	float yZ;
 
 	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
-	//store in the measurement vectors
-	//xZ << (_aFitCoeffsX[0]*(_aStickX*_aStickX*_aStickX) + _aFitCoeffsX[1]*(_aStickX*_aStickX) + _aFitCoeffsX[2]*_aStickX + _aFitCoeffsX[3]);
-	//yZ << (_aFitCoeffsY[0]*(_aStickY*_aStickY*_aStickY) + _aFitCoeffsY[1]*(_aStickY*_aStickY) + _aFitCoeffsY[2]*_aStickY + _aFitCoeffsY[3]);
 	xZ = linearize(_aStickX,_aFitCoeffsX);
 	yZ = linearize(_aStickY,_aFitCoeffsY);
 
-	//float posCx = (_cFitCoeffsX[0]*(_cStickX*_cStickX*_cStickX) + _cFitCoeffsX[1]*(_cStickX*_cStickX) + _cFitCoeffsX[2]*_cStickX + _cFitCoeffsX[3]);
-	//float posCy = (_aFitCoeffsY[1]*(_cStickY*_cStickY*_cStickY) + _aFitCoeffsY[1]*(_cStickY*_cStickY) + _aFitCoeffsY[2]*_cStickY + _aFitCoeffsY[3]);
   float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
 
-    //Run a median filter to reduce noise
-#ifdef USEMEDIAN
-    runMedian(xZ, _xPosList, _xMedianIndex);
-    runMedian(yZ, _yPosList, _yMedianIndex);
-#endif
 
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
-/* 	Serial.println();
-	Serial.print(xZ[0]);
-	Serial.print(",");
-	Serial.print(yZ[0]);
-	Serial.print(",");
-	Serial.print(_xState[0]);
-	Serial.print(",");
-	Serial.print(_yState[0]);
- */
-	float posAx;
-	float posAy;
-	//float posCx;
-	//float posCy;
 
-	notchRemap(_xPosFilt, _yPosFilt, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
+
+	float posAx = _xPosFilt;
+	float posAy = _yPosFilt;
+	
+	    //Run a median filter to reduce noise
+#ifdef USEMEDIAN
+    runMedian(posAx, _xPosList, _xMedianIndex);
+    runMedian(posAy, _yPosList, _yMedianIndex);
+#endif
+
+	notchRemap(posAx, posAy, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
+	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(_running){
-		btn.Ax = (uint8_t) (posAx+127.5);
-		btn.Ay = (uint8_t) (posAy+127.5);
-		btn.Cx = (uint8_t) (posCx+127.5 + _cXOffset);
-		btn.Cy = (uint8_t) (posCy+127.5 + _cYOffset);
+		if(readA){
+			float diffAx = (posAx+127.5)-btn.Ax;
+			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+				btn.Ax = (uint8_t) (posAx+127.5);
+			}
+			float diffAy = (posAy+127.5)-btn.Ay;
+			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+				btn.Ay = (uint8_t) (posAy+127.5);
+			}
+		}
+		if(readC){
+			float diffCx = (posCx+127.5)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (posCx+_cXOffset+127.5);
+			}
+			float diffCy = (posCy+127.5)-btn.Cy;
+			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+				btn.Cy = (uint8_t) (posCy+_cYOffset+127.5);
+			}
+		}
 	}
 	else
 	{
@@ -929,22 +1185,6 @@ void readSticks(){
 
 	_posALastX = posAx;
 	_posALastY = posAy;
-	//Serial.println();
-	//Serial.print(_dT/16.7);
-	//Serial.print(",");
-	//Serial.print(xZ[0],8);
-	//Serial.print(",");
-	//Serial.print(_velFilterX*10,8);
-	//Serial.print(",");
-	//Serial.print(yZ[0],8);
-	//Serial.print(",");
-	//Serial.print((posAx+127.5),8);
-	//Serial.print(",");
-	//Serial.print((posAy+127.5),8);
-	//Serial.print(",");
-	//Serial.print(btn.Ax);
-	//Serial.print(",");
-	//Serial.print(btn.Ay);
 }
 /*******************
 	notchRemap
@@ -990,6 +1230,7 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 void setPole(){
 	for(int i = 0; i < 8; i++){
 		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
+#ifdef TEENSY3_2
 		for(int j = 0; j < 4; j++){
 			//this could probably be done better but we need to take 2 bits at a time to put into one serial byte
 			//for details on this read here: http://www.qwertymodo.com/hardware-projects/n64/n64-controller
@@ -1009,9 +1250,16 @@ void setPole(){
 				break;
 			}
 		}
-
+#endif // TEENSY3_2
+#ifdef TEENSY4_0
+		for(int j = 0; j < 8; j++){
+			_pollResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+		}
+#endif // TEENSY4_0
 	}
 }
+
+#ifdef TEENSY3_2
 /*******************
 	communicate
 	try to communicate with the gamecube/wii
@@ -1106,6 +1354,7 @@ void communicate(){
 		case 0x40:
 			timer1.trigger(56);
 			_commStatus = _commPoll;
+			setPole();
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
@@ -1166,6 +1415,7 @@ void communicate(){
 	}
 	//Serial.println(_commStatus,DEC);
 }
+#endif // TEENSY3_2
 /*******************
 	cleanCalPoints
 	take the x and y coordinates and notch angles collected during the calibration procedure, and generate the cleaned x an y stick coordinates and the corresponding x and y notch coordinates
@@ -1284,26 +1534,37 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 
 	Serial.print("Collecting cal point for step: ");
 	Serial.println(currentStep);
-	float X = 0;
-	float Y = 0;
-
-	for(int i = 0; i < 128; i++){
-		if(aStick){
+	float X;
+	float Y;
+	
+	for(int j = 0; j < MEDIANLEN; j++){
+		X = 0;
+		Y = 0;
+		for(int i = 0; i < 128; i++){
+			if(aStick){
 #ifdef USEADCSCALE
-            _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+							_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
-            //otherwise _ADCScale is 1
-			X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-			Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+							//otherwise _ADCScale is 1
+				X += adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
+				Y += adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
+			}
+			else{
+				X += adc->adc0->analogRead(_pinCx)/4096.0;
+				Y += adc->adc0->analogRead(_pinCy)/4096.0;
+			}
 		}
-		else{
-			X += adc->adc0->analogRead(_pinCx)/4096.0;
-			Y += adc->adc0->analogRead(_pinCy)/4096.0;
-		}
+		X = X/128.0;
+		Y = Y/128.0;
+
+#ifdef USEMEDIAN
+		runMedian(X, _xPosList, _xMedianIndex);
+    runMedian(Y, _yPosList, _yMedianIndex);
+#endif
 	}
 
-	calPointsX[currentStep] = X/128.0;
-	calPointsY[currentStep] = Y/128.0;
+	calPointsX[currentStep] = X;
+	calPointsY[currentStep] = Y;
 
 	Serial.println("The collected coordinates are: ");
 	Serial.println(calPointsX[currentStep],8);
@@ -1496,13 +1757,6 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
 }
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
-
-	//get the time delta since the kalman filter was last run
-	unsigned int thisMicros = micros();
-	_dT = (thisMicros-_lastMicros)/1000.0;
-	_lastMicros = thisMicros;
-	//Serial.print("loop time: ");
-	//Serial.println(_dT);
 
     //set up gains according to the time delta.
     //The reference time delta used to tune was 1.2 ms.
