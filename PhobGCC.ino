@@ -13,7 +13,7 @@
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
-#include "src/Phob1_1Teensy4_0.h"
+//#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
 
@@ -1167,11 +1167,11 @@ void readSticks(int readA, int readC, int running){
 		if(readC){
 			float diffCx = (posCx+127.5)-btn.Cx;
 			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (posCx+127.5);
+				btn.Cx = (uint8_t) (posCx+_cXOffset+127.5);
 			}
 			float diffCy = (posCy+127.5)-btn.Cy;
 			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (posCy+127.5);
+				btn.Cy = (uint8_t) (posCy+_cYOffset+127.5);
 			}
 		}
 	}
