@@ -723,7 +723,7 @@ void resetDefaults(){
   EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
 
     //recompute the intermediate gains used directly by the kalman filter
-    recomputeGains()
+    recomputeGains();
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -1793,8 +1793,8 @@ void recomputeGains(){
     _g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
     _g.velThresh     = _g.velThresh*_g.velThresh;//square it because it's used squared
     _g.accelThresh   = _g.accelThresh*_g.accelThresh;
-    _g.xSmoothing    = pow(1-gains.xSmoothing, timeDivisor);
-    _g.ySmoothing    = pow(1-gains.ySmoothing, timeDivisor);
+    _g.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
+    _g.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
 }
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
@@ -1835,9 +1835,9 @@ void runKalman(const float xZ,const float yZ){
 
     //the current velocity weight for the filtered velocity is the stick r^2
     const float xVelWeight1 = _g.xSmoothing*stickDistance2;
-    const float xVelWeight2 = 1-velWeight1;
+    const float xVelWeight2 = 1-xVelWeight1;
     const float yVelWeight1 = _g.ySmoothing*stickDistance2;
-    const float yVelWeight2 = 1-velWeight1;
+    const float yVelWeight2 = 1-xVelWeight1;
 
     //modified velocity to feed into our kalman filter.
     //We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
