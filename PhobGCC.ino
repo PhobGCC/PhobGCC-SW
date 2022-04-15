@@ -77,6 +77,7 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .velThresh = 1.00,
     .accelThresh = 3.00
 };
+FilterGains _g;//this gets filled by recomputeGains();
 
 //////values used to determine how much large of a region will count as being "in a notch"
 
@@ -665,6 +666,9 @@ void readEEPROM(){
     _gains.yVelDamp = _velDampMin;
   }
 
+    //recompute the intermediate gains used directly by the kalman filter
+    recomputeGains();
+
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
@@ -710,6 +714,9 @@ void resetDefaults(){
   EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
   _gains.yVelDamp = _velDampMin;
   EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
+
+    //recompute the intermediate gains used directly by the kalman filter
+    recomputeGains()
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -980,6 +987,9 @@ void adjustSnapback(int cStickX, int cStickY){
 	else if(_gains.yVelDamp < _velDampMin){
 		_gains.yVelDamp = _velDampMin;
 	}
+
+    //recompute the intermediate gains used directly by the kalman filter
+    recomputeGains();
 
   float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
   float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
@@ -1755,25 +1765,30 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
     val         = max(tmpArray[1], tmp);
 #endif
 }
+void recomputeGains(){
+    //Recompute the intermediate gains used directly by the kalman filter
+    //This happens according to the time between loop iterations.
+    //Before, this happened every iteration of runKalman, but now
+    //the event loop runs at a fixed 1000 Hz
+    //Even if it's not *exactly* 1000 Hz, it should be constant enough.
+    //Hopefully.
+    //So now, this should be called any time _gains gets changed.
+    const float timeFactor = 1.0 / 1.2;
+    const float timeDivisor = 1.2 / 1.0;
+    _g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
+    _g.xVelDecay     = _gains.xVelDecay      * timeFactor;
+    _g.yVelDecay     = _gains.yVelDecay      * timeFactor;
+    _g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
+    _g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
+    _g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
+    _g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
+    _g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
+    _g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
+    _g.velThresh     = _g.velThresh*_g.velThresh;//square it because it's used squared
+    _g.accelThresh   = _g.accelThresh*_g.accelThresh;
+}
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
-
-    //set up gains according to the time delta.
-    //The reference time delta used to tune was 1.2 ms.
-    FilterGains g;
-    const float timeFactor = _dT / 1.2;
-    const float timeDivisor = 1.2 / _dT;
-    g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
-    g.xVelDecay     = _gains.xVelDecay      * timeFactor;
-    g.yVelDecay     = _gains.yVelDecay      * timeFactor;
-    g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
-    g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
-    g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
-    g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
-    g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
-    g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
-    g.velThresh     = g.velThresh*g.velThresh;//square it because it's used squared
-    g.accelThresh   = g.accelThresh*g.accelThresh;
 
     //save previous values of state
     //float _xPos;//input of kalman filter
@@ -1806,7 +1821,7 @@ void runKalman(const float xZ,const float yZ){
     const float oldYPosDiff = oldYPos - oldYPosFilt;
 
     //compute stick position exponents for weights
-    const float stickDistance2 = min(g.maxStick, _xPos*_xPos + _yPos*_yPos)/g.maxStick;//0-1
+    const float stickDistance2 = min(_g.maxStick, _xPos*_xPos + _yPos*_yPos)/_g.maxStick;//0-1
     const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
     //the current velocity weight for the filtered velocity is the stick r^2
@@ -1818,8 +1833,8 @@ void runKalman(const float xZ,const float yZ){
     //term 1: weight current velocity according to r^2
     //term 2: the previous filtered velocity, weighted the opposite and also set to decay
     //term 3: a corrective factor based on the disagreement between real and filtered position
-    _xVelFilt = velWeight1*_xVel + (1-g.xVelDecay)*velWeight2*oldXVelFilt + g.xVelPosFactor*oldXPosDiff;
-    _yVelFilt = velWeight1*_yVel + (1-g.yVelDecay)*velWeight2*oldYVelFilt + g.yVelPosFactor*oldYPosDiff;
+    _xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
+    _yVelFilt = velWeight1*_yVel + (1-_g.yVelDecay)*velWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
 
     //the current position weight used for the filtered position is whatever is larger of
     //  a) 1 minus the sum of the squares of
@@ -1831,10 +1846,10 @@ void runKalman(const float xZ,const float yZ){
     //  acceleration in order to rule out snapback.
     //When the stick is near the rim, we also want instant response, and we know snapback
     //  doesn't reach the rim.
-    const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*g.velThresh + xAccel*xAccel*g.accelThresh);
+    const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
     const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
     const float xPosWeight2 = 1-xPosWeight1;
-    const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*g.velThresh + yAccel*yAccel*g.accelThresh);
+    const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
     const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
     const float yPosWeight2 = 1-yPosWeight1;
 
@@ -1844,9 +1859,9 @@ void runKalman(const float xZ,const float yZ){
     //  with the filtered velocity damped, and the overall term weighted inverse of the previous term
     //term 3: the integral error correction term
     _xPosFilt = xPosWeight1*_xPos +
-                xPosWeight2*(oldXPosFilt + (1-g.xVelDamp)*_xVelFilt);
+                xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
     _yPosFilt = yPosWeight1*_yPos +
-                yPosWeight2*(oldYPosFilt + (1-g.yVelDamp)*_yVelFilt);
+                yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
 }
 
 
