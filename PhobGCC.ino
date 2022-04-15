@@ -334,8 +334,8 @@ volatile char _pollResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-    //Serial.println("Software version 0.17 (hopefully Phobos remembered to update this message)");
-    Serial.println("This is not a stable version");
+    Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
+    //Serial.println("This is not a stable version");
     delay(1000);
 
 	readEEPROM();
