@@ -12,7 +12,7 @@
 
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
-//#include "src/Phob1_1Teensy3_2.h"
+#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
@@ -102,17 +102,22 @@ float _cleanedPointsX[_noOfNotches+1]; //array to hold the x coordinates of the 
 float _cleanedPointsY[_noOfNotches+1]; //array to hold the y coordinates of the stick positions for calibration
 float _notchPointsX[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
 float _notchPointsY[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
-const float _cDefaultCalPointsX[_noOfCalibrationPoints] = {0.507073712,0.9026247224,0.5072693007,0.5001294236,0.5037118952,0.8146074226,0.5046028951,0.5066508636,0.5005339326,0.5065670067,0.5006805723,0.5056853599,0.5058308703,0.1989667596,0.5009560613,0.508400395,0.507729394,0.1003568119,0.5097473849,0.5074989796,0.5072406293,0.2014042034,0.5014653263,0.501119675,0.502959011,0.5032433665,0.5018446562,0.5085523857,0.5099732513,0.8100862401,0.5089320995,0.5052066109};
-const float _cDefaultCalPointsY[_noOfCalibrationPoints] = {0.5006151799,0.5025356503,0.501470528,0.5066983468,0.5008275958,0.8094667357,0.5008874968,0.5079207909,0.5071239815,0.9046004275,0.5010136589,0.5071086316,0.5058914031,0.8076523013,0.5078213507,0.5049117887,0.5075638281,0.5003774649,0.504562192,0.50644895,0.5074859854,0.1983865682,0.5074515232,0.5084323402,0.5015846608,0.1025902875,0.5043605453,0.5070589342,0.5073953693,0.2033337702,0.5005351734,0.5056548782};
-const float _aDefaultCalPointsX[_noOfCalibrationPoints] = {0.3010610568,0.3603937084,0.3010903951,0.3000194135,0.3005567843,0.3471911134,0.3006904343,0.3009976295,0.3000800899,0.300985051,0.3001020858,0.300852804,0.3008746305,0.2548450139,0.3001434092,0.3012600593,0.3011594091,0.2400535218,0.3014621077,0.3011248469,0.3010860944,0.2552106305,0.3002197989,0.3001679513,0.3004438517,0.300486505,0.3002766984,0.3012828579,0.3014959877,0.346512936,0.3013398149,0.3007809916};
-const float _aDefaultCalPointsY[_noOfCalibrationPoints] = {0.300092277,0.3003803475,0.3002205792,0.301004752,0.3001241394,0.3464200104,0.3001331245,0.3011881186,0.3010685972,0.3606900641,0.3001520488,0.3010662947,0.3008837105,0.3461478452,0.3011732026,0.3007367683,0.3011345742,0.3000566197,0.3006843288,0.3009673425,0.3011228978,0.2547579852,0.3011177285,0.301264851,0.3002376991,0.2403885431,0.3006540818,0.3010588401,0.3011093054,0.2555000655,0.300080276,0.3008482317};
-const float _notchAngleDefaults[_noOfNotches] = {0,M_PI/8.0,M_PI*2/8.0,M_PI*3/8.0,M_PI*4/8.0,M_PI*5/8.0,M_PI*6/8.0,M_PI*7/8.0,M_PI*8/8.0,M_PI*9/8.0,M_PI*10/8.0,M_PI*11/8.0,M_PI*12/8.0,M_PI*13/8.0,M_PI*14/8.0,M_PI*15/8.0};
-const float _notchRange[_noOfNotches] = {0,M_PI*1/16.0,M_PI/16.0,M_PI*1/16.0,0,M_PI*1/16.0,M_PI/16.0,M_PI*1/16.0,0,M_PI*1/16.0,M_PI/16.0,M_PI*1/16.0,0,M_PI*1/16.0,M_PI/16.0,M_PI*1/16.0};
-const int _notchStatusDefaults[_noOfNotches] = {3,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1};
-float _aNotchAngles[_noOfNotches] = {0,M_PI/8.0,M_PI*2/8.0,M_PI*3/8.0,M_PI*4/8.0,M_PI*5/8.0,M_PI*6/8.0,M_PI*7/8.0,M_PI*8/8.0,M_PI*9/8.0,M_PI*10/8.0,M_PI*11/8.0,M_PI*12/8.0,M_PI*13/8.0,M_PI*14/8.0,M_PI*15/8.0};
-int _aNotchStatus[_noOfNotches] = {3,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1};
+//                                                         right                     notch 1                   up right                  notch 2                   up                        notch 3                   up left                   notch 4                   left                      notch 5                   down left                 notch 6                   down                      notch 7                   down right                notch 8       
+//                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15           16           17           18           19           20           21           22           23           24           25           26           27           28           29           30           31
+const float _cDefaultCalPointsX[_noOfCalibrationPoints] = {0.507073712, 0.9026247224,0.5072693007,0.5001294236,0.5037118952,0.8146074226,0.5046028951,0.5066508636,0.5005339326,0.5065670067,0.5006805723,0.5056853599,0.5058308703,0.1989667596,0.5009560613,0.508400395, 0.507729394, 0.1003568119,0.5097473849,0.5074989796,0.5072406293,0.2014042034,0.5014653263,0.501119675, 0.502959011, 0.5032433665,0.5018446562,0.5085523857,0.5099732513,0.8100862401,0.5089320995,0.5052066109};
+const float _cDefaultCalPointsY[_noOfCalibrationPoints] = {0.5006151799,0.5025356503,0.501470528, 0.5066983468,0.5008275958,0.8094667357,0.5008874968,0.5079207909,0.5071239815,0.9046004275,0.5010136589,0.5071086316,0.5058914031,0.8076523013,0.5078213507,0.5049117887,0.5075638281,0.5003774649,0.504562192, 0.50644895,  0.5074859854,0.1983865682,0.5074515232,0.5084323402,0.5015846608,0.1025902875,0.5043605453,0.5070589342,0.5073953693,0.2033337702,0.5005351734,0.5056548782};
+const float _aDefaultCalPointsX[_noOfCalibrationPoints] = {0.3010610568,0.3603937084,0.3010903951,0.3000194135,0.3005567843,0.3471911134,0.3006904343,0.3009976295,0.3000800899,0.300985051, 0.3001020858,0.300852804, 0.3008746305,0.2548450139,0.3001434092,0.3012600593,0.3011594091,0.2400535218,0.3014621077,0.3011248469,0.3010860944,0.2552106305,0.3002197989,0.3001679513,0.3004438517,0.300486505, 0.3002766984,0.3012828579,0.3014959877,0.346512936, 0.3013398149,0.3007809916};
+const float _aDefaultCalPointsY[_noOfCalibrationPoints] = {0.300092277, 0.3003803475,0.3002205792,0.301004752, 0.3001241394,0.3464200104,0.3001331245,0.3011881186,0.3010685972,0.3606900641,0.3001520488,0.3010662947,0.3008837105,0.3461478452,0.3011732026,0.3007367683,0.3011345742,0.3000566197,0.3006843288,0.3009673425,0.3011228978,0.2547579852,0.3011177285,0.301264851, 0.3002376991,0.2403885431,0.3006540818,0.3010588401,0.3011093054,0.2555000655,0.300080276, 0.3008482317};
+//                                                         right        up          left          down         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8      
+const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,       16, 17,       24, 25,      4, 5,        12, 13,      20, 21,      28, 29,      2, 3,        6, 7,        10, 11,      14, 15,      18, 19,      22, 23,      26, 27,      30, 31};
+//                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
+const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
+const float _notchRange[_noOfNotches] =                   {0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0};
+float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
+const int _notchStatusDefaults[_noOfNotches] =            {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
+int _aNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
+int _cNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 float _cNotchAngles[_noOfNotches];
-int _cNotchStatus[_noOfNotches] = {3,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1};
 const int _cardinalNotch = 3;
 const int _secondaryNotch = 2;
 const int _tertiaryNotchActive = 1;
@@ -1498,7 +1503,8 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 		Serial.println(notchPointsY[i]);
 	}
 }
-void adjustNotch(int currentStep, float loopDelta, bool CW, int CCW, bool calibratingAStick, float notchAngles[], int notchStatus[]){
+void adjustNotch(int currentStepIn, float loopDelta, bool CW, int CCW, bool calibratingAStick, float notchAngles[], int notchStatus[]){
+    const int currentStep = _calOrder[currentStepIn];
 	float X = 0;
 	float Y = 0;
 	//don't run on center steps
@@ -1530,9 +1536,12 @@ void adjustNotch(int currentStep, float loopDelta, bool CW, int CCW, bool calibr
 		btn.Ay = (uint8_t) (Y + 127.5);
 	}
 }
-void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float calPointsY[]){
-
+void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[]){
 	Serial.print("Collecting cal point for step: ");
+	Serial.println(currentStepIn);
+    const int currentStep = _calOrder[currentStepIn];
+
+	Serial.print("Cal point number: ");
 	Serial.println(currentStep);
 	float X;
 	float Y;
