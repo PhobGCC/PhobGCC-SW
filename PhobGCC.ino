@@ -31,6 +31,8 @@ int _rTrigger = 1;
 bool _changeTrigger = true;
 int _cXOffset = 0;
 int _cYOffset = 0;
+int _cMax = 127;
+int _cMin = -127;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -404,10 +406,10 @@ void loop() {
 		Serial.println("Starting to report values");
 		_running=true;
 	}
-	
+
 	//read the controllers buttons
 	readButtons();
-	
+
 	//check to see if we are calibrating
 	if(_currentCalStep >= 0){
 		if(_calAStick){
@@ -628,11 +630,21 @@ void readEEPROM(){
   if(std::isnan(_cXOffset)) {
     _cXOffset = 0;
   }
+  if(_cXOffset > _cMax) {
+    _cXOffset = _cMax;
+  } else if(_cXOffset < _cMin) {
+    _cXOffset = _cMin;
+  }
 
   //get the C-stick Y offset
   EEPROM.get(_eepromcYOffset, _cYOffset);
   if(std::isnan(_cYOffset)) {
     _cYOffset = 0;
+  }
+  if(_cYOffset > _cMax) {
+    _cYOffset = _cMax;
+  } else if(_cYOffset < _cMin) {
+    _cYOffset = _cMin;
   }
 
   //get the x-axis velocity dampening
@@ -796,62 +808,65 @@ void readButtons(){
 
 
 	//check the dpad buttons to change the controller settings
-  if(!_safeMode) {
-
-  	if(bounceDr.fell()){
-  		if(_currentCalStep == -1){
-  			Serial.println("Calibrating the C stick");
-  			_calAStick = false;
-  			_currentCalStep ++;
-  			_advanceCal = true;
-  		}
-  	}
-  	else if(bounceDl.fell()){
-  		if(_currentCalStep == -1){
-  			if(btn.S && btn.X && btn.Y){
-  				resetDefaults();
-  			}
-  			else{
-  				Serial.println("Calibrating the A stick");
-  				_calAStick = true;
-  				_currentCalStep ++;
-  				_advanceCal = true;
-  			}
-  		}
-  	}
-  	else if(bounceDu.fell()){
-  		adjustSnapback(btn.Cx,btn.Cy);
-  	}
-    else if(bounceDd.fell() && !_safeMode){
-      if(btn.S) {
-        _safeMode = true;
-      } else if(btn.L) {
-  			setLRToggle(_lTrigger, 0, _changeTrigger);
-  		} else if(btn.R) {
-  			setLRToggle(_rTrigger, 0, _changeTrigger);
-      } else if(btn.A) {
-        if(btn.X) {
-          _cXOffset++;
-          EEPROM.put(_eepromcXOffset, _cXOffset);
-        } else if (btn.Y) {
-          _cYOffset++;
-          EEPROM.put(_eepromcYOffset, _cYOffset);
-        }
-      } else if(btn.B) {
-        if(btn.X) {
-          _cXOffset--;
-          EEPROM.put(_eepromcXOffset, _cXOffset);
-        } else if (btn.Y) {
-          _cYOffset--;
-          EEPROM.put(_eepromcYOffset, _cYOffset);
-        }
-  		} else {
-  			readJumpConfig();
-  		}
-  	}
-  } else if(bounceDd.fell()) {
-    if(btn.S) {
+  if(!_safeMode && (_currentCalStep == -1)) {
+    if(btn.A && btn.X && btn.Y && btn.S) { //Safe Mode Toggle
+      _safeMode = true;
+      freezeSticks();
+    } else if (btn.A && btn.B && btn.Z && btn.S) { //Hard Reset
+      resetDefaults();
+      freezeSticks();
+    } else if (btn.A && btn.X && btn.Y && btn.R) { //Analog Calibration
+      Serial.println("Calibrating the A stick");
+  		_calAStick = true;
+  		_currentCalStep ++;
+  		_advanceCal = true;
+      freezeSticks();
+    } else if (btn.A && btn.X && btn.Y && btn.L) { //C-stick Calibration
+      Serial.println("Calibrating the C stick");
+  	  _calAStick = false;
+  		_currentCalStep ++;
+  		_advanceCal = true;
+      freezeSticks();
+    } else if(btn.X && btn.Z && bounceDu.fell()) { //Increase Snapback X-Filtering
+      adjustSnapback(true, true, true);
+    } else if(btn.X && btn.Z && bounceDd.fell()) { //Decrease Snapback X-Filtering
+      adjustSnapback(true, true, false);
+    } else if(btn.Y && btn.Z && bounceDu.fell()) { //Increase Snapback Y-Filtering
+      adjustSnapback(true, false, true);
+    } else if(btn.Y && btn.Z && bounceDd.fell()) { //Decrease Snapback Y-Filtering
+      adjustSnapback(true, false, false);
+    } else if(btn.A && btn.Z && bounceDd.fell()) { //Show Current Snapback Filtering
+      adjustSnapback(false, false, false);
+    } else if(btn.X && btn.Z && btn.S) { //Swap X and Z
+      readJumpConfig(true, false);
+      freezeSticks();
+    } else if(btn.Y && btn.Z && btn.S) { //Swap Y and Z
+      readJumpConfig(false, true);
+      freezeSticks();
+    } else if(btn.A && btn.X && btn.Y && btn.Z) { // Reset X/Y/Z Config
+      readJumpConfig(false, false);
+      freezeSticks();
+    } else if(btn.L && btn.Z && btn.S) { //Toggle Analog L
+      setLRToggle(_lTrigger, 0, _changeTrigger);
+      freezeSticks();
+    } else if(btn.R && btn.Z && btn.S) { //Toggle Analog R
+      setLRToggle(_rTrigger, 0, _changeTrigger);
+      freezeSticks();
+    } else if(btn.X && btn. L && bounceDu.fell()) { //Increase C-stick X Offset
+      adjustCstick(true, true, true);
+    } else if(btn.X && btn. L && bounceDd.fell()) { //Decrease C-stick X Offset
+      adjustCstick(true, true, false);
+    } else if(btn.Y && btn. L && bounceDu.fell()) { //Increase C-stick Y Offset
+      adjustCstick(true, false, true);
+    } else if(btn.Y && btn. L && bounceDd.fell()) { //Decrease C-stick Y Offset
+      adjustCstick(true, false, false);
+    } else if(btn.A && btn. L && bounceDd.fell()) { //Show Current C-stick Offset
+      adjustCstick(false, false, false);
+    }
+  } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
+    if(btn.A && btn.X && btn.Y && btn.S) { //Safe Mode Toggle
       _safeMode = false;
+      freezeSticks();
     }
   }
 
@@ -918,41 +933,35 @@ void readButtons(){
 	} else if(!btn.A) {
 		_advanceCalPressed = false;
 	}
-
-	/*
-	bool dPad = (btn.Dl || btn.Dr);
-
-	if(dPad && !_lastDPad){
-		_dPadSince = millis();
-		_watchingDPad = true;
-	}
-	else if(dPad && _watchingDPad){
-		int startTimer = millis()- _dPadSince;
-		if(startTimer > 1000){
-			if(_currentCalStep == -1){
-				if(btn.Dl){
-					_calAStick = true;
-				}
-				else{
-					_calAStick = false;
-				}
-			}
-			_currentCalStep ++;
-			_watchingDPad = false;
-			Serial.println("calibrating");
-			Serial.println(_currentCalStep);
-		}
-	}
-	_lastDPad = dPad; */
 }
-void adjustSnapback(int cStickX, int cStickY){
+void freezeSticks() {
+  btn.Cx = (uint8_t) (127.5);
+  btn.Cy = (uint8_t) (127.5);
+  btn.Ax = (uint8_t) (127.5);
+  btn.Ay = (uint8_t) (127.5);
+
+  btn.A = (uint8_t) 0;
+  btn.B = (uint8_t) 0;
+  btn.X = (uint8_t) 0;
+  btn.Y = (uint8_t) 0;
+  btn.L = (uint8_t) 0;
+  btn.R = (uint8_t) 0;
+  btn.Z = (uint8_t) 0;
+  btn.S = (uint8_t) 0;
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
+void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
-	if(cStickX > 127+50){
+	if(_xAxis && _increase && _change){
 		_gains.xVelDamp = _gains.xVelDamp*1.2599;
 		Serial.print("X filtering increased to:");
 		Serial.println(_gains.xVelDamp);
 	}
-	else if(cStickX < 127-50){
+	else if(_xAxis && !_increase && _change){
 		_gains.xVelDamp = _gains.xVelDamp*0.7937;
 		Serial.print("X filtering decreased to:");
 		Serial.println(_gains.xVelDamp);
@@ -964,12 +973,12 @@ void adjustSnapback(int cStickX, int cStickY){
 		_gains.xVelDamp = _velDampMin;
 	}
 
-	if(cStickY > 127+50){
+	if(!_xAxis && _increase && _change){
 		_gains.yVelDamp = _gains.yVelDamp*1.2599;
 		Serial.print("Y filtering increased to:");
 		Serial.println(_gains.yVelDamp);
 	}
-	else if(cStickY < 127-50){
+	else if(!_xAxis && !_increase && _change){
 		_gains.yVelDamp = _gains.yVelDamp*0.7937;
 		Serial.print("Y filtering decreased to:");
 		Serial.println(_gains.yVelDamp);
@@ -1003,13 +1012,58 @@ void adjustSnapback(int cStickX, int cStickY){
 	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
 	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
 }
-void readJumpConfig(){
+void adjustCstick(bool _change, bool _xAxis, bool _increase) {
+  Serial.println("Adjusting C-stick Offset");
+  if(_xAxis && _increase && _change) {
+    _cXOffset++;
+    if(_cXOffset > _cMax) {
+      _cXOffset = _cMax;
+    }
+    EEPROM.put(_eepromcXOffset, _cXOffset);
+    Serial.print("X offset increased to:");
+    Serial.println(_cXOffset);
+  } else if(_xAxis && !_increase && _change) {
+    _cXOffset--;
+    if(_cXOffset < _cMin) {
+      _cXOffset = _cMin;
+    }
+    EEPROM.put(_eepromcXOffset, _cXOffset);
+    Serial.print("X offset decreased to:");
+    Serial.println(_cXOffset);
+  } else if(!_xAxis && _increase && _change) {
+    _cYOffset++;
+    if(_cYOffset > _cMax) {
+      _cYOffset = _cMax;
+    }
+    EEPROM.put(_eepromcYOffset, _cYOffset);
+    Serial.print("Y offset increased to:");
+    Serial.println(_cYOffset);
+  } else if(!_xAxis && !_increase && _change) {
+    _cYOffset--;
+    if(_cYOffset < _cMin) {
+      _cYOffset = _cMin;
+    }
+    EEPROM.put(_eepromcYOffset, _cYOffset);
+    Serial.print("Y offset decreased to:");
+    Serial.println(_cYOffset);
+  }
+
+  btn.Cx = (uint8_t) (127.5 + _cXOffset);
+  btn.Cy = (uint8_t) (127.5 + _cYOffset);
+
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
+void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
-	if(!digitalRead(_pinX)){
+	if(_swapXZ){
 		_jumpConfig = 1;
 		Serial.println("X<->Z");
 	}
-	else if(!digitalRead(_pinY)){
+	else if(_swapYZ){
 		_jumpConfig = 2;
 		Serial.println("Y<->Z");
 	}
@@ -1099,13 +1153,13 @@ void readSticks(int readA, int readC, int running){
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
 	//_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
-	
+
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
 	unsigned int cXSum = 0;
 	unsigned int cYSum = 0;
-	
+
 	do{
 		adcCount++;
 		aXSum += adc->adc0->analogRead(_pinAx);
@@ -1114,13 +1168,13 @@ void readSticks(int readA, int readC, int running){
 		cYSum += adc->adc0->analogRead(_pinCy);
 	}
 	while((micros()-_lastMicros) < 1000);
-	
+
 	//Serial.println(adcCount);
 	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
 	_cStickX = (_cStickX + cXSum/(float)adcCount/4096.0)*0.5;
 	_cStickY = (_cStickY + cYSum/(float)adcCount/4096.0)*0.5;
-	
+
 	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
 	//create the measurement value to be used in the kalman filter
@@ -1141,7 +1195,7 @@ void readSticks(int readA, int readC, int running){
 
 	float posAx = _xPosFilt;
 	float posAy = _yPosFilt;
-	
+
 	    //Run a median filter to reduce noise
 #ifdef USEMEDIAN
     runMedian(posAx, _xPosList, _xMedianIndex);
@@ -1536,7 +1590,7 @@ void collectCalPoints(bool aStick, int currentStep, float calPointsX[], float ca
 	Serial.println(currentStep);
 	float X;
 	float Y;
-	
+
 	for(int j = 0; j < MEDIANLEN; j++){
 		X = 0;
 		Y = 0;
