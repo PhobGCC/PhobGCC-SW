@@ -827,15 +827,15 @@ void readButtons(){
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if(btn.X && btn.Z && bounceDu.fell()) { //Increase Snapback X-Filtering
+    } else if(btn.X && btn.Z && btn.Du) { //Increase Snapback X-Filtering
       adjustSnapback(true, true, true);
-    } else if(btn.X && btn.Z && bounceDd.fell()) { //Decrease Snapback X-Filtering
+    } else if(btn.X && btn.Z && btn.Dd) { //Decrease Snapback X-Filtering
       adjustSnapback(true, true, false);
-    } else if(btn.Y && btn.Z && bounceDu.fell()) { //Increase Snapback Y-Filtering
+    } else if(btn.Y && btn.Z && btn.Du) { //Increase Snapback Y-Filtering
       adjustSnapback(true, false, true);
-    } else if(btn.Y && btn.Z && bounceDd.fell()) { //Decrease Snapback Y-Filtering
+    } else if(btn.Y && btn.Z && btn.Dd) { //Decrease Snapback Y-Filtering
       adjustSnapback(true, false, false);
-    } else if(btn.A && btn.Z && bounceDd.fell()) { //Show Current Snapback Filtering
+    } else if(btn.A && btn.Z && btn.Dd) { //Show Current Snapback Filtering
       adjustSnapback(false, false, false);
     } else if(btn.X && btn.Z && btn.S) { //Swap X and Z
       readJumpConfig(true, false);
@@ -852,15 +852,15 @@ void readButtons(){
     } else if(btn.R && btn.Z && btn.S) { //Toggle Analog R
       setLRToggle(_rTrigger, 0, _changeTrigger);
       freezeSticks();
-    } else if(btn.X && btn. L && bounceDu.fell()) { //Increase C-stick X Offset
+    } else if(btn.X && btn. L && btn.Du) { //Increase C-stick X Offset
       adjustCstick(true, true, true);
-    } else if(btn.X && btn. L && bounceDd.fell()) { //Decrease C-stick X Offset
+    } else if(btn.X && btn. L && btn.Dd) { //Decrease C-stick X Offset
       adjustCstick(true, true, false);
-    } else if(btn.Y && btn. L && bounceDu.fell()) { //Increase C-stick Y Offset
+    } else if(btn.Y && btn. L && btn.Du) { //Increase C-stick Y Offset
       adjustCstick(true, false, true);
-    } else if(btn.Y && btn. L && bounceDd.fell()) { //Decrease C-stick Y Offset
+    } else if(btn.Y && btn. L && btn.Dd) { //Decrease C-stick Y Offset
       adjustCstick(true, false, false);
-    } else if(btn.A && btn. L && bounceDd.fell()) { //Show Current C-stick Offset
+    } else if(btn.A && btn. L && btn.Dd) { //Show Current C-stick Offset
       adjustCstick(false, false, false);
     }
   } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
