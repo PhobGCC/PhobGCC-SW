@@ -20,6 +20,9 @@ using namespace Eigen;
 TeensyTimerTool::OneShotTimer timer1;
 
 //defining control configuration
+int _hardwareZ = _pinZ;
+int _hardwareX = _pinX;
+int _hardwareY = _pinY;
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
@@ -801,6 +804,10 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
+  uint8_t hardwareZ = !digitalRead(_hardwareZ);
+  uint8_t hardwareX = !digitalRead(_hardwareX);
+  uint8_t hardwareY = !digitalRead(_hardwareY);
+
 	bounceDr.update();
 	bounceDu.update();
 	bounceDl.update();
@@ -809,62 +816,62 @@ void readButtons(){
 
 	//check the dpad buttons to change the controller settings
   if(!_safeMode && (_currentCalStep == -1)) {
-    if(btn.A && btn.X && btn.Y && btn.S) { //Safe Mode Toggle
+    if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
       _safeMode = true;
       freezeSticks();
-    } else if (btn.A && btn.B && btn.Z && btn.S) { //Hard Reset
+    } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
       resetDefaults();
       freezeSticks();
-    } else if (btn.A && btn.X && btn.Y && btn.R) { //Analog Calibration
+    } else if (btn.A && hardwareX && hardwareY && btn.R) { //Analog Calibration
       Serial.println("Calibrating the A stick");
   		_calAStick = true;
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if (btn.A && btn.X && btn.Y && btn.L) { //C-stick Calibration
+    } else if (btn.A && hardwareX && hardwareY && btn.L) { //C-stick Calibration
       Serial.println("Calibrating the C stick");
   	  _calAStick = false;
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if(btn.X && btn.Z && btn.Du) { //Increase Snapback X-Filtering
+    } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
       adjustSnapback(true, true, true);
-    } else if(btn.X && btn.Z && btn.Dd) { //Decrease Snapback X-Filtering
+    } else if(hardwareX && hardwareZ && btn.Dd) { //Decrease Snapback X-Filtering
       adjustSnapback(true, true, false);
-    } else if(btn.Y && btn.Z && btn.Du) { //Increase Snapback Y-Filtering
+    } else if(hardwareY && hardwareZ && btn.Du) { //Increase Snapback Y-Filtering
       adjustSnapback(true, false, true);
-    } else if(btn.Y && btn.Z && btn.Dd) { //Decrease Snapback Y-Filtering
+    } else if(hardwareY && hardwareZ && btn.Dd) { //Decrease Snapback Y-Filtering
       adjustSnapback(true, false, false);
-    } else if(btn.A && btn.Z && btn.Dd) { //Show Current Snapback Filtering
+    } else if(btn.A && hardwareZ && btn.Dd) { //Show Current Snapback Filtering
       adjustSnapback(false, false, false);
-    } else if(btn.X && btn.Z && btn.S) { //Swap X and Z
+    } else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
       readJumpConfig(true, false);
       freezeSticks();
-    } else if(btn.Y && btn.Z && btn.S) { //Swap Y and Z
+    } else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
       readJumpConfig(false, true);
       freezeSticks();
-    } else if(btn.A && btn.X && btn.Y && btn.Z) { // Reset X/Y/Z Config
+    } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
       readJumpConfig(false, false);
       freezeSticks();
-    } else if(btn.L && btn.Z && btn.S) { //Toggle Analog L
+    } else if(btn.L && hardwareZ && btn.S) { //Toggle Analog L
       setLRToggle(_lTrigger, 0, _changeTrigger);
       freezeSticks();
-    } else if(btn.R && btn.Z && btn.S) { //Toggle Analog R
+    } else if(btn.R && hardwareZ && btn.S) { //Toggle Analog R
       setLRToggle(_rTrigger, 0, _changeTrigger);
       freezeSticks();
-    } else if(btn.X && btn. L && btn.Du) { //Increase C-stick X Offset
+    } else if(hardwareX && btn.L && btn.Du) { //Increase C-stick X Offset
       adjustCstick(true, true, true);
-    } else if(btn.X && btn. L && btn.Dd) { //Decrease C-stick X Offset
+    } else if(hardwareX && btn.L && btn.Dd) { //Decrease C-stick X Offset
       adjustCstick(true, true, false);
-    } else if(btn.Y && btn. L && btn.Du) { //Increase C-stick Y Offset
+    } else if(hardwareY && btn.L && btn.Du) { //Increase C-stick Y Offset
       adjustCstick(true, false, true);
-    } else if(btn.Y && btn. L && btn.Dd) { //Decrease C-stick Y Offset
+    } else if(hardwareY && btn.L && btn.Dd) { //Decrease C-stick Y Offset
       adjustCstick(true, false, false);
-    } else if(btn.A && btn. L && btn.Dd) { //Show Current C-stick Offset
+    } else if(btn.A && btn.L && btn.Dd) { //Show Current C-stick Offset
       adjustCstick(false, false, false);
     }
   } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
-    if(btn.A && btn.X && btn.Y && btn.S) { //Safe Mode Toggle
+    if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
       _safeMode = false;
       freezeSticks();
     }
