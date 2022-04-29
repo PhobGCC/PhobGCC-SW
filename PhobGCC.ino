@@ -822,13 +822,13 @@ void readButtons(){
     } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
       resetDefaults();
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.R) { //Analog Calibration
+    } else if (btn.A && hardwareX && hardwareY && btn.L) { //Analog Calibration
       Serial.println("Calibrating the A stick");
   		_calAStick = true;
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.L) { //C-stick Calibration
+    } else if (btn.A && hardwareX && hardwareY && btn.R) { //C-stick Calibration
       Serial.println("Calibrating the C stick");
   	  _calAStick = false;
   		_currentCalStep ++;
@@ -1568,10 +1568,10 @@ void adjustNotch(int currentStep, float loopDelta, bool CW, int CCW, bool calibr
 		//Serial.println(notchAngles[notchIndex]);
 		if(notchStatus[notchIndex] != _cardinalNotch){
 			if(CW){
-				notchAngles[notchIndex] += loopDelta*0.00005;
+				notchAngles[notchIndex] += loopDelta*0.000075;
 			}
 			else if(CCW){
-				notchAngles[notchIndex] -= loopDelta*0.00005;
+				notchAngles[notchIndex] -= loopDelta*0.000075;
 			}
 		}
 		if(notchAngles[notchIndex] > _notchAngleDefaults[notchIndex]+_notchRange[notchIndex]){
