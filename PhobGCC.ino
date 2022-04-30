@@ -214,6 +214,8 @@ union Buttons{
 	};
 }btn;
 
+uint8_t hardwareL;
+uint8_t hardwareR;
 uint8_t hardwareZ;
 uint8_t hardwareX;
 uint8_t hardwareY;
@@ -864,6 +866,8 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
+  hardwareL = !digitalRead(_pinL);
+  hardwareR = !digitalRead(_pinR);
   hardwareZ = !digitalRead(_pinZ);
   hardwareX = !digitalRead(_pinX);
   hardwareY = !digitalRead(_pinY);
@@ -906,13 +910,13 @@ void readButtons(){
     } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
       resetDefaults();
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.L) { //Analog Calibration
+    } else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
       Serial.println("Calibrating the A stick");
   		_calAStick = true;
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.R) { //C-stick Calibration
+    } else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
       Serial.println("Calibrating the C stick");
   	  _calAStick = false;
   		_currentCalStep ++;
@@ -927,31 +931,31 @@ void readButtons(){
     } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
       readJumpConfig(false, false);
       freezeSticks();
-    } else if(btn.L && hardwareZ && btn.S) { //Toggle Analog L
+    } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
       setLRToggle(_lTrigger, 0, _changeTrigger);
       freezeSticks();
-    } else if(btn.R && hardwareZ && btn.S) { //Toggle Analog R
+    } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
       setLRToggle(_rTrigger, 0, _changeTrigger);
       freezeSticks();
-    } else if(hardwareX && btn.L && btn.Du) { //Increase C-stick X Offset
+    } else if(hardwareX && hardwareL && btn.Du) { //Increase C-stick X Offset
       adjustCstick(true, true, true);
-    } else if(hardwareX && btn.L && btn.Dd) { //Decrease C-stick X Offset
+    } else if(hardwareX && hardwareL && btn.Dd) { //Decrease C-stick X Offset
       adjustCstick(true, true, false);
-    } else if(hardwareY && btn.L && btn.Du) { //Increase C-stick Y Offset
+    } else if(hardwareY && hardwareL && btn.Du) { //Increase C-stick Y Offset
       adjustCstick(true, false, true);
-    } else if(hardwareY && btn.L && btn.Dd) { //Decrease C-stick Y Offset
+    } else if(hardwareY && hardwareL && btn.Dd) { //Decrease C-stick Y Offset
       adjustCstick(true, false, false);
-    } else if(btn.A && btn.L && btn.Dd) { //Show Current C-stick Offset
+    } else if(btn.A && hardwareL && btn.Dd) { //Show Current C-stick Offset
       adjustCstick(false, false, false);
-    } else if(btn.R && hardwareX && btn.Du) { //Increase X-axis Delay
+    } else if(hardwareR && hardwareX && btn.Du) { //Increase X-axis Delay
       adjustSmoothing(true, true, true);
-    } else if(btn.R && hardwareX && btn.Dd) { //Decrease X-axis Delay
+    } else if(hardwareR && hardwareX && btn.Dd) { //Decrease X-axis Delay
       adjustSmoothing(true, true, false);
-    } else if(btn.R && hardwareY && btn.Du) { //Increase Y-axis Delay
+    } else if(hardwareR && hardwareY && btn.Du) { //Increase Y-axis Delay
       adjustSmoothing(true, false, true);
-    } else if(btn.R && hardwareY && btn.Dd) { //Decrease Y-axis Delay
+    } else if(hardwareR && hardwareY && btn.Dd) { //Decrease Y-axis Delay
       adjustSmoothing(true, false, false);
-    } else if(btn.R && btn.A && btn.Dd) { //Show Current Delay
+    } else if(hardwareR && btn.A && btn.Dd) { //Show Current Delay
       adjustSmoothing(false, false, false);
     } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
       adjustSnapback(true, true, true);
@@ -983,7 +987,7 @@ void readButtons(){
 	}
 
 	//Advance Calibration Using L or R triggers
-	if((btn.L || btn.R) && _advanceCal && !_advanceCalPressed){
+	if((hardwareL || hardwareR) && _advanceCal && !_advanceCalPressed){
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
@@ -1031,7 +1035,7 @@ void readButtons(){
 				_advanceCal = false;
 			}
 		}
-	} else if(!(btn.L || btn.R)) {
+	} else if(!(hardwareL || hardwareR)) {
 		_advanceCalPressed = false;
 	}
 }
@@ -1050,10 +1054,12 @@ void freezeSticks() {
   btn.Z = (uint8_t) 0;
   btn.S = (uint8_t) 0;
 
+  hardwareL = (uint8_t) 0;
+  hardwareR = (uint8_t) 0;
   hardwareX = (uint8_t) 0;
   hardwareY = (uint8_t) 0;
   hardwareZ = (uint8_t) 0;
-  
+
   int startTime = millis();
   int delta = 0;
   while(delta < 2000){
