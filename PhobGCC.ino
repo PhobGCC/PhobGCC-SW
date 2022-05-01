@@ -20,9 +20,6 @@ using namespace Eigen;
 TeensyTimerTool::OneShotTimer timer1;
 
 //defining control configuration
-int _hardwareZ = _pinZ;
-int _hardwareX = _pinX;
-int _hardwareY = _pinY;
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
@@ -216,6 +213,10 @@ union Buttons{
 		uint8_t magic2 : 8;
 	};
 }btn;
+
+uint8_t hardwareZ;
+uint8_t hardwareX;
+uint8_t hardwareY;
 
 float _aStickX;
 float _posALastX;
@@ -863,15 +864,39 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
-  uint8_t hardwareZ = !digitalRead(_hardwareZ);
-  uint8_t hardwareX = !digitalRead(_hardwareX);
-  uint8_t hardwareY = !digitalRead(_hardwareY);
+  hardwareZ = !digitalRead(_pinZ);
+  hardwareX = !digitalRead(_pinX);
+  hardwareY = !digitalRead(_pinY);
 
 	bounceDr.update();
 	bounceDu.update();
 	bounceDl.update();
 	bounceDd.update();
 
+
+  /* Current Commands List
+  * Safe Mode:  AXY+Start
+  * Hard Reset:  ABZ+Start
+  * Analog Calibration:  AXY+L
+  * C-stick Calibration: AXY+R
+  * Advance Calibration:  L or R
+  * Undo Calibration:  Z
+  * Notch Adjustment CW/CCW:  X/Y
+  * Swap X with Z:  XZ+Start
+  * Swap Y with Z:  YZ+Start
+  * Reset Z-Jump:  AXY+Z
+  * Toggle Analog Slider L:  ZL+Start
+  * Toggle Analog Slider R: ZR+Start
+  * Increase/Decrease C-stick Offset on X:  LX+Du/Dd
+  * Increase/Decrease C-stick Offset on X:  LY+Du/Dd
+  * Show Current C-stick Offset:  LA+Dd
+  * Increase/Decrease Analog X Delay:  RX+Du/Dd
+  * Increase/Decrease Analog Y Delay:  RY+Du/Dd
+  * Show Analog Delay:  RA+Dd
+  * Increase/Decrease Snapback Fitering on X:  ZX+Du/Dd
+  * Increase/Decrease Snapback Fitering on Y:  ZY+Du/Dd
+  * Show Current Snapback Setting:  ZA+Dd
+  */
 
 	//check the dpad buttons to change the controller settings
   if(!_safeMode && (_currentCalStep == -1)) {
@@ -893,16 +918,6 @@ void readButtons(){
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
-      adjustSnapback(true, true, true);
-    } else if(hardwareX && hardwareZ && btn.Dd) { //Decrease Snapback X-Filtering
-      adjustSnapback(true, true, false);
-    } else if(hardwareY && hardwareZ && btn.Du) { //Increase Snapback Y-Filtering
-      adjustSnapback(true, false, true);
-    } else if(hardwareY && hardwareZ && btn.Dd) { //Decrease Snapback Y-Filtering
-      adjustSnapback(true, false, false);
-    } else if(btn.A && hardwareZ && btn.Dd) { //Show Current Snapback Filtering
-      adjustSnapback(false, false, false);
     } else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
       readJumpConfig(true, false);
       freezeSticks();
@@ -928,16 +943,26 @@ void readButtons(){
       adjustCstick(true, false, false);
     } else if(btn.A && btn.L && btn.Dd) { //Show Current C-stick Offset
       adjustCstick(false, false, false);
-    } else if(btn.R && hardwareX && btn.Du) { //Increase X-axis Smoothing
+    } else if(btn.R && hardwareX && btn.Du) { //Increase X-axis Delay
       adjustSmoothing(true, true, true);
-    } else if(btn.R && hardwareX && btn.Dd) { //Decrease X-axis Smoothing
+    } else if(btn.R && hardwareX && btn.Dd) { //Decrease X-axis Delay
       adjustSmoothing(true, true, false);
-    } else if(btn.R && hardwareY && btn.Du) { //Increase Y-axis Smoothing
+    } else if(btn.R && hardwareY && btn.Du) { //Increase Y-axis Delay
       adjustSmoothing(true, false, true);
-    } else if(btn.R && hardwareY && btn.Dd) { //Decrease Y-axis Smoothing
+    } else if(btn.R && hardwareY && btn.Dd) { //Decrease Y-axis Delay
       adjustSmoothing(true, false, false);
-    } else if(btn.R && btn.A && btn.Dd) { //Show Current Smoothing
+    } else if(btn.R && btn.A && btn.Dd) { //Show Current Delay
       adjustSmoothing(false, false, false);
+    } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
+      adjustSnapback(true, true, true);
+    } else if(hardwareX && hardwareZ && btn.Dd) { //Decrease Snapback X-Filtering
+      adjustSnapback(true, true, false);
+    } else if(hardwareY && hardwareZ && btn.Du) { //Increase Snapback Y-Filtering
+      adjustSnapback(true, false, true);
+    } else if(hardwareY && hardwareZ && btn.Dd) { //Decrease Snapback Y-Filtering
+      adjustSnapback(true, false, false);
+    } else if(btn.A && hardwareZ && btn.Dd) { //Show Current Snapback Filtering
+      adjustSnapback(false, false, false);
     }
   } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
     if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
@@ -946,19 +971,19 @@ void readButtons(){
     }
   }
 
-	//Undo Calibration using B-button
-	if(btn.B && _undoCal && !_undoCalPressed) {
+	//Undo Calibration using Z-button
+	if(hardwareZ && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
 		if(_currentCalStep % 2 == 0 && _currentCalStep != 32 && _currentCalStep != 0) {
 			_currentCalStep --;
 			_currentCalStep --;
 		}
-	} else if(!btn.B) {
+	} else if(!hardwareZ) {
 		_undoCalPressed = false;
 	}
 
-	//Advance Calibration Using A-button
-	if(btn.A && _advanceCal && !_advanceCalPressed){
+	//Advance Calibration Using L or R triggers
+	if((btn.L || btn.R) && _advanceCal && !_advanceCalPressed){
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
@@ -1006,7 +1031,7 @@ void readButtons(){
 				_advanceCal = false;
 			}
 		}
-	} else if(!btn.A) {
+	} else if(!(btn.L || btn.R)) {
 		_advanceCalPressed = false;
 	}
 }
@@ -1024,6 +1049,11 @@ void freezeSticks() {
   btn.R = (uint8_t) 0;
   btn.Z = (uint8_t) 0;
   btn.S = (uint8_t) 0;
+
+  hardwareX = (uint8_t) 0;
+  hardwareY = (uint8_t) 0;
+  hardwareZ = (uint8_t) 0;
+  
   int startTime = millis();
   int delta = 0;
   while(delta < 2000){
@@ -2005,7 +2035,7 @@ void runKalman(const float xZ,const float yZ){
     const float xVelWeight1 = _g.xSmoothing*stickDistance2;
     const float xVelWeight2 = 1-xVelWeight1;
     const float yVelWeight1 = _g.ySmoothing*stickDistance2;
-    const float yVelWeight2 = 1-xVelWeight1;
+    const float yVelWeight2 = 1-yVelWeight1;
 
     //modified velocity to feed into our kalman filter.
     //We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
