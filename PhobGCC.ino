@@ -103,7 +103,7 @@ const int _noOfCalibrationPoints = _noOfNotches * 2;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
-const float _maxStickAngle = 0.67195176201;
+const float _maxStickAngle = 0.67195176201;//38.5 degrees; this is the max angular deflection of the stick.
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 bool _advanceCal = false;
 bool _advanceCalPressed = false;
@@ -1629,7 +1629,8 @@ void communicate(){
 #endif // TEENSY3_2
 /*******************
 	cleanCalPoints
-	take the x and y coordinates and notch angles collected during the calibration procedure, and generate the cleaned x an y stick coordinates and the corresponding x and y notch coordinates
+	take the x and y coordinates and notch angles collected during the calibration procedure, 
+	and generate the cleaned (non-redundant) x and y stick coordinates and the corresponding x and y notch coordinates
 *******************/
 void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[]){
 
@@ -1652,37 +1653,86 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 
 	Serial.println("The notch points are:");
 	for(int i = 0; i < _noOfNotches; i++){
-			//add the origin values to the first x,y point
-			cleanedPointsX[0] += calPointsX[i*2];
-			cleanedPointsY[0] += calPointsY[i*2];
+		//add the origin values to the first x,y point
+		cleanedPointsX[0] += calPointsX[i*2];
+		cleanedPointsY[0] += calPointsY[i*2];
 
-			//set the notch point
-			cleanedPointsX[i+1] = calPointsX[i*2+1];
-			cleanedPointsY[i+1] = calPointsY[i*2+1];
+		//copy the cal point into the cleaned list
+		cleanedPointsX[i+1] = calPointsX[i*2+1];
+		cleanedPointsY[i+1] = calPointsY[i*2+1];
 
-			calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
-			//notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
-			//notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
-			notchPointsX[i+1] = round(notchPointsX[i+1]);
-			notchPointsY[i+1] = round(notchPointsY[i+1]);
+		//convert notch angles to x/y coords (weird since the stick moves spherically)
+		calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
+		notchPointsX[i+1] = round(notchPointsX[i+1]);
+		notchPointsY[i+1] = round(notchPointsY[i+1]);
 
-			Serial.print(notchPointsX[i+1]);
-			Serial.print(",");
-			Serial.println(notchPointsY[i+1]);
+		Serial.print(notchPointsX[i+1]);
+		Serial.print(",");
+		Serial.println(notchPointsY[i+1]);
+	}
+
+	//remove the largest and smallest two origin values to remove outliers
+	//first, find their indices
+	int smallestX = 0;
+	int smallX = 0;
+	int largeX = 0;
+	int largestX = 0;
+	int smallestY = 0;
+	int smallY = 0;
+	int largeY = 0;
+	int largestY = 0;
+	for (int i = 0; i < _noOfNotches; i++){
+		if (calPointsX[i*2] < calPointsX[smallestX]){//if it's the new smallest
+			smallX = smallestX;//shuffle the old smallest to small
+			smallestX = i*2;//record the new smallest index
+		} else if (calPointsX[i*2] < calPointsX[smallX]){//if it's the new second-smallest
+			smallX = i*2;//record the new small index
 		}
+		if (calPointsX[i*2] > calPointsX[largestX]){//if it's the new largest
+			largeX = largestX;//shuffle the old largest to large
+			largestX = i*2;//record the new largest index
+		} else if (calPointsX[i*2] > calPointsX[largeX]){//if it's the new second-largest
+			largeX = i*2;//record the new large index
+		}
+		if (calPointsY[i*2] < calPointsY[smallestY]){
+			smallY = smallestY;
+			smallestY = i*2;
+		} else if (calPointsY[i*2] < calPointsY[smallY]){
+			smallY = i*2;
+		}
+		if (calPointsY[i*2] > calPointsY[largestY]){
+			largeY = largestY;
+			largestY = i*2;
+		} else if (calPointsY[i*2] > calPointsY[largeY]){
+			largeY = i*2;
+		}
+	}
+	//subtract the smallest and largest values
+	cleanedPointsX[0] -= calPointsX[smallestX];
+	cleanedPointsX[0] -= calPointsX[smallX];
+	cleanedPointsX[0] -= calPointsX[largeX];
+	cleanedPointsX[0] -= calPointsX[largestX];
+	cleanedPointsY[0] -= calPointsY[smallestY];
+	cleanedPointsY[0] -= calPointsY[smallY];
+	cleanedPointsY[0] -= calPointsY[largeY];
+	cleanedPointsY[0] -= calPointsY[largestY];
 
-
-		//divide by the total number of calibration steps/2 to get the average origin value
-		cleanedPointsX[0] = cleanedPointsX[0]/((float)_noOfNotches);
-		cleanedPointsY[0] = cleanedPointsY[0]/((float)_noOfNotches);
+	//divide by the total number of calibration steps/2 to get the average origin value
+	//except it's minus 4 steps since we removed outliers
+	cleanedPointsX[0] = cleanedPointsX[0]/((float)_noOfNotches-4);
+	cleanedPointsY[0] = cleanedPointsY[0]/((float)_noOfNotches-4);
 
 	for(int i = 0; i < _noOfNotches; i++){
+		//calculate radius of cleaned point from center
 		float deltaX = cleanedPointsX[i+1] - cleanedPointsX[0];
 		float deltaY = cleanedPointsY[i+1] - cleanedPointsY[0];
 		float mag = sqrt(deltaX*deltaX + deltaY*deltaY);
-		if(mag < 0.02){
-			int prevIndex = (i-1+_noOfNotches) % _noOfNotches+1;
-			int nextIndex = (i+1) % _noOfNotches+1;
+
+		if(mag < 0.02){//if the cleaned point was at the center
+			//average the previous and next points (cardinal & diagonal) for some sanity
+			//note: this will likely bork if this happens to a cardinal or diagonal
+			int prevIndex = ((i-1+_noOfNotches) % _noOfNotches) + 1;
+			int nextIndex = ((i+1) % _noOfNotches) + 1;
 
 			cleanedPointsX[i+1] = (cleanedPointsX[prevIndex] + cleanedPointsX[nextIndex])/2.0;
 			cleanedPointsY[i+1] = (cleanedPointsY[prevIndex] + cleanedPointsY[nextIndex])/2.0;
@@ -1787,13 +1837,13 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 }
 /*******************
 	linearizeCal
-	calibrate a stick so that its response will be linear
+	Generate a fit to linearize the stick response.
 	Inputs:
 		cleaned points X and Y, (must be 17 points for each of these, the first being the center, the others starting at 3 oclock and going around counterclockwise)
 	Outputs:
-		linearization fit coefficients X and Y
+		linearization fit coefficients for X and Y
 *******************/
-void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitCoeffsX[],float fitCoeffsY[]){
+void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitCoeffsX[], float fitCoeffsY[]){
 	Serial.println("beginning linearization");
 
 	//do the curve fit first
@@ -1802,22 +1852,24 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	double fitPointsX[5];
 	double fitPointsY[5];
 
-	fitPointsX[0] = inX[8+1];
-	fitPointsX[1] = (inX[6+1] + inX[10+1])/2.0;
-	fitPointsX[2] = inX[0];
-	fitPointsX[3] = (inX[2+1] + inX[14+1])/2.0;
-	fitPointsX[4] = inX[0+1];
+	fitPointsX[0] = inX[8+1];                   //right
+	fitPointsX[1] = (inX[6+1] + inX[10+1])/2.0; //right 45 deg
+	fitPointsX[2] = inX[0];                     //center
+	fitPointsX[3] = (inX[2+1] + inX[14+1])/2.0; //left 45 deg
+	fitPointsX[4] = inX[0+1];                   //left
 
-	fitPointsY[0] = inY[12+1];
-	fitPointsY[1] = (inY[10+1] + inY[14+1])/2.0;
-	fitPointsY[2] = inY[0];
-	fitPointsY[3] = (inY[6+1] + inY[2+1])/2.0;
-	fitPointsY[4] = inY[4+1];
+	fitPointsY[0] = inY[12+1];                  //down
+	fitPointsY[1] = (inY[10+1] + inY[14+1])/2.0;//down 45 deg
+	fitPointsY[2] = inY[0];                     //center
+	fitPointsY[3] = (inY[6+1] + inY[2+1])/2.0;  //up 45 deg
+	fitPointsY[4] = inY[4+1];                   //up
 
 
 	//////determine the coefficients needed to linearize the stick
 	//create the expected output, what we want our curve to be fit too
 	//this is hard coded because it doesn't depend on the notch adjustments
+	//                   -100 -74.246        0     74.246         100, centered around 0-255
+    //It's not sin(45 deg) because it's a spherical motion, not planar.
 	double x_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 	double y_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 
@@ -1839,21 +1891,21 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	double tempCoeffsX[_fitOrder+1];
 	double tempCoeffsY[_fitOrder+1];
 
-	fitCurve(_fitOrder, 5, fitPointsX, x_output, _fitOrder+1,  tempCoeffsX);
+	fitCurve(_fitOrder, 5, fitPointsX, x_output, _fitOrder+1, tempCoeffsX);
 	fitCurve(_fitOrder, 5, fitPointsY, y_output, _fitOrder+1, tempCoeffsY);
 
-		//write these coefficients to the array that was passed in, this is our first output
+	//write these coefficients to the array that was passed in, this is our first output
 	for(int i = 0; i < (_fitOrder+1); i++){
 		fitCoeffsX[i] = tempCoeffsX[i];
 		fitCoeffsY[i] = tempCoeffsY[i];
 	}
 
-	//we will now take out the offset, making the range -100 to 100 isntead of 28 to 228
+	//we will now take out the offset, making the range -100 to 100 instead of 28 to 228
 	//calculate the offset
 	float xZeroError = linearize((float)fitPointsX[2],fitCoeffsX);
 	float yZeroError = linearize((float)fitPointsY[2],fitCoeffsY);
 
-	//Adjust the fit so that the stick zero position is 0
+	//Adjust the fit's constant coefficient so that the stick zero position is 0
 	fitCoeffsX[3] = fitCoeffsX[3] - xZeroError;
 	fitCoeffsY[3] = fitCoeffsY[3] - yZeroError;
 
@@ -2092,6 +2144,11 @@ void print_mtxf(const Eigen::MatrixXf& X){
    }
    Serial.println();
 }
+
+/*
+ * calcStickValues computes the stick x/y coordinates from angle.
+ * This requires weird trig because the stick moves spherically.
+ */
 void calcStickValues(float angle, float* x, float* y){
 	*x = 100*atan2f((sinf(_maxStickAngle)*cosf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
 	*y = 100*atan2f((sinf(_maxStickAngle)*sinf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
