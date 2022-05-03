@@ -33,6 +33,10 @@ int _cXOffset = 0;
 int _cYOffset = 0;
 int _cMax = 127;
 int _cMin = -127;
+int _LTriggerOffset = 49;
+int _RTriggerOffset = 49;
+int _triggerMin = 49;
+int _triggerMax = 140;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -165,6 +169,8 @@ const int _eepromcXOffset = _eepromRToggle+_bytesPerFloat;
 const int _eepromcYOffset = _eepromcXOffset+_bytesPerFloat;
 const int _eepromxSmoothing = _eepromcYOffset+_bytesPerFloat;
 const int _eepromySmoothing = _eepromxSmoothing+_bytesPerFloat;
+const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
+const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -735,6 +741,29 @@ void readEEPROM(){
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
+  //get the L-trigger Offset value
+  EEPROM.get(_eepromLOffset, _LTriggerOffset);
+  if(std::isnan(_LTriggerOffset)){
+    _LTriggerOffset = _triggerMin;
+  }
+  if(_LTriggerOffset > _triggerMax) {
+    _LTriggerOffset = _triggerMax;
+  } else if(_LTriggerOffset < _triggerMin) {
+    _LTriggerOffset = _triggerMin;
+  }
+
+  //get the R-trigger Offset value
+  EEPROM.get(_eepromROffset, _RTriggerOffset);
+  if(std::isnan(_RTriggerOffset)){
+    _RTriggerOffset = _triggerMin;
+  }
+  if(_RTriggerOffset > _triggerMax) {
+    _RTriggerOffset = _triggerMax;
+  } else if(_RTriggerOffset < _triggerMin) {
+    _RTriggerOffset = _triggerMin;
+  }
+
+
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
@@ -787,6 +816,11 @@ void resetDefaults(){
   EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
+
+  _LTriggerOffset = _triggerMin;
+  _RTriggerOffset = _triggerMin;
+  EEPROM.put(_eepromLOffset, _LTriggerOffset);
+  EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -891,6 +925,8 @@ void readButtons(){
   * Reset Z-Jump:  AXY+Z
   * Toggle Analog Slider L:  ZL+Start
   * Toggle Analog Slider R: ZR+Start
+  * Increase/Decrease L-trigger Offset: ZL+Du/Dd
+  * Increase/Decrease R-Trigger Offset:  ZR+Du/Dd
   * Increase/Decrease C-stick Offset on X:  LX+Du/Dd
   * Increase/Decrease C-stick Offset on X:  LY+Du/Dd
   * Show Current C-stick Offset:  LA+Dd
@@ -937,6 +973,14 @@ void readButtons(){
     } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
       setLRToggle(_rTrigger, 0, _changeTrigger);
       freezeSticks();
+    } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
+      adjustTriggerOffset(true, true, true);
+    } else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
+      adjustTriggerOffset(true, true, false);
+    } else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
+      adjustTriggerOffset(true, false, true);
+    } else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
+      adjustTriggerOffset(true, false, false);
     } else if(hardwareX && hardwareL && btn.Du) { //Increase C-stick X Offset
       adjustCstick(true, true, true);
     } else if(hardwareX && hardwareL && btn.Dd) { //Decrease C-stick X Offset
@@ -1213,6 +1257,41 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
 
   btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
   btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
+void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
+  if(_lTrigger && _increase && _change) {
+    _LTriggerOffset++;
+    if(_LTriggerOffset > _triggerMax) {
+      _LTriggerOffset = _triggerMax;
+    }
+  } else if(_lTrigger && !_increase && _change) {
+    _LTriggerOffset--;
+    if(_LTriggerOffset < _triggerMin) {
+      _LTriggerOffset = _triggerMin;
+    }
+  } else if(!_lTrigger && _increase && _change) {
+    _RTriggerOffset++;
+    if(_RTriggerOffset > _triggerMax) {
+      _RTriggerOffset = _triggerMax;
+    }
+  } else if(!_lTrigger && !_increase && _change) {
+    _RTriggerOffset--;
+    if(_RTriggerOffset < _triggerMin) {
+      _RTriggerOffset = _triggerMin;
+    }
+  }
+
+  EEPROM.put(_eepromLOffset, _LTriggerOffset);
+  EEPROM.put(_eepromROffset, _RTriggerOffset);
+
+  btn.La = (uint8_t) (60.0 + _LTriggerOffset);
+  btn.Ra = (uint8_t) (60.0 + _RTriggerOffset);
 
   int startTime = millis();
   int delta = 0;
