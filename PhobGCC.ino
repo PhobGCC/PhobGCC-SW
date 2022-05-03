@@ -1787,13 +1787,13 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 }
 /*******************
 	linearizeCal
-	calibrate a stick so that its response will be linear
+	Generate a fit to linearize the stick response.
 	Inputs:
 		cleaned points X and Y, (must be 17 points for each of these, the first being the center, the others starting at 3 oclock and going around counterclockwise)
 	Outputs:
-		linearization fit coefficients X and Y
+		linearization fit coefficients for X and Y
 *******************/
-void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitCoeffsX[],float fitCoeffsY[]){
+void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitCoeffsX[], float fitCoeffsY[]){
 	Serial.println("beginning linearization");
 
 	//do the curve fit first
@@ -1802,22 +1802,24 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	double fitPointsX[5];
 	double fitPointsY[5];
 
-	fitPointsX[0] = inX[8+1];
-	fitPointsX[1] = (inX[6+1] + inX[10+1])/2.0;
-	fitPointsX[2] = inX[0];
-	fitPointsX[3] = (inX[2+1] + inX[14+1])/2.0;
-	fitPointsX[4] = inX[0+1];
+	fitPointsX[0] = inX[8+1];                   //right
+	fitPointsX[1] = (inX[6+1] + inX[10+1])/2.0; //right 45 deg
+	fitPointsX[2] = inX[0];                     //center
+	fitPointsX[3] = (inX[2+1] + inX[14+1])/2.0; //left 45 deg
+	fitPointsX[4] = inX[0+1];                   //left
 
-	fitPointsY[0] = inY[12+1];
-	fitPointsY[1] = (inY[10+1] + inY[14+1])/2.0;
-	fitPointsY[2] = inY[0];
-	fitPointsY[3] = (inY[6+1] + inY[2+1])/2.0;
-	fitPointsY[4] = inY[4+1];
+	fitPointsY[0] = inY[12+1];                  //down
+	fitPointsY[1] = (inY[10+1] + inY[14+1])/2.0;//down 45 deg
+	fitPointsY[2] = inY[0];                     //center
+	fitPointsY[3] = (inY[6+1] + inY[2+1])/2.0;  //up 45 deg
+	fitPointsY[4] = inY[4+1];                   //up
 
 
 	//////determine the coefficients needed to linearize the stick
 	//create the expected output, what we want our curve to be fit too
 	//this is hard coded because it doesn't depend on the notch adjustments
+	//                   -100 -74.246        0     74.246         100, centered around 0-255
+    //It's not sin(45 deg) because it's a spherical motion, not planar.
 	double x_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 	double y_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 
@@ -1839,21 +1841,21 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	double tempCoeffsX[_fitOrder+1];
 	double tempCoeffsY[_fitOrder+1];
 
-	fitCurve(_fitOrder, 5, fitPointsX, x_output, _fitOrder+1,  tempCoeffsX);
+	fitCurve(_fitOrder, 5, fitPointsX, x_output, _fitOrder+1, tempCoeffsX);
 	fitCurve(_fitOrder, 5, fitPointsY, y_output, _fitOrder+1, tempCoeffsY);
 
-		//write these coefficients to the array that was passed in, this is our first output
+	//write these coefficients to the array that was passed in, this is our first output
 	for(int i = 0; i < (_fitOrder+1); i++){
 		fitCoeffsX[i] = tempCoeffsX[i];
 		fitCoeffsY[i] = tempCoeffsY[i];
 	}
 
-	//we will now take out the offset, making the range -100 to 100 isntead of 28 to 228
+	//we will now take out the offset, making the range -100 to 100 instead of 28 to 228
 	//calculate the offset
 	float xZeroError = linearize((float)fitPointsX[2],fitCoeffsX);
 	float yZeroError = linearize((float)fitPointsY[2],fitCoeffsY);
 
-	//Adjust the fit so that the stick zero position is 0
+	//Adjust the fit's constant coefficient so that the stick zero position is 0
 	fitCoeffsX[3] = fitCoeffsX[3] - xZeroError;
 	fitCoeffsY[3] = fitCoeffsY[3] - yZeroError;
 
