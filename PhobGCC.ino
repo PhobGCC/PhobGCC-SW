@@ -436,11 +436,11 @@ void loop() {
 	//check to see if we are calibrating
 	if(_currentCalStep >= 0){
 		if(_calAStick){
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,true,_aNotchAngles,_aNotchStatus);
+			adjustNotch(_currentCalStep,_dT,hardwareY,hardwareX,true,_aNotchAngles,_aNotchStatus);
 			readSticks(true,false,true);
 		}
 		else{
-			adjustNotch(_currentCalStep,_dT,btn.Y,btn.X,false,_cNotchAngles,_cNotchStatus);
+			adjustNotch(_currentCalStep,_dT,hardwareY,hardwareX,false,_cNotchAngles,_cNotchStatus);
 			readSticks(false,true,true);
 		}
 	}
