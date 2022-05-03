@@ -19,7 +19,7 @@ const int _pinCx = 22;
 const int _pinCy = 21;
 const int _pinRX = 7;
 const int _pinTX = 8;
-const int _pinDr = 6;
+const int _pinDr = 5;
 const int _pinDu = 18;
 const int _pinDl = 17;
 const int _pinDd = 6;
@@ -29,8 +29,8 @@ const int _pinA = 4;
 const int _pinB = 20;
 const int _pinZ = 0;
 const int _pinS = 19;
-const int _pinRumble = 11;
-const int _pinBrake = 12;
+const int _pinRumble = 12;
+const int _pinBrake = 11;
 
 //don't #define USEADCSCALE
 

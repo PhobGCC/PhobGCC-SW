@@ -777,6 +777,11 @@ void setPinModes(){
     pinMode(13,   OUTPUT);
 #endif // TEENSY4_0
 
+#ifdef RUMBLE
+	pinMode(_pinRumble, OUTPUT);
+	pinMode(_pinBrake, OUTPUT);
+#endif
+
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
 	bounceDu.attach(_pinDu);
@@ -1161,7 +1166,7 @@ void readSticks(int readA, int readC, int running){
 
 	notchRemap(posAx, posAy, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
-
+	
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(_running){
