@@ -487,7 +487,7 @@ void commInt() {
 
 			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
 			_writing = true;
-			_bitQueue = _pollLength-1;
+			_bitQueue = _pollLength;
 
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
@@ -540,7 +540,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				Serial2.begin(2500000);
 				_writing = true;
-				_bitQueue = _probeLength-1;
+				_bitQueue = _probeLength;
 
 				//write the probe response
 				for(int i = 0; i<_probeLength; i++){
@@ -565,7 +565,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(2500000);
 				_writing = true;
-				_bitQueue = _originLength-1;
+				_bitQueue = _originLength;
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
@@ -1524,22 +1524,22 @@ void communicate(){
 		switch(cmdByte){
 		case 0x00:
 			timer1.trigger(PROBE_LENGTH*8);
-			for(int i = 0; i< PROBE_LENGTH-1; i++){
+			for(int i = 0; i< PROBE_LENGTH; i++){
 				Serial2.write(_probeResponse[i]);
 			}
 			Serial2.write(0xFF);
 			Serial.println("probe");
-			_writeQueue = 9+(PROBE_LENGTH-1)*2+1;
+			_writeQueue = 9+(PROBE_LENGTH)*2+1;
 			_commStatus = _commWrite;
 		break;
 		case 0x41:
 			timer1.trigger(ORIGIN_LENGTH*8);
-			for(int i = 0; i< ORIGIN_LENGTH-1; i++){
+			for(int i = 0; i< ORIGIN_LENGTH; i++){
 				Serial2.write(_commResponse[i]);
 			}
 			Serial2.write(0xFF);
 			Serial.println("origin");
-			_writeQueue = 9+(ORIGIN_LENGTH-1)*2+1;
+			_writeQueue = 9+(ORIGIN_LENGTH)*2+1;
 			_commStatus = _commWrite;
 		  break;
 		case 0x40:
@@ -1578,13 +1578,13 @@ void communicate(){
 		digitalWriteFast(12,LOW);
 		while(_bitCount<25){}
 		//Serial2.write((const char*)_commResponse,POLL_LENGTH);
-		for(int i = 0; i< POLL_LENGTH-1; i++){
+		for(int i = 0; i< POLL_LENGTH; i++){
 			Serial2.write(_commResponse[i]);
 		}
 		Serial2.write(0xFF);
 		
 		timer1.trigger(135);
-		_writeQueue = 25+(POLL_LENGTH-1)*2+1;
+		_writeQueue = 25+(POLL_LENGTH)*2+1;
 		_commStatus = _commWrite;
 		//digitalWriteFast(12,HIGH);
 	}
