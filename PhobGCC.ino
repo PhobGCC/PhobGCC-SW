@@ -103,7 +103,7 @@ const int _noOfCalibrationPoints = _noOfNotches * 2;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
-const float _maxStickAngle = 0.67195176201;
+const float _maxStickAngle = 0.67195176201;//38.5 degrees; this is the max angular deflection of the stick.
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 bool _advanceCal = false;
 bool _advanceCalPressed = false;
@@ -1629,7 +1629,8 @@ void communicate(){
 #endif // TEENSY3_2
 /*******************
 	cleanCalPoints
-	take the x and y coordinates and notch angles collected during the calibration procedure, and generate the cleaned x an y stick coordinates and the corresponding x and y notch coordinates
+	take the x and y coordinates and notch angles collected during the calibration procedure, 
+	and generate the cleaned (non-redundant) x and y stick coordinates and the corresponding x and y notch coordinates
 *******************/
 void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[]){
 
@@ -1652,37 +1653,86 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 
 	Serial.println("The notch points are:");
 	for(int i = 0; i < _noOfNotches; i++){
-			//add the origin values to the first x,y point
-			cleanedPointsX[0] += calPointsX[i*2];
-			cleanedPointsY[0] += calPointsY[i*2];
+		//add the origin values to the first x,y point
+		cleanedPointsX[0] += calPointsX[i*2];
+		cleanedPointsY[0] += calPointsY[i*2];
 
-			//set the notch point
-			cleanedPointsX[i+1] = calPointsX[i*2+1];
-			cleanedPointsY[i+1] = calPointsY[i*2+1];
+		//copy the cal point into the cleaned list
+		cleanedPointsX[i+1] = calPointsX[i*2+1];
+		cleanedPointsY[i+1] = calPointsY[i*2+1];
 
-			calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
-			//notchPointsX[i+1] = ((int)notchPointsX[i+1] + 0.5);
-			//notchPointsY[i+1] = ((int)notchPointsY[i+1] + 0.5);
-			notchPointsX[i+1] = round(notchPointsX[i+1]);
-			notchPointsY[i+1] = round(notchPointsY[i+1]);
+		//convert notch angles to x/y coords (weird since the stick moves spherically)
+		calcStickValues(notchAngles[i], notchPointsX+i+1, notchPointsY+i+1);
+		notchPointsX[i+1] = round(notchPointsX[i+1]);
+		notchPointsY[i+1] = round(notchPointsY[i+1]);
 
-			Serial.print(notchPointsX[i+1]);
-			Serial.print(",");
-			Serial.println(notchPointsY[i+1]);
+		Serial.print(notchPointsX[i+1]);
+		Serial.print(",");
+		Serial.println(notchPointsY[i+1]);
+	}
+
+	//remove the largest and smallest two origin values to remove outliers
+	//first, find their indices
+	int smallestX = 0;
+	int smallX = 0;
+	int largeX = 0;
+	int largestX = 0;
+	int smallestY = 0;
+	int smallY = 0;
+	int largeY = 0;
+	int largestY = 0;
+	for (int i = 0; i < _noOfNotches; i++){
+		if (calPointsX[i*2] < calPointsX[smallestX]){//if it's the new smallest
+			smallX = smallestX;//shuffle the old smallest to small
+			smallestX = i*2;//record the new smallest index
+		} else if (calPointsX[i*2] < calPointsX[smallX]){//if it's the new second-smallest
+			smallX = i*2;//record the new small index
 		}
+		if (calPointsX[i*2] > calPointsX[largestX]){//if it's the new largest
+			largeX = largestX;//shuffle the old largest to large
+			largestX = i*2;//record the new largest index
+		} else if (calPointsX[i*2] > calPointsX[largeX]){//if it's the new second-largest
+			largeX = i*2;//record the new large index
+		}
+		if (calPointsY[i*2] < calPointsY[smallestY]){
+			smallY = smallestY;
+			smallestY = i*2;
+		} else if (calPointsY[i*2] < calPointsY[smallY]){
+			smallY = i*2;
+		}
+		if (calPointsY[i*2] > calPointsY[largestY]){
+			largeY = largestY;
+			largestY = i*2;
+		} else if (calPointsY[i*2] > calPointsY[largeY]){
+			largeY = i*2;
+		}
+	}
+	//subtract the smallest and largest values
+	cleanedPointsX[0] -= calPointsX[smallestX];
+	cleanedPointsX[0] -= calPointsX[smallX];
+	cleanedPointsX[0] -= calPointsX[largeX];
+	cleanedPointsX[0] -= calPointsX[largestX];
+	cleanedPointsY[0] -= calPointsY[smallestY];
+	cleanedPointsY[0] -= calPointsY[smallY];
+	cleanedPointsY[0] -= calPointsY[largeY];
+	cleanedPointsY[0] -= calPointsY[largestY];
 
-
-		//divide by the total number of calibration steps/2 to get the average origin value
-		cleanedPointsX[0] = cleanedPointsX[0]/((float)_noOfNotches);
-		cleanedPointsY[0] = cleanedPointsY[0]/((float)_noOfNotches);
+	//divide by the total number of calibration steps/2 to get the average origin value
+	//except it's minus 4 steps since we removed outliers
+	cleanedPointsX[0] = cleanedPointsX[0]/((float)_noOfNotches-4);
+	cleanedPointsY[0] = cleanedPointsY[0]/((float)_noOfNotches-4);
 
 	for(int i = 0; i < _noOfNotches; i++){
+		//calculate radius of cleaned point from center
 		float deltaX = cleanedPointsX[i+1] - cleanedPointsX[0];
 		float deltaY = cleanedPointsY[i+1] - cleanedPointsY[0];
 		float mag = sqrt(deltaX*deltaX + deltaY*deltaY);
-		if(mag < 0.02){
-			int prevIndex = (i-1+_noOfNotches) % _noOfNotches+1;
-			int nextIndex = (i+1) % _noOfNotches+1;
+
+		if(mag < 0.02){//if the cleaned point was at the center
+			//average the previous and next points (cardinal & diagonal) for some sanity
+			//note: this will likely bork if this happens to a cardinal or diagonal
+			int prevIndex = ((i-1+_noOfNotches) % _noOfNotches) + 1;
+			int nextIndex = ((i+1) % _noOfNotches) + 1;
 
 			cleanedPointsX[i+1] = (cleanedPointsX[prevIndex] + cleanedPointsX[nextIndex])/2.0;
 			cleanedPointsY[i+1] = (cleanedPointsY[prevIndex] + cleanedPointsY[nextIndex])/2.0;
@@ -2094,6 +2144,11 @@ void print_mtxf(const Eigen::MatrixXf& X){
    }
    Serial.println();
 }
+
+/*
+ * calcStickValues computes the stick x/y coordinates from angle.
+ * This requires weird trig because the stick moves spherically.
+ */
 void calcStickValues(float angle, float* x, float* y){
 	*x = 100*atan2f((sinf(_maxStickAngle)*cosf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
 	*y = 100*atan2f((sinf(_maxStickAngle)*sinf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
