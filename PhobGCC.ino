@@ -12,7 +12,7 @@
 
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
-//#include "src/Phob1_1Teensy3_2.h"
+#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
@@ -100,6 +100,7 @@ const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margi
 //////values used for calibration
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
+const int _noOfAdjNotches = _noOfNotches * 3 / 4;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
@@ -125,9 +126,14 @@ const float _aDefaultCalPointsY[_noOfCalibrationPoints] = {0.300092277, 0.300380
 //                                                         right        up          left          down         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,       16, 17,       24, 25,      4, 5,        12, 13,      20, 21,      28, 29,      2, 3,        6, 7,        10, 11,      14, 15,      18, 19,      22, 23,      26, 27,      30, 31};
 //                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
+//                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
 const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
-const float _notchRange[_noOfNotches] =                   {0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0};
+//                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
+const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
+//const float _notchRange[_noOfNotches] =                   {0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0};
+const float _notchAdjustStretchLimit = 0.3;
 float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
+float _measuredNotchAngles[_noOfNotches];
 const int _notchStatusDefaults[_noOfNotches] =            {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 int _aNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 int _cNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
@@ -436,11 +442,31 @@ void loop() {
 	//check to see if we are calibrating
 	if(_currentCalStep >= 0){
 		if(_calAStick){
-			adjustNotch(_currentCalStep,_dT,hardwareY,hardwareX,true,_aNotchAngles,_aNotchStatus);
+			if(_currentCalStep >= _noOfNotches*2){//adjust notch angles
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B && btn.S, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
+				//clean full cal points again, feeding updated angles in
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				//linearize again
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+				//notchCalibrate again to update the affine transform
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+			}else{//just show desired stick position
+				displayNotch(_currentCalStep, true, _notchAngleDefaults);
+			}
 			readSticks(true,false,true);
 		}
 		else{
-			adjustNotch(_currentCalStep,_dT,hardwareY,hardwareX,false,_cNotchAngles,_cNotchStatus);
+			if(_currentCalStep >= _noOfNotches*2){//adjust notch angles
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B && btn.S, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
+				//clean full cal points again, feeding updated angles in
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				//linearize again
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+				//notchCalibrate again to update the affine transform
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+			}else{//just show desired stick position
+				displayNotch(_currentCalStep, false, _notchAngleDefaults);
+			}
 			readSticks(false,true,true);
 		}
 	}
@@ -737,22 +763,22 @@ void readEEPROM(){
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
 	EEPROM.get(_eepromANotchAngles, _aNotchAngles);
-	cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_aNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 	Serial.println("calibration points cleaned");
-	linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_aFitCoeffsX,_aFitCoeffsY);
+	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 	Serial.println("A stick linearized");
-	notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_aNotchAngles,_aFitCoeffsX,_aFitCoeffsY,_aAffineCoeffs,_aBoundaryAngles);
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromCPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromCPointsY, _tempCalPointsY);
 	EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
-	cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_cNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 	Serial.println("calibration points cleaned");
-	linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_cFitCoeffsX,_cFitCoeffsY);
+	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 	Serial.println("C stick linearized");
-	notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_cNotchAngles,_cFitCoeffsX,_cFitCoeffsY,_cAffineCoeffs,_cBoundaryAngles);
 }
 void resetDefaults(){
@@ -801,11 +827,11 @@ void resetDefaults(){
 	EEPROM.put(_eepromAPointsY,_tempCalPointsY);
 
 	Serial.println("A calibration points stored in EEPROM");
-	cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_aNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 	Serial.println("A calibration points cleaned");
-	linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_aFitCoeffsX,_aFitCoeffsY);
+	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 	Serial.println("A stick linearized");
-	notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 
 	for(int i = 0; i < _noOfCalibrationPoints; i++){
 		_tempCalPointsX[i] = _cDefaultCalPointsX[i];
@@ -815,11 +841,11 @@ void resetDefaults(){
 	EEPROM.put(_eepromCPointsY,_tempCalPointsY);
 
 	Serial.println("C calibration points stored in EEPROM");
-	cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_cNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 	Serial.println("C calibration points cleaned");
-	linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_cFitCoeffsX,_cFitCoeffsY);
+	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 	Serial.println("C stick linearized");
-	notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 
 }
 void setPinModes(){
@@ -882,6 +908,7 @@ void readButtons(){
   * Advance Calibration:  L or R
   * Undo Calibration:  Z
   * Notch Adjustment CW/CCW:  X/Y
+  * Notch Adjustment reset: B+Start
   * Swap X with Z:  XZ+Start
   * Swap Y with Z:  YZ+Start
   * Reset Z-Jump:  AXY+Z
@@ -988,22 +1015,52 @@ void readButtons(){
 		if (!_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
-			if(_currentCalStep >= 2) {
+			if(_currentCalStep >= 2 && _currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
 				_undoCal = true;
 			} else {
 				_undoCal = false;
 			}
-			if(_currentCalStep >= _noOfNotches*2){
+			if(_currentCalStep == _noOfNotches*2){//done collecting points
 				Serial.println("finished collecting the calibration points for the C stick");
+				//make temp temp cal points that are missing all notches so that we get straight
+				float tempCalPointsX[(_noOfNotches)*2];
+				float tempCalPointsY[(_noOfNotches)*2];
+				stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+				//clean the stripped calibration points, use default angles
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				//apply the calibration to the original notches; we don't care about the angles
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+                float transformedX[_noOfNotches+1];
+                float transformedY[_noOfNotches+1];
+				transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _cFitCoeffsX, _cFitCoeffsY, _cAffineCoeffs, _cBoundaryAngles);
+				//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
+                computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
+				//clean full cal points again, feeding those angles in
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				//linearize again
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+				//notchCalibrate again
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+			}
+			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			while(_currentCalStep >= _noOfNotches*2 && _cNotchStatus[notchIndex] == 3 && _currentCalStep <= _noOfNotches*2 + _noOfAdjNotches){//this non-diagonal notch was not calibrated
+				//skip to the next valid notch
+				_currentCalStep++;
+				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			}
+			if(_currentCalStep >= _noOfNotches*2 + _noOfAdjNotches){//two times for collection, one more for adjust
+				Serial.println("finished adjusting notches for the C stick");
 				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
 				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
 				EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
 				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_cNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				Serial.println("calibration points cleaned");
-				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_cFitCoeffsX,_cFitCoeffsY);
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 				Serial.println("C stick linearized");
-				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 				_currentCalStep = -1;
 				_advanceCal = false;
 			}
@@ -1011,22 +1068,52 @@ void readButtons(){
 		else if (_calAStick){
 			collectCalPoints(_calAStick, _currentCalStep,_tempCalPointsX,_tempCalPointsY);
 			_currentCalStep ++;
-			if(_currentCalStep >= 2) {
+			if(_currentCalStep >= 2 && _currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
 				_undoCal = true;
 			} else {
 				_undoCal = false;
 			}
-			if(_currentCalStep >= _noOfNotches*2){
+			if(_currentCalStep == _noOfNotches*2){//done collecting points
 				Serial.println("finished collecting the calibration points for the A stick");
+				//make temp temp cal points that are missing all notches so that we get straight
+				float tempCalPointsX[(_noOfNotches)*2];
+				float tempCalPointsY[(_noOfNotches)*2];
+				stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+				//clean the stripped calibration points, use default angles
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				//apply the calibration to the original notches; we don't care about the angles
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+                float transformedX[_noOfNotches+1];
+                float transformedY[_noOfNotches+1];
+				transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _aFitCoeffsX, _aFitCoeffsY, _aAffineCoeffs, _aBoundaryAngles);
+				//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
+                computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
+				//clean full cal points again, feeding those angles in
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				//linearize again
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+				//notchCalibrate again
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+			}
+			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			while(_currentCalStep >= _noOfNotches*2 && _aNotchStatus[notchIndex] == 3 && _currentCalStep <= _noOfNotches*2 + _noOfAdjNotches){//this non-diagonal notch was not calibrated
+				//skip to the next valid notch
+				_currentCalStep++;
+				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			}
+			if(_currentCalStep >= _noOfNotches*2 + _noOfAdjNotches){//two times for collection, one more for adjust
+				Serial.println("finished adjusting notches for the A stick");
 				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
 				EEPROM.put(_eepromAPointsY,_tempCalPointsY);
 				EEPROM.put(_eepromANotchAngles,_aNotchAngles);
 				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX,_tempCalPointsY,_aNotchAngles,_cleanedPointsX,_cleanedPointsY,_notchPointsX,_notchPointsY);
+				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				Serial.println("calibration points cleaned");
-				linearizeCal(_cleanedPointsX,_cleanedPointsY,_cleanedPointsX,_cleanedPointsY,_aFitCoeffsX,_aFitCoeffsY);
+				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 				Serial.println("A stick linearized");
-				notchCalibrate(_cleanedPointsX,_cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 				_currentCalStep = -1;
 				_advanceCal = false;
 			}
@@ -1632,7 +1719,7 @@ void communicate(){
 	take the x and y coordinates and notch angles collected during the calibration procedure, 
 	and generate the cleaned (non-redundant) x and y stick coordinates and the corresponding x and y notch coordinates
 *******************/
-void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[]){
+void cleanCalPoints(const float calPointsX[], const float calPointsY[], const float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[], int notchStatus[]){
 
 	Serial.println("The raw calibration points (x,y) are:");
 	for(int i = 0; i< _noOfCalibrationPoints; i++){
@@ -1742,6 +1829,9 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 
 			Serial.print("no input was found for notch: ");
 			Serial.println(i+1);
+
+			//Mark that notch adjustment should be skipped for this
+			notchStatus[i] = 3;
 		}
 	}
 
@@ -1759,37 +1849,86 @@ void cleanCalPoints(float calPointsX[], float  calPointsY[], float notchAngles[]
 		Serial.println(notchPointsY[i]);
 	}
 }
-void adjustNotch(int currentStepIn, float loopDelta, bool CW, int CCW, bool calibratingAStick, float notchAngles[], int notchStatus[]){
-    const int currentStep = _calOrder[currentStepIn];
-	float X = 0;
-	float Y = 0;
-	//don't run on center steps
+//adjustNotch is used to adjust the angles of the notch.
+//It is run after calibration points are collected.
+//The notch adjustment is limited in order to control
+//1. displacement of points (max 12 units out of +/- 100, for now)
+//2. stretching of coordinates (max +/- 30%)
+void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool reset, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], int notchStatus[]){
+	//This gets run after all the calibration points are collected
+	//So we subtract the number of calibration points and switch over to notch adjust order
+	const int notchIndex = _notchAdjOrder[currentStepIn-_noOfCalibrationPoints];
+
+	//do nothing if it's not a valid notch to calibrate
+	if(notchStatus[notchIndex] == 3){
+		return;
+	}
+
+	//Adjust notch angle according to which button is pressed (do nothing for both buttons)
+	if(CW && !CCW){
+		notchAngles[notchIndex] += loopDelta*0.000075;
+	}
+	else if(CCW && !CW){
+		notchAngles[notchIndex] -= loopDelta*0.000075;
+	}
+
+	//Limit the notch adjustment
+
+	//Start out with the limits being 12 units around the circle at the gate
+	const float lowerPosLimit = measuredNotchAngles[notchIndex] - 12/100.f;
+	const float upperPosLimit = measuredNotchAngles[notchIndex] + 12/100.f;
+
+	//Now we need to determine the stretch/compression limit
+	//Figure out the previous and next notch angles.
+	//For most they're the adjacent notches.
+	int prevIndex = (notchIndex-1+_noOfNotches) % _noOfNotches;
+	int nextIndex = (notchIndex+1) % _noOfNotches;
+	//For diagonals, the cardinals are the index points.
+	if((notchIndex - 2) % 4 == 0){
+		prevIndex = (notchIndex-2+_noOfNotches) % _noOfNotches;
+		nextIndex = (notchIndex+2) % _noOfNotches;
+	}
+	const float prevAngle = notchAngles[prevIndex];
+	const float nextAngle = notchAngles[nextIndex];
+	const float lowerStretchLimit = max(prevAngle + 0.7*(notchAngles[notchIndex]-prevAngle), nextAngle - 1.3*(nextAngle-notchAngles[notchIndex]));
+	const float upperStretchLimit = min(prevAngle + 1.3*(notchAngles[notchIndex]-prevAngle), nextAngle - 0.7*(nextAngle-notchAngles[notchIndex]));
+
+	//Combine the limits
+	const float lowerLimit = max(lowerStretchLimit, lowerPosLimit);
+	const float upperLimit = max(upperStretchLimit, upperPosLimit);
+
+	//Apply the limits
+	notchAngles[notchIndex] = max(notchAngles[notchIndex], lowerLimit);
+	notchAngles[notchIndex] = min(notchAngles[notchIndex], upperLimit);
+
+	//display the desired value on the other stick
+	float x = 0;
+	float y = 0;
+	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
+	if(calibratingAStick){
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
+	}else{
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
+	}
+}
+//displayNotch is used in lieu of adjustNotch when doing basic calibration
+void displayNotch(const int currentStepIn, const bool calibratingAStick, const float notchAngles[]){
+	const int currentStep = _calOrder[currentStepIn];
+	//display the desired value on the other stick
+	float x = 0;
+	float y = 0;
 	if(currentStep%2){
-		int notchIndex = currentStep/2;
-		//Serial.println(notchAngles[notchIndex]);
-		if(notchStatus[notchIndex] != _cardinalNotch){
-			if(CW){
-				notchAngles[notchIndex] += loopDelta*0.000075;
-			}
-			else if(CCW){
-				notchAngles[notchIndex] -= loopDelta*0.000075;
-			}
-		}
-		if(notchAngles[notchIndex] > _notchAngleDefaults[notchIndex]+_notchRange[notchIndex]){
-			notchAngles[notchIndex] = _notchAngleDefaults[notchIndex]+_notchRange[notchIndex];
-		}
-		else if(notchAngles[notchIndex] < _notchAngleDefaults[notchIndex]-_notchRange[notchIndex]){
-			notchAngles[notchIndex] = _notchAngleDefaults[notchIndex]-_notchRange[notchIndex];
-		}
-		calcStickValues(notchAngles[notchIndex], &X, &Y);
+		const int notchIndex = currentStep/2;
+		calcStickValues(notchAngles[notchIndex], &x, &y);
 	}
 	if(calibratingAStick){
-		btn.Cx = (uint8_t) (X + 127.5);
-		btn.Cy = (uint8_t) (Y + 127.5);
-	}
-	else{
-		btn.Ax = (uint8_t) (X + 127.5);
-		btn.Ay = (uint8_t) (Y + 127.5);
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
+	}else{
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
 	}
 }
 void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[]){
@@ -2152,4 +2291,61 @@ void print_mtxf(const Eigen::MatrixXf& X){
 void calcStickValues(float angle, float* x, float* y){
 	*x = 100*atan2f((sinf(_maxStickAngle)*cosf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
 	*y = 100*atan2f((sinf(_maxStickAngle)*sinf(angle)),cosf(_maxStickAngle))/_maxStickAngle;
+}
+/*
+ * Convert the x/y coordinates (actually angles on a sphere) to an azimuth
+ * We first convert to a 3D coordinate and then drop to 2D, then arctan it
+ * This does the opposite of calcStickValues, ideally.
+ */
+void angleOnSphere(const float x, const float y, float& angle){
+	float xx = 1 * sinf(x*_maxStickAngle/100);
+	float z  = 1 * cosf(x*_maxStickAngle/100);
+	float yy = z * sinf(y*_maxStickAngle/100);
+	angle = atan2f(yy, xx);
+}
+/*
+ * stripCalPoints removes the notches from un-cleaned cal points
+ * this is so we can get the original values of the notches after the affine transform.
+ */
+void stripCalPoints(float calPointsX[], float calPointsY[], float strippedPointsY[], float strippedPointsX[]){
+	for(int i=0; i < _noOfCalibrationPoints; i++){
+		if(_notchStatusDefaults[1+((i-1)/2)]==1){//non-cardinal non-diagonal notch
+			strippedPointsX[i] = calPointsX[0];//set equal to origin
+			strippedPointsY[i] = calPointsY[0];
+		}else{
+			strippedPointsX[i] = calPointsX[i];//otherwise just copy
+			strippedPointsY[i] = calPointsY[i];
+		}
+	}
+}
+/*
+ * transformCalPoints
+ * remaps the cleaned calibration points from raw measurements to output coordinates
+ * This seems redundant but we're feeding it coordinates without non-diagonal notches
+ */
+void transformCalPoints(float xInput[], float yInput[], float xOutput[], float yOutput[], float fitCoeffsX[], float fitCoeffsY[], float affineCoeffs[][6], float boundaryAngles[]){
+	for(int i=0; i < _noOfNotches+1; i++){
+		float xValue = linearize(xInput[i], fitCoeffsX);
+		float yValue = linearize(yInput[i], fitCoeffsY);
+		float outX;
+		float outY;
+		notchRemap(xValue, yValue, &outX, &outY, affineCoeffs, boundaryAngles, _noOfNotches);
+		xOutput[i] = outX;
+		yOutput[i] = outY;
+	}
+}
+/*
+ * computeStickAngles
+ * write all the stick angles into the notch angles array array
+ * inputs need to be length _noOfNotches+1
+ * output needs to be length _noOfNotches
+ */
+void computeStickAngles(float xInput[], float yInput[], float stickAngles[]){
+	for(int i=0; i < _noOfNotches; i++){
+		if(i%2 == 0){//cardinal or diagonal
+			stickAngles[i] = _notchAngleDefaults[i];
+		} else {
+			angleOnSphere(xInput[i+1], yInput[i+1], stickAngles[i]);
+		}
+	}
 }
