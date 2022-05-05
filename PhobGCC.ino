@@ -2327,15 +2327,16 @@ void angleOnSphere(const float x, const float y, float& angle){
 /*
  * stripCalPoints removes the notches from un-cleaned cal points
  * this is so we can get the original values of the notches after the affine transform.
+ * there need to be _noOfCalibrationPoints values in the inputs and outputs.
  */
 void stripCalPoints(float calPointsX[], float calPointsY[], float strippedPointsY[], float strippedPointsX[]){
 	for(int i=0; i < _noOfCalibrationPoints; i++){
-		if(_notchStatusDefaults[1+((i-1)/2)]==1){//non-cardinal non-diagonal notch
+		//start off by just copying them wholesale
+		strippedPointsX[i] = calPointsX[i];
+		strippedPointsY[i] = calPointsY[i];
+		if((i+1)%4 == 0){//non-cardinal non-diagonal notch (every fourth starting at index 3)
 			strippedPointsX[i] = calPointsX[0];//set equal to origin
 			strippedPointsY[i] = calPointsY[0];
-		}else{
-			strippedPointsX[i] = calPointsX[i];//otherwise just copy
-			strippedPointsY[i] = calPointsY[i];
 		}
 	}
 }
