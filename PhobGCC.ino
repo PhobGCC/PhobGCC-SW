@@ -26,6 +26,7 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 int _lConfig = 0;
 int _rConfig = 0;
+int _triggerDefault = 0;
 int _lTrigger = 0;
 int _rTrigger = 1;
 bool _changeTrigger = true;
@@ -36,7 +37,7 @@ int _cMin = -127;
 int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
 int _triggerMin = 49;
-int _triggerMax = 140;
+int _triggerMax = 255;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -645,16 +646,14 @@ void readEEPROM(){
 	//get the L setting
 	EEPROM.get(_eepromLToggle, _lConfig);
 	if(std::isnan(_lConfig)) {
-		_lConfig = 0;
+		_lConfig = _triggerDefault;
 	}
-	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
 	if(std::isnan(_rConfig)) {
-		_rConfig = 0;
+		_rConfig = _triggerDefault;
 	}
-	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
   //get the C-stick X offset
   EEPROM.get(_eepromcXOffset, _cXOffset);
@@ -793,12 +792,10 @@ void resetDefaults(){
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
-	_lConfig = 0;
-	_rConfig = 0;
+	_lConfig = _triggerDefault;
+	_rConfig = _triggerDefault;
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
-	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
-	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
   _cXOffset = 0;
   _cYOffset = 0;
@@ -893,12 +890,38 @@ void readButtons(){
 	btn.Y = !digitalRead(_pinYSwappable);
 	btn.Z = !digitalRead(_pinZSwappable);
 	btn.S = !digitalRead(_pinS);
-	btn.L = !digitalRead(_pinL);
-	btn.R = !digitalRead(_pinR);
 	btn.Du = !digitalRead(_pinDu);
 	btn.Dd = !digitalRead(_pinDd);
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
+
+  switch(_lConfig) {
+    case 0: //Default Trigger state
+      btn.L = !digitalRead(_pinL);
+      break;
+    case 1: //Digital Only Trigger state
+      btn.L = !digitalRead(_pinL);
+      break;
+    case 2: //Analog Only Trigger state
+      btn.L = (uint8_t) 0;
+      break;
+    default:
+      btn.L = !digitalRead(_pinL);
+  }
+
+  switch(_rConfig) {
+    case 0: //Default Trigger state
+      btn.R = !digitalRead(_pinR);
+      break;
+    case 1: //Digital Only Trigger state
+      btn.R = !digitalRead(_pinR);
+      break;
+    case 2: //Analog Only Trigger state
+      btn.R = (uint8_t) 0;
+      break;
+    default:
+      btn.R = !digitalRead(_pinR);
+  }
 
   hardwareL = !digitalRead(_pinL);
   hardwareR = !digitalRead(_pinR);
@@ -968,10 +991,10 @@ void readButtons(){
       readJumpConfig(false, false);
       freezeSticks();
     } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
-      setLRToggle(_lTrigger, 0, _changeTrigger);
+      nextTriggerState(_lConfig, true);
       freezeSticks();
     } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
-      setLRToggle(_rTrigger, 0, _changeTrigger);
+      nextTriggerState(_rConfig, false);
       freezeSticks();
     } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
       adjustTriggerOffset(true, true, true);
@@ -1290,8 +1313,8 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
   EEPROM.put(_eepromLOffset, _LTriggerOffset);
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
-  btn.La = (uint8_t) (60.0 + _LTriggerOffset);
-  btn.Ra = (uint8_t) (60.0 + _RTriggerOffset);
+  btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+  btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
 
   int startTime = millis();
   int delta = 0;
@@ -1334,39 +1357,22 @@ void setJump(int jumpConfig){
 				_pinYSwappable = _pinY;
 	}
 }
-/*
-* setLRToggle handles the current state of the L and R Triggers and whether or not they should be enabled or not.
-* int targetTrigger handles identifying the trigger, L = 0  and R = 1.
-* if it is 0, it should read out an actual analog value. If it is 1, it shouldn't.
-* config handles incoming values from the EEPROM. takes the state and sets it.
-* changeTrigger handles whether or not the current configuration of the targetTrigger should be swapped or not.
-*/
-void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
-	if(changeTrigger) {
-		if(targetTrigger == _lTrigger) {
-			if(_lConfig == 0) {
-				_lConfig = 1;
-			} else {
-				_lConfig = 0;
-			}
-			EEPROM.put(_eepromLToggle, _lConfig);
-		} else {
-			if(_rConfig == 0) {
-				_rConfig = 1;
-			} else {
-				_rConfig = 0;
-			}
-			EEPROM.put(_eepromRToggle, _rConfig);
-		}
-	} else {
-		if(targetTrigger == _lTrigger) {
-			_lConfig = config;
-			EEPROM.put(_eepromLToggle, _lConfig);
-		} else {
-			_rConfig = config;
-			EEPROM.put(_eepromRToggle, _rConfig);
-		}
-	}
+void nextTriggerState(int _currentConfig, bool _lTrigger) {
+  if(_lTrigger) {
+    if(_currentConfig == 2) {
+      _lConfig = 0;
+    } else {
+      _lConfig = _currentConfig + 1;
+    }
+} else {
+  if(_currentConfig == 2) {
+    _rConfig = 0;
+  } else {
+    _rConfig = _currentConfig + 1;
+  }
+}
+  EEPROM.put(_eepromLToggle, _lConfig);
+  EEPROM.put(_eepromRToggle, _rConfig);
 }
 void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
@@ -1380,17 +1386,33 @@ void readSticks(int readA, int readC, int running){
 
 
 	//read the L and R sliders
-	if(_lConfig == 0) {
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	} else {
-			btn.La = (uint8_t) 0;
-	}
+  switch(_lConfig) {
+    case 0: //Default Trigger state
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+      break;
+    case 1: //Digital Only Trigger state
+      btn.La = (uint8_t) 0;
+      break;
+    case 2: //Analog Only Trigger state
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+      break;
+    default:
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+  }
 
-	if(_rConfig == 0) {
-		btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-	} else {
-			btn.Ra = (uint8_t) 0;
-	}
+  switch(_rConfig) {
+    case 0: //Default Trigger state
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+      break;
+    case 1: //Digital Only Trigger state
+      btn.Ra = (uint8_t) 0;
+      break;
+    case 2: //Analog Only Trigger state
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+      break;
+    default:
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+  }
 
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
