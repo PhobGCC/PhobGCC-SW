@@ -100,7 +100,7 @@ const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margi
 //////values used for calibration
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
-const int _noOfAdjNotches = _noOfNotches * 3 / 4;
+const int _noOfAdjNotches = 12;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
@@ -128,8 +128,6 @@ const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,   
 //                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
 const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
-//                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
-const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 //const float _notchRange[_noOfNotches] =                   {0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0};
 const float _notchAdjustStretchLimit = 0.3;
 float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
@@ -138,6 +136,8 @@ const int _notchStatusDefaults[_noOfNotches] =            {3,           1,      
 int _aNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 int _cNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 float _cNotchAngles[_noOfNotches];
+//                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
+const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 const int _cardinalNotch = 3;
 const int _secondaryNotch = 2;
 const int _tertiaryNotchActive = 1;
@@ -443,35 +443,36 @@ void loop() {
 	if(_currentCalStep >= 0){
 		if(_calAStick){
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B && btn.S, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
-				//clean full cal points again, feeding updated angles in
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
-				//linearize again
-				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
-				//notchCalibrate again to update the affine transform
-				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
+				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+					//clean full cal points again, feeding updated angles in
+					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+					//linearize again
+					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+					//notchCalibrate again to update the affine transform
+					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				}
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, true, _notchAngleDefaults);
 			}
-			btn.Ra = (uint8_t) (60.0+_currentCalStep);
 			readSticks(true,false,true);
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B && btn.S, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
-				//clean full cal points again, feeding updated angles in
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
-				//linearize again
-				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
-				//notchCalibrate again to update the affine transform
-				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
+				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+					//clean full cal points again, feeding updated angles in
+					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+					//linearize again
+					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+					//notchCalibrate again to update the affine transform
+					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				}
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, false, _notchAngleDefaults);
 			}
-			btn.Ra = (uint8_t) (60.0+_currentCalStep);
 			readSticks(false,true,true);
 		}
-		btn.Ra = (uint8_t) (60.0+_currentCalStep);
 	}
 	else{
 		//if not calibrating read the sticks normally
@@ -911,7 +912,7 @@ void readButtons(){
   * Advance Calibration:  L or R
   * Undo Calibration:  Z
   * Notch Adjustment CW/CCW:  X/Y
-  * Notch Adjustment reset: B+Start
+  * Notch Adjustment reset: B
   * Swap X with Z:  XZ+Start
   * Swap Y with Z:  YZ+Start
   * Reset Z-Jump:  AXY+Z
@@ -1050,7 +1051,7 @@ void readButtons(){
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 			}
 			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
-			while(_currentCalStep >= _noOfCalibrationPoints && _cNotchStatus[notchIndex] == 3 && _currentCalStep <= _noOfCalibrationPoints + _noOfAdjNotches){//this non-diagonal notch was not calibrated
+			while(_currentCalStep >= _noOfCalibrationPoints && _cNotchStatus[notchIndex] == _tertiaryNotchInactive && _currentCalStep <= _noOfCalibrationPoints + _noOfAdjNotches){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
 				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
@@ -1116,14 +1117,16 @@ void readButtons(){
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 				Serial.println("notch calibrated with measured angles");
 			}
+			/*
 			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
-			while(_currentCalStep >= _noOfCalibrationPoints && _aNotchStatus[notchIndex] == 3 && _currentCalStep <= _noOfCalibrationPoints + _noOfAdjNotches){//this non-diagonal notch was not calibrated
+			while(_currentCalStep >= _noOfCalibrationPoints && _aNotchStatus[notchIndex] == _tertiaryNotchInactive && _currentCalStep <= _noOfCalibrationPoints + _noOfAdjNotches){//this non-diagonal notch was not calibrated
 				Serial.println("skipping cal step");
 				Serial.println(_currentCalStep);
 				//skip to the next valid notch
 				_currentCalStep++;
 				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
 			}
+			*/
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//two times for collection, one more for adjust
 				Serial.println("finished adjusting notches for the A stick");
 				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
@@ -1852,7 +1855,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 			Serial.println(i+1);
 
 			//Mark that notch adjustment should be skipped for this
-			notchStatus[i] = 3;
+			notchStatus[i] = _tertiaryNotchInactive;
 		}
 	}
 
@@ -1880,6 +1883,19 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	//So we subtract the number of calibration points and switch over to notch adjust order
 	const int notchIndex = _notchAdjOrder[currentStepIn-_noOfCalibrationPoints];
 
+	//display the desired value on the other stick
+	float x = 0;
+	float y = 0;
+	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
+	//calcStickValues(_notchAngleDefaults[notchIndex], &x, &y);
+	if(calibratingAStick){
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
+	}else{
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
+	}
+
 	//do nothing if it's not a valid notch to calibrate
 	if(notchStatus[notchIndex] == 3){
 		return;
@@ -1888,16 +1904,22 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	//Adjust notch angle according to which button is pressed (do nothing for both buttons)
 	if(CW && !CCW){
 		notchAngles[notchIndex] += loopDelta*0.000075;
-	}
-	else if(CCW && !CW){
+	}else if(CCW && !CW){
 		notchAngles[notchIndex] -= loopDelta*0.000075;
+	}else if(reset){
+		notchAngles[notchIndex] = measuredNotchAngles[notchIndex];
+	}else{
+		return;
 	}
 
 	//Limit the notch adjustment
 
 	//Start out with the limits being 12 units around the circle at the gate
-	const float lowerPosLimit = measuredNotchAngles[notchIndex] - 12/100.f;
-	const float upperPosLimit = measuredNotchAngles[notchIndex] + 12/100.f;
+	float lowerPosLimit = measuredNotchAngles[notchIndex] - 12/100.f;
+	float upperPosLimit = measuredNotchAngles[notchIndex] + 12/100.f;
+	if(upperPosLimit < lowerPosLimit){
+		upperPosLimit += 2*M_PI;
+	}
 
 	//Now we need to determine the stretch/compression limit
 	//Figure out the previous and next notch angles.
@@ -1909,34 +1931,31 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 		prevIndex = (notchIndex-2+_noOfNotches) % _noOfNotches;
 		nextIndex = (notchIndex+2) % _noOfNotches;
 	}
-	const float prevAngle = notchAngles[prevIndex];
-	const float nextAngle = notchAngles[nextIndex];
-	const float lowerStretchLimit = max(prevAngle + 0.7*(notchAngles[notchIndex]-prevAngle), nextAngle - 1.3*(nextAngle-notchAngles[notchIndex]));
-	const float upperStretchLimit = min(prevAngle + 1.3*(notchAngles[notchIndex]-prevAngle), nextAngle - 0.7*(nextAngle-notchAngles[notchIndex]));
+	float prevAngle = notchAngles[prevIndex];
+	float nextAngle = notchAngles[nextIndex];
+	if(nextAngle < prevAngle){
+		nextAngle += 2*M_PI;
+	}
+	float lowerStretchLimit = max(prevAngle + 0.7*(notchAngles[notchIndex]-prevAngle), nextAngle - 1.3*(nextAngle-notchAngles[notchIndex]));
+	float upperStretchLimit = min(prevAngle + 1.3*(notchAngles[notchIndex]-prevAngle), nextAngle - 0.7*(nextAngle-notchAngles[notchIndex]));
+	if(upperStretchLimit < lowerStretchLimit){
+		upperStretchLimit += 2*M_PI;
+	}
 
 	//Combine the limits
-	const float lowerLimit = max(lowerStretchLimit, lowerPosLimit);
-	const float upperLimit = max(upperStretchLimit, upperPosLimit);
+	float lowerLimit = max(lowerStretchLimit, lowerPosLimit);
+	float upperLimit = min(upperStretchLimit, upperPosLimit);
+	if(upperLimit < lowerLimit){
+		upperLimit += 2*M_PI;
+	}
 
 	//Apply the limits
 	notchAngles[notchIndex] = max(notchAngles[notchIndex], lowerLimit);
 	notchAngles[notchIndex] = min(notchAngles[notchIndex], upperLimit);
-
-	//display the desired value on the other stick
-	float x = 0;
-	float y = 0;
-	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
-	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + 127.5);
-		btn.Cy = (uint8_t) (y + 127.5);
-	}else{
-		btn.Ax = (uint8_t) (x + 127.5);
-		btn.Ay = (uint8_t) (y + 127.5);
-	}
 }
 //displayNotch is used in lieu of adjustNotch when doing basic calibration
 void displayNotch(const int currentStepIn, const bool calibratingAStick, const float notchAngles[]){
-	const int currentStep = _calOrder[currentStepIn];
+	int currentStep = _calOrder[currentStepIn];
 	//display the desired value on the other stick
 	float x = 0;
 	float y = 0;
@@ -2322,7 +2341,7 @@ void angleOnSphere(const float x, const float y, float& angle){
 	float xx = 1 * sinf(x*_maxStickAngle/100);
 	float z  = 1 * cosf(x*_maxStickAngle/100);
 	float yy = z * sinf(y*_maxStickAngle/100);
-	angle = atan2f(yy, xx);
+	angle = atan2f(xx, yy);
 }
 /*
  * stripCalPoints removes the notches from un-cleaned cal points
