@@ -1005,8 +1005,10 @@ void readButtons(){
 	//Undo Calibration using Z-button
 	if(hardwareZ && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
-		if(_currentCalStep % 2 == 0 && _currentCalStep != 32 && _currentCalStep != 0) {
+		if(_currentCalStep % 2 == 0 && _currentCalStep < 32 && _currentCalStep != 0 ) {
 			_currentCalStep --;
+			_currentCalStep --;
+		} else if(_currentCalStep > 32) {
 			_currentCalStep --;
 		}
 	} else if(!hardwareZ) {
