@@ -1050,13 +1050,15 @@ void readButtons(){
 				//notchCalibrate again
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 			}
+			/*
 			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
 			while(_currentCalStep >= _noOfCalibrationPoints && _cNotchStatus[notchIndex] == _tertiaryNotchInactive && _currentCalStep <= _noOfCalibrationPoints + _noOfAdjNotches){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
 				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
 			}
-			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//two times for collection, one more for adjust
+			*/
+			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
 				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
 				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
@@ -1127,7 +1129,7 @@ void readButtons(){
 				notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
 			}
 			*/
-			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//two times for collection, one more for adjust
+			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
 				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
 				EEPROM.put(_eepromAPointsY,_tempCalPointsY);
