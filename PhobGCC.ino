@@ -2367,6 +2367,7 @@ void stripCalPoints(float calPointsX[], float calPointsY[], float strippedPoints
  * This seems redundant but we're feeding it coordinates without non-diagonal notches
  */
 void transformCalPoints(float xInput[], float yInput[], float xOutput[], float yOutput[], float fitCoeffsX[], float fitCoeffsY[], float affineCoeffs[][6], float boundaryAngles[]){
+	Serial.println("transformed cleaned original calibration points are:");
 	for(int i=0; i < _noOfNotches+1; i++){
 		float xValue = linearize(xInput[i], fitCoeffsX);
 		float yValue = linearize(yInput[i], fitCoeffsY);
@@ -2375,6 +2376,9 @@ void transformCalPoints(float xInput[], float yInput[], float xOutput[], float y
 		notchRemap(xValue, yValue, &outX, &outY, affineCoeffs, boundaryAngles, _noOfNotches);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
+		Serial.print(outX);
+		Serial.print(",");
+		Serial.println(outY);
 	}
 }
 /*
