@@ -1040,6 +1040,12 @@ void readButtons(){
       _safeMode = false;
       freezeSticks();
     }
+    if(hardwareL && hardwareR && btn.A && btn.S) {
+      btn.L = (uint8_t) (1);
+      btn.R = (uint8_t) (1);
+      btn.A = (uint8_t) (1);
+      btn.S = (uint8_t) (1);
+    }
   }
 
 	//Undo Calibration using Z-button
