@@ -1011,6 +1011,21 @@ void readButtons(){
 		} else if(_currentCalStep > 32) {
 			_currentCalStep --;
 		}
+		if(!_calAStick){
+			int notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+			while((_currentCalStep >= _noOfCalibrationPoints) && (_cNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+				//skip to the next valid notch
+				_currentCalStep--;
+				notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+			}
+		} else if(_calAStick){
+			int notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+			while((_currentCalStep >= _noOfCalibrationPoints) && (_aNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+				//skip to the next valid notch
+				_currentCalStep--;
+				notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+			}
+		}
 	} else if(!hardwareZ) {
 		_undoCalPressed = false;
 	}
@@ -1056,11 +1071,11 @@ void readButtons(){
 				//notchCalibrate again
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 			}
-			int notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
+			int notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			while((_currentCalStep >= _noOfCalibrationPoints) && (_cNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
-				notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
+				notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
@@ -1116,11 +1131,11 @@ void readButtons(){
 				//notchCalibrate again
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 			}
-			int notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
+			int notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			while((_currentCalStep >= _noOfCalibrationPoints) && (_aNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
-				notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
+				notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
