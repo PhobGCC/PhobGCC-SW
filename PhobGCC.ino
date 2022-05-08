@@ -12,7 +12,7 @@
 
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
-//#include "src/Phob1_1Teensy3_2.h"
+#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
@@ -1056,7 +1056,7 @@ void readButtons(){
 				//notchCalibrate again
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 			}
-			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			int notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
 			while((_currentCalStep >= _noOfCalibrationPoints) && (_cNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
@@ -1116,7 +1116,7 @@ void readButtons(){
 				//notchCalibrate again
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 			}
-			int notchIndex = _notchAdjOrder[_currentCalStep-_noOfCalibrationPoints];
+			int notchIndex = min(_notchAdjOrder[_currentCalStep-_noOfCalibrationPoints], _noOfAdjNotches-1);//limit this so it doesn't access outside the array bounds
 			while((_currentCalStep >= _noOfCalibrationPoints) && (_aNotchStatus[notchIndex] == _tertiaryNotchInactive) && (_currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				_currentCalStep++;
