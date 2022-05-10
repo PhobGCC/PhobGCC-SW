@@ -997,37 +997,37 @@ void readButtons(){
   if(!_safeMode && (_currentCalStep == -1)) {
     if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
       _safeMode = true;
-      freezeSticks();
+      freezeSticks(4000);
     } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
       resetDefaults();
-      freezeSticks();
+      freezeSticks(2000);
     } else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
       Serial.println("Calibrating the A stick");
   		_calAStick = true;
   		_currentCalStep ++;
   		_advanceCal = true;
-      freezeSticks();
+      freezeSticks(2000);
     } else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
       Serial.println("Calibrating the C stick");
   	  _calAStick = false;
   		_currentCalStep ++;
   		_advanceCal = true;
-      freezeSticks();
+      freezeSticks(2000);
     } else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
       readJumpConfig(true, false);
-      freezeSticks();
+      freezeSticks(2000);
     } else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
       readJumpConfig(false, true);
-      freezeSticks();
+      freezeSticks(2000);
     } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
       readJumpConfig(false, false);
-      freezeSticks();
+      freezeSticks(2000);
     } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
       nextTriggerState(_lConfig, true);
-      freezeSticks();
+      freezeSticks(2000);
     } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
       nextTriggerState(_rConfig, false);
-      freezeSticks();
+      freezeSticks(2000);
     } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
       adjustTriggerOffset(true, true, true);
     } else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
@@ -1070,7 +1070,7 @@ void readButtons(){
   } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
     if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
       _safeMode = false;
-      freezeSticks();
+      freezeSticks(2000);
     }
     if(hardwareL && hardwareR && btn.A && btn.S) {
       btn.L = (uint8_t) (1);
@@ -1300,11 +1300,11 @@ void readButtons(){
 		_advanceCalPressed = false;
 	}
 }
-void freezeSticks() {
-  btn.Cx = (uint8_t) (127.5);
-  btn.Cy = (uint8_t) (127.5);
-  btn.Ax = (uint8_t) (127.5);
-  btn.Ay = (uint8_t) (127.5);
+void freezeSticks(int time) {
+  btn.Cx = (uint8_t) (255);
+  btn.Cy = (uint8_t) (255);
+  btn.Ax = (uint8_t) (255);
+  btn.Ay = (uint8_t) (255);
 
   btn.A = (uint8_t) 0;
   btn.B = (uint8_t) 0;
@@ -1323,7 +1323,7 @@ void freezeSticks() {
 
   int startTime = millis();
   int delta = 0;
-  while(delta < 2000){
+  while(delta < time){
     delta = millis() - startTime;
   }
 }
@@ -1930,7 +1930,7 @@ void communicate(){
 #endif // TEENSY3_2
 /*******************
 	cleanCalPoints
-	take the x and y coordinates and notch angles collected during the calibration procedure, 
+	take the x and y coordinates and notch angles collected during the calibration procedure,
 	and generate the cleaned (non-redundant) x and y stick coordinates and the corresponding x and y notch coordinates
 *******************/
 void cleanCalPoints(const float calPointsX[], const float calPointsY[], const float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[], int notchStatus[]){
