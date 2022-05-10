@@ -26,6 +26,7 @@ int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
 int _lConfig = 0;
 int _rConfig = 0;
+int _triggerDefault = 0;
 int _lTrigger = 0;
 int _rTrigger = 1;
 bool _changeTrigger = true;
@@ -33,6 +34,10 @@ int _cXOffset = 0;
 int _cYOffset = 0;
 int _cMax = 127;
 int _cMin = -127;
+int _LTriggerOffset = 49;
+int _RTriggerOffset = 49;
+int _triggerMin = 49;
+int _triggerMax = 255;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -171,6 +176,8 @@ const int _eepromcXOffset = _eepromRToggle+_bytesPerFloat;
 const int _eepromcYOffset = _eepromcXOffset+_bytesPerFloat;
 const int _eepromxSmoothing = _eepromcYOffset+_bytesPerFloat;
 const int _eepromySmoothing = _eepromxSmoothing+_bytesPerFloat;
+const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
+const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -220,6 +227,8 @@ union Buttons{
 	};
 }btn;
 
+uint8_t hardwareL;
+uint8_t hardwareR;
 uint8_t hardwareZ;
 uint8_t hardwareX;
 uint8_t hardwareY;
@@ -667,16 +676,14 @@ void readEEPROM(){
 	//get the L setting
 	EEPROM.get(_eepromLToggle, _lConfig);
 	if(std::isnan(_lConfig)) {
-		_lConfig = 0;
+		_lConfig = _triggerDefault;
 	}
-	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
 	if(std::isnan(_rConfig)) {
-		_rConfig = 0;
+		_rConfig = _triggerDefault;
 	}
-	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
   //get the C-stick X offset
   EEPROM.get(_eepromcXOffset, _cXOffset);
@@ -763,6 +770,29 @@ void readEEPROM(){
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
+  //get the L-trigger Offset value
+  EEPROM.get(_eepromLOffset, _LTriggerOffset);
+  if(std::isnan(_LTriggerOffset)){
+    _LTriggerOffset = _triggerMin;
+  }
+  if(_LTriggerOffset > _triggerMax) {
+    _LTriggerOffset = _triggerMax;
+  } else if(_LTriggerOffset < _triggerMin) {
+    _LTriggerOffset = _triggerMin;
+  }
+
+  //get the R-trigger Offset value
+  EEPROM.get(_eepromROffset, _RTriggerOffset);
+  if(std::isnan(_RTriggerOffset)){
+    _RTriggerOffset = _triggerMin;
+  }
+  if(_RTriggerOffset > _triggerMax) {
+    _RTriggerOffset = _triggerMax;
+  } else if(_RTriggerOffset < _triggerMin) {
+    _RTriggerOffset = _triggerMin;
+  }
+
+
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
@@ -792,12 +822,10 @@ void resetDefaults(){
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
-	_lConfig = 0;
-	_rConfig = 0;
+	_lConfig = _triggerDefault;
+	_rConfig = _triggerDefault;
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
-	setLRToggle(_lTrigger, _lConfig, !_changeTrigger);
-	setLRToggle(_rTrigger, _rConfig, !_changeTrigger);
 
   _cXOffset = 0;
   _cYOffset = 0;
@@ -815,6 +843,11 @@ void resetDefaults(){
   EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
+
+  _LTriggerOffset = _triggerMin;
+  _RTriggerOffset = _triggerMin;
+  EEPROM.put(_eepromLOffset, _LTriggerOffset);
+  EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -887,13 +920,41 @@ void readButtons(){
 	btn.Y = !digitalRead(_pinYSwappable);
 	btn.Z = !digitalRead(_pinZSwappable);
 	btn.S = !digitalRead(_pinS);
-	btn.L = !digitalRead(_pinL);
-	btn.R = !digitalRead(_pinR);
 	btn.Du = !digitalRead(_pinDu);
 	btn.Dd = !digitalRead(_pinDd);
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
+  switch(_lConfig) {
+    case 0: //Default Trigger state
+      btn.L = !digitalRead(_pinL);
+      break;
+    case 1: //Digital Only Trigger state
+      btn.L = !digitalRead(_pinL);
+      break;
+    case 2: //Analog Only Trigger state
+      btn.L = (uint8_t) 0;
+      break;
+    default:
+      btn.L = !digitalRead(_pinL);
+  }
+
+  switch(_rConfig) {
+    case 0: //Default Trigger state
+      btn.R = !digitalRead(_pinR);
+      break;
+    case 1: //Digital Only Trigger state
+      btn.R = !digitalRead(_pinR);
+      break;
+    case 2: //Analog Only Trigger state
+      btn.R = (uint8_t) 0;
+      break;
+    default:
+      btn.R = !digitalRead(_pinR);
+  }
+
+  hardwareL = !digitalRead(_pinL);
+  hardwareR = !digitalRead(_pinR);
   hardwareZ = !digitalRead(_pinZ);
   hardwareX = !digitalRead(_pinX);
   hardwareY = !digitalRead(_pinY);
@@ -919,6 +980,8 @@ void readButtons(){
   * Reset Z-Jump:  AXY+Z
   * Toggle Analog Slider L:  ZL+Start
   * Toggle Analog Slider R: ZR+Start
+  * Increase/Decrease L-trigger Offset: ZL+Du/Dd
+  * Increase/Decrease R-Trigger Offset:  ZR+Du/Dd
   * Increase/Decrease C-stick Offset on X:  LX+Du/Dd
   * Increase/Decrease C-stick Offset on X:  LY+Du/Dd
   * Show Current C-stick Offset:  LA+Dd
@@ -938,13 +1001,13 @@ void readButtons(){
     } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
       resetDefaults();
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.L) { //Analog Calibration
+    } else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
       Serial.println("Calibrating the A stick");
   		_calAStick = true;
   		_currentCalStep ++;
   		_advanceCal = true;
       freezeSticks();
-    } else if (btn.A && hardwareX && hardwareY && btn.R) { //C-stick Calibration
+    } else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
       Serial.println("Calibrating the C stick");
   	  _calAStick = false;
   		_currentCalStep ++;
@@ -959,31 +1022,39 @@ void readButtons(){
     } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
       readJumpConfig(false, false);
       freezeSticks();
-    } else if(btn.L && hardwareZ && btn.S) { //Toggle Analog L
-      setLRToggle(_lTrigger, 0, _changeTrigger);
+    } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
+      nextTriggerState(_lConfig, true);
       freezeSticks();
-    } else if(btn.R && hardwareZ && btn.S) { //Toggle Analog R
-      setLRToggle(_rTrigger, 0, _changeTrigger);
+    } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
+      nextTriggerState(_rConfig, false);
       freezeSticks();
-    } else if(hardwareX && btn.L && btn.Du) { //Increase C-stick X Offset
+    } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
+      adjustTriggerOffset(true, true, true);
+    } else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
+      adjustTriggerOffset(true, true, false);
+    } else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
+      adjustTriggerOffset(true, false, true);
+    } else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
+      adjustTriggerOffset(true, false, false);
+    } else if(hardwareX && hardwareL && btn.Du) { //Increase C-stick X Offset
       adjustCstick(true, true, true);
-    } else if(hardwareX && btn.L && btn.Dd) { //Decrease C-stick X Offset
+    } else if(hardwareX && hardwareL && btn.Dd) { //Decrease C-stick X Offset
       adjustCstick(true, true, false);
-    } else if(hardwareY && btn.L && btn.Du) { //Increase C-stick Y Offset
+    } else if(hardwareY && hardwareL && btn.Du) { //Increase C-stick Y Offset
       adjustCstick(true, false, true);
-    } else if(hardwareY && btn.L && btn.Dd) { //Decrease C-stick Y Offset
+    } else if(hardwareY && hardwareL && btn.Dd) { //Decrease C-stick Y Offset
       adjustCstick(true, false, false);
-    } else if(btn.A && btn.L && btn.Dd) { //Show Current C-stick Offset
+    } else if(btn.A && hardwareL && btn.Dd) { //Show Current C-stick Offset
       adjustCstick(false, false, false);
-    } else if(btn.R && hardwareX && btn.Du) { //Increase X-axis Delay
+    } else if(hardwareR && hardwareX && btn.Du) { //Increase X-axis Delay
       adjustSmoothing(true, true, true);
-    } else if(btn.R && hardwareX && btn.Dd) { //Decrease X-axis Delay
+    } else if(hardwareR && hardwareX && btn.Dd) { //Decrease X-axis Delay
       adjustSmoothing(true, true, false);
-    } else if(btn.R && hardwareY && btn.Du) { //Increase Y-axis Delay
+    } else if(hardwareR && hardwareY && btn.Du) { //Increase Y-axis Delay
       adjustSmoothing(true, false, true);
-    } else if(btn.R && hardwareY && btn.Dd) { //Decrease Y-axis Delay
+    } else if(hardwareR && hardwareY && btn.Dd) { //Decrease Y-axis Delay
       adjustSmoothing(true, false, false);
-    } else if(btn.R && btn.A && btn.Dd) { //Show Current Delay
+    } else if(hardwareR && btn.A && btn.Dd) { //Show Current Delay
       adjustSmoothing(false, false, false);
     } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
       adjustSnapback(true, true, true);
@@ -1000,6 +1071,12 @@ void readButtons(){
     if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
       _safeMode = false;
       freezeSticks();
+    }
+    if(hardwareL && hardwareR && btn.A && btn.S) {
+      btn.L = (uint8_t) (1);
+      btn.R = (uint8_t) (1);
+      btn.A = (uint8_t) (1);
+      btn.S = (uint8_t) (1);
     }
   }
 
@@ -1098,7 +1175,7 @@ void readButtons(){
 	}
 
 	//Advance Calibration Using L or R triggers
-	if((btn.L || btn.R) && _advanceCal && !_advanceCalPressed){
+	if((hardwareL || hardwareR) && _advanceCal && !_advanceCalPressed){
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			if(_currentCalStep < _noOfCalibrationPoints){//still collecting points
@@ -1219,7 +1296,7 @@ void readButtons(){
 				_advanceCal = false;
 			}
 		}
-	} else if(!(btn.L || btn.R)) {
+	} else if(!(hardwareL || hardwareR)) {
 		_advanceCalPressed = false;
 	}
 }
@@ -1238,10 +1315,12 @@ void freezeSticks() {
   btn.Z = (uint8_t) 0;
   btn.S = (uint8_t) 0;
 
+  hardwareL = (uint8_t) 0;
+  hardwareR = (uint8_t) 0;
   hardwareX = (uint8_t) 0;
   hardwareY = (uint8_t) 0;
   hardwareZ = (uint8_t) 0;
-  
+
   int startTime = millis();
   int delta = 0;
   while(delta < 2000){
@@ -1402,6 +1481,41 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
     delta = millis() - startTime;
   }
 }
+void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
+  if(_lTrigger && _increase && _change) {
+    _LTriggerOffset++;
+    if(_LTriggerOffset > _triggerMax) {
+      _LTriggerOffset = _triggerMax;
+    }
+  } else if(_lTrigger && !_increase && _change) {
+    _LTriggerOffset--;
+    if(_LTriggerOffset < _triggerMin) {
+      _LTriggerOffset = _triggerMin;
+    }
+  } else if(!_lTrigger && _increase && _change) {
+    _RTriggerOffset++;
+    if(_RTriggerOffset > _triggerMax) {
+      _RTriggerOffset = _triggerMax;
+    }
+  } else if(!_lTrigger && !_increase && _change) {
+    _RTriggerOffset--;
+    if(_RTriggerOffset < _triggerMin) {
+      _RTriggerOffset = _triggerMin;
+    }
+  }
+
+  EEPROM.put(_eepromLOffset, _LTriggerOffset);
+  EEPROM.put(_eepromROffset, _RTriggerOffset);
+
+  btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+  btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
 void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
 	if(_swapXZ){
@@ -1437,39 +1551,22 @@ void setJump(int jumpConfig){
 				_pinYSwappable = _pinY;
 	}
 }
-/*
-* setLRToggle handles the current state of the L and R Triggers and whether or not they should be enabled or not.
-* int targetTrigger handles identifying the trigger, L = 0  and R = 1.
-* if it is 0, it should read out an actual analog value. If it is 1, it shouldn't.
-* config handles incoming values from the EEPROM. takes the state and sets it.
-* changeTrigger handles whether or not the current configuration of the targetTrigger should be swapped or not.
-*/
-void setLRToggle(int targetTrigger, int config, bool changeTrigger) {
-	if(changeTrigger) {
-		if(targetTrigger == _lTrigger) {
-			if(_lConfig == 0) {
-				_lConfig = 1;
-			} else {
-				_lConfig = 0;
-			}
-			EEPROM.put(_eepromLToggle, _lConfig);
-		} else {
-			if(_rConfig == 0) {
-				_rConfig = 1;
-			} else {
-				_rConfig = 0;
-			}
-			EEPROM.put(_eepromRToggle, _rConfig);
-		}
-	} else {
-		if(targetTrigger == _lTrigger) {
-			_lConfig = config;
-			EEPROM.put(_eepromLToggle, _lConfig);
-		} else {
-			_rConfig = config;
-			EEPROM.put(_eepromRToggle, _rConfig);
-		}
-	}
+void nextTriggerState(int _currentConfig, bool _lTrigger) {
+  if(_lTrigger) {
+    if(_currentConfig == 2) {
+      _lConfig = 0;
+    } else {
+      _lConfig = _currentConfig + 1;
+    }
+} else {
+  if(_currentConfig == 2) {
+    _rConfig = 0;
+  } else {
+    _rConfig = _currentConfig + 1;
+  }
+}
+  EEPROM.put(_eepromLToggle, _lConfig);
+  EEPROM.put(_eepromRToggle, _rConfig);
 }
 void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
@@ -1483,17 +1580,33 @@ void readSticks(int readA, int readC, int running){
 
 
 	//read the L and R sliders
-	if(_lConfig == 0) {
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	} else {
-			btn.La = (uint8_t) 0;
-	}
+  switch(_lConfig) {
+    case 0: //Default Trigger state
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+      break;
+    case 1: //Digital Only Trigger state
+      btn.La = (uint8_t) 0;
+      break;
+    case 2: //Analog Only Trigger state
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+      break;
+    default:
+      btn.La = adc->adc0->analogRead(_pinLa)>>4;
+  }
 
-	if(_rConfig == 0) {
-		btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-	} else {
-			btn.Ra = (uint8_t) 0;
-	}
+  switch(_rConfig) {
+    case 0: //Default Trigger state
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+      break;
+    case 1: //Digital Only Trigger state
+      btn.Ra = (uint8_t) 0;
+      break;
+    case 2: //Analog Only Trigger state
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+      break;
+    default:
+      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+  }
 
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
