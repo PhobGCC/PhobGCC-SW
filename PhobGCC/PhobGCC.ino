@@ -1663,6 +1663,12 @@ void readSticks(int readA, int readC, int running){
 	notchRemap(posAx, posAy, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
 	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
+	//Clamp values from -125 to +125
+	posAx = min(125, max(-125, posAx));
+	posAy = min(125, max(-125, posAy));
+	posCx = min(125, max(-125, posCx));
+	posCy = min(125, max(-125, posCy));
+
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(_running){
