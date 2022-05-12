@@ -46,41 +46,45 @@ float _velDampMin = 0.125;
 float _velDampMax = .5;
 
 // Values used for dealing with X/Y Smoothing in the CarVac Filter, for ledge-dashing
+// also used for C-stick snapback filtering
 
 float _smoothingMin = 0.0;
 float _smoothingMax = 0.9;
 
 //New snapback Kalman filter parameters.
 struct FilterGains {
-    //What's the max stick distance from the center
-    float maxStick;
-    //filtered velocity terms
-    //how fast the filtered velocity falls off in the absence of stick movement.
-    //Probably don't touch this.
-    float xVelDecay;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
-    float yVelDecay;
-    //how much the current position disagreement impacts the filtered velocity.
-    //Probably don't touch this.
-    float xVelPosFactor;//0.01 default for 1.2ms timesteps, larger for bigger timesteps
-    float yVelPosFactor;
-    //how much to ignore filtered velocity when computing the new stick position.
-    //DO CHANGE THIS
-    //Higher gives shorter rise times and slower fall times (more pode, less snapback)
-    float xVelDamp;//0.125 default for 1.2ms timesteps, smaller for bigger timesteps
-    float yVelDamp;
-    //speed and accel thresholds below which we try to follow the stick better
-    //These may need tweaking according to how noisy the signal is
-    //If it's noisier, we may need to add additional filtering
-    //If the timesteps are *really small* then it may need to be increased to get
-    //  above the noise floor. Or some combination of filtering and playing with
-    //  the thresholds.
-    float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
-    float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
-    //This just applies a low-pass filter.
-    //The purpose is to provide delay for single-axis ledgedashes.
-    //Must be between 0 and 1. Larger = more smoothing and delay.
-    float xSmoothing;
-    float ySmoothing;
+	//What's the max stick distance from the center
+	float maxStick;
+	//filtered velocity terms
+	//how fast the filtered velocity falls off in the absence of stick movement.
+	//Probably don't touch this.
+	float xVelDecay;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
+	float yVelDecay;
+	//how much the current position disagreement impacts the filtered velocity.
+	//Probably don't touch this.
+	float xVelPosFactor;//0.01 default for 1.2ms timesteps, larger for bigger timesteps
+	float yVelPosFactor;
+	//how much to ignore filtered velocity when computing the new stick position.
+	//DO CHANGE THIS
+	//Higher gives shorter rise times and slower fall times (more pode, less snapback)
+	float xVelDamp;//0.125 default for 1.2ms timesteps, smaller for bigger timesteps
+	float yVelDamp;
+	//speed and accel thresholds below which we try to follow the stick better
+	//These may need tweaking according to how noisy the signal is
+	//If it's noisier, we may need to add additional filtering
+	//If the timesteps are *really small* then it may need to be increased to get
+	//  above the noise floor. Or some combination of filtering and playing with
+	//  the thresholds.
+	float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
+	float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
+	//This just applies a low-pass filter.
+	//The purpose is to provide delay for single-axis ledgedashes.
+	//Must be between 0 and 1. Larger = more smoothing and delay.
+	float xSmoothing;
+	float ySmoothing;
+	//Same thing but for C-stick
+	float cXSmoothing;
+	float cYSmoothing;
 };
 FilterGains _gains {//these values are actually timestep-compensated for in runKalman
     .maxStick = 100,
@@ -93,7 +97,9 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .velThresh = 1.00,
     .accelThresh = 3.00,
     .xSmoothing = 0.0,
-    .ySmoothing = 0.0
+    .ySmoothing = 0.0,
+    .cXSmoothing = 0.0,
+    .cYSmoothing = 0.0
 };
 FilterGains _g;//this gets filled by recomputeGains();
 
@@ -178,6 +184,8 @@ const int _eepromxSmoothing = _eepromcYOffset+_bytesPerFloat;
 const int _eepromySmoothing = _eepromxSmoothing+_bytesPerFloat;
 const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
 const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
+const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
+const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -264,6 +272,9 @@ float _xVel;
 float _yVel;
 float _xVelFilt;
 float _yVelFilt;
+//simple low pass filter state variable for c-stick
+float _cXPos;
+float _cYPos;
 
 #ifdef TEENSY3_2
 #define CMD_LENGTH_SHORT 5
@@ -374,8 +385,8 @@ volatile char _pollResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-    Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
-    //Serial.println("This is not a stable version");
+    //Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
+    Serial.println("This is not a stable version");
     delay(1000);
 
 	readEEPROM();
@@ -403,6 +414,8 @@ void setup() {
     _yVel = 0;
     _xVelFilt = 0;
     _yVelFilt = 0;
+    _cXPos = 0;
+    _cYPos = 0;
 
 	_lastMicros = micros();
 
@@ -767,6 +780,36 @@ void readEEPROM(){
     _gains.ySmoothing = _smoothingMin;
   }
 
+  //get the c-stick x-axis smoothing value
+  EEPROM.get(_eepromCxSmoothing, _gains.cXSmoothing);
+  Serial.print("the cXSmoothing value from eeprom is:");
+  Serial.println(_gains.cXSmoothing);
+  if(std::isnan(_gains.cXSmoothing)){
+    _gains.cXSmoothing = _smoothingMin;
+    Serial.print("the cXSmoothing value was adjusted to:");
+    Serial.println(_gains.cXSmoothing);
+  }
+  if(_gains.cXSmoothing > _smoothingMax) {
+    _gains.cXSmoothing = _smoothingMax;
+  } else if(_gains.cXSmoothing < _smoothingMin) {
+    _gains.cXSmoothing = _smoothingMin;
+  }
+
+  //get the c-stick y-axis smoothing value
+  EEPROM.get(_eepromCySmoothing, _gains.cYSmoothing);
+  Serial.print("the cYSmoothing value from eeprom is:");
+  Serial.println(_gains.cYSmoothing);
+  if(std::isnan(_gains.cYSmoothing)){
+    _gains.cYSmoothing = _smoothingMin;
+    Serial.print("the cYSmoothing value was adjusted to:");
+    Serial.println(_gains.cYSmoothing);
+  }
+  if(_gains.cYSmoothing > _smoothingMax) {
+    _gains.cYSmoothing = _smoothingMax;
+  } else if(_gains.cYSmoothing < _smoothingMin) {
+    _gains.cYSmoothing = _smoothingMin;
+  }
+
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
@@ -841,6 +884,11 @@ void resetDefaults(){
   EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
   _gains.ySmoothing = _smoothingMin;
   EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+
+  _gains.cXSmoothing = _smoothingMin;
+  EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+  _gains.cYSmoothing = _smoothingMin;
+  EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
@@ -925,39 +973,39 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
-  switch(_lConfig) {
-    case 0: //Default Trigger state
-      btn.L = !digitalRead(_pinL);
-      break;
-    case 1: //Digital Only Trigger state
-      btn.L = !digitalRead(_pinL);
-      break;
-    case 2: //Analog Only Trigger state
-      btn.L = (uint8_t) 0;
-      break;
-    default:
-      btn.L = !digitalRead(_pinL);
-  }
+	switch(_lConfig) {
+		case 0: //Default Trigger state
+			btn.L = !digitalRead(_pinL);
+			break;
+		case 1: //Digital Only Trigger state
+			btn.L = !digitalRead(_pinL);
+			break;
+		case 2: //Analog Only Trigger state
+			btn.L = (uint8_t) 0;
+			break;
+		default:
+			btn.L = !digitalRead(_pinL);
+	}
 
-  switch(_rConfig) {
-    case 0: //Default Trigger state
-      btn.R = !digitalRead(_pinR);
-      break;
-    case 1: //Digital Only Trigger state
-      btn.R = !digitalRead(_pinR);
-      break;
-    case 2: //Analog Only Trigger state
-      btn.R = (uint8_t) 0;
-      break;
-    default:
-      btn.R = !digitalRead(_pinR);
-  }
+	switch(_rConfig) {
+		case 0: //Default Trigger state
+			btn.R = !digitalRead(_pinR);
+			break;
+		case 1: //Digital Only Trigger state
+			btn.R = !digitalRead(_pinR);
+			break;
+		case 2: //Analog Only Trigger state
+			btn.R = (uint8_t) 0;
+			break;
+		default:
+			btn.R = !digitalRead(_pinR);
+	}
 
-  hardwareL = !digitalRead(_pinL);
-  hardwareR = !digitalRead(_pinR);
-  hardwareZ = !digitalRead(_pinZ);
-  hardwareX = !digitalRead(_pinX);
-  hardwareY = !digitalRead(_pinY);
+	hardwareL = !digitalRead(_pinL);
+	hardwareR = !digitalRead(_pinR);
+	hardwareZ = !digitalRead(_pinZ);
+	hardwareX = !digitalRead(_pinX);
+	hardwareY = !digitalRead(_pinY);
 
 	bounceDr.update();
 	bounceDu.update();
@@ -965,120 +1013,135 @@ void readButtons(){
 	bounceDd.update();
 
 
-  /* Current Commands List
-  * Safe Mode:  AXY+Start
-  * Hard Reset:  ABZ+Start
-  * Analog Calibration:  AXY+L
-  * C-stick Calibration: AXY+R
-  * Advance Calibration:  L or R
-  * Undo Calibration:  Z
-  * Skip to Notch Adjustment: Start
-  * Notch Adjustment CW/CCW:  X/Y
-  * Notch Adjustment Reset: B
-  * Swap X with Z:  XZ+Start
-  * Swap Y with Z:  YZ+Start
-  * Reset Z-Jump:  AXY+Z
-  * Toggle Analog Slider L:  ZL+Start
-  * Toggle Analog Slider R: ZR+Start
-  * Increase/Decrease L-trigger Offset: ZL+Du/Dd
-  * Increase/Decrease R-Trigger Offset:  ZR+Du/Dd
-  * Increase/Decrease C-stick Offset on X:  LX+Du/Dd
-  * Increase/Decrease C-stick Offset on X:  LY+Du/Dd
-  * Show Current C-stick Offset:  LA+Dd
-  * Increase/Decrease Analog X Delay:  RX+Du/Dd
-  * Increase/Decrease Analog Y Delay:  RY+Du/Dd
-  * Show Analog Delay:  RA+Dd
-  * Increase/Decrease Snapback Fitering on X:  ZX+Du/Dd
-  * Increase/Decrease Snapback Fitering on Y:  ZY+Du/Dd
-  * Show Current Snapback Setting:  ZA+Dd
-  */
+	/* Current Commands List
+	* Safe Mode:  AXY+Start
+	* Hard Reset:  ABZ+Start
+	* Rumble Toggle: 
+	*
+	* Calibration
+	* Analog Stick Calibration:  AXY+L
+	* C-Stick Calibration:  AXY+R
+	* Advance Calibration:  L or R
+	* Undo Calibration:  Z
+	* Skip to Notch Adjustment:  Start
+	* Notch Adjustment CW/CCW:  X/Y
+	* Notch Adjustment Reset:  B
+	*
+	* Analog Stick Configuration:
+	* Increase/Decrease X-Axis Snapback Filtering:  LX+Du/Dd
+	* Increase/Decrease Y-Axis Snapback Filtering:  LY+Du/Dd
+	* Increase/Decrease X-Axis Delay:  LA+Du/Dd
+	* Increase/Decrease Y-Axis Delay:  LB+Du/Dd
+	* Show Filtering and Axis Delay:  LStart+Dd
+	*
+	* C-Stick Configuration
+	* Increase/Decrease X-Axis Snapback Filtering:  RX+Du/Dd
+	* Increase/Decrease Y-Axis Snapback Filtering:  RY+Du/Dd
+	* Increase/Decrease X-Axis Offset:  RA+Du/Dd
+	* Increase/Decrease Y-Axis Offset:  RB+Du/Dd
+	* Show Filtering and Axis Offset:  RStart+Dd
+	*
+	* Swap X with Z:  XZ+Start
+	* Swap Y with Z:  YZ+Start
+	* Reset Z-Jump:  AXY+Z
+	* Toggle Analog Slider L:  ZL+Start
+	* Toggle Analog Slider R:  ZR+Start
+	* Increase/Decrease L-trigger Offset:  ZL+Du/Dd
+	* Increase/Decrease R-Trigger Offset:  ZR+Du/Dd
+	*/
 
 	//check the dpad buttons to change the controller settings
-  if(!_safeMode && (_currentCalStep == -1)) {
-    if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
-      _safeMode = true;
-      freezeSticks(4000);
-    } else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
-      resetDefaults();
-      freezeSticks(2000);
-    } else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
-      Serial.println("Calibrating the A stick");
-  		_calAStick = true;
-  		_currentCalStep ++;
-  		_advanceCal = true;
-      freezeSticks(2000);
-    } else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
-      Serial.println("Calibrating the C stick");
-  	  _calAStick = false;
-  		_currentCalStep ++;
-  		_advanceCal = true;
-      freezeSticks(2000);
-    } else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
-      readJumpConfig(true, false);
-      freezeSticks(2000);
-    } else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
-      readJumpConfig(false, true);
-      freezeSticks(2000);
-    } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
-      readJumpConfig(false, false);
-      freezeSticks(2000);
-    } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
-      nextTriggerState(_lConfig, true);
-      freezeSticks(2000);
-    } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
-      nextTriggerState(_rConfig, false);
-      freezeSticks(2000);
-    } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
-      adjustTriggerOffset(true, true, true);
-    } else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
-      adjustTriggerOffset(true, true, false);
-    } else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
-      adjustTriggerOffset(true, false, true);
-    } else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
-      adjustTriggerOffset(true, false, false);
-    } else if(hardwareX && hardwareL && btn.Du) { //Increase C-stick X Offset
-      adjustCstick(true, true, true);
-    } else if(hardwareX && hardwareL && btn.Dd) { //Decrease C-stick X Offset
-      adjustCstick(true, true, false);
-    } else if(hardwareY && hardwareL && btn.Du) { //Increase C-stick Y Offset
-      adjustCstick(true, false, true);
-    } else if(hardwareY && hardwareL && btn.Dd) { //Decrease C-stick Y Offset
-      adjustCstick(true, false, false);
-    } else if(btn.A && hardwareL && btn.Dd) { //Show Current C-stick Offset
-      adjustCstick(false, false, false);
-    } else if(hardwareR && hardwareX && btn.Du) { //Increase X-axis Delay
-      adjustSmoothing(true, true, true);
-    } else if(hardwareR && hardwareX && btn.Dd) { //Decrease X-axis Delay
-      adjustSmoothing(true, true, false);
-    } else if(hardwareR && hardwareY && btn.Du) { //Increase Y-axis Delay
-      adjustSmoothing(true, false, true);
-    } else if(hardwareR && hardwareY && btn.Dd) { //Decrease Y-axis Delay
-      adjustSmoothing(true, false, false);
-    } else if(hardwareR && btn.A && btn.Dd) { //Show Current Delay
-      adjustSmoothing(false, false, false);
-    } else if(hardwareX && hardwareZ && btn.Du) { //Increase Snapback X-Filtering
-      adjustSnapback(true, true, true);
-    } else if(hardwareX && hardwareZ && btn.Dd) { //Decrease Snapback X-Filtering
-      adjustSnapback(true, true, false);
-    } else if(hardwareY && hardwareZ && btn.Du) { //Increase Snapback Y-Filtering
-      adjustSnapback(true, false, true);
-    } else if(hardwareY && hardwareZ && btn.Dd) { //Decrease Snapback Y-Filtering
-      adjustSnapback(true, false, false);
-    } else if(btn.A && hardwareZ && btn.Dd) { //Show Current Snapback Filtering
-      adjustSnapback(false, false, false);
-    }
-  } else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
-    if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
-      _safeMode = false;
-      freezeSticks(2000);
-    }
-    if(hardwareL && hardwareR && btn.A && btn.S) {
-      btn.L = (uint8_t) (1);
-      btn.R = (uint8_t) (1);
-      btn.A = (uint8_t) (1);
-      btn.S = (uint8_t) (1);
-    }
-  }
+	if(!_safeMode && (_currentCalStep == -1)) {
+		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+			_safeMode = true;
+			freezeSticks(4000);
+		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
+			resetDefaults();
+			freezeSticks(2000);
+		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
+			Serial.println("Calibrating the A stick");
+			_calAStick = true;
+			_currentCalStep ++;
+			_advanceCal = true;
+			freezeSticks(2000);
+		} else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
+			Serial.println("Calibrating the C stick");
+			_calAStick = false;
+			_currentCalStep ++;
+			_advanceCal = true;
+			freezeSticks(2000);
+		} else if(hardwareL && hardwareX && btn.Du) { //Increase Analog X-Axis Snapback Filtering
+			adjustSnapback(true, true, true);
+		} else if(hardwareL && hardwareX && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
+			adjustSnapback(true, true, false);
+		} else if(hardwareL && hardwareY && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
+			adjustSnapback(true, false, true);
+		} else if(hardwareL && hardwareY && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+			adjustSnapback(true, false, false);
+		} else if(hardwareL && btn.A && btn.Du) { //Increase X-axis Delay
+			adjustSmoothing(true, true, true);
+		} else if(hardwareL && btn.A && btn.Dd) { //Decrease X-axis Delay
+			adjustSmoothing(true, true, false);
+		} else if(hardwareL && btn.B && btn.Du) { //Increase Y-axis Delay
+			adjustSmoothing(true, false, true);
+		} else if(hardwareL && btn.B && btn.Dd) { //Decrease Y-axis Delay
+			adjustSmoothing(true, false, false);
+		} else if(hardwareL && btn.S && btn.Dd) { //Show Current Analog Settings
+			showAstickSettings();
+		} else if(hardwareR && hardwareX && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
+			adjustCstickSmoothing(true, true, true);
+		} else if(hardwareR && hardwareX && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+			adjustCstickSmoothing(true, true, false);
+		} else if(hardwareR && hardwareY && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
+			adjustCstickSmoothing(true, false, true);
+		} else if(hardwareR && hardwareY && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+			adjustCstickSmoothing(true, false, false);
+		} else if(hardwareR && btn.A && btn.Du) { //Increase C-stick X Offset
+			adjustCstickOffset(true, true, true);
+		} else if(hardwareR && btn.A && btn.Dd) { //Decrease C-stick X Offset
+			adjustCstickOffset(true, true, false);
+		} else if(hardwareR && btn.B && btn.Du) { //Increase C-stick Y Offset
+			adjustCstickOffset(true, false, true);
+		} else if(hardwareR && btn.B && btn.Dd) { //Decrease C-stick Y Offset
+			adjustCstickOffset(true, false, false);
+		} else if(hardwareR && btn.S && btn.Dd) { //Show Current C-stick SEttings
+			showCstickSettings();
+		} else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
+			nextTriggerState(_lConfig, true);
+			freezeSticks(2000);
+		} else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
+			nextTriggerState(_rConfig, false);
+			freezeSticks(2000);
+		} else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
+			adjustTriggerOffset(true, true, true);
+		} else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
+			adjustTriggerOffset(true, true, false);
+		} else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
+			adjustTriggerOffset(true, false, true);
+		} else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
+			adjustTriggerOffset(true, false, false);
+		} else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
+			readJumpConfig(true, false);
+			freezeSticks(2000);
+		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
+			readJumpConfig(false, true);
+			freezeSticks(2000);
+		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
+			readJumpConfig(false, false);
+			freezeSticks(2000);
+		}
+	} else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
+		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+			_safeMode = false;
+			freezeSticks(2000);
+		}
+		if(hardwareL && hardwareR && btn.A && btn.S) {
+			btn.L = (uint8_t) (1);
+			btn.R = (uint8_t) (1);
+			btn.A = (uint8_t) (1);
+			btn.S = (uint8_t) (1);
+		}
+	}
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(btn.S && (_currentCalStep >= 0 && _currentCalStep < 32)){
@@ -1366,13 +1429,12 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains();
 
-  float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
-  float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
+	float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
+	float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
 
 	Serial.println("Var display results");
 		Serial.println(xVarDisplay);
 	Serial.println(yVarDisplay);
-
 
 	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
 	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
@@ -1387,51 +1449,6 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 
 	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
 	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
-}
-void adjustCstick(bool _change, bool _xAxis, bool _increase) {
-  Serial.println("Adjusting C-stick Offset");
-  if(_xAxis && _increase && _change) {
-    _cXOffset++;
-    if(_cXOffset > _cMax) {
-      _cXOffset = _cMax;
-    }
-    EEPROM.put(_eepromcXOffset, _cXOffset);
-    Serial.print("X offset increased to:");
-    Serial.println(_cXOffset);
-  } else if(_xAxis && !_increase && _change) {
-    _cXOffset--;
-    if(_cXOffset < _cMin) {
-      _cXOffset = _cMin;
-    }
-    EEPROM.put(_eepromcXOffset, _cXOffset);
-    Serial.print("X offset decreased to:");
-    Serial.println(_cXOffset);
-  } else if(!_xAxis && _increase && _change) {
-    _cYOffset++;
-    if(_cYOffset > _cMax) {
-      _cYOffset = _cMax;
-    }
-    EEPROM.put(_eepromcYOffset, _cYOffset);
-    Serial.print("Y offset increased to:");
-    Serial.println(_cYOffset);
-  } else if(!_xAxis && !_increase && _change) {
-    _cYOffset--;
-    if(_cYOffset < _cMin) {
-      _cYOffset = _cMin;
-    }
-    EEPROM.put(_eepromcYOffset, _cYOffset);
-    Serial.print("Y offset decreased to:");
-    Serial.println(_cYOffset);
-  }
-
-  btn.Cx = (uint8_t) (127.5 + _cXOffset);
-  btn.Cy = (uint8_t) (127.5 + _cYOffset);
-
-  int startTime = millis();
-  int delta = 0;
-  while(delta < 2000){
-    delta = millis() - startTime;
-  }
 }
 void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
   Serial.println("Adjusting Smoothing");
@@ -1480,6 +1497,132 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
   while(delta < 2000){
     delta = millis() - startTime;
   }
+}
+void showAstickSettings() {
+	//Snapback on A-stick
+	float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
+	float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
+
+	btn.Ax = (uint8_t) (xVarDisplay + 127.5);
+	btn.Ay = (uint8_t) (yVarDisplay + 127.5);
+
+	//Smoothing on C-stick
+	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+
+	int startTime = millis();
+	int delta = 0;
+	while(delta < 2000){
+		delta = millis() - startTime;
+	}
+}
+void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase) {
+  Serial.println("Adjusting C-Stick Smoothing");
+  if (_xAxis && _increase && _change) {
+    _gains.cXSmoothing = _gains.cXSmoothing + 0.1;
+    if(_gains.cXSmoothing > _smoothingMax) {
+      _gains.cXSmoothing = _smoothingMax;
+    }
+    EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+    Serial.print("C-Stick X Smoothing increased to:");
+    Serial.println(_gains.cXSmoothing);
+  } else if(_xAxis && !_increase && _change) {
+    _gains.cXSmoothing = _gains.cXSmoothing - 0.1;
+    if(_gains.cXSmoothing < _smoothingMin) {
+      _gains.cXSmoothing = _smoothingMin;
+    }
+    EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+    Serial.print("C-Stick X Smoothing decreased to:");
+    Serial.println(_gains.cXSmoothing);
+  } else if(!_xAxis && _increase && _change) {
+    _gains.cYSmoothing = _gains.cYSmoothing + 0.1;
+    if (_gains.cYSmoothing > _smoothingMax) {
+      _gains.cYSmoothing = _smoothingMax;
+    }
+    EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+    Serial.print("C-Stick Y Smoothing increased to:");
+    Serial.println(_gains.cYSmoothing);
+  } else if(!_xAxis && !_increase && _change) {
+    _gains.cYSmoothing = _gains.cYSmoothing - 0.1;
+    if (_gains.cYSmoothing < _smoothingMin) {
+      _gains.cYSmoothing = _smoothingMin;
+    }
+    EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+    Serial.print("C-Stick Y Smoothing decreased to:");
+    Serial.println(_gains.cYSmoothing);
+  }
+
+  //recompute the intermediate gains used directly by the kalman filter
+  recomputeGains();
+
+  btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+  btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
+
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
+void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
+  Serial.println("Adjusting C-stick Offset");
+  if(_xAxis && _increase && _change) {
+    _cXOffset++;
+    if(_cXOffset > _cMax) {
+      _cXOffset = _cMax;
+    }
+    EEPROM.put(_eepromcXOffset, _cXOffset);
+    Serial.print("X offset increased to:");
+    Serial.println(_cXOffset);
+  } else if(_xAxis && !_increase && _change) {
+    _cXOffset--;
+    if(_cXOffset < _cMin) {
+      _cXOffset = _cMin;
+    }
+    EEPROM.put(_eepromcXOffset, _cXOffset);
+    Serial.print("X offset decreased to:");
+    Serial.println(_cXOffset);
+  } else if(!_xAxis && _increase && _change) {
+    _cYOffset++;
+    if(_cYOffset > _cMax) {
+      _cYOffset = _cMax;
+    }
+    EEPROM.put(_eepromcYOffset, _cYOffset);
+    Serial.print("Y offset increased to:");
+    Serial.println(_cYOffset);
+  } else if(!_xAxis && !_increase && _change) {
+    _cYOffset--;
+    if(_cYOffset < _cMin) {
+      _cYOffset = _cMin;
+    }
+    EEPROM.put(_eepromcYOffset, _cYOffset);
+    Serial.print("Y offset decreased to:");
+    Serial.println(_cYOffset);
+  }
+
+  btn.Cx = (uint8_t) (127.5 + _cXOffset);
+  btn.Cy = (uint8_t) (127.5 + _cYOffset);
+
+  int startTime = millis();
+  int delta = 0;
+  while(delta < 2000){
+    delta = millis() - startTime;
+  }
+}
+void showCstickSettings() {
+	//Snapback/smoothing on A-stick
+	btn.Ax = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+	btn.Ay = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
+
+	//Smoothing on C-stick
+	btn.Cx = (uint8_t) (127.5 + _cXOffset);
+	btn.Cy = (uint8_t) (127.5 + _cYOffset);
+
+	int startTime = millis();
+	int delta = 0;
+	while(delta < 2000){
+		delta = millis() - startTime;
+	}
 }
 void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
   if(_lTrigger && _increase && _change) {
@@ -1643,25 +1786,46 @@ void readSticks(int readA, int readC, int running){
 	xZ = linearize(_aStickX,_aFitCoeffsX);
 	yZ = linearize(_aStickY,_aFitCoeffsY);
 
-  float posCx = linearize(_cStickX,_cFitCoeffsX);
+	float posCx = linearize(_cStickX,_cFitCoeffsX);
 	float posCy = linearize(_cStickY,_cFitCoeffsY);
 
 
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
 
+	//Run a simple low-pass filter on the C-stick
+	float oldCX = _cXPos;
+	float oldCY = _cYPos;
+	_cXPos = posCx;
+	_cYPos = posCy;
+	float xWeight1 = _g.cXSmoothing;
+	float xWeight2 = 1-xWeight1;
+	float yWeight1 = _g.cYSmoothing;
+	float yWeight2 = 1-yWeight1;
+
+	_cXPos = xWeight1*_cXPos + xWeight2*oldCX;
+	_cYPos = yWeight1*_cYPos + yWeight2*oldCY;
+
+	posCx = _cXPos;
+	posCy = _cYPos;
 
 	float posAx = _xPosFilt;
 	float posAy = _yPosFilt;
 
-	    //Run a median filter to reduce noise
+	//Run a median filter to reduce noise
 #ifdef USEMEDIAN
     runMedian(posAx, _xPosList, _xMedianIndex);
     runMedian(posAy, _yPosList, _yMedianIndex);
 #endif
 
-	notchRemap(posAx, posAy, &posAx,  &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
-	notchRemap(posCx,posCy, &posCx,  &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
+	notchRemap(posAx, posAy, &posAx, &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
+	notchRemap(posCx, posCy, &posCx, &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
+
+	//Clamp values from -125 to +125
+	posAx = min(125, max(-125, posAx));
+	posAy = min(125, max(-125, posAy));
+	posCx = min(125, max(-125, posCx+_cXOffset));
+	posCy = min(125, max(-125, posCy+_cYOffset));
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
@@ -1679,11 +1843,11 @@ void readSticks(int readA, int readC, int running){
 		if(readC){
 			float diffCx = (posCx+127.5)-btn.Cx;
 			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (posCx+_cXOffset+127.5);
+				btn.Cx = (uint8_t) (posCx+127.5);
 			}
 			float diffCy = (posCy+127.5)-btn.Cy;
 			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (posCy+_cYOffset+127.5);
+				btn.Cy = (uint8_t) (posCy+127.5);
 			}
 		}
 	}
@@ -2429,6 +2593,8 @@ void recomputeGains(){
     _g.accelThresh   = _g.accelThresh*_g.accelThresh;
     _g.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
     _g.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
+    _g.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
+    _g.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
 }
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
