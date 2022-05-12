@@ -385,8 +385,8 @@ volatile char _pollResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-    Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
-    //Serial.println("This is not a stable version");
+    //Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
+    Serial.println("This is not a stable version");
     delay(1000);
 
 	readEEPROM();
@@ -1037,8 +1037,8 @@ void readButtons(){
 	* C-Stick Configuration
 	* Increase/Decrease X-Axis Snapback Filtering:  RX+Du/Dd
 	* Increase/Decrease Y-Axis Snapback Filtering:  RY+Du/Dd
-	* Increase/Decrease X-Axis Offset:  RX+Du/Dd
-	* Increase/Decrease Y-Axis Offset:  RY+Du/Dd
+	* Increase/Decrease X-Axis Offset:  RA+Du/Dd
+	* Increase/Decrease Y-Axis Offset:  RB+Du/Dd
 	* Show Filtering and Axis Offset:  RStart+Dd
 	*
 	* Swap X with Z:  XZ+Start
