@@ -279,9 +279,9 @@ float _cYPos;
 #ifdef TEENSY3_2
 #define CMD_LENGTH_SHORT 5
 #define CMD_LENGTH_LONG 13
-#define PROBE_LENGTH 13
-#define ORIGIN_LENGTH 41
-#define POLL_LENGTH 33
+#define PROBE_LENGTH 12
+#define ORIGIN_LENGTH 40
+#define POLL_LENGTH 32
 
 ////Serial bitbanging settings
 const int _fastBaud = 1250000;
@@ -297,12 +297,11 @@ const int _fastC4 = _fastDivider & 0x1F;
 const int _slowC4 = _slowDivider & 0x1F;
 volatile int _writeQueue = 0;
 
-const char probeResponse[PROBE_LENGTH] = {
+const char _probeResponse[PROBE_LENGTH] = {
     0x08,0x08,0x0F,0xE8,
     0x08,0x08,0x08,0x08,
-    0x08,0x08,0x08,0xEF,
-    0xFF};
-volatile char pollResponse[POLL_LENGTH] = {
+    0x08,0x08,0x08,0xEF};
+volatile char _commResponse[ORIGIN_LENGTH] = {
     0x08,0x08,0x08,0x08,
     0x0F,0x08,0x08,0x08,
     0xE8,0xEF,0xEF,0xEF,
@@ -311,19 +310,8 @@ volatile char pollResponse[POLL_LENGTH] = {
     0xE8,0xEF,0xEF,0xEF,
     0x08,0xEF,0xEF,0x08,
     0x08,0xEF,0xEF,0x08,
-    0xFF};
-const char originResponse[ORIGIN_LENGTH] = {
-    0x08,0x08,0x08,0x08,
-    0x0F,0x08,0x08,0x08,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0x08,0xEF,0xEF,0x08,
-    0x08,0xEF,0xEF,0x08,
-    0x08,0x08,0x08,0x08,
-    0x08,0x08,0x08,0x08,
-    0xFF};
+		0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0x08};
 
 int cmd[CMD_LENGTH_LONG];
 int cmdByte;
@@ -347,9 +335,9 @@ int _writeQueue = 0;
 uint8_t _cmdByte = 0;
 const int _fastBaud = 2500000;
 const int _slowBaud = 2000000;
-const int _probeLength = 25;
-const int _originLength = 81;
-const int _pollLength = 65;
+const int _probeLength = 24;
+const int _originLength = 80;
+const int _pollLength = 64;
 static char _serialBuffer[128];
 int _errorCount = 0;
 int _reportCount = 0;
@@ -357,9 +345,8 @@ int _reportCount = 0;
 const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
-    0,0,0,0, 0,0,1,1,
-    1};
-const char _originResponse[_originLength] = {
+    0,0,0,0, 0,0,1,1};
+volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,1,1,1,1,1,1,1,
@@ -369,18 +356,7 @@ const char _originResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    1};
-volatile char _pollResponse[_originLength] = {
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    1};
+    0,0,0,0,0,0,0,0};
 #endif // TEENSY4_0
 
 void setup() {
@@ -563,11 +539,11 @@ void commInt() {
 
 			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
 			_writing = true;
-			_bitQueue = _pollLength-1;
+			_bitQueue = _pollLength;
 
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
-				if(_pollResponse[i]){
+				if(_commResponse[i]){
 					//short low period = 1
 					Serial2.write(0b11111100);
 				}
@@ -576,6 +552,8 @@ void commInt() {
 					Serial2.write(0b11000000);
 				}
 			}
+			//write stop bit to indicate end of response
+			Serial2.write(0b11111100);
 		}
 		else{
 			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
@@ -614,7 +592,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				Serial2.begin(2500000);
 				_writing = true;
-				_bitQueue = _probeLength-1;
+				_bitQueue = _probeLength;
 
 				//write the probe response
 				for(int i = 0; i<_probeLength; i++){
@@ -627,6 +605,8 @@ void commInt() {
 						Serial2.write(0b11000000);
 					}
 				}
+				//write stop bit to indicate end of response
+				Serial2.write(0b11111100);
 			}
 			//if the command byte is 01000001 it is an origin command, we will send an origin response
 			else if(_cmdByte == 0b01000001){
@@ -637,11 +617,11 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(2500000);
 				_writing = true;
-				_bitQueue = _originLength-1;
+				_bitQueue = _originLength;
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
-					if(_originResponse[i]){
+					if(_commResponse[i]){
 						//short low period = 1
 						Serial2.write(0b11111100);
 					}
@@ -650,6 +630,8 @@ void commInt() {
 						Serial2.write(0b11000000);
 					}
 				}
+				//write stop bit to indicate end of response
+				Serial2.write(0b11111100);
 			}
 
 			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
@@ -1913,23 +1895,23 @@ void setPole(){
 			int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
 			switch(these2bits){
 				case 0:
-				pollResponse[(i<<2)+j] = 0x08;
+				_commResponse[(i<<2)+j] = 0x08;
 				break;
 				case 1:
-				pollResponse[(i<<2)+j] = 0xE8;
+				_commResponse[(i<<2)+j] = 0xE8;
 				break;
 				case 2:
-				pollResponse[(i<<2)+j] = 0x0F;
+				_commResponse[(i<<2)+j] = 0x0F;
 				break;
 				case 3:
-				pollResponse[(i<<2)+j] = 0xEF;
+				_commResponse[(i<<2)+j] = 0xEF;
 				break;
 			}
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
 		for(int j = 0; j < 8; j++){
-			_pollResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
 		}
 #endif // TEENSY4_0
 	}
@@ -2006,25 +1988,23 @@ void communicate(){
 
 		switch(cmdByte){
 		case 0x00:
-			//digitalWriteFast(12,LOW);
 			timer1.trigger(PROBE_LENGTH*8);
-			//Serial2.write(probeResponse,PROBE_LENGTH);
 			for(int i = 0; i< PROBE_LENGTH; i++){
-				Serial2.write(probeResponse[i]);
+				Serial2.write(_probeResponse[i]);
 			}
+			Serial2.write(0xFF);
 			Serial.println("probe");
-			_writeQueue = 9+(PROBE_LENGTH-1)*2+1;
+			_writeQueue = 9+(PROBE_LENGTH)*2+1;
 			_commStatus = _commWrite;
-			//digitalWriteFast(12,HIGH);
 		break;
 		case 0x41:
 			timer1.trigger(ORIGIN_LENGTH*8);
-			//Serial2.write(originResponse,ORIGIN_LENGTH);
 			for(int i = 0; i< ORIGIN_LENGTH; i++){
-				Serial2.write(originResponse[i]);
+				Serial2.write(_commResponse[i]);
 			}
+			Serial2.write(0xFF);
 			Serial.println("origin");
-			_writeQueue = 9+(ORIGIN_LENGTH-1)*2+1;
+			_writeQueue = 9+(ORIGIN_LENGTH)*2+1;
 			_commStatus = _commWrite;
 		  break;
 		case 0x40:
@@ -2062,12 +2042,14 @@ void communicate(){
 	else if(_commStatus == _commPoll){
 		digitalWriteFast(12,LOW);
 		while(_bitCount<25){}
-		//Serial2.write((const char*)pollResponse,POLL_LENGTH);
+		//Serial2.write((const char*)_commResponse,POLL_LENGTH);
 		for(int i = 0; i< POLL_LENGTH; i++){
-			Serial2.write(pollResponse[i]);
+			Serial2.write(_commResponse[i]);
 		}
+		Serial2.write(0xFF);
+
 		timer1.trigger(135);
-		_writeQueue = 25+(POLL_LENGTH-1)*2+1;
+		_writeQueue = 25+(POLL_LENGTH)*2+1;
 		_commStatus = _commWrite;
 		//digitalWriteFast(12,HIGH);
 	}
