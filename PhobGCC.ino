@@ -13,7 +13,7 @@
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
-#include "src/Phob1_1Teensy4_0.h"
+//#include "src/Phob1_1Teensy4_0.h"
 
 using namespace Eigen;
 
@@ -1035,7 +1035,7 @@ void freezeSticks() {
   hardwareX = (uint8_t) 0;
   hardwareY = (uint8_t) 0;
   hardwareZ = (uint8_t) 0;
-  
+
   int startTime = millis();
   int delta = 0;
   while(delta < 2000){
@@ -1582,7 +1582,7 @@ void communicate(){
 			Serial2.write(_commResponse[i]);
 		}
 		Serial2.write(0xFF);
-		
+
 		timer1.trigger(135);
 		_writeQueue = 25+(POLL_LENGTH)*2+1;
 		_commStatus = _commWrite;
