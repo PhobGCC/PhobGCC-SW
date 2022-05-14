@@ -965,6 +965,12 @@ void readButtons(){
 		case 2: //Analog Only Trigger state
 			btn.L = (uint8_t) 0;
 			break;
+		case 3: //Trigger Plug Emulation state
+			btn.L = !digitalRead(_pinL);
+			break;
+		case 4: //Digital => Analog Value state
+			btn.L = (uint8_t) 0;
+			break;
 		default:
 			btn.L = !digitalRead(_pinL);
 	}
@@ -977,6 +983,12 @@ void readButtons(){
 			btn.R = !digitalRead(_pinR);
 			break;
 		case 2: //Analog Only Trigger state
+			btn.R = (uint8_t) 0;
+			break;
+		case 3: //Trigger Plug Emulation state
+			btn.R = !digitalRead(_pinR);
+			break;
+		case 4: //Digital => Analog Value state
 			btn.R = (uint8_t) 0;
 			break;
 		default:
@@ -998,7 +1010,7 @@ void readButtons(){
 	/* Current Commands List
 	* Safe Mode:  AXY+Start
 	* Hard Reset:  ABZ+Start
-	* Rumble Toggle: 
+	* Rumble Toggle:
 	*
 	* Calibration
 	* Analog Stick Calibration:  AXY+L
@@ -1350,6 +1362,8 @@ void freezeSticks(int time) {
   btn.Cy = (uint8_t) (255);
   btn.Ax = (uint8_t) (255);
   btn.Ay = (uint8_t) (255);
+	btn.La = (uint8_t) (255 + 60.0);
+	btn.Ra = (uint8_t) (255 + 60.0);
 
   btn.A = (uint8_t) 0;
   btn.B = (uint8_t) 0;
@@ -1678,13 +1692,13 @@ void setJump(int jumpConfig){
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
   if(_lTrigger) {
-    if(_currentConfig == 2) {
+    if(_currentConfig == 4) {
       _lConfig = 0;
     } else {
       _lConfig = _currentConfig + 1;
     }
 } else {
-  if(_currentConfig == 2) {
+  if(_currentConfig == 4) {
     _rConfig = 0;
   } else {
     _rConfig = _currentConfig + 1;
@@ -1715,6 +1729,19 @@ void readSticks(int readA, int readC, int running){
     case 2: //Analog Only Trigger state
       btn.La = adc->adc0->analogRead(_pinLa)>>4;
       break;
+		case 3: //Trigger Plug Emulation state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			if (btn.La > (((uint8_t) (_LTriggerOffset)) + 60.0)) {
+				btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+			}
+			break;
+		case 4: //Digital => Analog Value state
+			if(hardwareL) {
+				btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+			} else {
+				btn.La = (uint8_t) 0;
+			}
+			break;
     default:
       btn.La = adc->adc0->analogRead(_pinLa)>>4;
   }
@@ -1729,6 +1756,19 @@ void readSticks(int readA, int readC, int running){
     case 2: //Analog Only Trigger state
       btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
       break;
+		case 3: //Trigger Plug Emulation state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + 60.0)) {
+				btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+			}
+			break;
+			case 4: //Digital => Analog Value state
+				if(hardwareR) {
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
     default:
       btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
   }
