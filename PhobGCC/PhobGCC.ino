@@ -1432,8 +1432,8 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 		Serial.println(xVarDisplay);
 	Serial.println(yVarDisplay);
 
-	btn.Cx = (uint8_t) (xVarDisplay + 128);
-	btn.Cy = (uint8_t) (yVarDisplay + 128);
+	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
+	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
 
 	//setPole();
 
@@ -1485,8 +1485,8 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
-  btn.Cx = (uint8_t) (128 + (_gains.xSmoothing * 10));
-  btn.Cy = (uint8_t) (128 + (_gains.ySmoothing * 10));
+  btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+  btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
   int startTime = millis();
   int delta = 0;
@@ -1499,12 +1499,12 @@ void showAstickSettings() {
 	float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
 	float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
 
-	btn.Ax = (uint8_t) (xVarDisplay + 128);
-	btn.Ay = (uint8_t) (yVarDisplay + 128);
+	btn.Ax = (uint8_t) (xVarDisplay + 127.5);
+	btn.Ay = (uint8_t) (yVarDisplay + 127.5);
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (128 + (_gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (128 + (_gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
 	int startTime = millis();
 	int delta = 0;
@@ -1551,8 +1551,8 @@ void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase) {
   //recompute the intermediate gains used directly by the kalman filter
   recomputeGains();
 
-  btn.Cx = (uint8_t) (128 + (_gains.cXSmoothing * 10));
-  btn.Cy = (uint8_t) (128 + (_gains.cYSmoothing * 10));
+  btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+  btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
   int startTime = millis();
   int delta = 0;
@@ -1596,8 +1596,8 @@ void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
     Serial.println(_cYOffset);
   }
 
-  btn.Cx = (uint8_t) (128 + _cXOffset);
-  btn.Cy = (uint8_t) (128 + _cYOffset);
+  btn.Cx = (uint8_t) (127.5 + _cXOffset);
+  btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
   int startTime = millis();
   int delta = 0;
@@ -1607,12 +1607,12 @@ void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
 }
 void showCstickSettings() {
 	//Snapback/smoothing on A-stick
-	btn.Ax = (uint8_t) (128 + (_gains.cXSmoothing * 10));
-	btn.Ay = (uint8_t) (128 + (_gains.cYSmoothing * 10));
+	btn.Ax = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+	btn.Ay = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (128 + _cXOffset);
-	btn.Cy = (uint8_t) (128 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + _cXOffset);
+	btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
 	int startTime = millis();
 	int delta = 0;
@@ -1646,8 +1646,8 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
   EEPROM.put(_eepromLOffset, _LTriggerOffset);
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
-  btn.Cx = (uint8_t) (128 + _LTriggerOffset);
-  btn.Cy = (uint8_t) (128 + _RTriggerOffset);
+  btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+  btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
 
   int startTime = millis();
   int delta = 0;
@@ -1853,32 +1853,32 @@ void readSticks(int readA, int readC, int running){
 	//assign the remapped values to the button struct
 	if(_running){
 		if(readA){
-			float diffAx = (posAx+128)-btn.Ax;
+			float diffAx = (posAx+127.5)-btn.Ax;
 			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-				btn.Ax = (uint8_t) (posAx+128);
+				btn.Ax = (uint8_t) (posAx+127.5);
 			}
-			float diffAy = (posAy+128)-btn.Ay;
+			float diffAy = (posAy+127.5)-btn.Ay;
 			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-				btn.Ay = (uint8_t) (posAy+128);
+				btn.Ay = (uint8_t) (posAy+127.5);
 			}
 		}
 		if(readC){
-			float diffCx = (posCx+128)-btn.Cx;
+			float diffCx = (posCx+127.5)-btn.Cx;
 			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (posCx+128);
+				btn.Cx = (uint8_t) (posCx+127.5);
 			}
-			float diffCy = (posCy+128)-btn.Cy;
+			float diffCy = (posCy+127.5)-btn.Cy;
 			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (posCy+128);
+				btn.Cy = (uint8_t) (posCy+127.5);
 			}
 		}
 	}
 	else
 	{
-		btn.Ax = 128;
-		btn.Ay = 128;
-		btn.Cx = 128;
-		btn.Cy = 128;
+		btn.Ax = 127.5;//For some reason, this and all other offsets need to be 127.5.
+		btn.Ay = 127.5;//127 or 128 for everything would make sense (probably 128) but then the stick output
+		btn.Cx = 127.5;//doesn't reach the cardinals when doing display output, even though the normal stick position output
+		btn.Cy = 127.5;//does reach the cardinals. It's fucked up.
 	}
 
 	_posALastX = posAx;
@@ -2271,11 +2271,11 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	float y = 0;
 	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
 	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + 128);
-		btn.Cy = (uint8_t) (y + 128);
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
 	}else{
-		btn.Ax = (uint8_t) (x + 128);
-		btn.Ay = (uint8_t) (y + 128);
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
 	}
 
 	//do nothing if it's not a valid notch to calibrate
@@ -2355,11 +2355,11 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 		calcStickValues(notchAngles[notchIndex], &x, &y);
 	}
 	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + 128);
-		btn.Cy = (uint8_t) (y + 128);
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
 	}else{
-		btn.Ax = (uint8_t) (x + 128);
-		btn.Ay = (uint8_t) (y + 128);
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
 	}
 }
 void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[]){
