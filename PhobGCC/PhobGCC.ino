@@ -1853,23 +1853,23 @@ void readSticks(int readA, int readC, int running){
 	//assign the remapped values to the button struct
 	if(_running){
 		if(readA){
-			float diffAx = (posAx+127.5)-btn.Ax;
+			float diffAx = (posAx+127)-btn.Ax;
 			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-				btn.Ax = (uint8_t) (posAx+127.5);
+				btn.Ax = (uint8_t) (posAx+127);
 			}
-			float diffAy = (posAy+127.5)-btn.Ay;
+			float diffAy = (posAy+127)-btn.Ay;
 			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-				btn.Ay = (uint8_t) (posAy+127.5);
+				btn.Ay = (uint8_t) (posAy+127);
 			}
 		}
 		if(readC){
-			float diffCx = (posCx+127.5)-btn.Cx;
+			float diffCx = (posCx+127)-btn.Cx;
 			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (posCx+127.5);
+				btn.Cx = (uint8_t) (posCx+127);
 			}
-			float diffCy = (posCy+127.5)-btn.Cy;
+			float diffCy = (posCy+127)-btn.Cy;
 			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (posCy+127.5);
+				btn.Cy = (uint8_t) (posCy+127);
 			}
 		}
 	}
