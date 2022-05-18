@@ -1875,10 +1875,10 @@ void readSticks(int readA, int readC, int running){
 	}
 	else
 	{
-		btn.Ax = 127.5;//For some reason, this and all other offsets need to be 127.5.
-		btn.Ay = 127.5;//127 or 128 for everything would make sense (probably 128) but then the stick output
-		btn.Cx = 127.5;//doesn't reach the cardinals when doing display output, even though the normal stick position output
-		btn.Cy = 127.5;//does reach the cardinals. It's fucked up.
+		btn.Ax = (uint8_t) 127.5;//For some reason, this and all other offsets need to be 127.5.
+		btn.Ay = (uint8_t) 127.5;//127 or 128 for everything would make sense (probably 128) but then the stick output
+		btn.Cx = (uint8_t) 127.5;//doesn't reach the cardinals when doing display output, even though the normal stick position output
+		btn.Cy = (uint8_t) 127.5;//does reach the cardinals. It's fucked up.
 	}
 
 	_posALastX = posAx;
