@@ -12,7 +12,7 @@
 
 //Uncomment the appropriate include line for your hardware.
 //#include "src/Phob1_0Teensy3_2.h"
-//#include "src/Phob1_1Teensy3_2.h"
+#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
 #define BUILD_RELEASE
@@ -365,9 +365,11 @@ volatile char _commResponse[_originLength] = {
 void setup() {
     serialSetup();
 		#ifdef BUILD_RELEASE
-    	Serial.println("Software version 0.20");
+    Serial.println("Software version 0.20");
+    #endif
 		#ifdef BUILD_DEV
-    	Serial.println("This is not a stable version");
+    Serial.println("This is not a stable version");
+    #endif
     delay(1000);
 
 	readEEPROM();
