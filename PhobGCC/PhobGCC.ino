@@ -15,6 +15,9 @@
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
+#define BUILD_RELEASE
+//#define BUILD_DEV
+
 using namespace Eigen;
 
 TeensyTimerTool::OneShotTimer timer1;
@@ -361,8 +364,10 @@ volatile char _commResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-    //Serial.println("Software version 0.19 (hopefully Phobos remembered to update this message)");
-    Serial.println("This is not a stable version");
+		#ifdef BUILD_RELEASE
+    	Serial.println("Software version 0.20");
+		#ifdef BUILD_DEV
+    	Serial.println("This is not a stable version");
     delay(1000);
 
 	readEEPROM();
@@ -1696,13 +1701,13 @@ void setJump(int jumpConfig){
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
-		if(_currentConfig == 2/*4*/) {
+		if(_currentConfig >= 2/*4*/) {
 			_lConfig = 0;
 		} else {
 			_lConfig = _currentConfig + 1;
 		}
 	} else {
-		if(_currentConfig == 2/*4*/) {
+		if(_currentConfig >= 2/*4*/) {
 			_rConfig = 0;
 		} else {
 			_rConfig = _currentConfig + 1;
