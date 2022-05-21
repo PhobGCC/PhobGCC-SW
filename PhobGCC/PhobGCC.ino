@@ -965,12 +965,14 @@ void readButtons(){
 		case 2: //Analog Only Trigger state
 			btn.L = (uint8_t) 0;
 			break;
+		/*
 		case 3: //Trigger Plug Emulation state
 			btn.L = !digitalRead(_pinL);
 			break;
 		case 4: //Digital => Analog Value state
 			btn.L = (uint8_t) 0;
 			break;
+		*/
 		default:
 			btn.L = !digitalRead(_pinL);
 	}
@@ -985,12 +987,14 @@ void readButtons(){
 		case 2: //Analog Only Trigger state
 			btn.R = (uint8_t) 0;
 			break;
+		/*
 		case 3: //Trigger Plug Emulation state
 			btn.R = !digitalRead(_pinR);
 			break;
 		case 4: //Digital => Analog Value state
 			btn.R = (uint8_t) 0;
 			break;
+		*/
 		default:
 			btn.R = !digitalRead(_pinR);
 	}
@@ -1691,21 +1695,21 @@ void setJump(int jumpConfig){
 	}
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
-  if(_lTrigger) {
-    if(_currentConfig == 4) {
-      _lConfig = 0;
-    } else {
-      _lConfig = _currentConfig + 1;
-    }
-} else {
-  if(_currentConfig == 4) {
-    _rConfig = 0;
-  } else {
-    _rConfig = _currentConfig + 1;
-  }
-}
-  EEPROM.put(_eepromLToggle, _lConfig);
-  EEPROM.put(_eepromRToggle, _rConfig);
+	if(_lTrigger) {
+		if(_currentConfig == 2/*4*/) {
+			_lConfig = 0;
+		} else {
+			_lConfig = _currentConfig + 1;
+		}
+	} else {
+		if(_currentConfig == 2/*4*/) {
+			_rConfig = 0;
+		} else {
+			_rConfig = _currentConfig + 1;
+		}
+	}
+	EEPROM.put(_eepromLToggle, _lConfig);
+	EEPROM.put(_eepromRToggle, _rConfig);
 }
 void readSticks(int readA, int readC, int running){
 #ifdef USEADCSCALE
@@ -1719,16 +1723,17 @@ void readSticks(int readA, int readC, int running){
 
 
 	//read the L and R sliders
-  switch(_lConfig) {
-    case 0: //Default Trigger state
-      btn.La = adc->adc0->analogRead(_pinLa)>>4;
-      break;
-    case 1: //Digital Only Trigger state
-      btn.La = (uint8_t) 0;
-      break;
-    case 2: //Analog Only Trigger state
-      btn.La = adc->adc0->analogRead(_pinLa)>>4;
-      break;
+	switch(_lConfig) {
+		case 0: //Default Trigger state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			break;
+		case 1: //Digital Only Trigger state
+			btn.La = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			break;
+		/*
 		case 3: //Trigger Plug Emulation state
 			btn.La = adc->adc0->analogRead(_pinLa)>>4;
 			if (btn.La > (((uint8_t) (_LTriggerOffset)) + 60.0)) {
@@ -1742,36 +1747,39 @@ void readSticks(int readA, int readC, int running){
 				btn.La = (uint8_t) 0;
 			}
 			break;
-    default:
-      btn.La = adc->adc0->analogRead(_pinLa)>>4;
-  }
+		*/
+		default:
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+	}
 
-  switch(_rConfig) {
-    case 0: //Default Trigger state
-      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-      break;
-    case 1: //Digital Only Trigger state
-      btn.Ra = (uint8_t) 0;
-      break;
-    case 2: //Analog Only Trigger state
-      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-      break;
+	switch(_rConfig) {
+		case 0: //Default Trigger state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			break;
+		case 1: //Digital Only Trigger state
+			btn.Ra = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			break;
+		/*
 		case 3: //Trigger Plug Emulation state
 			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 			if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + 60.0)) {
 				btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
 			}
 			break;
-			case 4: //Digital => Analog Value state
-				if(hardwareR) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
-				} else {
-					btn.Ra = (uint8_t) 0;
-				}
-				break;
-    default:
-      btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-  }
+		case 4: //Digital => Analog Value state
+			if(hardwareR) {
+				btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+			} else {
+				btn.Ra = (uint8_t) 0;
+			}
+			break;
+		*/
+		default:
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	}
 
 	//read the c stick, scale it down so that we don't get huge values when we linearize
 	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
