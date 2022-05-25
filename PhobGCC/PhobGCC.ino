@@ -1137,6 +1137,9 @@ void readButtons(){
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
 		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+			if (!_running) {//wake it up if not already running
+				_running = true;
+			}
 			_safeMode = false;
 			freezeSticks(2000);
 		}
