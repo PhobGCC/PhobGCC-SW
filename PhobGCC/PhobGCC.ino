@@ -1371,34 +1371,55 @@ void readButtons(){
 		_advanceCalPressed = false;
 	}
 }
-void freezeSticks(int time) {
-  btn.Cx = (uint8_t) (255);
-  btn.Cy = (uint8_t) (255);
-  btn.Ax = (uint8_t) (255);
-  btn.Ay = (uint8_t) (255);
+void freezeSticks(const int time) {
+	btn.Cx = (uint8_t) (255);
+	btn.Cy = (uint8_t) (255);
+	btn.Ax = (uint8_t) (255);
+	btn.Ay = (uint8_t) (255);
 	btn.La = (uint8_t) (255 + 60.0);
 	btn.Ra = (uint8_t) (255 + 60.0);
 
-  btn.A = (uint8_t) 0;
-  btn.B = (uint8_t) 0;
-  btn.X = (uint8_t) 0;
-  btn.Y = (uint8_t) 0;
-  btn.L = (uint8_t) 0;
-  btn.R = (uint8_t) 0;
-  btn.Z = (uint8_t) 0;
-  btn.S = (uint8_t) 0;
+	btn.A = (uint8_t) 0;
+	btn.B = (uint8_t) 0;
+	btn.X = (uint8_t) 0;
+	btn.Y = (uint8_t) 0;
+	btn.L = (uint8_t) 0;
+	btn.R = (uint8_t) 0;
+	btn.Z = (uint8_t) 0;
+	btn.S = (uint8_t) 0;
 
-  hardwareL = (uint8_t) 0;
-  hardwareR = (uint8_t) 0;
-  hardwareX = (uint8_t) 0;
-  hardwareY = (uint8_t) 0;
-  hardwareZ = (uint8_t) 0;
+	hardwareL = (uint8_t) 0;
+	hardwareR = (uint8_t) 0;
+	hardwareX = (uint8_t) 0;
+	hardwareY = (uint8_t) 0;
+	hardwareZ = (uint8_t) 0;
 
-  int startTime = millis();
-  int delta = 0;
-  while(delta < time){
-    delta = millis() - startTime;
-  }
+	int startTime = millis();
+	int delta = 0;
+	while(delta < time){
+		delta = millis() - startTime;
+	}
+}
+//This clears all the buttons but doesn't overwrite the sticks or shoulder buttons.
+void clearButtons(const int time) {
+	btn.A = (uint8_t) 0;
+	btn.B = (uint8_t) 0;
+	btn.X = (uint8_t) 0;
+	btn.Y = (uint8_t) 0;
+	btn.Z = (uint8_t) 0;
+	btn.S = (uint8_t) 0;
+
+	hardwareL = (uint8_t) 0;
+	hardwareR = (uint8_t) 0;
+	hardwareX = (uint8_t) 0;
+	hardwareY = (uint8_t) 0;
+	hardwareZ = (uint8_t) 0;
+
+	int startTime = millis();
+	int delta = 0;
+	while(delta < time){
+		delta = millis() - startTime;
+	}
 }
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
@@ -1451,62 +1472,54 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 
 	//setPole();
 
-	int startTime = millis();
-	int delta = 0;
-	while(delta < 2000){
-		delta = millis() - startTime;
-	}
+	clearButtons(2000);
 
 	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
 	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
 }
 void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
-  Serial.println("Adjusting Smoothing");
-  if (_xAxis && _increase && _change) {
-    _gains.xSmoothing = _gains.xSmoothing + 0.1;
-    if(_gains.xSmoothing > _smoothingMax) {
-      _gains.xSmoothing = _smoothingMax;
-    }
-    EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
-    Serial.print("X Smoothing increased to:");
-    Serial.println(_gains.xSmoothing);
-  } else if(_xAxis && !_increase && _change) {
-    _gains.xSmoothing = _gains.xSmoothing - 0.1;
-    if(_gains.xSmoothing < _smoothingMin) {
-      _gains.xSmoothing = _smoothingMin;
-    }
-    EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
-    Serial.print("X Smoothing decreased to:");
-    Serial.println(_gains.xSmoothing);
-  } else if(!_xAxis && _increase && _change) {
-    _gains.ySmoothing = _gains.ySmoothing + 0.1;
-    if (_gains.ySmoothing > _smoothingMax) {
-      _gains.ySmoothing = _smoothingMax;
-    }
-    EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
-    Serial.print("Y Smoothing increased to:");
-    Serial.println(_gains.ySmoothing);
-  } else if(!_xAxis && !_increase && _change) {
-    _gains.ySmoothing = _gains.ySmoothing - 0.1;
-    if (_gains.ySmoothing < _smoothingMin) {
-      _gains.ySmoothing = _smoothingMin;
-    }
-    EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
-    Serial.print("Y Smoothing decreased to:");
-    Serial.println(_gains.ySmoothing);
-  }
+	Serial.println("Adjusting Smoothing");
+	if (_xAxis && _increase && _change) {
+		_gains.xSmoothing = _gains.xSmoothing + 0.1;
+		if(_gains.xSmoothing > _smoothingMax) {
+			_gains.xSmoothing = _smoothingMax;
+		}
+		EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
+		Serial.print("X Smoothing increased to:");
+		Serial.println(_gains.xSmoothing);
+	} else if(_xAxis && !_increase && _change) {
+		_gains.xSmoothing = _gains.xSmoothing - 0.1;
+		if(_gains.xSmoothing < _smoothingMin) {
+			_gains.xSmoothing = _smoothingMin;
+		}
+		EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
+		Serial.print("X Smoothing decreased to:");
+		Serial.println(_gains.xSmoothing);
+	} else if(!_xAxis && _increase && _change) {
+		_gains.ySmoothing = _gains.ySmoothing + 0.1;
+		if (_gains.ySmoothing > _smoothingMax) {
+			_gains.ySmoothing = _smoothingMax;
+		}
+		EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+		Serial.print("Y Smoothing increased to:");
+		Serial.println(_gains.ySmoothing);
+	} else if(!_xAxis && !_increase && _change) {
+		_gains.ySmoothing = _gains.ySmoothing - 0.1;
+		if (_gains.ySmoothing < _smoothingMin) {
+			_gains.ySmoothing = _smoothingMin;
+		}
+		EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+		Serial.print("Y Smoothing decreased to:");
+		Serial.println(_gains.ySmoothing);
+	}
 
-  //recompute the intermediate gains used directly by the kalman filter
-  recomputeGains();
+	//recompute the intermediate gains used directly by the kalman filter
+	recomputeGains();
 
-  btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
-  btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
-  int startTime = millis();
-  int delta = 0;
-  while(delta < 2000){
-    delta = millis() - startTime;
-  }
+	clearButtons(2000);
 }
 void showAstickSettings() {
 	//Snapback on A-stick
@@ -1520,104 +1533,92 @@ void showAstickSettings() {
 	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
 	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
-	int startTime = millis();
-	int delta = 0;
-	while(delta < 2000){
-		delta = millis() - startTime;
-	}
+	clearButtons(2000);
 }
 void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase) {
-  Serial.println("Adjusting C-Stick Smoothing");
-  if (_xAxis && _increase && _change) {
-    _gains.cXSmoothing = _gains.cXSmoothing + 0.1;
-    if(_gains.cXSmoothing > _smoothingMax) {
-      _gains.cXSmoothing = _smoothingMax;
-    }
-    EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
-    Serial.print("C-Stick X Smoothing increased to:");
-    Serial.println(_gains.cXSmoothing);
-  } else if(_xAxis && !_increase && _change) {
-    _gains.cXSmoothing = _gains.cXSmoothing - 0.1;
-    if(_gains.cXSmoothing < _smoothingMin) {
-      _gains.cXSmoothing = _smoothingMin;
-    }
-    EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
-    Serial.print("C-Stick X Smoothing decreased to:");
-    Serial.println(_gains.cXSmoothing);
-  } else if(!_xAxis && _increase && _change) {
-    _gains.cYSmoothing = _gains.cYSmoothing + 0.1;
-    if (_gains.cYSmoothing > _smoothingMax) {
-      _gains.cYSmoothing = _smoothingMax;
-    }
-    EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
-    Serial.print("C-Stick Y Smoothing increased to:");
-    Serial.println(_gains.cYSmoothing);
-  } else if(!_xAxis && !_increase && _change) {
-    _gains.cYSmoothing = _gains.cYSmoothing - 0.1;
-    if (_gains.cYSmoothing < _smoothingMin) {
-      _gains.cYSmoothing = _smoothingMin;
-    }
-    EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
-    Serial.print("C-Stick Y Smoothing decreased to:");
-    Serial.println(_gains.cYSmoothing);
-  }
+	Serial.println("Adjusting C-Stick Smoothing");
+	if (_xAxis && _increase && _change) {
+		_gains.cXSmoothing = _gains.cXSmoothing + 0.1;
+		if(_gains.cXSmoothing > _smoothingMax) {
+			_gains.cXSmoothing = _smoothingMax;
+		}
+		EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+		Serial.print("C-Stick X Smoothing increased to:");
+		Serial.println(_gains.cXSmoothing);
+	} else if(_xAxis && !_increase && _change) {
+		_gains.cXSmoothing = _gains.cXSmoothing - 0.1;
+		if(_gains.cXSmoothing < _smoothingMin) {
+			_gains.cXSmoothing = _smoothingMin;
+		}
+		EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+		Serial.print("C-Stick X Smoothing decreased to:");
+		Serial.println(_gains.cXSmoothing);
+	} else if(!_xAxis && _increase && _change) {
+		_gains.cYSmoothing = _gains.cYSmoothing + 0.1;
+		if (_gains.cYSmoothing > _smoothingMax) {
+			_gains.cYSmoothing = _smoothingMax;
+		}
+		EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+		Serial.print("C-Stick Y Smoothing increased to:");
+		Serial.println(_gains.cYSmoothing);
+	} else if(!_xAxis && !_increase && _change) {
+		_gains.cYSmoothing = _gains.cYSmoothing - 0.1;
+		if (_gains.cYSmoothing < _smoothingMin) {
+			_gains.cYSmoothing = _smoothingMin;
+		}
+		EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+		Serial.print("C-Stick Y Smoothing decreased to:");
+		Serial.println(_gains.cYSmoothing);
+	}
 
-  //recompute the intermediate gains used directly by the kalman filter
-  recomputeGains();
+	//recompute the intermediate gains used directly by the kalman filter
+	recomputeGains();
 
-  btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
-  btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
-  int startTime = millis();
-  int delta = 0;
-  while(delta < 2000){
-    delta = millis() - startTime;
-  }
+	clearButtons(2000);
 }
 void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
-  Serial.println("Adjusting C-stick Offset");
-  if(_xAxis && _increase && _change) {
-    _cXOffset++;
-    if(_cXOffset > _cMax) {
-      _cXOffset = _cMax;
-    }
-    EEPROM.put(_eepromcXOffset, _cXOffset);
-    Serial.print("X offset increased to:");
-    Serial.println(_cXOffset);
-  } else if(_xAxis && !_increase && _change) {
-    _cXOffset--;
-    if(_cXOffset < _cMin) {
-      _cXOffset = _cMin;
-    }
-    EEPROM.put(_eepromcXOffset, _cXOffset);
-    Serial.print("X offset decreased to:");
-    Serial.println(_cXOffset);
-  } else if(!_xAxis && _increase && _change) {
-    _cYOffset++;
-    if(_cYOffset > _cMax) {
-      _cYOffset = _cMax;
-    }
-    EEPROM.put(_eepromcYOffset, _cYOffset);
-    Serial.print("Y offset increased to:");
-    Serial.println(_cYOffset);
-  } else if(!_xAxis && !_increase && _change) {
-    _cYOffset--;
-    if(_cYOffset < _cMin) {
-      _cYOffset = _cMin;
-    }
-    EEPROM.put(_eepromcYOffset, _cYOffset);
-    Serial.print("Y offset decreased to:");
-    Serial.println(_cYOffset);
-  }
+	Serial.println("Adjusting C-stick Offset");
+	if(_xAxis && _increase && _change) {
+		_cXOffset++;
+		if(_cXOffset > _cMax) {
+			_cXOffset = _cMax;
+		}
+		EEPROM.put(_eepromcXOffset, _cXOffset);
+		Serial.print("X offset increased to:");
+		Serial.println(_cXOffset);
+	} else if(_xAxis && !_increase && _change) {
+		_cXOffset--;
+		if(_cXOffset < _cMin) {
+			_cXOffset = _cMin;
+		}
+		EEPROM.put(_eepromcXOffset, _cXOffset);
+		Serial.print("X offset decreased to:");
+		Serial.println(_cXOffset);
+	} else if(!_xAxis && _increase && _change) {
+		_cYOffset++;
+		if(_cYOffset > _cMax) {
+			_cYOffset = _cMax;
+		}
+		EEPROM.put(_eepromcYOffset, _cYOffset);
+		Serial.print("Y offset increased to:");
+		Serial.println(_cYOffset);
+	} else if(!_xAxis && !_increase && _change) {
+		_cYOffset--;
+		if(_cYOffset < _cMin) {
+			_cYOffset = _cMin;
+		}
+		EEPROM.put(_eepromcYOffset, _cYOffset);
+		Serial.print("Y offset decreased to:");
+		Serial.println(_cYOffset);
+	}
 
-  btn.Cx = (uint8_t) (127.5 + _cXOffset);
-  btn.Cy = (uint8_t) (127.5 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + _cXOffset);
+	btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
-  int startTime = millis();
-  int delta = 0;
-  while(delta < 2000){
-    delta = millis() - startTime;
-  }
+	clearButtons(2000);
 }
 void showCstickSettings() {
 	//Snapback/smoothing on A-stick
@@ -1628,46 +1629,38 @@ void showCstickSettings() {
 	btn.Cx = (uint8_t) (127.5 + _cXOffset);
 	btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
-	int startTime = millis();
-	int delta = 0;
-	while(delta < 2000){
-		delta = millis() - startTime;
-	}
+	clearButtons(2000);
 }
 void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
-  if(_lTrigger && _increase && _change) {
-    _LTriggerOffset++;
-    if(_LTriggerOffset > _triggerMax) {
-      _LTriggerOffset = _triggerMax;
-    }
-  } else if(_lTrigger && !_increase && _change) {
-    _LTriggerOffset--;
-    if(_LTriggerOffset < _triggerMin) {
-      _LTriggerOffset = _triggerMin;
-    }
-  } else if(!_lTrigger && _increase && _change) {
-    _RTriggerOffset++;
-    if(_RTriggerOffset > _triggerMax) {
-      _RTriggerOffset = _triggerMax;
-    }
-  } else if(!_lTrigger && !_increase && _change) {
-    _RTriggerOffset--;
-    if(_RTriggerOffset < _triggerMin) {
-      _RTriggerOffset = _triggerMin;
-    }
-  }
+	if(_lTrigger && _increase && _change) {
+		_LTriggerOffset++;
+		if(_LTriggerOffset > _triggerMax) {
+			_LTriggerOffset = _triggerMax;
+		}
+	} else if(_lTrigger && !_increase && _change) {
+		_LTriggerOffset--;
+		if(_LTriggerOffset < _triggerMin) {
+			_LTriggerOffset = _triggerMin;
+		}
+	} else if(!_lTrigger && _increase && _change) {
+		_RTriggerOffset++;
+		if(_RTriggerOffset > _triggerMax) {
+			_RTriggerOffset = _triggerMax;
+		}
+	} else if(!_lTrigger && !_increase && _change) {
+		_RTriggerOffset--;
+		if(_RTriggerOffset < _triggerMin) {
+			_RTriggerOffset = _triggerMin;
+		}
+	}
 
-  EEPROM.put(_eepromLOffset, _LTriggerOffset);
-  EEPROM.put(_eepromROffset, _RTriggerOffset);
+	EEPROM.put(_eepromLOffset, _LTriggerOffset);
+	EEPROM.put(_eepromROffset, _RTriggerOffset);
 
-  btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
-  btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+	btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+	btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
 
-  int startTime = millis();
-  int delta = 0;
-  while(delta < 2000){
-    delta = millis() - startTime;
-  }
+	clearButtons(2000);
 }
 void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
