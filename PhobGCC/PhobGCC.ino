@@ -1131,8 +1131,12 @@ void setPinModes(){
 	pinMode(_pinZ,INPUT_PULLUP);
 	pinMode(_pinS,INPUT_PULLUP);
 #ifdef TEENSY4_0
-    pinMode(9,    INPUT_PULLUP);//WHY IS THIS NOT PIN 7 or _pinRX
-    pinMode(_pinLED,   OUTPUT);
+#ifdef HALFDUPLEX
+	pinMode(_pinRX,INPUT_PULLUP);
+#else // HALFDUPLEX
+	pinMode(9,    INPUT_PULLUP); //the normal RX pin doesn't work on teensy 4 with full duplex
+#endif // HALFDUPLEX
+	pinMode(_pinLED,   OUTPUT);
 #endif // TEENSY4_0
 
 #ifdef RUMBLE
