@@ -255,7 +255,7 @@ float _cStickY;
 
 unsigned int _lastMicros;
 float _dT;
-bool _running = true;
+bool _running = false;
 
 //The median filter can be either length 3, 4, or 5.
 #define MEDIANLEN 5
@@ -436,10 +436,10 @@ void setup() {
 
 void loop() {
 	//check if we should be reporting values yet
-	/*if(btn.B && !_running){
+	if(btn.B && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
-	}*/
+	}
 
 	//read the controllers buttons
 	readButtons();
