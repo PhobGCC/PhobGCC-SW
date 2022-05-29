@@ -29,6 +29,7 @@ const int _pinA = 4;
 const int _pinB = 20;
 const int _pinZ = 0;
 const int _pinS = 19;
+const int _pinLED = 13;
 const int _pinRumble = 12;
 const int _pinBrake = 11;
 

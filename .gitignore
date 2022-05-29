@@ -21,3 +21,5 @@ fp-info-cache
 *.ses
 # vim swap files
 *.swp
+# vim config file
+*.vimrc
