@@ -15,8 +15,8 @@
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 using namespace Eigen;
 
@@ -90,7 +90,7 @@ struct FilterGains {
 	float cYSmoothing;
 };
 FilterGains _gains {//these values are actually timestep-compensated for in runKalman
-    .maxStick = 100,
+    .maxStick = 80,//100,//no need to filter stuff outside the Melee unit circle,
     .xVelDecay = 0.1,
     .yVelDecay = 0.1,
     .xVelPosFactor = 0.01,
@@ -370,7 +370,6 @@ void setup() {
 		#ifdef BUILD_DEV
     Serial.println("This is not a stable version");
     #endif
-    delay(1000);
 
 	readEEPROM();
 
