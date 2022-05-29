@@ -7,6 +7,9 @@
 //Hardware specific code for PhobGCC board revision 1.1 with a Teensy 4.0
 #define TEENSY4_0
 
+//Hardware specific code for half duplex—using one pin for both TX and RX
+#define HALFDUPLEX
+
 //defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;
