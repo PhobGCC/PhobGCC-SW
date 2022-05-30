@@ -15,7 +15,7 @@
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"
-//#include "src/Phob1_2Teensy4_0.h"
+#include "src/Phob1_2Teensy4_0.h"
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -43,6 +43,13 @@ int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
 int _triggerMin = 49;
 int _triggerMax = 255;
+//rumble config; 0 is off, 1 is on. Higher values might be weaker rumble in the future?
+int _rumble = 1;
+int _rumbleMin = 0;
+int _rumbleMax = 1;
+//overrideRumble will always command rumble even if _rumble is off or if the console is telling it to stop.
+//0 is nothing, -1 is brake, 1 is on.
+int _overrideRumble = 0;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -191,6 +198,7 @@ const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
 const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
 const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
 const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
+const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -340,13 +348,20 @@ int _writeQueue = 0;
 uint8_t _cmdByte = 0;
 const int _fastBaud = 2500000;
 const int _slowBaud = 2000000;
+#ifndef HALFDUPLEX
 const int _probeLength = 24;
 const int _originLength = 80;
 const int _pollLength = 64;
+#else // HALFDUPLEX
+const int _probeLength = 25;
+const int _originLength = 81;
+const int _pollLength = 65;
+#endif // HALFDUPLEX
 static char _serialBuffer[128];
 int _errorCount = 0;
 int _reportCount = 0;
 
+#ifndef HALFDUPLEX
 const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
@@ -362,6 +377,35 @@ volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0};
+#else // HALFDUPLEX 
+const char _probeResponse[_probeLength] = {
+    0,0,0,0, 1,0,0,1,
+    0,0,0,0, 0,0,0,0,
+    0,0,0,0, 0,0,1,1,
+    1};
+const char _originResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+volatile char _pollResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
 
 void setup() {
@@ -694,11 +738,11 @@ void commInt() {
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 			}
 #ifdef RUMBLE
-			if(_cmdByte & 0b00000001){
+			if((_cmdByte & 0b00000001 && _rumble) || _overrideRumble == 1){
 				digitalWriteFast(_pinBrake,LOW);
 				digitalWriteFast(_pinRumble,HIGH);
 			}
-			else if(_cmdByte & 0b00000010){
+			else if((_cmdByte & 0b00000010) || _overrideRumble == -1){
 				digitalWriteFast(_pinRumble,LOW);
 				digitalWriteFast(_pinBrake,HIGH);
 			}
@@ -718,7 +762,7 @@ void commInt() {
 			}
 
 			
-2428         //if we are not writing, check to see if we were//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
+			//if we are not writing, check to see if we were//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
 			_bitQueue = 8;
@@ -1017,6 +1061,17 @@ void readEEPROM(){
     _RTriggerOffset = _triggerMin;
   }
 
+	//Get the rumble value
+	EEPROM.get(_eepromRumble, _rumble);
+	if(std::isnan(_rumble)) {
+		_rumble = _rumbleMin;
+	}
+	if(_rumble < _rumbleMin) {
+		_rumble = _rumbleMin;
+	}
+	if(_rumble < _rumbleMax) {
+		_rumble = _rumbleMax;
+	}
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
@@ -1078,6 +1133,9 @@ void resetDefaults(){
   _RTriggerOffset = _triggerMin;
   EEPROM.put(_eepromLOffset, _LTriggerOffset);
   EEPROM.put(_eepromROffset, _RTriggerOffset);
+
+	_rumble = _rumbleMin;
+	EEPROM.put(_eepromRumble, _rumble);
 
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
@@ -1221,9 +1279,9 @@ void readButtons(){
 
 
 	/* Current Commands List
-	* Safe Mode:  AXY+Start
+	* Safe Mode:  AXYZ+Start
 	* Hard Reset:  ABZ+Start
-	* Rumble Toggle:
+	* Rumble Toggle: BXY+Start (no A)
 	*
 	* Calibration
 	* Analog Stick Calibration:  AXY+L
@@ -1259,12 +1317,14 @@ void readButtons(){
 
 	//check the dpad buttons to change the controller settings
 	if(!_safeMode && (_currentCalStep == -1)) {
-		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+		if(btn.A && hardwareX && hardwareY && hardwareZ && btn.S) { //Safe Mode Toggle
 			_safeMode = true;
 			freezeSticks(4000);
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
 			resetDefaults();
 			freezeSticks(2000);
+		} else if (btn.B && hardwareX && hardwareY && btn.S && !btn.A) { //Rumble Toggle
+			toggleRumble();
 		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
 			_calAStick = true;
@@ -1622,6 +1682,21 @@ void clearButtons(const int time) {
 	while(delta < time){
 		delta = millis() - startTime;
 	}
+}
+void toggleRumble() {
+	Serial.println("toggling rumble");
+	if(_rumble == 1) {//if on, turn rumble off
+		_rumble = 0;
+		freezeSticks(2000);
+	} else if(_rumble == 0) {//if off, turn rumble on
+		_rumble = 1;
+		_overrideRumble = 1;//tell it to begin rumbling and then pause for a half second
+		freezeSticks(500);
+		_overrideRumble = -1;//tell it to stop rumbling
+		freezeSticks(100);
+		_overrideRumble = 0;//return override to neutral
+	}
+	EEPROM.put(_eepromRumble, _rumble);
 }
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
@@ -2168,9 +2243,15 @@ void setPole(){
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
+#ifndef HALFDUPLEX
 		for(int j = 0; j < 8; j++){
 			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
 		}
+#else // HALFDUPLEX
+		for(int j = 0; j < 8; j++){
+			_pollResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+		}
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
 	}
 }
