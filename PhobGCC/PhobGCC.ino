@@ -2133,6 +2133,11 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	if((abs(*yOut)<5) && (abs(*xOut)>95)){
 		*yOut = 0;
 	}
+
+	if((abs(*xOut)<3) && (abs(*yOut)<3)) {
+		*xOut = 0;
+		*yOut = 0;
+	}
 }
 /*******************
 	setPole
