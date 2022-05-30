@@ -90,7 +90,7 @@ struct FilterGains {
 	float cYSmoothing;
 };
 FilterGains _gains {//these values are actually timestep-compensated for in runKalman
-    .maxStick = 80,//100,//no need to filter stuff outside the Melee unit circle,
+    .maxStick = 100,
     .xVelDecay = 0.1,
     .yVelDecay = 0.1,
     .xVelPosFactor = 0.01,
