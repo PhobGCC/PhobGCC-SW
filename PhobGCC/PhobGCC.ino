@@ -15,8 +15,8 @@
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 using namespace Eigen;
 
@@ -370,7 +370,6 @@ void setup() {
 		#ifdef BUILD_DEV
     Serial.println("This is not a stable version");
     #endif
-    delay(1000);
 
 	readEEPROM();
 
