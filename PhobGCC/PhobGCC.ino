@@ -2312,14 +2312,13 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 
 	//Limit the notch adjustment
 
-	//Start out with the limits being 12 units around the circle at the gate
-	/*this may be unnecessary in our case, because 12 units is also the 30% stretch limit
-	float lowerPosLimit = measuredNotchAngles[notchIndex] - 12/100.f;
-	float upperPosLimit = measuredNotchAngles[notchIndex] + 12/100.f;
+	//Start out with the limits being 8.5 units around the circle at the melee unit circle (80/100)
+	//This lets us go 6 units in x or y around the diagonals.
+	float lowerPosLimit = measuredNotchAngles[notchIndex] - 8.5/80;
+	float upperPosLimit = measuredNotchAngles[notchIndex] + 8.5/80;
 	if(upperPosLimit < lowerPosLimit){
 		upperPosLimit += 2*M_PI;
 	}
-	*/
 
 	//Now we need to determine the stretch/compression limit
 	//Figure out the previous and next notch angles.
@@ -2342,15 +2341,17 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	if(nextMeasAngle < thisMeasAngle){
 		nextMeasAngle += 2*M_PI;
 	}
-	float lowerStretchLimit = max(prevAngle + 0.7*(thisMeasAngle-prevMeasAngle), nextAngle - 1.3*(nextMeasAngle-thisMeasAngle));
-	float upperStretchLimit = min(prevAngle + 1.3*(thisMeasAngle-prevMeasAngle), nextAngle - 0.7*(nextMeasAngle-thisMeasAngle));
+	const float shrink = 1-_notchAdjustStretchLimit;
+	const float stretch = 1+_notchAdjustStretchLimit;
+	float lowerStretchLimit = max(prevAngle +  shrink*(thisMeasAngle-prevMeasAngle), nextAngle - stretch*(nextMeasAngle-thisMeasAngle));
+	float upperStretchLimit = min(prevAngle + stretch*(thisMeasAngle-prevMeasAngle), nextAngle -  shrink*(nextMeasAngle-thisMeasAngle));
 	if(upperStretchLimit < lowerStretchLimit){
 		upperStretchLimit += 2*M_PI;
 	}
 
 	//Combine the limits
-	float lowerLimit = lowerStretchLimit;//max(lowerStretchLimit, lowerPosLimit);
-	float upperLimit = upperStretchLimit;//min(upperStretchLimit, upperPosLimit);
+	float lowerLimit = max(lowerStretchLimit, lowerPosLimit);
+	float upperLimit = min(upperStretchLimit, upperPosLimit);
 	if(upperLimit < lowerLimit){
 		upperLimit += 2*M_PI;
 	}
