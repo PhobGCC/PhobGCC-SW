@@ -372,7 +372,6 @@ void setup() {
 		#ifdef BUILD_DEV
     Serial.println("This is not a stable version");
     #endif
-    delay(1000);
 
 	readEEPROM();
 
