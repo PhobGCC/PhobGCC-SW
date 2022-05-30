@@ -1317,7 +1317,7 @@ void readButtons(){
 
 	//check the dpad buttons to change the controller settings
 	if(!_safeMode && (_currentCalStep == -1)) {
-		if(btn.A && hardwareX && hardwareY && hardwareZ && btn.S) { //Safe Mode Toggle
+		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
 			_safeMode = true;
 			freezeSticks(4000);
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
