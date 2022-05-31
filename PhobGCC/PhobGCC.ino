@@ -45,8 +45,9 @@ int _triggerMin = 49;
 int _triggerMax = 255;
 //rumble config; 0 is off, 1 is on. Higher values might be weaker rumble in the future?
 int _rumble = 1;
-int _rumbleMin = 0;
-int _rumbleMax = 1;
+const int _rumbleMin = 0;
+const int _rumbleMax = 1;
+const int _rumbleDefault = 1;
 //overrideRumble will always command rumble even if _rumble is off or if the console is telling it to stop.
 //0 is nothing, -1 is brake, 1 is on.
 int _overrideRumble = 0;
@@ -1055,12 +1056,12 @@ void readEEPROM(){
 	//Get the rumble value
 	EEPROM.get(_eepromRumble, _rumble);
 	if(std::isnan(_rumble)) {
-		_rumble = _rumbleMin;
+		_rumble = _rumbleDefault;
 	}
 	if(_rumble < _rumbleMin) {
 		_rumble = _rumbleMin;
 	}
-	if(_rumble < _rumbleMax) {
+	if(_rumble > _rumbleMax) {
 		_rumble = _rumbleMax;
 	}
 
@@ -1125,7 +1126,7 @@ void resetDefaults(){
   EEPROM.put(_eepromLOffset, _LTriggerOffset);
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
-	_rumble = _rumbleMin;
+	_rumble = _rumbleDefault;
 	EEPROM.put(_eepromRumble, _rumble);
 
 	for(int i = 0; i < _noOfNotches; i++){
