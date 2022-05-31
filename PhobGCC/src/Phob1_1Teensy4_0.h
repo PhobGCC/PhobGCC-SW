@@ -31,6 +31,7 @@ const int _pinB = 20;
 const int _pinZ = 0;
 const int _pinS = 19;
 const int _pinLED = 13;
+const int _pinInt = 9;
 
 //don't #define USEADCSCALE
 

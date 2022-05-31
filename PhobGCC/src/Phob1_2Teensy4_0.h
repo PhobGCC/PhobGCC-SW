@@ -35,6 +35,7 @@ const int _pinS = 19;
 const int _pinLED = 13;
 const int _pinRumble = 12;
 const int _pinBrake = 11;
+const int _pinInt = 7;
 
 //don't #define USEADCSCALE
 
