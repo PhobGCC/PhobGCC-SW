@@ -14,7 +14,7 @@
 //#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
-#include "src/Phob1_1Teensy4_0DiodeShort.h"
+//#include "src/Phob1_1Teensy4_0DiodeShort.h"
 //#include "src/Phob1_2Teensy4_0.h"
 
 //#define BUILD_RELEASE
@@ -454,7 +454,7 @@ void setup() {
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
     Serial2.addMemoryForRead(_serialBuffer,128);
-		attachInterrupt(_pinInt, commInt, RISING);
+	attachInterrupt(_pinInt, commInt, RISING);
 #ifdef HALFDUPLEX
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
 	//Serial2.setTX(8,true);
@@ -469,7 +469,7 @@ void setup() {
 	timer1.begin(communicate);
 	//timer2.begin(checkCmd);
 	//timer3.begin(writePole);
-	digitalWriteFast(12,HIGH);/
+	digitalWriteFast(12,HIGH);
 	//ARM_DEMCR |= ARM_DEMCR_TRCENA;
 	//ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 	attachInterrupt(_pinInt, bitCounter, FALLING);
