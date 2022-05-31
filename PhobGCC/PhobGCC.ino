@@ -1314,8 +1314,10 @@ void readButtons(){
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
 			resetDefaults();
 			freezeSticks(2000);
+#ifdef RUMBLE
 		} else if (btn.B && hardwareX && hardwareY && btn.S && !btn.A) { //Rumble Toggle
 			toggleRumble();
+#endif // RUMBLE
 		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
 			_calAStick = true;
