@@ -10,7 +10,7 @@
 #include <Bounce2.h>
 #include "TeensyTimerTool.h"
 
-//Uncomment the appropriate include line for your hardware.
+//Uncomment the appropriate include line for your hardware by deleting the two slashes at the beginning of the line..
 //#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
