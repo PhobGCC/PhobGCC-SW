@@ -14,6 +14,8 @@
 //#include "src/Phob1_0Teensy3_2.h"
 //#include "src/Phob1_1Teensy3_2.h"
 //#include "src/Phob1_1Teensy4_0.h"
+//#include "src/Phob1_1Teensy4_0DiodeShort.h"
+//#include "src/Phob1_2Teensy4_0.h"
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -41,6 +43,14 @@ int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
 int _triggerMin = 49;
 int _triggerMax = 255;
+//rumble config; 0 is off, 1 is on. Higher values might be weaker rumble in the future?
+int _rumble = 1;
+const int _rumbleMin = 0;
+const int _rumbleMax = 1;
+const int _rumbleDefault = 1;
+//overrideRumble will always command rumble even if _rumble is off or if the console is telling it to stop.
+//0 is nothing, -1 is brake, 1 is on.
+int _overrideRumble = 0;
 bool _safeMode = true;
 
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
@@ -189,6 +199,7 @@ const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
 const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
 const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
 const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
+const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -338,13 +349,20 @@ int _writeQueue = 0;
 uint8_t _cmdByte = 0;
 const int _fastBaud = 2500000;
 const int _slowBaud = 2000000;
+#ifndef HALFDUPLEX
 const int _probeLength = 24;
 const int _originLength = 80;
 const int _pollLength = 64;
+#else // HALFDUPLEX
+const int _probeLength = 25;
+const int _originLength = 81;
+const int _pollLength = 65;
+#endif // HALFDUPLEX
 static char _serialBuffer[128];
 int _errorCount = 0;
 int _reportCount = 0;
 
+#ifndef HALFDUPLEX
 const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
@@ -360,6 +378,35 @@ volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0};
+#else // HALFDUPLEX 
+const char _probeResponse[_probeLength] = {
+    0,0,0,0, 1,0,0,1,
+    0,0,0,0, 0,0,0,0,
+    0,0,0,0, 0,0,1,1,
+    1};
+const char _originResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+volatile char _pollResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    1};
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
 
 void setup() {
@@ -405,21 +452,19 @@ void setup() {
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
-#ifdef TEENSY4_0
-    attachInterrupt(9, commInt, RISING);
-#endif // TEENSY4_0
-
-	//_slowBaud = findFreq();
-  //serialFreq = 950000;
-	//Serial.print("starting hw serial at freq:");
-	//Serial.println(_slowBaud);
-	//start hardware serial
+//set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
     Serial2.addMemoryForRead(_serialBuffer,128);
+	attachInterrupt(_pinInt, commInt, RISING);
+#ifdef HALFDUPLEX
+	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
+	//Serial2.setTX(8,true);
+	timer1.begin(resetSerial);
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
+#ifndef HALFDUPLEX
 	Serial2.begin(_slowBaud);
-	//UART1_C2 &= ~UART_C2_RE;
-	//attach the interrupt which will call the communicate function when the data line transitions from high to low
+#endif // HALFDUPLEX
 
 #ifdef TEENSY3_2
 	timer1.begin(communicate);
@@ -428,7 +473,7 @@ void setup() {
 	digitalWriteFast(12,HIGH);
 	//ARM_DEMCR |= ARM_DEMCR_TRCENA;
 	//ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
-	attachInterrupt(_pinRX, bitCounter, FALLING);
+	attachInterrupt(_pinInt, bitCounter, FALLING);
 	NVIC_SET_PRIORITY(IRQ_PORTC, 0);
 #endif // TEENSY3_2
 }
@@ -485,6 +530,7 @@ void loop() {
 }
 
 #ifdef TEENSY4_0
+#ifndef HALFDUPLEX
 //commInt() will be called on every rising edge of a pulse that we receive
 //we will check if we have the expected amount of serial data yet, if we do we will do something with it, if we don't we will do nothing and wait for the next rising edge to check again
 void commInt() {
@@ -493,7 +539,7 @@ void commInt() {
 		//check to see if we have been writing data, if have then we need to clear it and set the serial port back to low speed to be ready to receive the next command
 		if(_writing){
 			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
-			digitalWriteFast(13,LOW);
+			digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be read
 
 			while(Serial2.available() <= _bitQueue){}
@@ -520,10 +566,10 @@ void commInt() {
 		//if we are not writing, check to see if we were waiting for a poll command to finish
 		//if we are, we need to clear the data and send our poll response
 		else if(_waiting){
-			digitalWriteFast(13,LOW);
+			digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be received
 			while(Serial2.available() <= _bitQueue){}
-			digitalWriteFast(13,HIGH);
+			digitalWriteFast(_pinLED,HIGH);
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 			if(_reportCount == 0){
 				Serial.print("Poll: ");
@@ -564,7 +610,7 @@ void commInt() {
 		else{
 			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
 			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
-			digitalWriteFast(13,LOW);
+			digitalWriteFast(_pinLED,LOW);
 
 			//increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
 			_reportCount++;
@@ -663,8 +709,192 @@ void commInt() {
 		}
 	}
 	//turn the LED back on to indicate we are not stuck
-	digitalWriteFast(13,HIGH);
+	digitalWriteFast(_pinLED,HIGH);
 }
+#else // HALFDUPLEX
+//commInt() will be called on every rising edge of a pulse that we receive
+//we will check if we have the expected amount of serial data yet, if we do we will do something with it, if we don't we will do nothing and wait for the next rising edge to check again
+void commInt() {
+	digitalWriteFast(_pinLED,LOW);
+	//check to see if we have the expected amount of data yet
+	if(Serial2.available() >= _bitQueue){
+		//check to see if we were waiting for a poll command to finish
+		//if we are, we need to clear the data and send our poll response
+		if(_waiting){
+			//digitalWriteFast(_pinLED,LOW);
+			//wait for the stop bit to be received
+			while(Serial2.available() < _bitQueue){}
+			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
+			
+			for(int i = 0; i < _bitQueue; i++){
+				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
+			}
+#ifdef RUMBLE
+			if((_cmdByte & 0b00000001 && _rumble) || _overrideRumble == 1){
+				digitalWriteFast(_pinBrake,LOW);
+				digitalWriteFast(_pinRumble,HIGH);
+			}
+			else if((_cmdByte & 0b00000010) || _overrideRumble == -1){
+				digitalWriteFast(_pinRumble,LOW);
+				digitalWriteFast(_pinBrake,HIGH);
+			}
+			else{
+				digitalWriteFast(_pinRumble,LOW);
+				digitalWriteFast(_pinBrake,LOW);
+			}
+#endif
+			if(_reportCount == 0){
+				Serial.print("Poll: ");
+				//char myBuffer[128];
+				//for(int i = 0; i < _bitQueue; i++){
+				//	myBuffer[i] = (Serial2.read() > 0b11110000)+48;
+				//}
+				Serial.println(_cmdByte,BIN);
+				//Serial.println();
+			}
+
+			
+			//if we are not writing, check to see if we were//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
+			Serial2.clear();
+			_waiting = false;
+			_bitQueue = 8;
+			Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+			
+			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
+			//_writing = true;
+			//_bitQueue = _pollLength-1;
+			
+			
+			
+			//write the poll response
+			for(int i = 0; i<_pollLength; i++){
+				if(_pollResponse[i]){
+					//short low period = 1
+					Serial2.write(0b11111100);
+				}
+				else{
+					//long low period = 0
+					Serial2.write(0b11000000);
+				}
+			}
+			//start the timer to reset the the serial port when the response has been sent
+			timer1.trigger(175);
+			
+			
+		}
+		else{
+			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command	
+			//increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
+			_reportCount++;
+			if(_reportCount > 64){
+				_reportCount = 0;
+			}
+			
+			//clear the command byte of previous data
+			_cmdByte = 0;
+			
+			//write the new data from the serial buffer into the command byte
+			for(int i = 0; i<8; i++){
+				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
+
+			}
+			
+			//if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
+			if(_reportCount==0){
+				Serial.print("Received: ");
+				Serial.println(_cmdByte,BIN);
+				Serial.print("Error Count:");
+				Serial.println(_errorCount);
+			}
+			
+			//if the command byte is all 0s it is probe command, we will send a probe response
+			if(_cmdByte == 0b00000000){
+				//wait for the stop bit to be received and clear it
+				while(!Serial2.available()){}
+				Serial2.clear();
+				
+				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
+				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+				//Serial2.setTX(8,true);
+				//_writing = true;
+				//_bitQueue = _probeLength-1;
+				
+				//write the probe response
+				for(int i = 0; i<_probeLength; i++){
+					if(_probeResponse[i]){
+						//short low period = 1
+						Serial2.write(0b11111100);
+					}
+					else{
+						//long low period = 0
+						Serial2.write(0b11000000);
+					}
+				}
+				resetSerial();
+			}
+			//if the command byte is 01000001 it is an origin command, we will send an origin response
+			else if(_cmdByte == 0b01000001){
+				//wait for the stop bit to be received and clear it
+				while(!Serial2.available()){}
+				Serial2.clear();
+				
+				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
+				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+				//Serial2.setTX(8,true);
+				//_writing = true;
+				//_bitQueue = _originLength-1;
+				
+				//write the origin response
+				for(int i = 0; i<_originLength; i++){
+					if(_originResponse[i]){
+						//short low period = 1
+						Serial2.write(0b11111100);
+					}
+					else{
+						//long low period = 0
+						Serial2.write(0b11000000);
+					}
+				}
+				resetSerial();
+			}
+			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
+			//to do this we will set our expected bit queue to the remaining length of the poll command, and wait until it is finished
+			else if(_cmdByte == 0b01000000){
+				//digitalWriteFast(_pinLED,LOW);
+				_waiting = true;
+				_bitQueue = 16;
+				setPole();
+			}
+			//if we got something else then something went wrong, print the command we got and increase the error count
+			else{
+				//digitalWriteFast(_pinLED,LOW);
+				Serial.print("error: ");
+				Serial.println(_cmdByte,BIN);
+				_errorCount ++;
+				_waiting = false;
+				
+				//we don't know for sure what state things are in, so clear, flush, and restart the serial port at low speed to be ready to receive a command
+				resetSerial();
+				//set our expected bit queue to 8, which will collect the first byte of any command we receive
+				_bitQueue = 8;
+				//wait a bit to make sure whatever command didn't get read properly is finished
+				delayMicroseconds(200);
+				
+			}
+		}
+	}
+	//turn the LED back on to indicate we are not stuck
+	digitalWriteFast(_pinLED,HIGH);
+}
+void resetSerial(){
+	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
+	Serial2.clear();
+	Serial2.flush();
+	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
+	//Serial2.setTX(8,true);
+	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
+}
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
 void readEEPROM(){
 	//get the jump setting
@@ -823,6 +1053,17 @@ void readEEPROM(){
     _RTriggerOffset = _triggerMin;
   }
 
+	//Get the rumble value
+	EEPROM.get(_eepromRumble, _rumble);
+	if(std::isnan(_rumble)) {
+		_rumble = _rumbleDefault;
+	}
+	if(_rumble < _rumbleMin) {
+		_rumble = _rumbleMin;
+	}
+	if(_rumble > _rumbleMax) {
+		_rumble = _rumbleMax;
+	}
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
@@ -885,6 +1126,9 @@ void resetDefaults(){
   EEPROM.put(_eepromLOffset, _LTriggerOffset);
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
+	_rumble = _rumbleDefault;
+	EEPROM.put(_eepromRumble, _rumble);
+
 	for(int i = 0; i < _noOfNotches; i++){
 		_aNotchAngles[i] = _notchAngleDefaults[i];
 		_cNotchAngles[i] = _notchAngleDefaults[i];
@@ -936,9 +1180,18 @@ void setPinModes(){
 	pinMode(_pinZ,INPUT_PULLUP);
 	pinMode(_pinS,INPUT_PULLUP);
 #ifdef TEENSY4_0
-    pinMode(9,    INPUT_PULLUP);
-    pinMode(13,   OUTPUT);
+#ifdef HALFDUPLEX
+	pinMode(_pinRX,INPUT_PULLUP);
+#else // HALFDUPLEX
+	pinMode(9,    INPUT_PULLUP); //the normal RX pin doesn't work on teensy 4 with full duplex
+#endif // HALFDUPLEX
+	pinMode(_pinLED,   OUTPUT);
 #endif // TEENSY4_0
+
+#ifdef RUMBLE
+	pinMode(_pinRumble, OUTPUT);
+	pinMode(_pinBrake, OUTPUT);
+#endif
 
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
@@ -1018,9 +1271,9 @@ void readButtons(){
 
 
 	/* Current Commands List
-	* Safe Mode:  AXY+Start
+	* Safe Mode:  AXYZ+Start
 	* Hard Reset:  ABZ+Start
-	* Rumble Toggle:
+	* Rumble Toggle: BXY+Start (no A)
 	*
 	* Calibration
 	* Analog Stick Calibration:  AXY+L
@@ -1062,6 +1315,10 @@ void readButtons(){
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
 			resetDefaults();
 			freezeSticks(2000);
+		} else if (btn.B && hardwareX && hardwareY && btn.S && !btn.A) { //Rumble Toggle
+#ifdef RUMBLE
+			toggleRumble();
+#endif // RUMBLE
 		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
 			_calAStick = true;
@@ -1419,6 +1676,21 @@ void clearButtons(const int time) {
 	while(delta < time){
 		delta = millis() - startTime;
 	}
+}
+void toggleRumble() {
+	Serial.println("toggling rumble");
+	if(_rumble == 1) {//if on, turn rumble off
+		_rumble = 0;
+		freezeSticks(2000);
+	} else if(_rumble == 0) {//if off, turn rumble on
+		_rumble = 1;
+		_overrideRumble = 1;//tell it to begin rumbling and then pause for a half second
+		freezeSticks(500);
+		_overrideRumble = -1;//tell it to stop rumbling
+		freezeSticks(100);
+		_overrideRumble = 0;//return override to neutral
+	}
+	EEPROM.put(_eepromRumble, _rumble);
 }
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
@@ -1965,9 +2237,15 @@ void setPole(){
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
+#ifndef HALFDUPLEX
 		for(int j = 0; j < 8; j++){
 			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
 		}
+#else // HALFDUPLEX
+		for(int j = 0; j < 8; j++){
+			_pollResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+		}
+#endif // HALFDUPLEX
 #endif // TEENSY4_0
 	}
 }
