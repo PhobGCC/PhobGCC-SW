@@ -15,7 +15,7 @@
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -349,20 +349,13 @@ int _writeQueue = 0;
 uint8_t _cmdByte = 0;
 const int _fastBaud = 2500000;
 const int _slowBaud = 2000000;
-#ifndef HALFDUPLEX
 const int _probeLength = 24;
 const int _originLength = 80;
 const int _pollLength = 64;
-#else // HALFDUPLEX
-const int _probeLength = 25;
-const int _originLength = 81;
-const int _pollLength = 65;
-#endif // HALFDUPLEX
 static char _serialBuffer[128];
 int _errorCount = 0;
 int _reportCount = 0;
 
-#ifndef HALFDUPLEX
 const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
@@ -378,35 +371,6 @@ volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0};
-#else // HALFDUPLEX 
-const char _probeResponse[_probeLength] = {
-    0,0,0,0, 1,0,0,1,
-    0,0,0,0, 0,0,0,0,
-    0,0,0,0, 0,0,1,1,
-    1};
-const char _originResponse[_originLength] = {
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    1};
-volatile char _pollResponse[_originLength] = {
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    1};
-#endif // HALFDUPLEX
 #endif // TEENSY4_0
 
 void setup() {
@@ -760,15 +724,9 @@ void commInt() {
 			_bitQueue = 8;
 			Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
 			
-			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
-			//_writing = true;
-			//_bitQueue = _pollLength-1;
-			
-			
-			
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
-				if(_pollResponse[i]){
+				if(_commResponse[i]){
 					//short low period = 1
 					Serial2.write(0b11111100);
 				}
@@ -777,6 +735,9 @@ void commInt() {
 					Serial2.write(0b11000000);
 				}
 			}
+			
+			//write the stop bit
+			Serial2.write(0b11111100);
 			//start the timer to reset the the serial port when the response has been sent
 			timer1.trigger(175);
 			
@@ -840,13 +801,10 @@ void commInt() {
 				
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
-				//Serial2.setTX(8,true);
-				//_writing = true;
-				//_bitQueue = _originLength-1;
 				
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
-					if(_originResponse[i]){
+					if(_commResponse[i]){
 						//short low period = 1
 						Serial2.write(0b11111100);
 					}
@@ -855,6 +813,9 @@ void commInt() {
 						Serial2.write(0b11000000);
 					}
 				}
+				//write the stop bit
+				Serial2.write(0b11111100);
+				
 				resetSerial();
 			}
 			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
@@ -2237,15 +2198,9 @@ void setPole(){
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
-#ifndef HALFDUPLEX
 		for(int j = 0; j < 8; j++){
 			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
 		}
-#else // HALFDUPLEX
-		for(int j = 0; j < 8; j++){
-			_pollResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
-		}
-#endif // HALFDUPLEX
 #endif // TEENSY4_0
 	}
 }
