@@ -417,7 +417,7 @@ void setup() {
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 		
 	//read the current stats of the controller before starting communications to ensure the first origin/poll responses have trigger info
-	readSticks();
+	readSticks(false,false,false);
 	readButtons();
 	
 //set upt communication interrupts, serial, and timers
