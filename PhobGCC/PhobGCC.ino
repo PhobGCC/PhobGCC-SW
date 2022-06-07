@@ -415,7 +415,11 @@ void setup() {
     setPinModes();
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
-
+		
+	//read the current stats of the controller before starting communications to ensure the first origin/poll responses have trigger info
+	readSticks();
+	readButtons();
+	
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
     Serial2.addMemoryForRead(_serialBuffer,128);
@@ -551,7 +555,7 @@ void commInt() {
 			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
-			Serial2.begin(2500000);
+			Serial2.begin(_fastBaud);
 
 			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
 			_writing = true;
@@ -606,7 +610,7 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
-				Serial2.begin(2500000);
+				Serial2.begin(_fastBaud);
 				_writing = true;
 				_bitQueue = _probeLength;
 
@@ -631,7 +635,7 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
-				Serial2.begin(2500000);
+				Serial2.begin(_fastBaud);
 				_writing = true;
 				_bitQueue = _originLength;
 
@@ -666,7 +670,7 @@ void commInt() {
 				//we don't know for sure what state things are in, so clear, flush, and restart the serial port at low speed to be ready to receive a command
 				Serial2.clear();
 				Serial2.flush();
-				Serial2.begin(2000000);
+				Serial2.begin(_slowBaud);
 				//set our expected bit queue to 8, which will collect the first byte of any command we receive
 				_bitQueue = 8;
 			}
@@ -687,7 +691,7 @@ void commInt() {
 		if(_waiting){
 			//digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be received
-			while(Serial2.available() < _bitQueue){}
+			while(Serial2.available() <= _bitQueue){}
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 			
 			for(int i = 0; i < _bitQueue; i++){
@@ -717,8 +721,7 @@ void commInt() {
 				//Serial.println();
 			}
 
-			
-			//if we are not writing, check to see if we were//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
+			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
 			_bitQueue = 8;
@@ -726,6 +729,7 @@ void commInt() {
 			
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
+				
 				if(_commResponse[i]){
 					//short low period = 1
 					Serial2.write(0b11111100);
@@ -777,8 +781,6 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
 				//Serial2.setTX(8,true);
-				//_writing = true;
-				//_bitQueue = _probeLength-1;
 				
 				//write the probe response
 				for(int i = 0; i<_probeLength; i++){
@@ -791,6 +793,8 @@ void commInt() {
 						Serial2.write(0b11000000);
 					}
 				}
+				//write stop bit
+				Serial2.write(0b11111100);
 				resetSerial();
 			}
 			//if the command byte is 01000001 it is an origin command, we will send an origin response
@@ -801,6 +805,8 @@ void commInt() {
 				
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+				//set the comm response so when we respond to the origin command it has the correct data
+				setPole();
 				
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
@@ -852,8 +858,7 @@ void resetSerial(){
 	Serial2.clear();
 	Serial2.flush();
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
-	//Serial2.setTX(8,true);
-	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
+	digitalWriteFast(_pinLED,LOW);
 }
 #endif // HALFDUPLEX
 #endif // TEENSY4_0
