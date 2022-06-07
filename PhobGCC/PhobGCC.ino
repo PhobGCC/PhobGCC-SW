@@ -1477,9 +1477,15 @@ void readButtons(){
 	if(hardwareZ && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
 		if(_currentCalStep % 2 == 0 && _currentCalStep < 32 && _currentCalStep != 0 ) {
+			//If it's measuring zero, go back to the previous zero
 			_currentCalStep --;
 			_currentCalStep --;
+		} else if(_currentCalStep % 2 == 1 && _currentCalStep < 32 && _currentCalStep != 0 ) {
+			//If it's measuring a notch, go back to the zero before the previous notch
+			_currentCalStep -= 3;
+			_currentCalStep = max(_currentCalStep, 0);
 		} else if(_currentCalStep > 32) {
+			//We can go directly between notches when adjusting notches
 			_currentCalStep --;
 		}
 		if(!_calAStick){
