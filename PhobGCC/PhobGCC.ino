@@ -53,6 +53,8 @@ const int _rumbleDefault = 1;
 int _overrideRumble = 0;
 bool _safeMode = true;
 
+int trigL,trigR;
+
 ///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
 
 float _velDampMin = 0.125;
@@ -416,10 +418,9 @@ void setup() {
     setPinModes();
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
-	
-	int trigL,trigR;
+
 	initializeButtons(btn,trigL,trigR);
-	
+
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
     Serial2.addMemoryForRead(_serialBuffer,128);
@@ -693,7 +694,7 @@ void commInt() {
 			//wait for the stop bit to be received
 			while(Serial2.available() <= _bitQueue){}
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
-			
+
 			for(int i = 0; i < _bitQueue; i++){
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 			}
@@ -726,10 +727,10 @@ void commInt() {
 			_waiting = false;
 			_bitQueue = 8;
 			Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
-			
+
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
-				
+
 				if(_commResponse[i]){
 					//short low period = 1
 					Serial2.write(0b11111100);
@@ -739,31 +740,31 @@ void commInt() {
 					Serial2.write(0b11000000);
 				}
 			}
-			
+
 			//write the stop bit
 			Serial2.write(0b11111100);
 			//start the timer to reset the the serial port when the response has been sent
 			timer1.trigger(175);
-			
-			
+
+
 		}
 		else{
-			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command	
+			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
 			//increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
 			_reportCount++;
 			if(_reportCount > 64){
 				_reportCount = 0;
 			}
-			
+
 			//clear the command byte of previous data
 			_cmdByte = 0;
-			
+
 			//write the new data from the serial buffer into the command byte
 			for(int i = 0; i<8; i++){
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 
 			}
-			
+
 			//if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
 			if(_reportCount==0){
 				Serial.print("Received: ");
@@ -771,17 +772,17 @@ void commInt() {
 				Serial.print("Error Count:");
 				Serial.println(_errorCount);
 			}
-			
+
 			//if the command byte is all 0s it is probe command, we will send a probe response
 			if(_cmdByte == 0b00000000){
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
-				
+
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
 				//Serial2.setTX(8,true);
-				
+
 				//write the probe response
 				for(int i = 0; i<_probeLength; i++){
 					if(_probeResponse[i]){
@@ -802,12 +803,12 @@ void commInt() {
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
-				
+
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
 				//set the comm response so when we respond to the origin command it has the correct data
 				setCommResponse();
-				
+
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
 					if(_commResponse[i]){
@@ -821,7 +822,7 @@ void commInt() {
 				}
 				//write the stop bit
 				Serial2.write(0b11111100);
-				
+
 				resetSerial();
 			}
 			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
@@ -839,14 +840,14 @@ void commInt() {
 				Serial.println(_cmdByte,BIN);
 				_errorCount ++;
 				_waiting = false;
-				
+
 				//we don't know for sure what state things are in, so clear, flush, and restart the serial port at low speed to be ready to receive a command
 				resetSerial();
 				//set our expected bit queue to 8, which will collect the first byte of any command we receive
 				_bitQueue = 8;
 				//wait a bit to make sure whatever command didn't get read properly is finished
 				delayMicroseconds(200);
-				
+
 			}
 		}
 	}
@@ -1190,14 +1191,12 @@ void readButtons(){
 		case 2: //Analog Only Trigger state
 			btn.L = (uint8_t) 0;
 			break;
-		/*
 		case 3: //Trigger Plug Emulation state
 			btn.L = !digitalRead(_pinL);
 			break;
 		case 4: //Digital => Analog Value state
 			btn.L = (uint8_t) 0;
 			break;
-		*/
 		default:
 			btn.L = !digitalRead(_pinL);
 	}
@@ -1212,14 +1211,12 @@ void readButtons(){
 		case 2: //Analog Only Trigger state
 			btn.R = (uint8_t) 0;
 			break;
-		/*
 		case 3: //Trigger Plug Emulation state
 			btn.R = !digitalRead(_pinR);
 			break;
 		case 4: //Digital => Analog Value state
 			btn.R = (uint8_t) 0;
 			break;
-		*/
 		default:
 			btn.R = !digitalRead(_pinR);
 	}
@@ -1936,13 +1933,13 @@ void setJump(int jumpConfig){
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
-		if(_currentConfig >= 2/*4*/) {
+		if(_currentConfig >= 4) {
 			_lConfig = 0;
 		} else {
 			_lConfig = _currentConfig + 1;
 		}
 	} else {
-		if(_currentConfig >= 2/*4*/) {
+		if(_currentConfig >= 4) {
 			_rConfig = 0;
 		} else {
 			_rConfig = _currentConfig + 1;
@@ -1957,7 +1954,7 @@ void initializeButtons(Buttons &thisbtn,int &startUpLa, int &startUpRa){
 	thisbtn.Ay = _analogCenter;
 	thisbtn.Cx = _analogCenter;
 	thisbtn.Cy = _analogCenter;
-	
+
 	//read the ADC inputs for the analog triggers a few times and choose the startup value to be the maximum that was recorded
 	//these values could be used as offsets to set particular trigger values
 	startUpLa = 0;
@@ -1969,14 +1966,14 @@ void initializeButtons(Buttons &thisbtn,int &startUpLa, int &startUpRa){
 	//set the trigger values to this measured startup value
 	thisbtn.La = startUpLa;
 	thisbtn.Ra = startUpRa;
-	
+
 }
 void readSticks(int readA, int readC){
 #ifdef USEADCSCALE
     _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
     // otherwise _ADCScale is 1
-		
+
 	//read the L and R sliders
 		switch(_lConfig) {
 			case 0: //Default Trigger state
@@ -1988,21 +1985,19 @@ void readSticks(int readA, int readC){
 			case 2: //Analog Only Trigger state
 				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 				break;
-			/*
 			case 3: //Trigger Plug Emulation state
 				btn.La = adc->adc0->analogRead(_pinLa)>>4;
-				if (btn.La > (((uint8_t) (_LTriggerOffset)) + 60.0)) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
+					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
 				}
 				break;
 			case 4: //Digital => Analog Value state
 				if(hardwareL) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
 				} else {
 					btn.La = (uint8_t) 0;
 				}
 				break;
-			*/
 			default:
 				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 		}
@@ -2017,25 +2012,23 @@ void readSticks(int readA, int readC){
 			case 2: //Analog Only Trigger state
 				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 				break;
-			/*
 			case 3: //Trigger Plug Emulation state
 				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + 60.0)) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
 				}
 				break;
 			case 4: //Digital => Analog Value state
 				if(hardwareR) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
 				} else {
 					btn.Ra = (uint8_t) 0;
 				}
 				break;
-			*/
 			default:
 				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 		}
-		
+
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
@@ -2130,7 +2123,7 @@ void readSticks(int readA, int readC){
 			btn.Cy = (uint8_t) (posCy+127.5);
 		}
 	}
-	
+
 	_posALastX = posAx;
 	_posALastY = posAy;
 }
