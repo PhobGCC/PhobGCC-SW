@@ -15,8 +15,7 @@
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-
+//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#define BUILD_RELEASE
 #define BUILD_DEV
 
@@ -122,6 +121,7 @@ const float _marginAngle = 1.50/100.0; //angle range(+/-) in radians that will b
 const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
 
 //////values used for calibration
+const int _analogCenter = 127;
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
 const int _noOfAdjNotches = 12;
@@ -415,10 +415,9 @@ void setup() {
     setPinModes();
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
-		
-	//read the current stats of the controller before starting communications to ensure the first origin/poll responses have trigger info
-	readSticks(false,false,false);
-	readButtons();
+	
+	int trigL,trigR;
+	initializeButtons(btn,trigL,trigR);
 	
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
@@ -472,7 +471,7 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, true, _notchAngleDefaults);
 			}
-			readSticks(true,false,true);
+			readSticks(true,false);
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -488,12 +487,12 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, false, _notchAngleDefaults);
 			}
-			readSticks(false,true,true);
+			readSticks(false,true);
 		}
 	}
-	else{
+	else if(_running){
 		//if not calibrating read the sticks normally
-		readSticks(true,true,_running);
+		readSticks(true,true);
 	}
 }
 
@@ -659,7 +658,7 @@ void commInt() {
 			else if(_cmdByte == 0b01000000){
 				_waiting = true;
 				_bitQueue = 16;
-				setPole();
+				setCommResponse();
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -806,7 +805,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
 				//set the comm response so when we respond to the origin command it has the correct data
-				setPole();
+				setCommResponse();
 				
 				//write the origin response
 				for(int i = 0; i<_originLength; i++){
@@ -830,7 +829,7 @@ void commInt() {
 				//digitalWriteFast(_pinLED,LOW);
 				_waiting = true;
 				_bitQueue = 16;
-				setPole();
+				setCommResponse();
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -1707,7 +1706,7 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
 	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
 
-	//setPole();
+	//setCommResponse();
 
 	clearButtons(2000);
 
@@ -1951,80 +1950,91 @@ void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
 }
-void readSticks(int readA, int readC, int running){
+void initializeButtons(Buttons &thisbtn,int &startUpLa, int &startUpRa){
+	//set the analog stick values to the chosen center value that will be reported to the console on startup
+	thisbtn.Ax = _analogCenter;
+	thisbtn.Ay = _analogCenter;
+	thisbtn.Cx = _analogCenter;
+	thisbtn.Cy = _analogCenter;
+	
+	//read the ADC inputs for the analog triggers a few times and choose the startup value to be the maximum that was recorded
+	//these values could be used as offsets to set particular trigger values
+	startUpLa = 0;
+	startUpRa = 0;
+	for(int i = 0; i <64; i++){
+		startUpLa = max(startUpLa,adc->adc0->analogRead(_pinLa)>>4);
+		startUpRa = max(startUpRa,adc->adc0->analogRead(_pinRa)>>4);
+	}
+	//set the trigger values to this measured startup value
+	thisbtn.La = startUpLa;
+	thisbtn.Ra = startUpRa;
+	
+}
+void readSticks(int readA, int readC){
 #ifdef USEADCSCALE
     _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
     // otherwise _ADCScale is 1
-
-	//read the analog stick, scale it down so that we don't get huge values when we linearize
-	//_aStickX = adc->adc0->analogRead(_pinAx)/4096.0*_ADCScale;
-	//_aStickY = adc->adc0->analogRead(_pinAy)/4096.0*_ADCScale;
-
-
+		
 	//read the L and R sliders
-	switch(_lConfig) {
-		case 0: //Default Trigger state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			break;
-		case 1: //Digital Only Trigger state
-			btn.La = (uint8_t) 0;
-			break;
-		case 2: //Analog Only Trigger state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			break;
-		/*
-		case 3: //Trigger Plug Emulation state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			if (btn.La > (((uint8_t) (_LTriggerOffset)) + 60.0)) {
-				btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
-			}
-			break;
-		case 4: //Digital => Analog Value state
-			if(hardwareL) {
-				btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
-			} else {
+		switch(_lConfig) {
+			case 0: //Default Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				break;
+			case 1: //Digital Only Trigger state
 				btn.La = (uint8_t) 0;
-			}
-			break;
-		*/
-		default:
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	}
+				break;
+			case 2: //Analog Only Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				break;
+			/*
+			case 3: //Trigger Plug Emulation state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				if (btn.La > (((uint8_t) (_LTriggerOffset)) + 60.0)) {
+					btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				if(hardwareL) {
+					btn.La = (((uint8_t) (_LTriggerOffset)) + 60.0);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			*/
+			default:
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+		}
 
-	switch(_rConfig) {
-		case 0: //Default Trigger state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			break;
-		case 1: //Digital Only Trigger state
-			btn.Ra = (uint8_t) 0;
-			break;
-		case 2: //Analog Only Trigger state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			break;
-		/*
-		case 3: //Trigger Plug Emulation state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + 60.0)) {
-				btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
-			}
-			break;
-		case 4: //Digital => Analog Value state
-			if(hardwareR) {
-				btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
-			} else {
+		switch(_rConfig) {
+			case 0: //Default Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				break;
+			case 1: //Digital Only Trigger state
 				btn.Ra = (uint8_t) 0;
-			}
-			break;
-		*/
-		default:
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-	}
-
-	//read the c stick, scale it down so that we don't get huge values when we linearize
-	//_cStickX = (_cStickX + adc->adc0->analogRead(_pinCx)/4096.0)*0.5;
-	//_cStickY = (_cStickY + adc->adc0->analogRead(_pinCy)/4096.0)*0.5;
-
+				break;
+			case 2: //Analog Only Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				break;
+			/*
+			case 3: //Trigger Plug Emulation state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + 60.0)) {
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				if(hardwareR) {
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + 60.0);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			*/
+			default:
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+		}
+		
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
@@ -2099,36 +2109,27 @@ void readSticks(int readA, int readC, int running){
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
-	if(_running){
-		if(readA){
-			float diffAx = (posAx+127.5)-btn.Ax;
-			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-				btn.Ax = (uint8_t) (posAx+127.5);
-			}
-			float diffAy = (posAy+127.5)-btn.Ay;
-			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-				btn.Ay = (uint8_t) (posAy+127.5);
-			}
+	if(readA){
+		float diffAx = (posAx+127.5)-btn.Ax;
+		if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+			btn.Ax = (uint8_t) (posAx+127.5);
 		}
-		if(readC){
-			float diffCx = (posCx+127.5)-btn.Cx;
-			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (posCx+127.5);
-			}
-			float diffCy = (posCy+127.5)-btn.Cy;
-			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (posCy+127.5);
-			}
+		float diffAy = (posAy+127.5)-btn.Ay;
+		if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+			btn.Ay = (uint8_t) (posAy+127.5);
 		}
 	}
-	else
-	{
-		btn.Ax = (uint8_t) 127;//For some reason, this must be 127 and all other offsets need to be 127.5.
-		btn.Ay = (uint8_t) 127;//127 or 128 for everything would make sense (probably 128) but then the stick output
-		btn.Cx = (uint8_t) 127;//doesn't reach the cardinals when displaying the cal hints, even though the normal stick position output
-		btn.Cy = (uint8_t) 127;//does reach the cardinals. It's fucked up. Even worse, if this is 127.5, it doesn't zero properly on console.
+	if(readC){
+		float diffCx = (posCx+127.5)-btn.Cx;
+		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+			btn.Cx = (uint8_t) (posCx+127.5);
+		}
+		float diffCy = (posCy+127.5)-btn.Cy;
+		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+			btn.Cy = (uint8_t) (posCy+127.5);
+		}
 	}
-
+	
 	_posALastX = posAx;
 	_posALastY = posAy;
 }
@@ -2174,11 +2175,11 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	}
 }
 /*******************
-	setPole
+	setCommResponse
 	takes the values that have been put into the button struct and translates them in the serial commands ready
 	to be sent to the gamecube/wii
 *******************/
-void setPole(){
+void setCommResponse(){
 	for(int i = 0; i < 8; i++){
 		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
 #ifdef TEENSY3_2
@@ -2292,6 +2293,7 @@ void communicate(){
 		break;
 		case 0x41:
 			timer1.trigger(ORIGIN_LENGTH*8);
+			setCommResponse();
 			for(int i = 0; i< ORIGIN_LENGTH; i++){
 				Serial2.write(_commResponse[i]);
 			}
@@ -2303,7 +2305,7 @@ void communicate(){
 		case 0x40:
 			timer1.trigger(56);
 			_commStatus = _commPoll;
-			setPole();
+			setCommResponse();
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
