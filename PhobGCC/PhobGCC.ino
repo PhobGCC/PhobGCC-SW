@@ -42,7 +42,7 @@ int _cMin = -127;
 int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
 int _triggerMin = 49;
-int _triggerMax = 255;
+int _triggerMax = 227;
 //rumble config; 0 is off, 1 is on. Higher values might be weaker rumble in the future?
 int _rumble = 1;
 const int _rumbleMin = 0;
@@ -1897,10 +1897,20 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 	EEPROM.put(_eepromLOffset, _LTriggerOffset);
 	EEPROM.put(_eepromROffset, _RTriggerOffset);
 
-	btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
-	btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+	if(_LTriggerOffset > 99) {
+		btn.Ax = (uint8_t) (127.5 + 100);
+		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset-100);
+	} else {
+		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+	}
+	if(_RTriggerOffset > 99) {
+		btn.Ay = (uint8_t) (127.5 + 100);
+		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset-100);
+	} else {
+		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+	}
 
-	clearButtons(2000);
+	clearButtons(250);
 }
 void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
@@ -1999,14 +2009,14 @@ void readSticks(int readA, int readC){
 				break;
 			case 4: //Digital => Analog Value state
 				if(hardwareL) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
 				}
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(hardwareL) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
 				}
@@ -2033,14 +2043,14 @@ void readSticks(int readA, int readC){
 				break;
 			case 4: //Digital => Analog Value state
 				if(hardwareR) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
 				}
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(hardwareR) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
 				}
