@@ -43,14 +43,12 @@ int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
 int _triggerMin = 49;
 int _triggerMax = 227;
-//rumble config; 0 is off, 1 is on. Higher values might be weaker rumble in the future?
+//rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 1;
+int _rumblePower = pow(2.0, 7+((_rumble+1)/8.0)); //should be 256 when rumble is 7
 const int _rumbleMin = 0;
-const int _rumbleMax = 1;
-const int _rumbleDefault = 1;
-//overrideRumble will always command rumble even if _rumble is off or if the console is telling it to stop.
-//0 is nothing, -1 is brake, 1 is on.
-int _overrideRumble = 0;
+const int _rumbleMax = 7;
+const int _rumbleDefault = 5;
 bool _safeMode = true;
 
 int trigL,trigR;
@@ -699,16 +697,16 @@ void commInt() {
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 			}
 #ifdef RUMBLE
-			if((_cmdByte & 0b00000001 && _rumble) || _overrideRumble == 1){
+			if(_cmdByte & 0b00000001 && _rumble > 0){
 				digitalWriteFast(_pinBrake,LOW);
-				digitalWriteFast(_pinRumble,HIGH);
+				analogWrite(_pinRumble, _rumblePower);
 			}
-			else if((_cmdByte & 0b00000010) || _overrideRumble == -1){
-				digitalWriteFast(_pinRumble,LOW);
+			else if(_cmdByte & 0b00000010){
+				analogWrite(_pinRumble,0);
 				digitalWriteFast(_pinBrake,HIGH);
 			}
 			else{
-				digitalWriteFast(_pinRumble,LOW);
+				analogWrite(_pinRumble,0);
 				digitalWriteFast(_pinBrake,LOW);
 			}
 #endif
@@ -1022,6 +1020,8 @@ void readEEPROM(){
 
 	//Get the rumble value
 	EEPROM.get(_eepromRumble, _rumble);
+	Serial.print("Rumble value before fixing: ");
+	Serial.println(_rumble);
 	if(std::isnan(_rumble)) {
 		_rumble = _rumbleDefault;
 	}
@@ -1031,6 +1031,11 @@ void readEEPROM(){
 	if(_rumble > _rumbleMax) {
 		_rumble = _rumbleMax;
 	}
+	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
+	Serial.print("Rumble value: ");
+	Serial.println(_rumble);
+	Serial.print("Rumble power: ");
+	Serial.println(_rumblePower);
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
@@ -1094,6 +1099,7 @@ void resetDefaults(){
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	_rumble = _rumbleDefault;
+	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
 	EEPROM.put(_eepromRumble, _rumble);
 
 	for(int i = 0; i < _noOfNotches; i++){
@@ -1242,7 +1248,8 @@ void readButtons(){
 	/* Current Commands List
 	* Safe Mode:  AXYZ+Start
 	* Hard Reset:  ABZ+Start
-	* Rumble Toggle: BXY+Start (no A)
+	* Increase/Decrease Rumble: XY+Du/Dd
+	* Show Current Rumble Setting: BXY (no A)
 	*
 	* Calibration
 	* Analog Stick Calibration:  AXY+L
@@ -1284,9 +1291,25 @@ void readButtons(){
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
 			resetDefaults();
 			freezeSticks(2000);
-		} else if (btn.B && hardwareX && hardwareY && btn.S && !btn.A) { //Rumble Toggle
+		} else if (hardwareX && hardwareY && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
-			toggleRumble();
+			changeRumble(true);
+#else // RUMBLE
+			//nothing
+			freezeSticks(2000);
+#endif // RUMBLE
+		} else if (hardwareX && hardwareY && btn.Dd) { //Decrease Rumble
+#ifdef RUMBLE
+			changeRumble(false);
+#else // RUMBLE
+			//nothing
+			freezeSticks(2000);
+#endif // RUMBLE
+		} else if (hardwareX && hardwareY && btn.B && !btn.A) { //Show current rumble setting
+#ifdef RUMBLE
+			showRumble(2000);
+#else // RUMBLE
+			freezeSticks(2000);
 #endif // RUMBLE
 		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
@@ -1446,9 +1469,15 @@ void readButtons(){
 	if(hardwareZ && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
 		if(_currentCalStep % 2 == 0 && _currentCalStep < 32 && _currentCalStep != 0 ) {
+			//If it's measuring zero, go back to the previous zero
 			_currentCalStep --;
 			_currentCalStep --;
+		} else if(_currentCalStep % 2 == 1 && _currentCalStep < 32 && _currentCalStep != 0 ) {
+			//If it's measuring a notch, go back to the zero before the previous notch
+			_currentCalStep -= 3;
+			_currentCalStep = max(_currentCalStep, 0);
 		} else if(_currentCalStep > 32) {
+			//We can go directly between notches when adjusting notches
 			_currentCalStep --;
 		}
 		if(!_calAStick){
@@ -1646,19 +1675,29 @@ void clearButtons(const int time) {
 		delta = millis() - startTime;
 	}
 }
-void toggleRumble() {
-	Serial.println("toggling rumble");
-	if(_rumble == 1) {//if on, turn rumble off
-		_rumble = 0;
-		freezeSticks(2000);
-	} else if(_rumble == 0) {//if off, turn rumble on
-		_rumble = 1;
-		_overrideRumble = 1;//tell it to begin rumbling and then pause for a half second
-		freezeSticks(500);
-		_overrideRumble = -1;//tell it to stop rumbling
-		freezeSticks(100);
-		_overrideRumble = 0;//return override to neutral
+void changeRumble(const bool increase) {
+	Serial.println("changing rumble");
+	if(increase) {
+		_rumble += 1;
+	} else {
+		_rumble -= 1;
 	}
+	if(_rumble > _rumbleMax) {
+		_rumble = _rumbleMax;
+	}
+	if(_rumble < _rumbleMin) {
+		_rumble = _rumbleMin;
+	}
+
+	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
+	showRumble(1000);
+}
+
+void showRumble(const int time) {
+	btn.Cx = (uint8_t) 127;
+	btn.Cy = (uint8_t) (_rumble + 127.5);
+	clearButtons(time);
+
 	EEPROM.put(_eepromRumble, _rumble);
 }
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
