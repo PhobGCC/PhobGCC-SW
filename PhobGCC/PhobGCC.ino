@@ -1197,6 +1197,9 @@ void readButtons(){
 		case 4: //Digital => Analog Value state
 			btn.L = (uint8_t) 0;
 			break;
+		case 5: //Digital -> Analog Value + Digital state
+			btn.L = !digitalRead(_pinL);
+			break;
 		default:
 			btn.L = !digitalRead(_pinL);
 	}
@@ -1216,6 +1219,9 @@ void readButtons(){
 			break;
 		case 4: //Digital => Analog Value state
 			btn.R = (uint8_t) 0;
+			break;
+		case 5: //Digital -> Analog Value + Digital state
+			btn.R = !digitalRead(_pinR);
 			break;
 		default:
 			btn.R = !digitalRead(_pinR);
@@ -1933,13 +1939,13 @@ void setJump(int jumpConfig){
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
-		if(_currentConfig >= 4) {
+		if(_currentConfig >= 5) {
 			_lConfig = 0;
 		} else {
 			_lConfig = _currentConfig + 1;
 		}
 	} else {
-		if(_currentConfig >= 4) {
+		if(_currentConfig >= 5) {
 			_rConfig = 0;
 		} else {
 			_rConfig = _currentConfig + 1;
@@ -1998,6 +2004,13 @@ void readSticks(int readA, int readC){
 					btn.La = (uint8_t) 0;
 				}
 				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(hardwareL) {
+					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
 			default:
 				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 		}
@@ -2019,6 +2032,13 @@ void readSticks(int readA, int readC){
 				}
 				break;
 			case 4: //Digital => Analog Value state
+				if(hardwareR) {
+					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
 				if(hardwareR) {
 					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
 				} else {
