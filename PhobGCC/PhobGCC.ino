@@ -17,8 +17,8 @@
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
-//#define BUILD_RELEASE
-#define BUILD_DEV
+#define BUILD_RELEASE
+//#define BUILD_DEV
 
 using namespace Eigen;
 
@@ -377,7 +377,7 @@ volatile char _commResponse[_originLength] = {
 void setup() {
     serialSetup();
 		#ifdef BUILD_RELEASE
-    Serial.println("Software version 0.20");
+    Serial.println("Software version 0.21");
     #endif
 		#ifdef BUILD_DEV
     Serial.println("This is not a stable version");
@@ -1246,7 +1246,7 @@ void readButtons(){
 
 
 	/* Current Commands List
-	* Safe Mode:  AXYZ+Start
+	* Safe Mode:  AXY+Start
 	* Hard Reset:  ABZ+Start
 	* Increase/Decrease Rumble: XY+Du/Dd
 	* Show Current Rumble Setting: BXY (no A)
