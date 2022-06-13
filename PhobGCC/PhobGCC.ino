@@ -24,6 +24,61 @@ using namespace Eigen;
 
 TeensyTimerTool::OneShotTimer timer1;
 
+union Buttons{
+  uint8_t arr[10];
+  struct {
+
+        // byte 0
+    uint8_t A : 1;
+    uint8_t B : 1;
+    uint8_t X : 1;
+    uint8_t Y : 1;
+    uint8_t S : 1;
+    uint8_t orig : 1;
+    uint8_t errL : 1;
+    uint8_t errS : 1;
+
+    // byte 1
+    uint8_t Dl : 1;
+    uint8_t Dr : 1;
+    uint8_t Dd : 1;
+    uint8_t Du : 1;
+    uint8_t Z : 1;
+    uint8_t R : 1;
+    uint8_t L : 1;
+    uint8_t high : 1;
+
+    //byte 2-7
+    uint8_t Ax : 8;
+    uint8_t Ay : 8;
+    uint8_t Cx : 8;
+    uint8_t Cy : 8;
+    uint8_t La : 8;
+    uint8_t Ra : 8;
+
+    // magic byte 8 & 9 (only used in origin cmd)
+    // have something to do with rumble motor status???
+    // ignore these, they are magic numbers needed
+    // to make a cmd response work
+    uint8_t magic1 : 8;
+    uint8_t magic2 : 8;
+  };
+}btn;
+
+uint8_t hardwareL;
+uint8_t hardwareR;
+uint8_t hardwareZ;
+uint8_t hardwareX;
+uint8_t hardwareY;
+
+float _aStickX;
+float _posALastX;
+float _aStickY;
+float _posALastY;
+float _cStickX;
+float _cStickY;
+
+
 //defining control configuration
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
@@ -44,8 +99,11 @@ int _RTriggerOffset = 49;
 int _triggerMin = 49;
 int _triggerMax = 227;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
-int _rumble = 1;
-int _rumblePower = pow(2.0, 7+((_rumble+1)/8.0)); //should be 256 when rumble is 7
+int _rumble = 5;
+int calcRumblePower(const int rumble){
+	return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+}
+int _rumblePower = calcRumblePower(_rumble);
 const int _rumbleMin = 0;
 const int _rumbleMax = 7;
 const int _rumbleDefault = 5;
@@ -53,10 +111,16 @@ bool _safeMode = true;
 
 int trigL,trigR;
 
-///// Values used for dealing with snapback in the Kalman Filter, a 6th power relationship between distance to center and ADC/acceleration variance is used, this was arrived at by trial and error
+///// Values used for adjusting snapback in the CarVac Filter
 
-float _velDampMin = 0.125;
-float _velDampMax = .5;
+int _xSnapback = 1;
+int _ySnapback = 1;
+const float _snapbackMin = 0;
+const float _snapbackMax = 7;
+const float _snapbackDefault = 1;//0 disables the filter completely, 1 is the default
+float velDampFromSnapback(const int snapback){
+	return 0.125 * pow(2, (snapback-1)/3.0);//1 should yield 0.125, 7 should yield 0.5, don't care about 0
+}
 
 // Values used for dealing with X/Y Smoothing in the CarVac Filter, for ledge-dashing
 // also used for C-stick snapback filtering
@@ -185,9 +249,9 @@ const int _eepromAPointsX = 0;
 const int _eepromAPointsY = _eepromAPointsX+_noOfCalibrationPoints*_bytesPerFloat;
 const int _eepromCPointsX = _eepromAPointsY+_noOfCalibrationPoints*_bytesPerFloat;
 const int _eepromCPointsY = _eepromCPointsX+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromxVelDamp = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromyVelDamp = _eepromxVelDamp+_bytesPerFloat;
-const int _eepromJump = _eepromyVelDamp+_bytesPerFloat;
+const int _eepromxSnapback = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
+const int _eepromySnapback = _eepromxSnapback+_bytesPerFloat;
+const int _eepromJump = _eepromySnapback+_bytesPerFloat;
 const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
 const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
 const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
@@ -208,61 +272,6 @@ Bounce bounceDl = Bounce();
 Bounce bounceDd = Bounce();
 
 ADC *adc = new ADC();
-
-union Buttons{
-	uint8_t arr[10];
-	struct {
-
-				// byte 0
-		uint8_t A : 1;
-		uint8_t B : 1;
-		uint8_t X : 1;
-		uint8_t Y : 1;
-		uint8_t S : 1;
-		uint8_t orig : 1;
-		uint8_t errL : 1;
-		uint8_t errS : 1;
-
-		// byte 1
-		uint8_t Dl : 1;
-		uint8_t Dr : 1;
-		uint8_t Dd : 1;
-		uint8_t Du : 1;
-		uint8_t Z : 1;
-		uint8_t R : 1;
-		uint8_t L : 1;
-		uint8_t high : 1;
-
-		//byte 2-7
-		uint8_t Ax : 8;
-		uint8_t Ay : 8;
-		uint8_t Cx : 8;
-		uint8_t Cy : 8;
-		uint8_t La : 8;
-		uint8_t Ra : 8;
-
-		// magic byte 8 & 9 (only used in origin cmd)
-		// have something to do with rumble motor status???
-		// ignore these, they are magic numbers needed
-		// to make a cmd response work
-		uint8_t magic1 : 8;
-		uint8_t magic2 : 8;
-	};
-}btn;
-
-uint8_t hardwareL;
-uint8_t hardwareR;
-uint8_t hardwareZ;
-uint8_t hardwareX;
-uint8_t hardwareY;
-
-float _aStickX;
-float _posALastX;
-float _aStickY;
-float _posALastY;
-float _cStickX;
-float _cStickY;
-
 
 
 unsigned int _lastMicros;
@@ -903,35 +912,41 @@ void readEEPROM(){
     _cYOffset = _cMin;
   }
 
-  //get the x-axis velocity dampening
-  EEPROM.get(_eepromxVelDamp, _gains.xVelDamp);
-  Serial.print("the xVelDamp value from eeprom is:");
-  Serial.println(_gains.xVelDamp);
-  if(std::isnan(_gains.xVelDamp)){
-		_gains.xVelDamp = _velDampMin;
-		Serial.print("the xVelDamp value was adjusted to:");
-		Serial.println(_gains.xVelDamp);
+	//get the x-axis snapback correction
+	EEPROM.get(_eepromxSnapback, _xSnapback);
+	Serial.print("the xSnapback value from eeprom is:");
+	Serial.println(_xSnapback);
+	if(std::isnan(_xSnapback)){
+		_xSnapback = _snapbackDefault;
+		Serial.print("the xSnapback value was adjusted to:");
+		Serial.println(_xSnapback);
 	}
-  if (_gains.xVelDamp > _velDampMax) {
-    _gains.xVelDamp = _velDampMax;
-  } else if (_gains.xVelDamp < _velDampMin) {
-    _gains.xVelDamp = _velDampMin;
-  }
+	if(_xSnapback < _snapbackMin) {
+		_xSnapback = _snapbackMin;
+	} else if (_xSnapback > _snapbackMax) {
+		_xSnapback = _snapbackMax;
+	}
+	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
+	Serial.print("the xVelDamp value from eeprom is:");
+	Serial.println(_gains.xVelDamp);
 
-  //get the y-axis velocity dampening
-  EEPROM.get(_eepromyVelDamp, _gains.yVelDamp);
-  Serial.print("the yVelDamp value from eeprom is:");
-  Serial.println(_gains.yVelDamp);
-  if(std::isnan(_gains.yVelDamp)){
-		_gains.yVelDamp = _velDampMin;
-		Serial.print("the yVelDamp value was adjusted to:");
-		Serial.println(_gains.yVelDamp);
+	//get the y-ayis snapback correction
+	EEPROM.get(_eepromySnapback, _ySnapback);
+	Serial.print("the ySnapback value from eeprom is:");
+	Serial.println(_ySnapback);
+	if(std::isnan(_ySnapback)){
+		_ySnapback = _snapbackDefault;
+		Serial.print("the ySnapback value was adjusted to:");
+		Serial.println(_ySnapback);
 	}
-  if (_gains.yVelDamp > _velDampMax) {
-    _gains.yVelDamp = _velDampMax;
-  } else if (_gains.yVelDamp < _velDampMin) {
-    _gains.yVelDamp = _velDampMin;
-  }
+	if(_ySnapback < _snapbackMin) {
+		_ySnapback = _snapbackMin;
+	} else if (_ySnapback > _snapbackMax) {
+		_ySnapback = _snapbackMax;
+	}
+	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
+	Serial.print("the yVelDamp value from eeprom is:");
+	Serial.println(_gains.yVelDamp);
 
   //get the x-axis smoothing value
   EEPROM.get(_eepromxSmoothing, _gains.xSmoothing);
@@ -1031,7 +1046,7 @@ void readEEPROM(){
 	if(_rumble > _rumbleMax) {
 		_rumble = _rumbleMax;
 	}
-	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
+	_rumblePower = calcRumblePower(_rumble);
 	Serial.print("Rumble value: ");
 	Serial.println(_rumble);
 	Serial.print("Rumble power: ");
@@ -1076,10 +1091,12 @@ void resetDefaults(){
   EEPROM.put(_eepromcXOffset, _cXOffset);
   EEPROM.put(_eepromcYOffset, _cYOffset);
 
-  _gains.xVelDamp = _velDampMin;
-  EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
-  _gains.yVelDamp = _velDampMin;
-  EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
+	_xSnapback = _snapbackDefault;
+	EEPROM.put(_eepromxSnapback,_xSnapback);
+	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
+	_ySnapback = _snapbackDefault;
+	EEPROM.put(_eepromySnapback,_ySnapback);
+	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 
   _gains.xSmoothing = _smoothingMin;
   EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
@@ -1099,7 +1116,7 @@ void resetDefaults(){
   EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	_rumble = _rumbleDefault;
-	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
+	_rumblePower = calcRumblePower(_rumble);
 	EEPROM.put(_eepromRumble, _rumble);
 
 	for(int i = 0; i < _noOfNotches; i++){
@@ -1689,7 +1706,7 @@ void changeRumble(const bool increase) {
 		_rumble = _rumbleMin;
 	}
 
-	_rumblePower = pow(2.0, 7+((_rumble+1)/8.0));
+	_rumblePower = calcRumblePower(_rumble);
 	showRumble(1000);
 }
 
@@ -1703,58 +1720,42 @@ void showRumble(const int time) {
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
 	if(_xAxis && _increase && _change){
-		_gains.xVelDamp = _gains.xVelDamp*1.2599;
-		Serial.print("X filtering increased to:");
-		Serial.println(_gains.xVelDamp);
+		_xSnapback = min(_xSnapback+1, _snapbackMax);
+		Serial.print("x snapback filtering increased to:");
+		Serial.println(_xSnapback);
 	}
 	else if(_xAxis && !_increase && _change){
-		_gains.xVelDamp = _gains.xVelDamp*0.7937;
-		Serial.print("X filtering decreased to:");
-		Serial.println(_gains.xVelDamp);
-	}
-	if(_gains.xVelDamp > _velDampMax){
-		_gains.xVelDamp = _velDampMax;
-	}
-	else if(_gains.xVelDamp < _velDampMin){
-		_gains.xVelDamp = _velDampMin;
+		_xSnapback = max(_xSnapback-1, _snapbackMin);
+		Serial.print("x snapback filtering decreased to:");
+		Serial.println(_xSnapback);
 	}
 
 	if(!_xAxis && _increase && _change){
-		_gains.yVelDamp = _gains.yVelDamp*1.2599;
-		Serial.print("Y filtering increased to:");
-		Serial.println(_gains.yVelDamp);
+		_ySnapback = min(_ySnapback+1, _snapbackMax);
+		Serial.print("y snapback filtering increased to:");
+		Serial.println(_ySnapback);
 	}
 	else if(!_xAxis && !_increase && _change){
-		_gains.yVelDamp = _gains.yVelDamp*0.7937;
-		Serial.print("Y filtering decreased to:");
-		Serial.println(_gains.yVelDamp);
+		_ySnapback = max(_ySnapback-1, _snapbackMin);
+		Serial.print("y snapback filtering decreased to:");
+		Serial.println(_ySnapback);
 	}
-	if(_gains.yVelDamp >_velDampMax){
-		_gains.yVelDamp = _velDampMax;
-	}
-	else if(_gains.yVelDamp < _velDampMin){
-		_gains.yVelDamp = _velDampMin;
-	}
+
+	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
+	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains();
 
-	float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
-	float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
-
-	Serial.println("Var display results");
-		Serial.println(xVarDisplay);
-	Serial.println(yVarDisplay);
-
-	btn.Cx = (uint8_t) (xVarDisplay + 127.5);
-	btn.Cy = (uint8_t) (yVarDisplay + 127.5);
+	btn.Cx = (uint8_t) (_xSnapback + 127.5);
+	btn.Cy = (uint8_t) (_ySnapback + 127.5);
 
 	//setCommResponse();
 
 	clearButtons(2000);
 
-	EEPROM.put(_eepromxVelDamp,_gains.xVelDamp);
-	EEPROM.put(_eepromyVelDamp,_gains.yVelDamp);
+	EEPROM.put(_eepromxSnapback,_xSnapback);
+	EEPROM.put(_eepromySnapback,_ySnapback);
 }
 void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
 	Serial.println("Adjusting Smoothing");
@@ -1802,11 +1803,8 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
 }
 void showAstickSettings() {
 	//Snapback on A-stick
-	float xVarDisplay = 3 * (log(_gains.xVelDamp / 0.125) / log(2));
-	float yVarDisplay = 3 * (log(_gains.yVelDamp / 0.125) / log(2));
-
-	btn.Ax = (uint8_t) (xVarDisplay + 127.5);
-	btn.Ay = (uint8_t) (yVarDisplay + 127.5);
+	btn.Ax = (uint8_t) (_xSnapback + 127.5);
+	btn.Ay = (uint8_t) (_ySnapback + 127.5);
 
 	//Smoothing on C-stick
 	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
@@ -2939,80 +2937,95 @@ void recomputeGains(){
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
 
-    //save previous values of state
-    //float _xPos;//input of kalman filter
-    //float _yPos;//input of kalman filter
-    const float oldXPos = _xPos;
-    const float oldYPos = _yPos;
-    //float _xPosFilt;//output of kalman filter
-    //float _yPosFilt;//output of kalman filter
-    const float oldXPosFilt = _xPosFilt;
-    const float oldYPosFilt = _yPosFilt;
-    //float _xVel;
-    //float _yVel;
-    const float oldXVel = _xVel;
-    const float oldYVel = _yVel;
-    //float _xVelFilt;
-    //float _yVelFilt;
-    const float oldXVelFilt = _xVelFilt;
-    const float oldYVelFilt = _yVelFilt;
+	//save previous values of state
+	//float _xPos;//input of kalman filter
+	//float _yPos;//input of kalman filter
+	const float oldXPos = _xPos;
+	const float oldYPos = _yPos;
+	//float _xPosFilt;//output of kalman filter
+	//float _yPosFilt;//output of kalman filter
+	const float oldXPosFilt = _xPosFilt;
+	const float oldYPosFilt = _yPosFilt;
+	//float _xVel;
+	//float _yVel;
+	const float oldXVel = _xVel;
+	const float oldYVel = _yVel;
+	//float _xVelFilt;
+	//float _yVelFilt;
+	const float oldXVelFilt = _xVelFilt;
+	const float oldYVelFilt = _yVelFilt;
 
-    //compute new (more trivial) state
-    _xPos = xZ;
-    _yPos = yZ;
-    _xVel = _xPos - oldXPos;
-    _yVel = _yPos - oldYPos;
-    const float xVelSmooth = 0.5*(_xVel + oldXVel);
-    const float yVelSmooth = 0.5*(_yVel + oldYVel);
-    const float xAccel = _xVel - oldXVel;
-    const float yAccel = _yVel - oldYVel;
-    const float oldXPosDiff = oldXPos - oldXPosFilt;
-    const float oldYPosDiff = oldYPos - oldYPosFilt;
+	//compute new (more trivial) state
+	_xPos = xZ;
+	_yPos = yZ;
+	_xVel = _xPos - oldXPos;
+	_yVel = _yPos - oldYPos;
+	const float xVelSmooth = 0.5*(_xVel + oldXVel);
+	const float yVelSmooth = 0.5*(_yVel + oldYVel);
+	const float xAccel = _xVel - oldXVel;
+	const float yAccel = _yVel - oldYVel;
+	const float oldXPosDiff = oldXPos - oldXPosFilt;
+	const float oldYPosDiff = oldYPos - oldYPosFilt;
 
-    //compute stick position exponents for weights
-    const float stickDistance2 = min(_g.maxStick, _xPos*_xPos + _yPos*_yPos)/_g.maxStick;//0-1
-    const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
+	//compute stick position exponents for weights
+	const float stickDistance2 = min(_g.maxStick, _xPos*_xPos + _yPos*_yPos)/_g.maxStick;//0-1
+	const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
-    //the current velocity weight for the filtered velocity is the stick r^2
-    const float xVelWeight1 = _g.xSmoothing*stickDistance2;
-    const float xVelWeight2 = 1-xVelWeight1;
-    const float yVelWeight1 = _g.ySmoothing*stickDistance2;
-    const float yVelWeight2 = 1-yVelWeight1;
+	//the current velocity weight for the filtered velocity is the stick r^2
+	const float xVelWeight1 = _g.xSmoothing*stickDistance2;
+	const float xVelWeight2 = 1-xVelWeight1;
+	const float yVelWeight1 = _g.ySmoothing*stickDistance2;
+	const float yVelWeight2 = 1-yVelWeight1;
 
-    //modified velocity to feed into our kalman filter.
-    //We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
-    //term 1: weight current velocity according to r^2
-    //term 2: the previous filtered velocity, weighted the opposite and also set to decay
-    //term 3: a corrective factor based on the disagreement between real and filtered position
-    _xVelFilt = xVelWeight1*_xVel + (1-_g.xVelDecay)*xVelWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
-    _yVelFilt = yVelWeight1*_yVel + (1-_g.yVelDecay)*yVelWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
+	//modified velocity to feed into our kalman filter.
+	//We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
+	//term 1: weight current velocity according to r^2
+	//term 2: the previous filtered velocity, weighted the opposite and also set to decay
+	//term 3: a corrective factor based on the disagreement between real and filtered position
 
-    //the current position weight used for the filtered position is whatever is larger of
-    //  a) 1 minus the sum of the squares of
-    //    1) the smoothed velocity divided by the velocity threshold
-    //    2) the acceleration divided by the accel threshold
-    //  b) stick r^6
-    //When the stick is moving slowly, we want to weight it highly, in order to achieve
-    //  quick control for inputs such as tilts. We lock out using both velocity and
-    //  acceleration in order to rule out snapback.
-    //When the stick is near the rim, we also want instant response, and we know snapback
-    //  doesn't reach the rim.
-    const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
-    const float xPosWeight1 = _g.xSmoothing*max(xPosWeightVelAcc, stickDistance6);
-    const float xPosWeight2 = 1-xPosWeight1;
-    const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
-    const float yPosWeight1 = _g.ySmoothing*max(yPosWeightVelAcc, stickDistance6);
-    const float yPosWeight2 = 1-yPosWeight1;
+	//the current position weight used for the filtered position is whatever is larger of
+	//  a) 1 minus the sum of the squares of
+	//    1) the smoothed velocity divided by the velocity threshold
+	//    2) the acceleration divided by the accel threshold
+	//  b) stick r^6
+	//When the stick is moving slowly, we want to weight it highly, in order to achieve
+	//  quick control for inputs such as tilts. We lock out using both velocity and
+	//  acceleration in order to rule out snapback.
+	//When the stick is near the rim, we also want instant response, and we know snapback
+	//  doesn't reach the rim.
 
-    //In calculating the filtered stick position, we have the following components
-    //term 1: current position, weighted according to the above weight
-    //term 2: a predicted position based on the filtered velocity and previous filtered position,
-    //  with the filtered velocity damped, and the overall term weighted inverse of the previous term
-    //term 3: the integral error correction term
-    _xPosFilt = xPosWeight1*_xPos +
-                xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
-    _yPosFilt = yPosWeight1*_yPos +
-                yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
+	//In calculating the filtered stick position, we have the following components
+	//term 1: current position, weighted according to the above weight
+	//term 2: a predicted position based on the filtered velocity and previous filtered position,
+	//  with the filtered velocity damped, and the overall term weighted inverse of the previous term
+	//term 3: the integral error correction term
+
+	//But if we _xSnapback or _ySnapback is zero, we skip the calculation
+	if(_xSnapback != 0){
+		_xVelFilt = xVelWeight1*_xVel + (1-_g.xVelDecay)*xVelWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
+
+		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
+		const float xPosWeight1 = _g.xSmoothing*max(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeight2 = 1-xPosWeight1;
+
+		_xPosFilt = xPosWeight1*_xPos +
+		            xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
+	} else {
+		_xPosFilt = _xPos;
+	}
+
+	if(_ySnapback != 0){
+		_yVelFilt = yVelWeight1*_yVel + (1-_g.yVelDecay)*yVelWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
+
+		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
+		const float yPosWeight1 = _g.ySmoothing*max(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeight2 = 1-yPosWeight1;
+
+		_yPosFilt = yPosWeight1*_yPos +
+		            yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
+	} else {
+		_yPosFilt = _yPos;
+	}
 }
 
 
