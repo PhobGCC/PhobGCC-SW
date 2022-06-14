@@ -15,7 +15,7 @@
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -72,9 +72,7 @@ uint8_t hardwareX;
 uint8_t hardwareY;
 
 float _aStickX;
-float _posALastX;
 float _aStickY;
-float _posALastY;
 float _cStickX;
 float _cStickY;
 
@@ -2114,8 +2112,8 @@ void readSticks(int readA, int readC){
 	//Serial.println(adcCount);
 	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
-	_cStickX = (_cStickX + cXSum/(float)adcCount/4096.0)*0.5;
-	_cStickY = (_cStickY + cYSum/(float)adcCount/4096.0)*0.5;
+	_cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
+	_cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
 
 	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
@@ -2133,6 +2131,13 @@ void readSticks(int readA, int readC){
 
 	//Run the kalman filter to eliminate snapback
 	runKalman(xZ,yZ);
+	//Run a simple low-pass filter
+	static float _oldPosAx = 0;
+	static float _oldPosAy = 0;
+	float posAx = _g.xSmoothing*_xPosFilt + (1-_g.xSmoothing)*_oldPosAx;
+	float posAy = _g.ySmoothing*_yPosFilt + (1-_g.ySmoothing)*_oldPosAy;
+	_oldPosAx = posAx;
+	_oldPosAy = posAy;
 
 	//Run a simple low-pass filter on the C-stick
 	float oldCX = _cXPos;
@@ -2150,49 +2155,48 @@ void readSticks(int readA, int readC){
 	posCx = _cXPos;
 	posCy = _cYPos;
 
-	float posAx = _xPosFilt;
-	float posAy = _yPosFilt;
-
 	//Run a median filter to reduce noise
 #ifdef USEMEDIAN
     runMedian(posAx, _xPosList, _xMedianIndex);
     runMedian(posAy, _yPosList, _yMedianIndex);
 #endif
 
-	notchRemap(posAx, posAy, &posAx, &posAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
-	notchRemap(posCx, posCy, &posCx, &posCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
+	float remappedAx;
+	float remappedAy;
+	float remappedCx;
+	float remappedCy;
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
 
 	//Clamp values from -125 to +125
-	posAx = min(125, max(-125, posAx));
-	posAy = min(125, max(-125, posAy));
-	posCx = min(125, max(-125, posCx+_cXOffset));
-	posCy = min(125, max(-125, posCy+_cYOffset));
+	remappedAx = min(125, max(-125, remappedAx));
+	remappedAy = min(125, max(-125, remappedAy));
+	remappedCx = min(125, max(-125, remappedCx+_cXOffset));
+	remappedCy = min(125, max(-125, remappedCy+_cYOffset));
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(readA){
-		float diffAx = (posAx+127.5)-btn.Ax;
+		float diffAx = (remappedAx+127.5)-btn.Ax;
 		if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-			btn.Ax = (uint8_t) (posAx+127.5);
+			btn.Ax = (uint8_t) (remappedAx+127.5);
 		}
-		float diffAy = (posAy+127.5)-btn.Ay;
+		float diffAy = (remappedAy+127.5)-btn.Ay;
 		if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-			btn.Ay = (uint8_t) (posAy+127.5);
+			btn.Ay = (uint8_t) (remappedAy+127.5);
 		}
 	}
 	if(readC){
-		float diffCx = (posCx+127.5)-btn.Cx;
+		float diffCx = (remappedCx+127.5)-btn.Cx;
 		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-			btn.Cx = (uint8_t) (posCx+127.5);
+			btn.Cx = (uint8_t) (remappedCx+127.5);
 		}
-		float diffCy = (posCy+127.5)-btn.Cy;
+		float diffCy = (remappedCy+127.5)-btn.Cy;
 		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-			btn.Cy = (uint8_t) (posCy+127.5);
+			btn.Cy = (uint8_t) (remappedCy+127.5);
 		}
 	}
 
-	_posALastX = posAx;
-	_posALastY = posAy;
 }
 /*******************
 	notchRemap
@@ -2972,10 +2976,8 @@ void runKalman(const float xZ,const float yZ){
 	const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
 	//the current velocity weight for the filtered velocity is the stick r^2
-	const float xVelWeight1 = _g.xSmoothing*stickDistance2;
-	const float xVelWeight2 = 1-xVelWeight1;
-	const float yVelWeight1 = _g.ySmoothing*stickDistance2;
-	const float yVelWeight2 = 1-yVelWeight1;
+	const float velWeight1 = stickDistance2;
+	const float velWeight2 = 1-velWeight1;
 
 	//modified velocity to feed into our kalman filter.
 	//We don't actually want an accurate model of the velocity, we want to suppress snapback without adding delay
@@ -3002,10 +3004,10 @@ void runKalman(const float xZ,const float yZ){
 
 	//But if we _xSnapback or _ySnapback is zero, we skip the calculation
 	if(_xSnapback != 0){
-		_xVelFilt = xVelWeight1*_xVel + (1-_g.xVelDecay)*xVelWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
+		_xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
 
 		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
-		const float xPosWeight1 = _g.xSmoothing*max(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		_xPosFilt = xPosWeight1*_xPos +
@@ -3015,10 +3017,10 @@ void runKalman(const float xZ,const float yZ){
 	}
 
 	if(_ySnapback != 0){
-		_yVelFilt = yVelWeight1*_yVel + (1-_g.yVelDecay)*yVelWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
+		_yVelFilt = velWeight1*_yVel + (1-_g.yVelDecay)*velWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
 
 		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
-		const float yPosWeight1 = _g.ySmoothing*max(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		_yPosFilt = yPosWeight1*_yPos +
