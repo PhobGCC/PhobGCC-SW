@@ -11,7 +11,7 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
-//#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
+#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
@@ -299,11 +299,11 @@ float _cXPos;
 float _cYPos;
 
 #ifdef TEENSY3_2
-#define CMD_LENGTH_SHORT 5
-#define CMD_LENGTH_LONG 13
-#define PROBE_LENGTH 12
-#define ORIGIN_LENGTH 40
-#define POLL_LENGTH 32
+const int _cmdLengthShort = 5; //number or serial bytes (2 bits per byte) in a short command - 8 bits + stopbit = 5 bytes
+const int _cmdLengthLong = 13; //number or serial bytes (2 bits per byte) in a long command - 24 bits + stopbit = 13 bytes
+const int _probeLength = 12; //number or serial bytes (2 bits per byte) in a probe response not including the stop bit - 24 bits = 12 bytes
+const int _originLength = 40; //number or serial bytes (2 bits per byte) in a origin response not including the stop bit - 80 bits = 40 bytes
+const int _pollLength = 32; //number or serial bytes (2 bits per byte) in a origin response not including the stop bit - 64 bits = 32 bytes
 
 ////Serial bitbanging settings
 const int _fastBaud = 1250000;
@@ -319,11 +319,11 @@ const int _fastC4 = _fastDivider & 0x1F;
 const int _slowC4 = _slowDivider & 0x1F;
 volatile int _writeQueue = 0;
 
-const char _probeResponse[PROBE_LENGTH] = {
+const char _probeResponse[_probeLength] = {
     0x08,0x08,0x0F,0xE8,
     0x08,0x08,0x08,0x08,
     0x08,0x08,0x08,0xEF};
-volatile char _commResponse[ORIGIN_LENGTH] = {
+volatile char _commResponse[_originLength] = {
     0x08,0x08,0x08,0x08,
     0x0F,0x08,0x08,0x08,
     0xE8,0xEF,0xEF,0xEF,
@@ -335,16 +335,13 @@ volatile char _commResponse[ORIGIN_LENGTH] = {
 		0x08,0x08,0x08,0x08,
     0x08,0x08,0x08,0x08};
 
-int cmd[CMD_LENGTH_LONG];
-int cmdByte;
+
 volatile char _bitCount = 0;
-volatile bool _probe = false;
-volatile bool _pole = false;
 volatile int _commStatus = 0;
-static int _commIdle = 0;
-static int _commRead = 1;
-static int _commPoll = 2;
-static int _commWrite = 3;
+const int _commIdle = 0;
+const int _commRead = 1;
+const int _commPoll = 2;
+const int _commWrite = 3;
 #endif // TEENSY3_2
 
 #ifdef TEENSY4_0
@@ -2282,156 +2279,157 @@ void setCommResponse(){
 	try to communicate with the gamecube/wii
 *******************/
 void bitCounter(){
+	//received a bit of data
 	_bitCount ++;
 	//digitalWriteFast(12,!(_bitCount%2));
+	
+	//if this was the first bit of a command we need to set the timer to call communicate() in ~40us when the first 8 bits of the command is received and set the status to reading
 	if(_bitCount == 1){
-		timer1.trigger((CMD_LENGTH_SHORT-1)*10);
+		timer1.trigger((_cmdLengthShort-1)*10);
 		_commStatus = _commRead;
 	}
 }
 void communicate(){
 	//Serial.println(_commStatus,DEC);
+	
+	//check to see if we are reading a command
 	if(_commStatus == _commRead){
-		//digitalWriteFast(12,LOW);
-		//Serial.println(Serial2.available(),DEC);
-		while(Serial2.available() < (CMD_LENGTH_SHORT-1)){}
-			cmdByte = 0;
-			for(int i = 0; i < CMD_LENGTH_SHORT-1; i++){
-				cmd[i] = Serial2.read();
-				//Serial.println(cmd[i],BIN);
-				switch(cmd[i]){
-				case 0x08:
-					cmdByte = (cmdByte<<2);
-					break;
-				case 0xE8:
-					cmdByte = (cmdByte<<2)+1;
-					break;
- 				case 0xC8:
-					cmdByte = (cmdByte<<2)+1;
-					break;
-				case 0x0F:
-					cmdByte = (cmdByte<<2)+2;
-					break;
-				case 0x0E:
-					cmdByte = (cmdByte<<2)+2;
-					break;
-				case 0xEF:
-					cmdByte = (cmdByte<<2)+3;
-					break;
-				case 0xCF:
-					cmdByte = (cmdByte<<2)+3;
-					break;
-				case 0xEE:
-					cmdByte = (cmdByte<<2)+3;
-					break;
-				case 0xCE:
-					cmdByte = (cmdByte<<2)+3;
-					break;
-				default:
-					//got garbage data or a stop bit where it shouldn't be
-					Serial.println(cmd[i],BIN);
-					cmdByte = -1;
-					//Serial.println('o');
-				}
-				if(cmdByte == -1){
-					Serial.println('b');
-					break;
-				}
-			}
+		//wait until we have all 4 serial bytes (8 bits) ready to read
+		while(Serial2.available() < (_cmdLengthShort-1)){}
+		
+		//read the command in
+		int cmdByte = 0;
+		int cmd = 0;
+		bool bitOne = 0;
+		bool bitTwo = 0;
+		for(int i = 0; i < _cmdLengthShort-1; i++){
+			cmd = Serial2.read();
+			//the first bit is encoded in the first half of the serial byte, apply a mask to the 2nd bit of the serial byte to get it
+			bitOne = cmd & 0b00000010;
+			//the second bit is encoded in the second half of the serial byte, apply a mask to the 6nd bit of the serial byte to get it
+			bitTwo = cmd & 0b01000000;
+			//put the two bits into the command byte
+			cmdByte = (cmdByte<<1)+bitOne;
+			cmdByte = (cmdByte<<1)+bitTwo;
 
-		//Serial.println(cmdByte,HEX);
-		UART1_BDH = _fastBDH;
-		UART1_BDL = _fastBDL;
-		UART1_C4 = _fastC4;
-		UART1_C2 &= ~UART_C2_RE;
+		}
+		Serial.print("cmd: ");
+		Serial.println(cmdByte,BIN);
+		//switch the serial hardware to the faster baud rate to be ready to respond
+		setSerialFast();
 
 		switch(cmdByte){
+			
+		//probe
 		case 0x00:
-			timer1.trigger(PROBE_LENGTH*8);
-			for(int i = 0; i< PROBE_LENGTH; i++){
+			//set the timer to call communicate() again in ~96 us when the probe response is done being sent
+			timer1.trigger(_probeLength*8);
+			//write the probe response
+			for(int i = 0; i< _probeLength; i++){
 				Serial2.write(_probeResponse[i]);
 			}
+			//write a stop bit
 			Serial2.write(0xFF);
-			Serial.println("probe");
-			_writeQueue = 9+(PROBE_LENGTH)*2+1;
+			//set the write queue to the sum of the probe command BIT length and the probe response BIT length so we will be about to know when the correct number of bits has been sent
+			_writeQueue = _cmdLengthShort*2-1+(_probeLength)*2+1;
+			//set the status to writing
 			_commStatus = _commWrite;
+			Serial.println("probe");
 		break;
+		
+		//origin
 		case 0x41:
-			timer1.trigger(ORIGIN_LENGTH*8);
+			//set the timer to call communicate() again in ~320 us when the probe response is done being sent
+			timer1.trigger(_originLength*8);
+			//create the response to be sent
 			setCommResponse();
-			for(int i = 0; i< ORIGIN_LENGTH; i++){
+			//write the origin response
+			for(int i = 0; i< _originLength; i++){
 				Serial2.write(_commResponse[i]);
 			}
+			//write a stop bit
 			Serial2.write(0xFF);
-			Serial.println("origin");
-			_writeQueue = 9+(ORIGIN_LENGTH)*2+1;
+			//set the write queue to the sum of the origin command BIT length and the origin response BIT length so we will be about to know when the correct number of bits has been sent
+			_writeQueue = _cmdLengthShort*2-1+(_originLength)*2+1;
+			//set the status to writing
 			_commStatus = _commWrite;
+			Serial.println("origin");
 		  break;
+			
+		//poll
 		case 0x40:
+			//set the timer to call communicate() again in ~56 us when the poll command is finished being read
 			timer1.trigger(56);
+			//set the status to receiving the poll command
 			_commStatus = _commPoll;
+			//create the poll response
 			setCommResponse();
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
-			//resetFreq();
-			digitalWriteFast(12,LOW);
 			Serial.println("error");
 			Serial.println(_bitCount,DEC);
 
-			UART1_BDH = _slowBDH;
-			UART1_BDL = _slowBDL;
-			UART1_C4 = _slowC4;
-			UART1_C2 |= UART_C2_RE;
-			Serial2.clear();
+			resetSerial();
 
 			uint8_t thisbyte = 0;
+			//wait until we get a stop bit
 		  while(thisbyte != 0xFF){
 				while(!Serial2.available());
 				thisbyte = Serial2.read();
-				Serial.println(thisbyte,BIN);
+				//Serial.println(thisbyte,BIN);
 			}
-			//Serial2.clear();
+			//set the status to idle, reset the bit count and write queue so we are ready to receive the next command
 			_commStatus = _commIdle;
 			_bitCount = 0;
 			_writeQueue = 0;
-			digitalWriteFast(12,HIGH);
 	  }
-		//digitalWriteFast(12,HIGH);
 	}
 	else if(_commStatus == _commPoll){
-		digitalWriteFast(12,LOW);
-		while(_bitCount<25){}
-		//Serial2.write((const char*)_commResponse,POLL_LENGTH);
-		for(int i = 0; i< POLL_LENGTH; i++){
+		//we should now be finishing reading the poll command (which is longer than the others)
+		while(_bitCount<(_cmdLengthLong*2-1)){} //wait until we've received 25 bits, the length of the poll command
+		
+		//write the poll response (we do this before setting the timer  here to start responding as soon as possible)
+		for(int i = 0; i< _pollLength; i++){
 			Serial2.write(_commResponse[i]);
 		}
+		//write a stop bit
 		Serial2.write(0xFF);
-
+		
+		//set the timer so communicate() is called in ~135us when the poll response is done being written
 		timer1.trigger(135);
-		_writeQueue = 25+(POLL_LENGTH)*2+1;
+		//set the write queue to the sum of the origin command BIT length and the origin response BIT length so we will be about to know when the correct number of bits has been sent
+		_writeQueue = _cmdLengthLong*2-1+(_pollLength)*2+1;
+		//set the status to writing
 		_commStatus = _commWrite;
-		//digitalWriteFast(12,HIGH);
 	}
 	else if(_commStatus == _commWrite){
-		//digitalWriteFast(12,LOW);
+		//wait until we've written all the bits we intend to
  		while(_writeQueue > _bitCount){}
-
-		UART1_BDH = _slowBDH;
-		UART1_BDL = _slowBDL;
-		UART1_C4 = _slowC4;
-		UART1_C2 |= UART_C2_RE;
-
+		
+		//reset the serial to the slow baudrate
+		resetSerial();
+		//set the status to idle, reset the bit count and write queue so we are ready to receive the next command
 		_bitCount = 0;
 		_commStatus = _commIdle;
 		_writeQueue = 0;
-		digitalWriteFast(12,HIGH);
-		Serial2.clear();
 	}
 	else{
-		Serial.println('a');
+		Serial.println("communication status error");
 	}
-	//Serial.println(_commStatus,DEC);
+}
+void setSerialFast(){
+	UART1_BDH = _fastBDH;
+	UART1_BDL = _fastBDL;
+	UART1_C4 = _fastC4;
+	UART1_C2 &= ~UART_C2_RE;
+}
+void resetSerial(){
+	UART1_BDH = _slowBDH;
+	UART1_BDL = _slowBDL;
+	UART1_C4 = _slowC4;
+	UART1_C2 |= UART_C2_RE;
+	Serial2.clear();
 }
 #endif // TEENSY3_2
 /*******************
