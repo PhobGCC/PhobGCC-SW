@@ -11,7 +11,8 @@
 #include "TeensyTimerTool.h"
 
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
-#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
+//#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
+#include "src/Phob1_0Teensy3_2DiodeShort.h"  // For PhobGCC board 1.0 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0 and no diode short
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
@@ -438,6 +439,9 @@ void setup() {
 #endif // HALFDUPLEX
 
 #ifdef TEENSY3_2
+#ifdef HALFDUPLEX
+	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
+#endif // HALFDUPLEX
 	timer1.begin(communicate);
 	//timer2.begin(checkCmd);
 	//timer3.begin(writePole);
@@ -2304,9 +2308,9 @@ void communicate(){
 		bool bitTwo = 0;
 		for(int i = 0; i < _cmdLengthShort-1; i++){
 			cmd = Serial2.read();
-			//the first bit is encoded in the first half of the serial byte, apply a mask to the 2nd bit of the serial byte to get it
+			//the first bit is encoded in the second half of the serial byte, apply a mask to the 6th bit of the serial byte to get it
 			bitOne = cmd & 0b00000010;
-			//the second bit is encoded in the second half of the serial byte, apply a mask to the 6nd bit of the serial byte to get it
+			//the second bit is encoded in the first half of the serial byte, apply a mask to the 2nd bit of the serial byte to get it
 			bitTwo = cmd & 0b01000000;
 			//put the two bits into the command byte
 			cmdByte = (cmdByte<<1)+bitOne;
