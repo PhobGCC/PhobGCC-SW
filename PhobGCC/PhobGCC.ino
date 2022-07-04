@@ -1183,6 +1183,14 @@ void setPinModes(){
 	pinMode(_pinBrake, OUTPUT);
 #endif
 
+	//Teensy 4 has some weird jump in the analog with default pin mode
+	pinMode(_pinLa,INPUT_DISABLE);
+	pinMode(_pinRa,INPUT_DISABLE);
+	pinMode(_pinAx,INPUT_DISABLE);
+	pinMode(_pinAy,INPUT_DISABLE);
+	pinMode(_pinCx,INPUT_DISABLE);
+	pinMode(_pinCy,INPUT_DISABLE);
+
 	bounceDr.attach(_pinDr);
 	bounceDr.interval(1000);
 	bounceDu.attach(_pinDu);
