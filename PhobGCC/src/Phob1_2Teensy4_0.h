@@ -4,7 +4,7 @@
 #include <ADC.h>
 #include <VREF.h>
 
-//Hardware specific code for PhobGCC board revision 1.1 with a Teensy 4.0
+//Hardware specific code for PhobGCC board revision 1.2 with a Teensy 4.0
 #define TEENSY4_0
 #define RUMBLE
 
