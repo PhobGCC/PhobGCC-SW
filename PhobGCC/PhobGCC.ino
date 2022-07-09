@@ -19,8 +19,8 @@
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 using namespace Eigen;
 
@@ -383,7 +383,7 @@ volatile char _commResponse[_originLength] = {
 void setup() {
     serialSetup();
 #ifdef BUILD_RELEASE
-	Serial.println("Software version 0.22");
+	Serial.println("Software version 0.23");
 #endif
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
@@ -1960,14 +1960,22 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
 	if(_swapXZ){
-		_jumpConfig = 1;
-		Serial.println("X<->Z");
-	}
-	else if(_swapYZ){
-		_jumpConfig = 2;
-		Serial.println("Y<->Z");
-	}
-	else{
+		if(_jumpConfig == 1){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 1;
+			Serial.println("X<->Z");
+		}
+	}else if(_swapYZ){
+		if(_jumpConfig == 2){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 2;
+			Serial.println("Y<->Z");
+		}
+	}else{
 		Serial.println("normal");
 		_jumpConfig = 0;
 	}
