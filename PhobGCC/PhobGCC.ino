@@ -22,6 +22,8 @@
 //#define BUILD_RELEASE
 #define BUILD_DEV
 
+#define ENABLE_LED
+
 using namespace Eigen;
 
 TeensyTimerTool::OneShotTimer timer1;
@@ -545,7 +547,9 @@ void commInt() {
 			digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be received
 			while(Serial2.available() <= _bitQueue){}
+#ifdef ENABLE_LED
 			digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 			if(_reportCount == 0){
 				Serial.print("Poll: ");
@@ -685,7 +689,9 @@ void commInt() {
 		}
 	}
 	//turn the LED back on to indicate we are not stuck
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 }
 #else // HALFDUPLEX
 //commInt() will be called on every rising edge of a pulse that we receive
@@ -859,10 +865,14 @@ void commInt() {
 		}
 	}
 	//turn the LED back on to indicate we are not stuck
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 }
 void resetSerial(){
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
+#endif //ENABLE_LED
 	Serial2.clear();
 	Serial2.flush();
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
