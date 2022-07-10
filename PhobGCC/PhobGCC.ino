@@ -23,7 +23,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#define BUILD_RELEASE
 #define BUILD_DEV
 
-#define ENABLE_LED
+//#define ENABLE_LED
 
 using namespace Eigen;
 
