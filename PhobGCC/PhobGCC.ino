@@ -19,8 +19,10 @@
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
+
+#define ENABLE_LED
 
 using namespace Eigen;
 
@@ -383,7 +385,7 @@ volatile char _commResponse[_originLength] = {
 void setup() {
     serialSetup();
 #ifdef BUILD_RELEASE
-	Serial.println("Software version 0.22");
+	Serial.println("Software version 0.23");
 #endif
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
@@ -545,7 +547,9 @@ void commInt() {
 			digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be received
 			while(Serial2.available() <= _bitQueue){}
+#ifdef ENABLE_LED
 			digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 			if(_reportCount == 0){
 				Serial.print("Poll: ");
@@ -685,7 +689,9 @@ void commInt() {
 		}
 	}
 	//turn the LED back on to indicate we are not stuck
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 }
 #else // HALFDUPLEX
 //commInt() will be called on every rising edge of a pulse that we receive
@@ -859,10 +865,14 @@ void commInt() {
 		}
 	}
 	//turn the LED back on to indicate we are not stuck
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,HIGH);
+#endif //ENABLE_LED
 }
 void resetSerial(){
+#ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
+#endif //ENABLE_LED
 	Serial2.clear();
 	Serial2.flush();
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
@@ -1960,14 +1970,22 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
 	if(_swapXZ){
-		_jumpConfig = 1;
-		Serial.println("X<->Z");
-	}
-	else if(_swapYZ){
-		_jumpConfig = 2;
-		Serial.println("Y<->Z");
-	}
-	else{
+		if(_jumpConfig == 1){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 1;
+			Serial.println("X<->Z");
+		}
+	}else if(_swapYZ){
+		if(_jumpConfig == 2){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 2;
+			Serial.println("Y<->Z");
+		}
+	}else{
 		Serial.println("normal");
 		_jumpConfig = 0;
 	}
