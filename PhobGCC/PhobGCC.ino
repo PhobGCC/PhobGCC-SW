@@ -1419,7 +1419,14 @@ void readButtons(){
 			freezeSticks(2000);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
+		static float safeModeAccumulator = 0.0;
 		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
+		} else {
+			safeModeAccumulator = 0.99*safeModeAccumulator;
+		}
+		if(safeModeAccumulator > 0.99){
+			safeModeAccumulator = 0;
 			if (!_running) {//wake it up if not already running
 				_running = true;
 			}
@@ -1535,7 +1542,13 @@ void readButtons(){
 	}
 
 	//Advance Calibration Using L or R triggers
-	if((hardwareL || hardwareR) && _advanceCal && !_advanceCalPressed){
+	static float advanceCalAccumulator = 0.0;
+	if((hardwareL || hardwareR) && _advanceCal){// && !_advanceCalPressed){
+		advanceCalAccumulator = 0.96*advanceCalAccumulator + 0.04;
+	} else {
+		advanceCalAccumulator = 0.96*advanceCalAccumulator;
+	}
+	if(advanceCalAccumulator > 0.75 && !_advanceCalPressed){
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			if(_currentCalStep < _noOfCalibrationPoints){//still collecting points
@@ -1656,7 +1669,7 @@ void readButtons(){
 				_advanceCal = false;
 			}
 		}
-	} else if(!(hardwareL || hardwareR)) {
+	} else if(advanceCalAccumulator <= 0.25) {
 		_advanceCalPressed = false;
 	}
 }
