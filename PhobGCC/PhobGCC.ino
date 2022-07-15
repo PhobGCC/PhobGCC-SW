@@ -1396,10 +1396,8 @@ void readButtons(){
 			showCstickSettings();
 		} else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
 			nextTriggerState(_lConfig, true);
-			freezeSticks(2000);
 		} else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
 			nextTriggerState(_rConfig, false);
-			freezeSticks(2000);
 		} else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
 			adjustTriggerOffset(true, true, true);
 		} else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
@@ -2026,6 +2024,14 @@ void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	}
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
+
+	//We want to one-index the modes for the users, so we add 1 here
+	btn.Ay = (uint8_t) (127.5);
+	btn.Ax = (uint8_t) (127.5 + _lConfig + 1);
+	btn.Cy = (uint8_t) (127.5);
+	btn.Cx = (uint8_t) (127.5 + _rConfig + 1);
+
+	clearButtons(2000);
 }
 void initializeButtons(Buttons &thisbtn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
