@@ -9,6 +9,7 @@
 #include <VREF.h>
 #include <Bounce2.h>
 #include "TeensyTimerTool.h"
+extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
 //#include "src/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
@@ -22,7 +23,7 @@
 //#define BUILD_RELEASE
 #define BUILD_DEV
 
-#define ENABLE_LED
+//#define ENABLE_LED
 
 using namespace Eigen;
 
@@ -389,6 +390,11 @@ void setup() {
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
 #endif
+
+#ifdef TEENSY4_0
+	//Force-underclock Teensy 4 to 150 MHz to lower power draw.
+	set_arm_clock(150'000'000);
+#endif //TEENSY4_0
 
 	readEEPROM();
 
