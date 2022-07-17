@@ -356,7 +356,7 @@ int _bitQueue = 8;
 int _waitQueue = 0;
 int _writeQueue = 0;
 uint8_t _cmdByte = 0;
-const int _fastBaud = 2500000;
+const int _fastBaud = 2600000;
 const int _slowBaud = 2000000;
 const int _probeLength = 24;
 const int _originLength = 80;
@@ -762,7 +762,7 @@ void commInt() {
 			//write the stop bit
 			Serial2.write(0b11111100);
 			//start the timer to reset the the serial port when the response has been sent
-			timer1.trigger(175);
+			timer1.trigger(165);
 
 
 		}
