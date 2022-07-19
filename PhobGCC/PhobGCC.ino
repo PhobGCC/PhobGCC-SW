@@ -385,7 +385,7 @@ volatile char _commResponse[_originLength] = {
 void setup() {
     serialSetup();
 #ifdef BUILD_RELEASE
-	Serial.println("Software version 0.23");
+	Serial.println("Software version 0.24");
 #endif
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
