@@ -724,16 +724,16 @@ void commInt() {
 			}
 #ifdef RUMBLE
 			if(_cmdByte & 0b00000001 && _rumble > 0){
-				digitalWriteFast(_pinBrake,LOW);
+				analogWrite(_pinBrake,0);
 				analogWrite(_pinRumble, _rumblePower);
 			}
 			else if(_cmdByte & 0b00000010){
 				analogWrite(_pinRumble,0);
-				digitalWriteFast(_pinBrake,HIGH);
+				analogWrite(_pinBrake,256);
 			}
 			else{
 				analogWrite(_pinRumble,0);
-				digitalWriteFast(_pinBrake,LOW);
+				analogWrite(_pinBrake,0);
 			}
 #endif
 			if(_reportCount == 0){
