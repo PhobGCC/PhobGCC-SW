@@ -2527,7 +2527,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 
 	Serial.println("The notch angles are:");
 	for(int i = 0; i< _noOfNotches; i++){
-		Serial.println(notchAngles[i], 4a);
+		Serial.println(notchAngles[i], 4);
 	}
 
 	notchPointsX[0] = 0;
