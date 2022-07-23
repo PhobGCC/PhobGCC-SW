@@ -20,8 +20,8 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 //#define ENABLE_LED
 
@@ -384,9 +384,7 @@ volatile char _commResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-#ifdef BUILD_RELEASE
-	Serial.println("Software version 0.23");
-#endif
+	Serial.println("Software version 0.24");
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
 #endif
@@ -2496,14 +2494,14 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 
 	Serial.println("The raw calibration points (x,y) are:");
 	for(int i = 0; i< _noOfCalibrationPoints; i++){
-		Serial.print(calPointsX[i]);
+		Serial.print(calPointsX[i], 4);
 		Serial.print(",");
-		Serial.println(calPointsY[i]);
+		Serial.println(calPointsY[i], 4);
 	}
 
 	Serial.println("The notch angles are:");
 	for(int i = 0; i< _noOfNotches; i++){
-		Serial.println(notchAngles[i]);
+		Serial.println(notchAngles[i], 4);
 	}
 
 	notchPointsX[0] = 0;
@@ -2612,9 +2610,9 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 
 	Serial.println("The cleaned calibration points are:");
 	for(int i = 0; i< (_noOfNotches+1); i++){
-		Serial.print(cleanedPointsX[i]);
+		Serial.print(cleanedPointsX[i], 4);
 		Serial.print(",");
-		Serial.println(cleanedPointsY[i]);
+		Serial.println(cleanedPointsY[i], 4);
 	}
 
 	Serial.println("The corresponding notch points are:");
