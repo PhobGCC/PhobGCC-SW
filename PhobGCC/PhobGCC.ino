@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -3053,6 +3053,9 @@ void runKalman(const float xZ,const float yZ){
 	//  with the filtered velocity damped, and the overall term weighted inverse of the previous term
 	//term 3: the integral error correction term
 
+	//In order to make the filter hang around the rim a bit longer when you release it,
+	//a low-pass filter kicks in when the acceleration is very high (only rim-level snapback acceleration).
+
 	//But if we _xSnapback or _ySnapback is zero, we skip the calculation
 	if(_xSnapback != 0){
 		_xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
@@ -3060,13 +3063,30 @@ void runKalman(const float xZ,const float yZ){
 		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
 		const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
+		//TESTING CHANGE THIS
 
 		_xPosFilt = xPosWeight1*_xPos +
-		            xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
+		            xPosWeight2*oldXPosFilt +
+		            xPosWeight2*(1-_g.xVelDamp)*_xVelFilt;
 	} else {
 		_xPosFilt = _xPos;
 	}
+	//TESTING DEBUG DO NOT CHANGE THIS
+	if(_xSnapback != 0){
+		_xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldYPosDiff;
 
+		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
+		const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeight2 = 1-xPosWeight1;
+
+		_yPosFilt = xPosWeight1*_xPos +
+		            xPosWeight2*oldYPosFilt +
+		            xPosWeight2*(1-_g.xVelDamp)*_xVelFilt;
+	} else {
+		_yPosFilt = _xPos;
+	}
+
+/*TESTING LEAVE THIS ALONE
 	if(_ySnapback != 0){
 		_yVelFilt = velWeight1*_yVel + (1-_g.yVelDecay)*velWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
 
@@ -3075,10 +3095,12 @@ void runKalman(const float xZ,const float yZ){
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		_yPosFilt = yPosWeight1*_yPos +
-		            yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
+		            yPosWeight2*oldYPosFilt +
+		            yPosWeight2*(1-_g.yVelDamp)*_yVelFilt;
 	} else {
 		_yPosFilt = _yPos;
 	}
+	*/
 }
 
 
