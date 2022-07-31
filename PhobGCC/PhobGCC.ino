@@ -394,7 +394,13 @@ void setup() {
 	set_arm_clock(150'000'000);
 #endif //TEENSY4_0
 
-	readEEPROM();
+	const int numberOfNaN = readEEPROM();
+	Serial.print("Number of NaN in EEPROM: ");
+	Serial.println(numberOfNaN);
+	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
+		resetDefaults();
+		readEEPROM();
+	}
 
 	//set some of the unused values in the message response
 	btn.errS = 0;
@@ -883,11 +889,14 @@ void resetSerial(){
 }
 #endif // HALFDUPLEX
 #endif // TEENSY4_0
-void readEEPROM(){
+int readEEPROM(){
+	int numberOfNaN = 0;
+
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
 	if(std::isnan(_jumpConfig)){
 		_jumpConfig = 0;
+		numberOfNaN++;
 	}
 	setJump(_jumpConfig);
 
@@ -895,35 +904,39 @@ void readEEPROM(){
 	EEPROM.get(_eepromLToggle, _lConfig);
 	if(std::isnan(_lConfig)) {
 		_lConfig = _triggerDefault;
+		numberOfNaN++;
 	}
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
 	if(std::isnan(_rConfig)) {
 		_rConfig = _triggerDefault;
+		numberOfNaN++;
 	}
 
-  //get the C-stick X offset
-  EEPROM.get(_eepromcXOffset, _cXOffset);
-  if(std::isnan(_cXOffset)) {
-    _cXOffset = 0;
-  }
-  if(_cXOffset > _cMax) {
-    _cXOffset = _cMax;
-  } else if(_cXOffset < _cMin) {
-    _cXOffset = _cMin;
-  }
+	//get the C-stick X offset
+	EEPROM.get(_eepromcXOffset, _cXOffset);
+	if(std::isnan(_cXOffset)) {
+		_cXOffset = 0;
+		numberOfNaN++;
+	}
+	if(_cXOffset > _cMax) {
+		_cXOffset = _cMax;
+	} else if(_cXOffset < _cMin) {
+		_cXOffset = _cMin;
+	}
 
-  //get the C-stick Y offset
-  EEPROM.get(_eepromcYOffset, _cYOffset);
-  if(std::isnan(_cYOffset)) {
-    _cYOffset = 0;
-  }
-  if(_cYOffset > _cMax) {
-    _cYOffset = _cMax;
-  } else if(_cYOffset < _cMin) {
-    _cYOffset = _cMin;
-  }
+	//get the C-stick Y offset
+	EEPROM.get(_eepromcYOffset, _cYOffset);
+	if(std::isnan(_cYOffset)) {
+		_cYOffset = 0;
+		numberOfNaN++;
+	}
+	if(_cYOffset > _cMax) {
+		_cYOffset = _cMax;
+	} else if(_cYOffset < _cMin) {
+		_cYOffset = _cMin;
+	}
 
 	//get the x-axis snapback correction
 	EEPROM.get(_eepromxSnapback, _xSnapback);
@@ -933,6 +946,7 @@ void readEEPROM(){
 		_xSnapback = _snapbackDefault;
 		Serial.print("the xSnapback value was adjusted to:");
 		Serial.println(_xSnapback);
+		numberOfNaN++;
 	}
 	if(_xSnapback < _snapbackMin) {
 		_xSnapback = _snapbackMin;
@@ -951,6 +965,7 @@ void readEEPROM(){
 		_ySnapback = _snapbackDefault;
 		Serial.print("the ySnapback value was adjusted to:");
 		Serial.println(_ySnapback);
+		numberOfNaN++;
 	}
 	if(_ySnapback < _snapbackMin) {
 		_ySnapback = _snapbackMin;
@@ -961,90 +976,96 @@ void readEEPROM(){
 	Serial.print("the yVelDamp value from eeprom is:");
 	Serial.println(_gains.yVelDamp);
 
-  //get the x-axis smoothing value
-  EEPROM.get(_eepromxSmoothing, _gains.xSmoothing);
-  Serial.print("the xSmoothing value from eeprom is:");
-  Serial.println(_gains.xSmoothing);
-  if(std::isnan(_gains.xSmoothing)){
-    _gains.xSmoothing = _smoothingMin;
-    Serial.print("the xSmoothing value was adjusted to:");
-    Serial.println(_gains.xSmoothing);
-  }
-  if(_gains.xSmoothing > _smoothingMax) {
-    _gains.xSmoothing = _smoothingMax;
-  } else if(_gains.xSmoothing < _smoothingMin) {
-    _gains.xSmoothing = _smoothingMin;
-  }
+	//get the x-axis smoothing value
+	EEPROM.get(_eepromxSmoothing, _gains.xSmoothing);
+	Serial.print("the xSmoothing value from eeprom is:");
+	Serial.println(_gains.xSmoothing);
+	if(std::isnan(_gains.xSmoothing)){
+		_gains.xSmoothing = _smoothingMin;
+		Serial.print("the xSmoothing value was adjusted to:");
+		Serial.println(_gains.xSmoothing);
+		numberOfNaN++;
+	}
+	if(_gains.xSmoothing > _smoothingMax) {
+		_gains.xSmoothing = _smoothingMax;
+	} else if(_gains.xSmoothing < _smoothingMin) {
+		_gains.xSmoothing = _smoothingMin;
+	}
 
-  //get the y-axis smoothing value
-  EEPROM.get(_eepromySmoothing, _gains.ySmoothing);
-  Serial.print("the ySmoothing value from eeprom is:");
-  Serial.println(_gains.ySmoothing);
-  if(std::isnan(_gains.ySmoothing)){
-    _gains.ySmoothing = _smoothingMin;
-    Serial.print("the ySmoothing value was adjusted to:");
-    Serial.println(_gains.ySmoothing);
-  }
-  if(_gains.ySmoothing > _smoothingMax) {
-    _gains.ySmoothing = _smoothingMax;
-  } else if(_gains.ySmoothing < _smoothingMin) {
-    _gains.ySmoothing = _smoothingMin;
-  }
+	//get the y-axis smoothing value
+	EEPROM.get(_eepromySmoothing, _gains.ySmoothing);
+	Serial.print("the ySmoothing value from eeprom is:");
+	Serial.println(_gains.ySmoothing);
+	if(std::isnan(_gains.ySmoothing)){
+		_gains.ySmoothing = _smoothingMin;
+		Serial.print("the ySmoothing value was adjusted to:");
+		Serial.println(_gains.ySmoothing);
+		numberOfNaN++;
+	}
+	if(_gains.ySmoothing > _smoothingMax) {
+		_gains.ySmoothing = _smoothingMax;
+	} else if(_gains.ySmoothing < _smoothingMin) {
+		_gains.ySmoothing = _smoothingMin;
+	}
 
-  //get the c-stick x-axis smoothing value
-  EEPROM.get(_eepromCxSmoothing, _gains.cXSmoothing);
-  Serial.print("the cXSmoothing value from eeprom is:");
-  Serial.println(_gains.cXSmoothing);
-  if(std::isnan(_gains.cXSmoothing)){
-    _gains.cXSmoothing = _smoothingMin;
-    Serial.print("the cXSmoothing value was adjusted to:");
-    Serial.println(_gains.cXSmoothing);
-  }
-  if(_gains.cXSmoothing > _smoothingMax) {
-    _gains.cXSmoothing = _smoothingMax;
-  } else if(_gains.cXSmoothing < _smoothingMin) {
-    _gains.cXSmoothing = _smoothingMin;
-  }
+	//get the c-stick x-axis smoothing value
+	EEPROM.get(_eepromCxSmoothing, _gains.cXSmoothing);
+	Serial.print("the cXSmoothing value from eeprom is:");
+	Serial.println(_gains.cXSmoothing);
+	if(std::isnan(_gains.cXSmoothing)){
+		_gains.cXSmoothing = _smoothingMin;
+		Serial.print("the cXSmoothing value was adjusted to:");
+		Serial.println(_gains.cXSmoothing);
+		numberOfNaN++;
+	}
+	if(_gains.cXSmoothing > _smoothingMax) {
+		_gains.cXSmoothing = _smoothingMax;
+	} else if(_gains.cXSmoothing < _smoothingMin) {
+		_gains.cXSmoothing = _smoothingMin;
+	}
 
-  //get the c-stick y-axis smoothing value
-  EEPROM.get(_eepromCySmoothing, _gains.cYSmoothing);
-  Serial.print("the cYSmoothing value from eeprom is:");
-  Serial.println(_gains.cYSmoothing);
-  if(std::isnan(_gains.cYSmoothing)){
-    _gains.cYSmoothing = _smoothingMin;
-    Serial.print("the cYSmoothing value was adjusted to:");
-    Serial.println(_gains.cYSmoothing);
-  }
-  if(_gains.cYSmoothing > _smoothingMax) {
-    _gains.cYSmoothing = _smoothingMax;
-  } else if(_gains.cYSmoothing < _smoothingMin) {
-    _gains.cYSmoothing = _smoothingMin;
-  }
+	//get the c-stick y-axis smoothing value
+	EEPROM.get(_eepromCySmoothing, _gains.cYSmoothing);
+	Serial.print("the cYSmoothing value from eeprom is:");
+	Serial.println(_gains.cYSmoothing);
+	if(std::isnan(_gains.cYSmoothing)){
+		_gains.cYSmoothing = _smoothingMin;
+		Serial.print("the cYSmoothing value was adjusted to:");
+		Serial.println(_gains.cYSmoothing);
+		numberOfNaN++;
+	}
+	if(_gains.cYSmoothing > _smoothingMax) {
+		_gains.cYSmoothing = _smoothingMax;
+	} else if(_gains.cYSmoothing < _smoothingMin) {
+		_gains.cYSmoothing = _smoothingMin;
+	}
 
-  //recompute the intermediate gains used directly by the kalman filter
-  recomputeGains();
+	//recompute the intermediate gains used directly by the kalman filter
+	recomputeGains();
 
-  //get the L-trigger Offset value
-  EEPROM.get(_eepromLOffset, _LTriggerOffset);
-  if(std::isnan(_LTriggerOffset)){
-    _LTriggerOffset = _triggerMin;
-  }
-  if(_LTriggerOffset > _triggerMax) {
-    _LTriggerOffset = _triggerMax;
-  } else if(_LTriggerOffset < _triggerMin) {
-    _LTriggerOffset = _triggerMin;
-  }
+	//get the L-trigger Offset value
+	EEPROM.get(_eepromLOffset, _LTriggerOffset);
+	if(std::isnan(_LTriggerOffset)){
+		_LTriggerOffset = _triggerMin;
+		numberOfNaN++;
+	}
+	if(_LTriggerOffset > _triggerMax) {
+		_LTriggerOffset = _triggerMax;
+	} else if(_LTriggerOffset < _triggerMin) {
+		_LTriggerOffset = _triggerMin;
+	}
 
-  //get the R-trigger Offset value
-  EEPROM.get(_eepromROffset, _RTriggerOffset);
-  if(std::isnan(_RTriggerOffset)){
-    _RTriggerOffset = _triggerMin;
-  }
-  if(_RTriggerOffset > _triggerMax) {
-    _RTriggerOffset = _triggerMax;
-  } else if(_RTriggerOffset < _triggerMin) {
-    _RTriggerOffset = _triggerMin;
-  }
+	//get the R-trigger Offset value
+	EEPROM.get(_eepromROffset, _RTriggerOffset);
+	if(std::isnan(_RTriggerOffset)){
+		_RTriggerOffset = _triggerMin;
+		numberOfNaN++;
+	}
+	if(_RTriggerOffset > _triggerMax) {
+		_RTriggerOffset = _triggerMax;
+	} else if(_RTriggerOffset < _triggerMin) {
+		_RTriggerOffset = _triggerMin;
+	}
 
 	//Get the rumble value
 	EEPROM.get(_eepromRumble, _rumble);
@@ -1052,6 +1073,7 @@ void readEEPROM(){
 	Serial.println(_rumble);
 	if(std::isnan(_rumble)) {
 		_rumble = _rumbleDefault;
+		numberOfNaN++;
 	}
 	if(_rumble < _rumbleMin) {
 		_rumble = _rumbleMin;
@@ -1086,6 +1108,8 @@ void readEEPROM(){
 	Serial.println("C stick linearized");
 	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_cNotchAngles,_cFitCoeffsX,_cFitCoeffsY,_cAffineCoeffs,_cBoundaryAngles);
+
+	return numberOfNaN;
 }
 void resetDefaults(){
 	Serial.println("RESETTING ALL DEFAULTS");
