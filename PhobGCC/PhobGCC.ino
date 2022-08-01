@@ -625,7 +625,7 @@ void commInt() {
 			//}
 
 			//if the command byte is all 0s it is probe command, we will send a probe response
-			if(_cmdByte == 0b00000000){
+			if(_cmdByte == 0b00000000 || _cmdByte == 0b11111111){
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
@@ -796,7 +796,7 @@ void commInt() {
 			}
 
 			//if the command byte is all 0s it is probe command, we will send a probe response
-			if(_cmdByte == 0b00000000){
+			if(_cmdByte == 0b00000000 || _cmdByte == 0b11111111){
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
@@ -2399,6 +2399,7 @@ void communicate(){
 			
 		//probe
 		case 0x00:
+		case 0xff;
 			//set the timer to call communicate() again in ~96 us when the probe response is done being sent
 			timer1.trigger(_probeLength*8);
 			//write the probe response
