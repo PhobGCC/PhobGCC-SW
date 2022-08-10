@@ -111,6 +111,7 @@ const int _rumbleMin = 0;
 const int _rumbleMax = 7;
 const int _rumbleDefault = 5;
 bool _safeMode = true;
+bool _autoInit = false;
 
 int trigL,trigR;
 
@@ -267,6 +268,7 @@ const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
 const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
 const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
+const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
 
 Bounce bounceDr = Bounce();
 Bounce bounceDu = Bounce();
@@ -398,7 +400,7 @@ void setup() {
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
 	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-		resetDefaults();
+		resetDefaults(true);//do reset sticks
 		readEEPROM();
 	}
 
@@ -467,7 +469,7 @@ void setup() {
 
 void loop() {
 	//check if we should be reporting values yet
-	if(btn.B && !_running){
+	if((btn.B || _autoInit) && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
@@ -1087,6 +1089,21 @@ int readEEPROM(){
 	Serial.print("Rumble power: ");
 	Serial.println(_rumblePower);
 
+	//Get the autoinit value
+	EEPROM.get(_eepromAutoInit, _autoInit);
+	if(std::isnan(_autoInit)) {
+		_autoInit = 0;
+		numberOfNaN++;
+	}
+	if(_autoInit < 0) {
+		_autoInit = 0;
+	}
+	if(_autoInit > 1) {
+		_autoInit = 1;
+	}
+	Serial.print("Auto init: ");
+	Serial.println(_autoInit);
+
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
@@ -1111,7 +1128,8 @@ int readEEPROM(){
 
 	return numberOfNaN;
 }
-void resetDefaults(){
+
+void resetDefaults(bool resetSticks){
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	_jumpConfig = 0;
@@ -1123,10 +1141,10 @@ void resetDefaults(){
 	EEPROM.put(_eepromLToggle, _lConfig);
 	EEPROM.put(_eepromRToggle, _rConfig);
 
-  _cXOffset = 0;
-  _cYOffset = 0;
-  EEPROM.put(_eepromcXOffset, _cXOffset);
-  EEPROM.put(_eepromcYOffset, _cYOffset);
+	_cXOffset = 0;
+	_cYOffset = 0;
+	EEPROM.put(_eepromcXOffset, _cXOffset);
+	EEPROM.put(_eepromcYOffset, _cYOffset);
 
 	_xSnapback = _snapbackDefault;
 	EEPROM.put(_eepromxSnapback,_xSnapback);
@@ -1135,62 +1153,67 @@ void resetDefaults(){
 	EEPROM.put(_eepromySnapback,_ySnapback);
 	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 
-  _gains.xSmoothing = _smoothingMin;
-  EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
-  _gains.ySmoothing = _smoothingMin;
-  EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+	_gains.xSmoothing = _smoothingMin;
+	EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
+	_gains.ySmoothing = _smoothingMin;
+	EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
 
-  _gains.cXSmoothing = _smoothingMin;
-  EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
-  _gains.cYSmoothing = _smoothingMin;
-  EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
-  //recompute the intermediate gains used directly by the kalman filter
-  recomputeGains();
+	_gains.cXSmoothing = _smoothingMin;
+	EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
+	_gains.cYSmoothing = _smoothingMin;
+	EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+	//recompute the intermediate gains used directly by the kalman filter
+	recomputeGains();
 
-  _LTriggerOffset = _triggerMin;
-  _RTriggerOffset = _triggerMin;
-  EEPROM.put(_eepromLOffset, _LTriggerOffset);
-  EEPROM.put(_eepromROffset, _RTriggerOffset);
+	_LTriggerOffset = _triggerMin;
+	_RTriggerOffset = _triggerMin;
+	EEPROM.put(_eepromLOffset, _LTriggerOffset);
+	EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	_rumble = _rumbleDefault;
 	_rumblePower = calcRumblePower(_rumble);
 	EEPROM.put(_eepromRumble, _rumble);
 
-	for(int i = 0; i < _noOfNotches; i++){
-		_aNotchAngles[i] = _notchAngleDefaults[i];
-		_cNotchAngles[i] = _notchAngleDefaults[i];
+	if(resetSticks){
+		//only cancel auto initialization when we reset the sticks
+		_autoInit = 0;
+		EEPROM.put(_eepromAutoInit, _autoInit);
+
+		for(int i = 0; i < _noOfNotches; i++){
+			_aNotchAngles[i] = _notchAngleDefaults[i];
+			_cNotchAngles[i] = _notchAngleDefaults[i];
+		}
+		EEPROM.put(_eepromANotchAngles,_aNotchAngles);
+		EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
+
+		for(int i = 0; i < _noOfCalibrationPoints; i++){
+			_tempCalPointsX[i] = _defaultCalPointsX[i];
+			_tempCalPointsY[i] = _defaultCalPointsY[i];
+		}
+		EEPROM.put(_eepromAPointsX,_tempCalPointsX);
+		EEPROM.put(_eepromAPointsY,_tempCalPointsY);
+
+		Serial.println("A calibration points stored in EEPROM");
+		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+		Serial.println("A calibration points cleaned");
+		linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+		Serial.println("A stick linearized");
+		notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+
+		for(int i = 0; i < _noOfCalibrationPoints; i++){
+			_tempCalPointsX[i] = _defaultCalPointsX[i];
+			_tempCalPointsY[i] = _defaultCalPointsY[i];
+		}
+		EEPROM.put(_eepromCPointsX,_tempCalPointsX);
+		EEPROM.put(_eepromCPointsY,_tempCalPointsY);
+
+		Serial.println("C calibration points stored in EEPROM");
+		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+		Serial.println("C calibration points cleaned");
+		linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+		Serial.println("C stick linearized");
+		notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 	}
-	EEPROM.put(_eepromANotchAngles,_aNotchAngles);
-	EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
-
-	for(int i = 0; i < _noOfCalibrationPoints; i++){
-		_tempCalPointsX[i] = _defaultCalPointsX[i];
-		_tempCalPointsY[i] = _defaultCalPointsY[i];
-	}
-	EEPROM.put(_eepromAPointsX,_tempCalPointsX);
-	EEPROM.put(_eepromAPointsY,_tempCalPointsY);
-
-	Serial.println("A calibration points stored in EEPROM");
-	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
-	Serial.println("A calibration points cleaned");
-	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
-	Serial.println("A stick linearized");
-	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
-
-	for(int i = 0; i < _noOfCalibrationPoints; i++){
-		_tempCalPointsX[i] = _defaultCalPointsX[i];
-		_tempCalPointsY[i] = _defaultCalPointsY[i];
-	}
-	EEPROM.put(_eepromCPointsX,_tempCalPointsX);
-	EEPROM.put(_eepromCPointsY,_tempCalPointsY);
-
-	Serial.println("C calibration points stored in EEPROM");
-	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
-	Serial.println("C calibration points cleaned");
-	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
-	Serial.println("C stick linearized");
-	notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
-
 }
 void setPinModes(){
 	pinMode(_pinL,INPUT_PULLUP);
@@ -1309,7 +1332,9 @@ void readButtons(){
 
 	/* Current Commands List
 	* Safe Mode:  AXY+Start
-	* Hard Reset:  ABZ+Start
+	* Soft Reset:  ABZ+Start
+	* Hard Reset:  ABZ+Dd
+	* Auto-Initialize: LRXY+Start
 	* Increase/Decrease Rumble: XY+Du/Dd
 	* Show Current Rumble Setting: BXY (no A)
 	*
@@ -1350,9 +1375,14 @@ void readButtons(){
 		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
 			_safeMode = true;
 			freezeSticks(4000);
-		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Hard Reset
-			resetDefaults();
+		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Soft Reset
+			resetDefaults(false);//don't reset sticks
 			freezeSticks(2000);
+		} else if (btn.A && btn.B && hardwareZ && btn.Dd) { //Hard Reset
+			resetDefaults(true);//do reset sticks
+			freezeSticks(2000);
+		} else if (hardwareL && hardwareR && hardwareX && hardwareY && btn.S) { //Toggle Auto-Initialize
+			changeAutoInit();
 		} else if (hardwareX && hardwareY && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
 			changeRumble(true);
@@ -1443,7 +1473,7 @@ void readButtons(){
 			readJumpConfig(false, false);
 			freezeSticks(2000);
 		}
-	} else if (_currentCalStep == -1) { //Safe Mode Disabled, Lock Settings
+	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
 		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
 			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
@@ -1621,9 +1651,11 @@ void readButtons(){
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
-				EEPROM.put(_eepromCPointsX,_tempCalPointsX);
-				EEPROM.put(_eepromCPointsY,_tempCalPointsY);
-				EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
+				EEPROM.put(_eepromCPointsX, _tempCalPointsX);
+				EEPROM.put(_eepromCPointsY, _tempCalPointsY);
+				EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
+				_autoInit = 0;
+				EEPROM.put(_eepromAutoInit, _autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -1681,9 +1713,11 @@ void readButtons(){
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
-				EEPROM.put(_eepromAPointsX,_tempCalPointsX);
-				EEPROM.put(_eepromAPointsY,_tempCalPointsY);
-				EEPROM.put(_eepromANotchAngles,_aNotchAngles);
+				EEPROM.put(_eepromAPointsX, _tempCalPointsX);
+				EEPROM.put(_eepromAPointsY, _tempCalPointsY);
+				EEPROM.put(_eepromANotchAngles, _aNotchAngles);
+				_autoInit = 0;
+				EEPROM.put(_eepromAutoInit, _autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -1773,6 +1807,28 @@ void showRumble(const int time) {
 
 	EEPROM.put(_eepromRumble, _rumble);
 }
+
+//Make it so you don't need to press B.
+//This is only good if the sticks are calibrated, so
+// the setting auto-resets whenever you hard reset or recalibrate.
+void changeAutoInit() {
+	if(_autoInit == 0) {
+		_autoInit = 1;
+	} else {
+		_autoInit = 0;
+	}
+
+	//move sticks up-right for on, down-left for off
+	btn.Ax = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Ay = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Cx = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Cy = (uint8_t) (_autoInit*100 - 50 + 127.5);
+
+	clearButtons(2000);
+
+	EEPROM.put(_eepromAutoInit, _autoInit);
+}
+
 void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	Serial.println("adjusting snapback filtering");
 	if(_xAxis && _increase && _change){
