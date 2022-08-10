@@ -116,13 +116,13 @@ int trigL,trigR;
 
 ///// Values used for adjusting snapback in the CarVac Filter
 
-int _xSnapback = 1;
-int _ySnapback = 1;
+int _xSnapback = 4;
+int _ySnapback = 4;
 const float _snapbackMin = 0;
-const float _snapbackMax = 7;
-const float _snapbackDefault = 1;//0 disables the filter completely, 1 is the default
+const float _snapbackMax = 10;
+const float _snapbackDefault = 4;//0 disables the filter completely, 4 is the default
 float velDampFromSnapback(const int snapback){
-	return 0.125 * pow(2, (snapback-1)/3.0);//1 should yield 0.125, 7 should yield 0.5, don't care about 0
+	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 }
 
 // Values used for dealing with X/Y Smoothing in the CarVac Filter, for ledge-dashing
