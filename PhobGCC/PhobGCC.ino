@@ -1174,11 +1174,11 @@ void resetDefaults(bool resetSticks){
 	_rumblePower = calcRumblePower(_rumble);
 	EEPROM.put(_eepromRumble, _rumble);
 
-	if(resetSticks){
-		//only cancel auto initialization when we reset the sticks
-		_autoInit = 0;
-		EEPROM.put(_eepromAutoInit, _autoInit);
+	//always cancel auto init on reset, even if we don't reset the sticks
+	_autoInit = 0;
+	EEPROM.put(_eepromAutoInit, _autoInit);
 
+	if(resetSticks){
 		for(int i = 0; i < _noOfNotches; i++){
 			_aNotchAngles[i] = _notchAngleDefaults[i];
 			_cNotchAngles[i] = _notchAngleDefaults[i];
