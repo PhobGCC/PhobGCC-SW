@@ -393,10 +393,8 @@ void setup() {
 #ifdef TEENSY4_0
 	//Force-underclock Teensy 4 to 150 MHz to lower power draw.
 	//set_arm_clock(150'000'000);
-	//actually don't, power draw is less of an issue than we thought.
-	//We need to get the serial running at the right clock speed.
-	//This doesn't actually warp the serial port speeds, it just happened to work.
-	set_arm_clock(550'000'000);
+	//for some reason, 150 MHz doesn't work with the new comms code. 300 seems to be enough.
+	set_arm_clock(300'000'000);
 #endif //TEENSY4_0
 
 	const int numberOfNaN = readEEPROM();
@@ -582,27 +580,28 @@ void commInt() {
 			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
-			Serial2.begin(_fastBaud);
+			setFastBaud();
 
 			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
 			_writing = true;
 			_bitQueue = _pollLength;
 
 			//write the poll response
-			for(int i = 0; i<_pollLength; i++){
-				/*
-				if(_commResponse[i]){
+			for(int i = 0; i<_pollLength; i += 2){
+				if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
 					//short low period = 1
-					Serial2.write(0b11111100);
-				}
-				else{
 					//long low period = 0
-					Serial2.write(0b11000000);
+					Serial2.write(0xEF);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					Serial2.write(0xE8);
+				} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x0F);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x08);
 				}
-				*/
 			}
 			//write stop bit to indicate end of response
-			Serial2.write(0b11111100);
+			Serial2.write(0xFF);
 		}
 		else{
 			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
@@ -639,23 +638,26 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
-				Serial2.begin(_fastBaud);
+				setFastBaud();
 				_writing = true;
 				_bitQueue = _probeLength;
 
 				//write the probe response
-				for(int i = 0; i<_probeLength; i++){
-					if(_probeResponse[i]){
+				for(int i = 0; i<_probeLength; i += 2){
+					if(_probeResponse[i] != 0 && _probeResponse[i+1] != 0){
 						//short low period = 1
-						Serial2.write(0b11111100);
-					}
-					else{
 						//long low period = 0
-						Serial2.write(0b11000000);
+						Serial2.write(0xEF);
+					} else if (_probeResponse[i] == 0 && _probeResponse[i+1] != 0){
+						Serial2.write(0xE8);
+					} else if (_probeResponse[i] != 0 && _probeResponse[i+1] == 0){
+						Serial2.write(0x0F);
+					} else if (_probeResponse[i] == 0 && _probeResponse[i+1] == 0){
+						Serial2.write(0x08);
 					}
 				}
 				//write stop bit to indicate end of response
-				Serial2.write(0b11111100);
+				Serial2.write(0xFF);
 			}
 			//if the command byte is 01000001 it is an origin command, we will send an origin response
 			else if(_cmdByte == 0b01000001){
@@ -664,23 +666,26 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
-				Serial2.begin(_fastBaud);
+				setFastBaud();
 				_writing = true;
 				_bitQueue = _originLength;
 
 				//write the origin response
-				for(int i = 0; i<_originLength; i++){
-					if(_commResponse[i]){
+				for(int i = 0; i<_originLength; i += 2){
+					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
 						//short low period = 1
-						Serial2.write(0b11111100);
-					}
-					else{
 						//long low period = 0
-						Serial2.write(0b11000000);
+						Serial2.write(0xEF);
+					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+						Serial2.write(0xE8);
+					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+						Serial2.write(0x0F);
+					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+						Serial2.write(0x08);
 					}
 				}
 				//write stop bit to indicate end of response
-				Serial2.write(0b11111100);
+				Serial2.write(0xFF);
 			}
 
 			//if the command byte is 01000000 it is an poll command, we need to wait for the poll command to finish then send our poll response
@@ -724,20 +729,11 @@ void commInt() {
 			while(Serial2.available() <= _bitQueue){}//bitQueue is 16 if we're _waiting
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 
+			//save command byte for later use in setting rumble
 			for(int i = 0; i < _bitQueue; i++){
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 			}
-/*
-			if(_reportCount == 0){
-				Serial.print("Poll: ");
-				//char myBuffer[128];
-				//for(int i = 0; i < _bitQueue; i++){
-				//	myBuffer[i] = (Serial2.read() > 0b11110000)+48;
-				//}
-				Serial.println(_cmdByte,BIN);
-				//Serial.println();
-			}
-*/
+
 			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
@@ -745,20 +741,22 @@ void commInt() {
 			setFastBaud();
 
 			//write the poll response
-			for(int i = 0; i<_pollLength; i++){
-
-				if(_commResponse[i]){
+			for(int i = 0; i<_pollLength; i += 2){
+				if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
 					//short low period = 1
-					Serial2.write(0b11111100);
-				}
-				else{
 					//long low period = 0
-					Serial2.write(0b11000000);
+					Serial2.write(0xEF);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					Serial2.write(0xE8);
+				} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x0F);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x08);
 				}
 			}
+			//write stop bit to indicate end of response
+			Serial2.write(0xFF);
 
-			//write the stop bit
-			Serial2.write(0b11111100);
 			//start the timer to reset the the serial port when the response has been sent
 			timer1.trigger(165);
 
@@ -814,18 +812,21 @@ void commInt() {
 				//Serial2.setTX(8,true);
 
 				//write the probe response
-				for(int i = 0; i<_probeLength; i++){
-					if(_probeResponse[i]){
+				for(int i = 0; i<_probeLength; i += 2){
+					if(_probeResponse[i] != 0 && _probeResponse[i+1] != 0){
 						//short low period = 1
-						Serial2.write(0b11111100);
-					}
-					else{
 						//long low period = 0
-						Serial2.write(0b11000000);
+						Serial2.write(0xEF);
+					} else if (_probeResponse[i] == 0 && _probeResponse[i+1] != 0){
+						Serial2.write(0xE8);
+					} else if (_probeResponse[i] != 0 && _probeResponse[i+1] == 0){
+						Serial2.write(0x0F);
+					} else if (_probeResponse[i] == 0 && _probeResponse[i+1] == 0){
+						Serial2.write(0x08);
 					}
 				}
-				//write stop bit
-				Serial2.write(0b11111100);
+				//write stop bit to indicate end of response
+				Serial2.write(0xFF);
 				resetSerial();
 			}
 			//if the command byte is 01000001 it is an origin command, we will send an origin response
@@ -840,18 +841,21 @@ void commInt() {
 				setCommResponse();
 
 				//write the origin response
-				for(int i = 0; i<_originLength; i++){
-					if(_commResponse[i]){
+				for(int i = 0; i<_originLength; i += 2){
+					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
 						//short low period = 1
-						Serial2.write(0b11111100);
-					}
-					else{
 						//long low period = 0
-						Serial2.write(0b11000000);
+						Serial2.write(0xEF);
+					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+						Serial2.write(0xE8);
+					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+						Serial2.write(0x0F);
+					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+						Serial2.write(0x08);
 					}
 				}
-				//write the stop bit
-				Serial2.write(0b11111100);
+				//write stop bit to indicate end of response
+				Serial2.write(0xFF);
 
 				resetSerial();
 			}
@@ -895,21 +899,28 @@ void resetSerial(){
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
 	digitalWriteFast(_pinLED,LOW);
 }
+#endif // HALFDUPLEX
 //We were using Serial2.begin() to change baudrate, but that took *waaay* too long.
 void setFastBaud(){
-	//oversample ratio * divisor = 2.4 MHz / baudrate (250 kHz) = 9.6,  10*1
-	//It ends up running at 240 kHz instead of 250, but that's better than 266 which
-	// caused issues with some consoles and adapters (6.4% too fast).
-	//240 kHz was occasionally too slow for Smashscope 2kHz polling
-	// until I made this function.
+	//By using 2:1 bit ratios, we were locking ourselves into a bad baudrate on teensy 4.
+	//The nearest lower one to the ideal 250 was 240 kHz, and the nearest higher was 266.
+	//oversample ratio * divisor = 24 MHz / baudrate (2.5 MHz) = 9.6,  10*1
+	//266 kHz was occasionally too fast for some consoles and adapters.
+	//240 kHz was occasionally too slow for Smashscope 2kHz polling until I made this function.
 	//I don't know why, but occasionally Smashscope polls a lot faster than every 500 microseconds.
 	//Most of the time it's a little slower than 2kHz but then it catches up or something?
-	//Either way, I just managed to make it squeak in under the line with 24 kHz.
-	const int osr = 10;
+	//const int osr = 10;
+	//const int div = 1;
+
+	//However, I realized that instead of using 2:1 bit ratios, I could do something similar to on the Teensy 3 code
+	//This lets us use a slower uart baudrate and get closer to the ideal of 1.25 MHz, within about 1%.
+	//The resulting measured bitrate is 252 KHz.
+
+	//Gonna try 1.25 MHz instead of 2.4
+	const int osr = 19;
 	const int div = 1;
 	IMXRT_LPUART4.BAUD = LPUART_BAUD_OSR(osr-1) | LPUART_BAUD_SBR(div);
 }
-#endif // HALFDUPLEX
 #endif // TEENSY4_0
 int readEEPROM(){
 	int numberOfNaN = 0;
