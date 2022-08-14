@@ -395,6 +395,7 @@ void setup() {
 	//set_arm_clock(150'000'000);
 	//actually don't, power draw is less of an issue than we thought.
 	//We need to get the serial running at the right clock speed.
+	//This doesn't actually warp the serial port speeds, it just happened to work.
 	set_arm_clock(550'000'000);
 #endif //TEENSY4_0
 
@@ -897,6 +898,13 @@ void resetSerial(){
 //We were using Serial2.begin() to change baudrate, but that took *waaay* too long.
 void setFastBaud(){
 	//oversample ratio * divisor = 2.4 MHz / baudrate (250 kHz) = 9.6,  10*1
+	//It ends up running at 240 kHz instead of 250, but that's better than 266 which
+	// caused issues with some consoles and adapters (6.4% too fast).
+	//240 kHz was occasionally too slow for Smashscope 2kHz polling
+	// until I made this function.
+	//I don't know why, but occasionally Smashscope polls a lot faster than every 500 microseconds.
+	//Most of the time it's a little slower than 2kHz but then it catches up or something?
+	//Either way, I just managed to make it squeak in under the line with 24 kHz.
 	const int osr = 10;
 	const int div = 1;
 	IMXRT_LPUART4.BAUD = LPUART_BAUD_OSR(osr-1) | LPUART_BAUD_SBR(div);
