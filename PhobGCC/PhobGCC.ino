@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -336,7 +336,7 @@ volatile char _commResponse[_originLength] = {
     0xE8,0xEF,0xEF,0xEF,
     0x08,0xEF,0xEF,0x08,
     0x08,0xEF,0xEF,0x08,
-		0x08,0x08,0x08,0x08,
+	0x08,0x08,0x08,0x08,
     0x08,0x08,0x08,0x08};
 
 
@@ -356,12 +356,13 @@ int _bitQueue = 8;
 int _waitQueue = 0;
 int _writeQueue = 0;
 uint8_t _cmdByte = 0;
-const int _fastBaud = 2600000;
+const int _fastBaud = 2500000;
 const int _slowBaud = 2000000;
 const int _probeLength = 24;
 const int _originLength = 80;
 const int _pollLength = 64;
 static char _serialBuffer[128];
+static char _writeBuffer[128];
 int _errorCount = 0;
 int _reportCount = 0;
 
@@ -391,7 +392,10 @@ void setup() {
 
 #ifdef TEENSY4_0
 	//Force-underclock Teensy 4 to 150 MHz to lower power draw.
-	set_arm_clock(150'000'000);
+	//set_arm_clock(150'000'000);
+	//actually don't, power draw is less of an issue than we thought.
+	//We need to get the serial running at the right clock speed.
+	set_arm_clock(550'000'000);
 #endif //TEENSY4_0
 
 	const int numberOfNaN = readEEPROM();
@@ -441,6 +445,7 @@ void setup() {
     Serial2.addMemoryForRead(_serialBuffer,128);
 	attachInterrupt(_pinInt, commInt, RISING);
 #ifdef HALFDUPLEX
+	Serial2.addMemoryForWrite(_writeBuffer, 128);
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
 	//Serial2.setTX(8,true);
 	timer1.begin(resetSerial);
@@ -584,6 +589,7 @@ void commInt() {
 
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
+				/*
 				if(_commResponse[i]){
 					//short low period = 1
 					Serial2.write(0b11111100);
@@ -592,6 +598,7 @@ void commInt() {
 					//long low period = 0
 					Serial2.write(0b11000000);
 				}
+				*/
 			}
 			//write stop bit to indicate end of response
 			Serial2.write(0b11111100);
@@ -708,32 +715,18 @@ void commInt() {
 void commInt() {
 	digitalWriteFast(_pinLED,LOW);
 	//check to see if we have the expected amount of data yet
-	if(Serial2.available() >= _bitQueue){
+	if(Serial2.available() >= _bitQueue){//bitQueue is 8 or 16
 		//check to see if we were waiting for a poll command to finish
 		//if we are, we need to clear the data and send our poll response
 		if(_waiting){
-			//digitalWriteFast(_pinLED,LOW);
 			//wait for the stop bit to be received
-			while(Serial2.available() <= _bitQueue){}
+			while(Serial2.available() <= _bitQueue){}//bitQueue is 16 if we're _waiting
 			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
 
 			for(int i = 0; i < _bitQueue; i++){
 				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 			}
-#ifdef RUMBLE
-			if(_cmdByte & 0b00000001 && _rumble > 0){
-				analogWrite(_pinBrake,0);
-				analogWrite(_pinRumble, _rumblePower);
-			}
-			else if(_cmdByte & 0b00000010){
-				analogWrite(_pinRumble,0);
-				analogWrite(_pinBrake,256);
-			}
-			else{
-				analogWrite(_pinRumble,0);
-				analogWrite(_pinBrake,0);
-			}
-#endif
+/*
 			if(_reportCount == 0){
 				Serial.print("Poll: ");
 				//char myBuffer[128];
@@ -743,12 +736,12 @@ void commInt() {
 				Serial.println(_cmdByte,BIN);
 				//Serial.println();
 			}
-
+*/
 			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
 			Serial2.clear();
 			_waiting = false;
 			_bitQueue = 8;
-			Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+			setFastBaud();
 
 			//write the poll response
 			for(int i = 0; i<_pollLength; i++){
@@ -768,7 +761,21 @@ void commInt() {
 			//start the timer to reset the the serial port when the response has been sent
 			timer1.trigger(165);
 
-
+			//actually write to the rumble pins after beginning the write
+#ifdef RUMBLE
+			if(_cmdByte & 0b00000001 && _rumble > 0){
+				analogWrite(_pinBrake,0);
+				analogWrite(_pinRumble, _rumblePower);
+			}
+			else if(_cmdByte & 0b00000010){
+				analogWrite(_pinRumble,0);
+				analogWrite(_pinBrake,256);
+			}
+			else{
+				analogWrite(_pinRumble,0);
+				analogWrite(_pinBrake,0);
+			}
+#endif
 		}
 		else{
 			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
@@ -802,7 +809,7 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
-				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+				setFastBaud();
 				//Serial2.setTX(8,true);
 
 				//write the probe response
@@ -827,7 +834,7 @@ void commInt() {
 				Serial2.clear();
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
-				Serial2.begin(_fastBaud,SERIAL_HALF_DUPLEX);
+				setFastBaud();
 				//set the comm response so when we respond to the origin command it has the correct data
 				setCommResponse();
 
@@ -886,6 +893,13 @@ void resetSerial(){
 	Serial2.flush();
 	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
 	digitalWriteFast(_pinLED,LOW);
+}
+//We were using Serial2.begin() to change baudrate, but that took *waaay* too long.
+void setFastBaud(){
+	//oversample ratio * divisor = 2.4 MHz / baudrate (250 kHz) = 9.6,  10*1
+	const int osr = 10;
+	const int div = 1;
+	IMXRT_LPUART4.BAUD = LPUART_BAUD_OSR(osr-1) | LPUART_BAUD_SBR(div);
 }
 #endif // HALFDUPLEX
 #endif // TEENSY4_0
