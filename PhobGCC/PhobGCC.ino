@@ -23,6 +23,9 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#define BUILD_RELEASE
 #define BUILD_DEV
 
+//This is just an integer.
+#define SW_VERSION 24
+
 //#define ENABLE_LED
 
 using namespace Eigen;
@@ -387,7 +390,8 @@ volatile char _commResponse[_originLength] = {
 
 void setup() {
     serialSetup();
-	Serial.println("Software version 0.24");
+	Serial.print("Software version 0.");
+	Serial.println(SW_VERSION);
 #ifdef BUILD_DEV
 	Serial.println("This is not a stable version");
 #endif
@@ -1365,9 +1369,12 @@ void readButtons(){
 
 	/* Current Commands List
 	* Safe Mode:  AXY+Start
+	* Display Version: AZ+Du
+	*
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
 	* Auto-Initialize: LRXY+Start
+	*
 	* Increase/Decrease Rumble: XY+Du/Dd
 	* Show Current Rumble Setting: BXY (no A)
 	*
@@ -1408,6 +1415,14 @@ void readButtons(){
 		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
 			_safeMode = true;
 			freezeSticks(4000);
+		} else if (btn.A && hardwareZ && btn.Du) { //display version number
+			const int versionHundreds = floor(SW_VERSION/100.0);
+			const int versionOnes     = SW_VERSION-versionHundreds;
+			btn.Ax = (uint8_t) 127.5;
+			btn.Ay = (uint8_t) 127.5;
+			btn.Cx = (uint8_t) 127.5 + versionHundreds;
+			btn.Cy = (uint8_t) 127.5 + versionOnes;
+			clearButtons(2000);
 		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Soft Reset
 			resetDefaults(false);//don't reset sticks
 			freezeSticks(2000);
