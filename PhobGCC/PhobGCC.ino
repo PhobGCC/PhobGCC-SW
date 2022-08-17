@@ -1340,7 +1340,7 @@ void readButtons(){
 	*
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
-	* Auto-Initialize: LRXY+Start
+	* Auto-Initialize: ABLR+Start
 	*
 	* Increase/Decrease Rumble: XY+Du/Dd
 	* Show Current Rumble Setting: BXY (no A)
@@ -1396,7 +1396,7 @@ void readButtons(){
 		} else if (btn.A && btn.B && hardwareZ && btn.Dd) { //Hard Reset
 			resetDefaults(true);//do reset sticks
 			freezeSticks(2000);
-		} else if (hardwareL && hardwareR && hardwareX && hardwareY && btn.S) { //Toggle Auto-Initialize
+		} else if (btn.A && btn.B && hardwareL && hardwareR && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit();
 		} else if (hardwareX && hardwareY && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
