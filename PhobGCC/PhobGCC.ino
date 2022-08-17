@@ -16,7 +16,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_0Teensy3_2DiodeShort.h"// For PhobGCC board 1.0 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
-//#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
+#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
@@ -557,7 +557,7 @@ void commInt() {
 
 			//turn the writing flag off, set the serial port to low speed, and set our expected bit queue to 8 to be ready to receive our next command
 			_writing = false;
-			Serial2.begin(2000000);
+			Serial2.begin(_slowBaud);
 			_bitQueue = 8;
 		}
 		//if we are not writing, check to see if we were waiting for a poll command to finish
@@ -590,7 +590,7 @@ void commInt() {
 
 			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
 			_writing = true;
-			_bitQueue = _pollLength;
+			_bitQueue = _pollLength/2;
 
 			//write the poll response
 			for(int i = 0; i<_pollLength; i += 2){
@@ -646,7 +646,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				setFastBaud();
 				_writing = true;
-				_bitQueue = _probeLength;
+				_bitQueue = _probeLength/2;
 
 				//write the probe response
 				for(int i = 0; i<_probeLength; i += 2){
@@ -674,7 +674,7 @@ void commInt() {
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				setFastBaud();
 				_writing = true;
-				_bitQueue = _originLength;
+				_bitQueue = _originLength/2;
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i += 2){
