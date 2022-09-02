@@ -332,6 +332,17 @@ const char _probeResponse[_probeLength] = {
     0x08,0x08,0x0F,0xE8,
     0x08,0x08,0x08,0x08,
     0x08,0x08,0x08,0xEF};
+volatile char _originResponse[_originLength] = {
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
+	0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0x08};
 volatile char _commResponse[_originLength] = {
     0x08,0x08,0x08,0x08,
     0x0F,0x08,0x08,0x08,
@@ -375,6 +386,17 @@ const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
     0,0,0,0, 0,0,1,1};
+volatile char _originResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0};
 volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
@@ -443,7 +465,11 @@ void setup() {
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
+	//measure the trigger values
 	initializeButtons(btn,trigL,trigR);
+	//set the origin response before the sticks have been touched
+	//it will never be changed again after this
+	setCommResponse(_originResponse, btn);
 
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
@@ -678,15 +704,15 @@ void commInt() {
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i += 2){
-					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
+					if(_originResponse[i] != 0 && _originResponse[i+1] != 0){
 						//short low period = 1
 						//long low period = 0
 						Serial2.write(0xEF);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] != 0){
 						Serial2.write(0xE8);
-					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] != 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x0F);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x08);
 					}
 				}
@@ -699,7 +725,7 @@ void commInt() {
 			else if(_cmdByte == 0b01000000){
 				_waiting = true;
 				_bitQueue = 16;
-				setCommResponse();
+				setCommResponse(_commResponse, btn);
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -843,20 +869,18 @@ void commInt() {
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				setFastBaud();
-				//set the comm response so when we respond to the origin command it has the correct data
-				setCommResponse();
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i += 2){
-					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
+					if(_originResponse[i] != 0 && _originResponse[i+1] != 0){
 						//short low period = 1
 						//long low period = 0
 						Serial2.write(0xEF);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] != 0){
 						Serial2.write(0xE8);
-					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] != 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x0F);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x08);
 					}
 				}
@@ -871,7 +895,7 @@ void commInt() {
 				//digitalWriteFast(_pinLED,LOW);
 				_waiting = true;
 				_bitQueue = 16;
-				setCommResponse();
+				setCommResponse(_commResponse, btn);
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -1910,8 +1934,6 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	btn.Cx = (uint8_t) (_xSnapback + 127.5);
 	btn.Cy = (uint8_t) (_ySnapback + 127.5);
 
-	//setCommResponse();
-
 	clearButtons(2000);
 
 	EEPROM.put(_eepromxSnapback,_xSnapback);
@@ -2422,33 +2444,33 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	takes the values that have been put into the button struct and translates them in the serial commands ready
 	to be sent to the gamecube/wii
 *******************/
-void setCommResponse(){
+void setCommResponse(volatile char response[], Buttons &button){
 	for(int i = 0; i < 8; i++){
 		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
 #ifdef TEENSY3_2
 		for(int j = 0; j < 4; j++){
 			//this could probably be done better but we need to take 2 bits at a time to put into one serial byte
 			//for details on this read here: http://www.qwertymodo.com/hardware-projects/n64/n64-controller
-			int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
+			int these2bits = (button.arr[i]>>(6-j*2)) & 3;
 			switch(these2bits){
 				case 0:
-				_commResponse[(i<<2)+j] = 0x08;
+				response[(i<<2)+j] = 0x08;
 				break;
 				case 1:
-				_commResponse[(i<<2)+j] = 0xE8;
+				response[(i<<2)+j] = 0xE8;
 				break;
 				case 2:
-				_commResponse[(i<<2)+j] = 0x0F;
+				response[(i<<2)+j] = 0x0F;
 				break;
 				case 3:
-				_commResponse[(i<<2)+j] = 0xEF;
+				response[(i<<2)+j] = 0xEF;
 				break;
 			}
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
 		for(int j = 0; j < 8; j++){
-			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+			response[i*8+j] = button.arr[i]>>(7-j) & 1;
 		}
 #endif // TEENSY4_0
 	}
@@ -2522,11 +2544,9 @@ void communicate(){
 		case 0x41:
 			//set the timer to call communicate() again in ~320 us when the probe response is done being sent
 			timer1.trigger(_originLength*8);
-			//create the response to be sent
-			setCommResponse();
 			//write the origin response
 			for(int i = 0; i< _originLength; i++){
-				Serial2.write(_commResponse[i]);
+				Serial2.write(_originResponse[i]);
 			}
 			//write a stop bit
 			Serial2.write(0xFF);
@@ -2544,7 +2564,7 @@ void communicate(){
 			//set the status to receiving the poll command
 			_commStatus = _commPoll;
 			//create the poll response
-			setCommResponse();
+			setCommResponse(_commResponse, btn);
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
