@@ -90,8 +90,12 @@ int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
 int _jumpConfig = 0;
+const int _jumpConfigMin = 0;
+const int _jumpConfigMax = 2;
 int _lConfig = 0;
 int _rConfig = 0;
+const int _triggerConfigMin = 0;
+const int _triggerConfigMax = 5;
 int _triggerDefault = 0;
 int _lTrigger = 0;
 int _rTrigger = 1;
@@ -102,8 +106,8 @@ int _cMax = 127;
 int _cMin = -127;
 int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
-int _triggerMin = 49;
-int _triggerMax = 227;
+const int _triggerMin = 49;
+const int _triggerMax = 227;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 5;
 int calcRumblePower(const int rumble){
@@ -957,7 +961,11 @@ int readEEPROM(){
 
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
-	if(std::isnan(_jumpConfig)){
+	if(_jumpConfig < _jumpConfigMin){
+		_jumpConfig = 0;
+		numberOfNaN++;
+	}
+	if(_jumpConfig > _jumpConfigMax){
 		_jumpConfig = 0;
 		numberOfNaN++;
 	}
@@ -965,56 +973,56 @@ int readEEPROM(){
 
 	//get the L setting
 	EEPROM.get(_eepromLToggle, _lConfig);
-	if(std::isnan(_lConfig)) {
+	if(_lConfig < _triggerConfigMin) {
+		_lConfig = _triggerDefault;
+		numberOfNaN++;
+	}
+	if(_lConfig > _triggerConfigMax) {
 		_lConfig = _triggerDefault;
 		numberOfNaN++;
 	}
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
-	if(std::isnan(_rConfig)) {
+	if(_rConfig < _triggerConfigMin) {
+		_rConfig = _triggerDefault;
+		numberOfNaN++;
+	}
+	if(_rConfig > _triggerConfigMax) {
 		_rConfig = _triggerDefault;
 		numberOfNaN++;
 	}
 
 	//get the C-stick X offset
 	EEPROM.get(_eepromcXOffset, _cXOffset);
-	if(std::isnan(_cXOffset)) {
+	if(_cXOffset > _cMax) {
 		_cXOffset = 0;
 		numberOfNaN++;
-	}
-	if(_cXOffset > _cMax) {
-		_cXOffset = _cMax;
 	} else if(_cXOffset < _cMin) {
-		_cXOffset = _cMin;
+		_cXOffset = 0;
+		numberOfNaN++;
 	}
 
 	//get the C-stick Y offset
 	EEPROM.get(_eepromcYOffset, _cYOffset);
-	if(std::isnan(_cYOffset)) {
+	if(_cYOffset > _cMax) {
 		_cYOffset = 0;
 		numberOfNaN++;
-	}
-	if(_cYOffset > _cMax) {
-		_cYOffset = _cMax;
 	} else if(_cYOffset < _cMin) {
-		_cYOffset = _cMin;
+		_cYOffset = 0;
+		numberOfNaN++;
 	}
 
 	//get the x-axis snapback correction
 	EEPROM.get(_eepromxSnapback, _xSnapback);
 	Serial.print("the xSnapback value from eeprom is:");
 	Serial.println(_xSnapback);
-	if(std::isnan(_xSnapback)){
-		_xSnapback = _snapbackDefault;
-		Serial.print("the xSnapback value was adjusted to:");
-		Serial.println(_xSnapback);
-		numberOfNaN++;
-	}
 	if(_xSnapback < _snapbackMin) {
 		_xSnapback = _snapbackMin;
+		numberOfNaN++;
 	} else if (_xSnapback > _snapbackMax) {
 		_xSnapback = _snapbackMax;
+		numberOfNaN++;
 	}
 	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
 	Serial.print("the xVelDamp value from eeprom is:");
@@ -1024,16 +1032,12 @@ int readEEPROM(){
 	EEPROM.get(_eepromySnapback, _ySnapback);
 	Serial.print("the ySnapback value from eeprom is:");
 	Serial.println(_ySnapback);
-	if(std::isnan(_ySnapback)){
-		_ySnapback = _snapbackDefault;
-		Serial.print("the ySnapback value was adjusted to:");
-		Serial.println(_ySnapback);
-		numberOfNaN++;
-	}
 	if(_ySnapback < _snapbackMin) {
 		_ySnapback = _snapbackMin;
+		numberOfNaN++;
 	} else if (_ySnapback > _snapbackMax) {
 		_ySnapback = _snapbackMax;
+		numberOfNaN++;
 	}
 	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 	Serial.print("the yVelDamp value from eeprom is:");
@@ -1108,26 +1112,22 @@ int readEEPROM(){
 
 	//get the L-trigger Offset value
 	EEPROM.get(_eepromLOffset, _LTriggerOffset);
-	if(std::isnan(_LTriggerOffset)){
-		_LTriggerOffset = _triggerMin;
-		numberOfNaN++;
-	}
 	if(_LTriggerOffset > _triggerMax) {
 		_LTriggerOffset = _triggerMax;
+		numberOfNaN++;
 	} else if(_LTriggerOffset < _triggerMin) {
 		_LTriggerOffset = _triggerMin;
+		numberOfNaN++;
 	}
 
 	//get the R-trigger Offset value
 	EEPROM.get(_eepromROffset, _RTriggerOffset);
-	if(std::isnan(_RTriggerOffset)){
-		_RTriggerOffset = _triggerMin;
-		numberOfNaN++;
-	}
 	if(_RTriggerOffset > _triggerMax) {
 		_RTriggerOffset = _triggerMax;
+		numberOfNaN++;
 	} else if(_RTriggerOffset < _triggerMin) {
 		_RTriggerOffset = _triggerMin;
+		numberOfNaN++;
 	}
 
 	//Get the rumble value
@@ -1152,15 +1152,13 @@ int readEEPROM(){
 
 	//Get the autoinit value
 	EEPROM.get(_eepromAutoInit, _autoInit);
-	if(std::isnan(_autoInit)) {
+	if(_autoInit < 0) {
 		_autoInit = 0;
 		numberOfNaN++;
 	}
-	if(_autoInit < 0) {
-		_autoInit = 0;
-	}
 	if(_autoInit > 1) {
-		_autoInit = 1;
+		_autoInit = 0;
+		numberOfNaN++;
 	}
 	Serial.print("Auto init: ");
 	Serial.println(_autoInit);
@@ -2176,13 +2174,13 @@ void setJump(int jumpConfig){
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
-		if(_currentConfig >= 5) {
+		if(_currentConfig >= _triggerConfigMax) {
 			_lConfig = 0;
 		} else {
 			_lConfig = _currentConfig + 1;
 		}
 	} else {
-		if(_currentConfig >= 5) {
+		if(_currentConfig >= _triggerConfigMax) {
 			_rConfig = 0;
 		} else {
 			_rConfig = _currentConfig + 1;
