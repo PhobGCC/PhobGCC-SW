@@ -1331,57 +1331,64 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
-	switch(_lConfig) {
-		case 0: //Default Trigger state
-			btn.L = !digitalRead(_pinL);
-			break;
-		case 1: //Digital Only Trigger state
-			btn.L = !digitalRead(_pinL);
-			break;
-		case 2: //Analog Only Trigger state
-			btn.L = (uint8_t) 0;
-			break;
-		case 3: //Trigger Plug Emulation state
-			btn.L = !digitalRead(_pinL);
-			break;
-		case 4: //Digital => Analog Value state
-			btn.L = (uint8_t) 0;
-			break;
-		case 5: //Digital -> Analog Value + Digital state
-			btn.L = !digitalRead(_pinL);
-			break;
-		default:
-			btn.L = !digitalRead(_pinL);
-	}
-
-	switch(_rConfig) {
-		case 0: //Default Trigger state
-			btn.R = !digitalRead(_pinR);
-			break;
-		case 1: //Digital Only Trigger state
-			btn.R = !digitalRead(_pinR);
-			break;
-		case 2: //Analog Only Trigger state
-			btn.R = (uint8_t) 0;
-			break;
-		case 3: //Trigger Plug Emulation state
-			btn.R = !digitalRead(_pinR);
-			break;
-		case 4: //Digital => Analog Value state
-			btn.R = (uint8_t) 0;
-			break;
-		case 5: //Digital -> Analog Value + Digital state
-			btn.R = !digitalRead(_pinR);
-			break;
-		default:
-			btn.R = !digitalRead(_pinR);
-	}
-
 	hardwareL = !digitalRead(_pinL);
 	hardwareR = !digitalRead(_pinR);
 	hardwareZ = !digitalRead(_pinZ);
 	hardwareX = !digitalRead(_pinX);
 	hardwareY = !digitalRead(_pinY);
+
+	if(hardwareL && hardwareR && btn.A && btn.S) {
+		btn.L = (uint8_t) (1);
+		btn.R = (uint8_t) (1);
+		btn.A = (uint8_t) (1);
+		btn.S = (uint8_t) (1);
+	} else {
+		switch(_lConfig) {
+			case 0: //Default Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 2: //Analog Only Trigger state
+				btn.L = (uint8_t) 0;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.L = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.L = !digitalRead(_pinL);
+				break;
+			default:
+				btn.L = !digitalRead(_pinL);
+		}
+
+		switch(_rConfig) {
+			case 0: //Default Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 2: //Analog Only Trigger state
+				btn.R = (uint8_t) 0;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.R = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.R = !digitalRead(_pinR);
+				break;
+			default:
+				btn.R = !digitalRead(_pinR);
+		}
+	}
 
 	bounceDr.update();
 	bounceDu.update();
@@ -1557,12 +1564,6 @@ void readButtons(){
 			}
 			_safeMode = false;
 			freezeSticks(2000);
-		}
-		if(hardwareL && hardwareR && btn.A && btn.S) {
-			btn.L = (uint8_t) (1);
-			btn.R = (uint8_t) (1);
-			btn.A = (uint8_t) (1);
-			btn.S = (uint8_t) (1);
 		}
 	}
 
