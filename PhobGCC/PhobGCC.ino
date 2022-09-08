@@ -24,7 +24,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#define BUILD_DEV
 
 //This is just an integer.
-#define SW_VERSION 24
+#define SW_VERSION 25
 
 //#define ENABLE_LED
 
@@ -85,24 +85,17 @@ float _cStickX;
 float _cStickY;
 
 
-enum RemapConfig {
-	DEFAULT,
-	SWAP_XZ,
-	SWAP_YZ,
-	SWAP_XL,
-	SWAP_YL,
-	SWAP_XR,
-	SWAP_YR,
-}
-
 //defining control configuration
 int _pinZSwappable = _pinZ;
-int _pinLSwappable = _pinL;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
-RemapConfig _jumpConfig = RemapConfig.DEFAULT;
+int _jumpConfig = 0;
+const int _jumpConfigMin = 0;
+const int _jumpConfigMax = 2;
 int _lConfig = 0;
 int _rConfig = 0;
+const int _triggerConfigMin = 0;
+const int _triggerConfigMax = 5;
 int _triggerDefault = 0;
 int _lTrigger = 0;
 int _rTrigger = 1;
@@ -113,8 +106,8 @@ int _cMax = 127;
 int _cMin = -127;
 int _LTriggerOffset = 49;
 int _RTriggerOffset = 49;
-int _triggerMin = 49;
-int _triggerMax = 227;
+const int _triggerMin = 49;
+const int _triggerMax = 227;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 5;
 int calcRumblePower(const int rumble){
@@ -343,6 +336,17 @@ const char _probeResponse[_probeLength] = {
     0x08,0x08,0x0F,0xE8,
     0x08,0x08,0x08,0x08,
     0x08,0x08,0x08,0xEF};
+volatile char _originResponse[_originLength] = {
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
+	0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0x08};
 volatile char _commResponse[_originLength] = {
     0x08,0x08,0x08,0x08,
     0x0F,0x08,0x08,0x08,
@@ -386,6 +390,17 @@ const char _probeResponse[_probeLength] = {
     0,0,0,0, 1,0,0,1,
     0,0,0,0, 0,0,0,0,
     0,0,0,0, 0,0,1,1};
+volatile char _originResponse[_originLength] = {
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0};
 volatile char _commResponse[_originLength] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
@@ -454,7 +469,11 @@ void setup() {
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
+	//measure the trigger values
 	initializeButtons(btn,trigL,trigR);
+	//set the origin response before the sticks have been touched
+	//it will never be changed again after this
+	setCommResponse(_originResponse, btn);
 
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
@@ -689,15 +708,15 @@ void commInt() {
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i += 2){
-					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
+					if(_originResponse[i] != 0 && _originResponse[i+1] != 0){
 						//short low period = 1
 						//long low period = 0
 						Serial2.write(0xEF);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] != 0){
 						Serial2.write(0xE8);
-					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] != 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x0F);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x08);
 					}
 				}
@@ -710,7 +729,7 @@ void commInt() {
 			else if(_cmdByte == 0b01000000){
 				_waiting = true;
 				_bitQueue = 16;
-				setCommResponse();
+				setCommResponse(_commResponse, btn);
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -854,20 +873,18 @@ void commInt() {
 
 				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the origin response length minus 1 (to account for the stop bit)
 				setFastBaud();
-				//set the comm response so when we respond to the origin command it has the correct data
-				setCommResponse();
 
 				//write the origin response
 				for(int i = 0; i<_originLength; i += 2){
-					if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
+					if(_originResponse[i] != 0 && _originResponse[i+1] != 0){
 						//short low period = 1
 						//long low period = 0
 						Serial2.write(0xEF);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] != 0){
 						Serial2.write(0xE8);
-					} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] != 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x0F);
-					} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					} else if (_originResponse[i] == 0 && _originResponse[i+1] == 0){
 						Serial2.write(0x08);
 					}
 				}
@@ -882,7 +899,7 @@ void commInt() {
 				//digitalWriteFast(_pinLED,LOW);
 				_waiting = true;
 				_bitQueue = 16;
-				setCommResponse();
+				setCommResponse(_commResponse, btn);
 			}
 			//if we got something else then something went wrong, print the command we got and increase the error count
 			else{
@@ -944,64 +961,68 @@ int readEEPROM(){
 
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
-	if(std::isnan(_jumpConfig)){
-		_jumpConfig = RemapConfig.DEFAULT;
+	if(_jumpConfig < _jumpConfigMin){
+		_jumpConfig = 0;
+		numberOfNaN++;
+	}
+	if(_jumpConfig > _jumpConfigMax){
+		_jumpConfig = 0;
 		numberOfNaN++;
 	}
 	setJump(_jumpConfig);
 
 	//get the L setting
 	EEPROM.get(_eepromLToggle, _lConfig);
-	if(std::isnan(_lConfig)) {
+	if(_lConfig < _triggerConfigMin) {
+		_lConfig = _triggerDefault;
+		numberOfNaN++;
+	}
+	if(_lConfig > _triggerConfigMax) {
 		_lConfig = _triggerDefault;
 		numberOfNaN++;
 	}
 
 	//get the R setting
 	EEPROM.get(_eepromRToggle, _rConfig);
-	if(std::isnan(_rConfig)) {
+	if(_rConfig < _triggerConfigMin) {
+		_rConfig = _triggerDefault;
+		numberOfNaN++;
+	}
+	if(_rConfig > _triggerConfigMax) {
 		_rConfig = _triggerDefault;
 		numberOfNaN++;
 	}
 
 	//get the C-stick X offset
 	EEPROM.get(_eepromcXOffset, _cXOffset);
-	if(std::isnan(_cXOffset)) {
+	if(_cXOffset > _cMax) {
 		_cXOffset = 0;
 		numberOfNaN++;
-	}
-	if(_cXOffset > _cMax) {
-		_cXOffset = _cMax;
 	} else if(_cXOffset < _cMin) {
-		_cXOffset = _cMin;
+		_cXOffset = 0;
+		numberOfNaN++;
 	}
 
 	//get the C-stick Y offset
 	EEPROM.get(_eepromcYOffset, _cYOffset);
-	if(std::isnan(_cYOffset)) {
+	if(_cYOffset > _cMax) {
 		_cYOffset = 0;
 		numberOfNaN++;
-	}
-	if(_cYOffset > _cMax) {
-		_cYOffset = _cMax;
 	} else if(_cYOffset < _cMin) {
-		_cYOffset = _cMin;
+		_cYOffset = 0;
+		numberOfNaN++;
 	}
 
 	//get the x-axis snapback correction
 	EEPROM.get(_eepromxSnapback, _xSnapback);
 	Serial.print("the xSnapback value from eeprom is:");
 	Serial.println(_xSnapback);
-	if(std::isnan(_xSnapback)){
-		_xSnapback = _snapbackDefault;
-		Serial.print("the xSnapback value was adjusted to:");
-		Serial.println(_xSnapback);
-		numberOfNaN++;
-	}
 	if(_xSnapback < _snapbackMin) {
 		_xSnapback = _snapbackMin;
+		numberOfNaN++;
 	} else if (_xSnapback > _snapbackMax) {
 		_xSnapback = _snapbackMax;
+		numberOfNaN++;
 	}
 	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
 	Serial.print("the xVelDamp value from eeprom is:");
@@ -1011,16 +1032,12 @@ int readEEPROM(){
 	EEPROM.get(_eepromySnapback, _ySnapback);
 	Serial.print("the ySnapback value from eeprom is:");
 	Serial.println(_ySnapback);
-	if(std::isnan(_ySnapback)){
-		_ySnapback = _snapbackDefault;
-		Serial.print("the ySnapback value was adjusted to:");
-		Serial.println(_ySnapback);
-		numberOfNaN++;
-	}
 	if(_ySnapback < _snapbackMin) {
 		_ySnapback = _snapbackMin;
+		numberOfNaN++;
 	} else if (_ySnapback > _snapbackMax) {
 		_ySnapback = _snapbackMax;
+		numberOfNaN++;
 	}
 	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 	Serial.print("the yVelDamp value from eeprom is:");
@@ -1095,26 +1112,22 @@ int readEEPROM(){
 
 	//get the L-trigger Offset value
 	EEPROM.get(_eepromLOffset, _LTriggerOffset);
-	if(std::isnan(_LTriggerOffset)){
-		_LTriggerOffset = _triggerMin;
-		numberOfNaN++;
-	}
 	if(_LTriggerOffset > _triggerMax) {
 		_LTriggerOffset = _triggerMax;
+		numberOfNaN++;
 	} else if(_LTriggerOffset < _triggerMin) {
 		_LTriggerOffset = _triggerMin;
+		numberOfNaN++;
 	}
 
 	//get the R-trigger Offset value
 	EEPROM.get(_eepromROffset, _RTriggerOffset);
-	if(std::isnan(_RTriggerOffset)){
-		_RTriggerOffset = _triggerMin;
-		numberOfNaN++;
-	}
 	if(_RTriggerOffset > _triggerMax) {
 		_RTriggerOffset = _triggerMax;
+		numberOfNaN++;
 	} else if(_RTriggerOffset < _triggerMin) {
 		_RTriggerOffset = _triggerMin;
+		numberOfNaN++;
 	}
 
 	//Get the rumble value
@@ -1139,15 +1152,13 @@ int readEEPROM(){
 
 	//Get the autoinit value
 	EEPROM.get(_eepromAutoInit, _autoInit);
-	if(std::isnan(_autoInit)) {
+	if(_autoInit < 0) {
 		_autoInit = 0;
 		numberOfNaN++;
 	}
-	if(_autoInit < 0) {
-		_autoInit = 0;
-	}
 	if(_autoInit > 1) {
-		_autoInit = 1;
+		_autoInit = 0;
+		numberOfNaN++;
 	}
 	Serial.print("Auto init: ");
 	Serial.println(_autoInit);
@@ -1180,7 +1191,7 @@ int readEEPROM(){
 void resetDefaults(bool resetSticks){
 	Serial.println("RESETTING ALL DEFAULTS");
 
-	_jumpConfig = RemapConfig.DEFAULT;
+	_jumpConfig = 0;
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
@@ -1320,37 +1331,64 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
-	switch(_lConfig) {
-		case 2: // Mode 3: Analog Only Trigger state.
-		case 4: // Mode 5: Digital => Analog Value state.
-			btn.L = (uint8_t) 0;
-			break;
-		default:
-			// Mode 1: Default Trigger state.
-			// Mode 2: Digital Only Trigger state.
-			// Mode 4: Trigger Plug Emulation state.
-			// Mode 5: Digital -> Analog Value + Digital state.
-			btn.L = !digitalRead(_pinLSwappable);
-	}
-
-	switch(_rConfig) {
-		case 2: // Mode 3: Analog Only Trigger state
-		case 4: // Mode 5: Digital => Analog Value state
-			btn.R = (uint8_t) 0;
-			break;
-		default:
-			// Mode 1: Default Trigger state
-		    // Mode 2: Digital Only Trigger state
-		    // Mode 4: Trigger Plug Emulation state
-		    // Mode 5: Digital -> Analog Value + Digital state
-			btn.R = !digitalRead(_pinR);
-	}
-
 	hardwareL = !digitalRead(_pinL);
 	hardwareR = !digitalRead(_pinR);
 	hardwareZ = !digitalRead(_pinZ);
 	hardwareX = !digitalRead(_pinX);
 	hardwareY = !digitalRead(_pinY);
+
+	if(hardwareL && hardwareR && btn.A && btn.S) {
+		btn.L = (uint8_t) (1);
+		btn.R = (uint8_t) (1);
+		btn.A = (uint8_t) (1);
+		btn.S = (uint8_t) (1);
+	} else {
+		switch(_lConfig) {
+			case 0: //Default Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 2: //Analog Only Trigger state
+				btn.L = (uint8_t) 0;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.L = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.L = !digitalRead(_pinL);
+				break;
+			default:
+				btn.L = !digitalRead(_pinL);
+		}
+
+		switch(_rConfig) {
+			case 0: //Default Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 2: //Analog Only Trigger state
+				btn.R = (uint8_t) 0;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.R = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.R = !digitalRead(_pinR);
+				break;
+			default:
+				btn.R = !digitalRead(_pinR);
+		}
+	}
 
 	bounceDr.update();
 	bounceDu.update();
@@ -1503,25 +1541,13 @@ void readButtons(){
 		} else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(true, false, false);
 		} else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
-			readJumpConfig(RemapConfig.SWAP_XZ);
+			readJumpConfig(true, false);
 			freezeSticks(2000);
 		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
-			readJumpConfig(RemapConfig.SWAP_YZ);
-			freezeSticks(2000);
-		} else if(hardwareX && hardwareL && btn.S) { //Swap X and L
-			readJumpConfig(RemapConfig.SWAP_XL);
-			freezeSticks(2000);
-		} else if(hardwareY && hardwareL && btn.S) { //Swap Y and L
-			readJumpConfig(RemapConfig.SWAP_YL);
-			freezeSticks(2000);
-		} else if(hardwareX && hardwareR && btn.S) { //Swap X and L
-			readJumpConfig(RemapConfig.SWAP_XR);
-			freezeSticks(2000);
-		} else if(hardwareY && hardwareR && btn.S) { //Swap Y and L
-			readJumpConfig(RemapConfig.SWAP_YR);
+			readJumpConfig(false, true);
 			freezeSticks(2000);
 		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
-			readJumpConfig(RemapConfig.DEFAULT);
+			readJumpConfig(false, false);
 			freezeSticks(2000);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
@@ -1538,12 +1564,6 @@ void readButtons(){
 			}
 			_safeMode = false;
 			freezeSticks(2000);
-		}
-		if(hardwareL && hardwareR && btn.A && btn.S) {
-			btn.L = (uint8_t) (1);
-			btn.R = (uint8_t) (1);
-			btn.A = (uint8_t) (1);
-			btn.S = (uint8_t) (1);
 		}
 	}
 
@@ -1913,8 +1933,6 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	btn.Cx = (uint8_t) (_xSnapback + 127.5);
 	btn.Cy = (uint8_t) (_ySnapback + 127.5);
 
-	//setCommResponse();
-
 	clearButtons(2000);
 
 	EEPROM.put(_eepromxSnapback,_xSnapback);
@@ -2112,115 +2130,58 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 
 	clearButtons(250);
 }
-void readJumpConfig(RemapConfig remapConfig){
+void readJumpConfig(bool _swapXZ, bool _swapYZ){
 	Serial.print("setting jump to: ");
-	switch (remapConfig) {
-		case SWAP_XZ:
-			if(_jumpConfig == RemapConfig.SWAP_XZ){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				RemapConfig.SWAP_XZ;
-				Serial.println("X<->Z");
-			}
-			break;
-		case SWAP_YZ:
-			if(_jumpConfig == RemapConfig.SWAP_YZ){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				_jumpConfig = RemapConfig.SWAP_YZ;
-				Serial.println("Y<->Z");
-			}
-			break;
-		case SWAP_XL:
-			if(_jumpConfig == RemapConfig.SWAP_XL){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				_jumpConfig = RemapConfig.SWAP_XL;
-				Serial.println("X<->L");
-			}
-			break;
-		case SWAP_YL:
-			if(_jumpConfig == RemapConfig.SWAP_YL){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				_jumpConfig = RemapConfig.SWAP_YL;
-				Serial.println("Y<->L");
-			}
-			break;
-		case SWAP_XR:
-			if(_jumpConfig == RemapConfig.SWAP_XR){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				_jumpConfig = RemapConfig.SWAP_XR;
-				Serial.println("X<->R");
-			}
-			break;
-		case SWAP_YR:
-			if(_jumpConfig == RemapConfig.SWAP_YR){
-				_jumpConfig = RemapConfig.DEFAULT;
-				Serial.println("normal again");
-			}else{
-				_jumpConfig = RemapConfig.SWAP_YR;
-				Serial.println("Y<->R");
-			}
-			break;
-		default:
-			Serial.println("normal");
-			_jumpConfig = RemapConfig.DEFAULT;
+	if(_swapXZ){
+		if(_jumpConfig == 1){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 1;
+			Serial.println("X<->Z");
+		}
+	}else if(_swapYZ){
+		if(_jumpConfig == 2){
+			_jumpConfig = 0;
+			Serial.println("normal again");
+		}else{
+			_jumpConfig = 2;
+			Serial.println("Y<->Z");
+		}
+	}else{
+		Serial.println("normal");
+		_jumpConfig = 0;
 	}
 	EEPROM.put(_eepromJump,_jumpConfig);
 	setJump(_jumpConfig);
 }
-void setJump(RemapConfig jumpConfig){
+void setJump(int jumpConfig){
 	switch(jumpConfig){
-			case SWAP_XZ:
+			case 1:
 				_pinZSwappable = _pinX;
 				_pinXSwappable = _pinZ;
 				_pinYSwappable = _pinY;
 				break;
-			case SWAP_YZ:
+			case 2:
 				_pinZSwappable = _pinY;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinZ;
 				break;
-			case SWAP_XL:
-				_pinLSwappable = _pinX;
-				_pinXSwappable = _pinL;
-				_pinYSwappable = _pinY;
-			case SWAP_YL:
-				_pinLSwappable = _pinY;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinL;
-			case SWAP_XR:
-				_pinRSwappable = _pinX;
-				_pinXSwappable = _pinR;
-				_pinYSwappable = _pinY;
-			case SWAP_YR:
-				_pinRSwappable = _pinY;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinR;
 			default:
 				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinR;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinY;
 	}
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
-		if(_currentConfig >= 5) {
+		if(_currentConfig >= _triggerConfigMax) {
 			_lConfig = 0;
 		} else {
 			_lConfig = _currentConfig + 1;
 		}
 	} else {
-		if(_currentConfig >= 5) {
+		if(_currentConfig >= _triggerConfigMax) {
 			_rConfig = 0;
 		} else {
 			_rConfig = _currentConfig + 1;
@@ -2265,30 +2226,30 @@ void readSticks(int readA, int readC){
 
 	//read the L and R sliders
 		switch(_lConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
-			    // If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == RemapConfig.SWAP_XL || _jumpConfig == RemapConfig.SWAP_YL)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
+			case 0: //Default Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 				break;
-			case 1: // Mode 2: Digital Only Trigger state
+			case 1: //Digital Only Trigger state
 				btn.La = (uint8_t) 0;
 				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-			    // If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == RemapConfig.SWAP_XL || _jumpConfig == RemapConfig.SWAP_YL)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
+			case 2: //Analog Only Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
 					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
 				}
 				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareL && (_jumpConfig != RemapConfig.SWAP_XL && _jumpConfig != RemapConfig.SWAP_YL))
-				   || (btn.X && _jumpConfig == RemapConfig.SWAP_XL)
-				   || (btn.Y && _jumpConfig == RemapConfig.SWAP_YL))) {
+			case 4: //Digital => Analog Value state
+				if(hardwareL) {
+					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(hardwareL) {
 					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
@@ -2297,32 +2258,32 @@ void readSticks(int readA, int readC){
 			default:
 				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 		}
-		
+
 		switch(_rConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
-			    // If X/Y are swapped with L, ignore analoge input.
-				btn.Ra = (_jumpConfig == RemapConfig.SWAP_XR || _jumpConfig == RemapConfig.SWAP_YR)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
+			case 0: //Default Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 				break;
-			case 1: // Mode 2: Digital Only Trigger state
+			case 1: //Digital Only Trigger state
 				btn.Ra = (uint8_t) 0;
 				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-			    // If X/Y are swapped with R, ignore analoge input.
-				btn.Ra = (_jumpConfig == RemapConfig.SWAP_XR || _jumpConfig == RemapConfig.SWAP_YR)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
+			case 2: //Analog Only Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
 					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
 				}
 				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareR && (_jumpConfig != RemapConfig.SWAP_XR && _jumpConfig != RemapConfig.SWAP_YR))
-				   || (btn.X && _jumpConfig == RemapConfig.SWAP_XR)
-				   || (btn.Y && _jumpConfig == RemapConfig.SWAP_YR))) {
+			case 4: //Digital => Analog Value state
+				if(hardwareR) {
+					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(hardwareR) {
 					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
@@ -2482,33 +2443,33 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	takes the values that have been put into the button struct and translates them in the serial commands ready
 	to be sent to the gamecube/wii
 *******************/
-void setCommResponse(){
+void setCommResponse(volatile char response[], Buttons &button){
 	for(int i = 0; i < 8; i++){
 		//write all of the data in the button struct (taken from the dogebawx project, thanks to GoodDoge)
 #ifdef TEENSY3_2
 		for(int j = 0; j < 4; j++){
 			//this could probably be done better but we need to take 2 bits at a time to put into one serial byte
 			//for details on this read here: http://www.qwertymodo.com/hardware-projects/n64/n64-controller
-			int these2bits = (btn.arr[i]>>(6-j*2)) & 3;
+			int these2bits = (button.arr[i]>>(6-j*2)) & 3;
 			switch(these2bits){
 				case 0:
-				_commResponse[(i<<2)+j] = 0x08;
+				response[(i<<2)+j] = 0x08;
 				break;
 				case 1:
-				_commResponse[(i<<2)+j] = 0xE8;
+				response[(i<<2)+j] = 0xE8;
 				break;
 				case 2:
-				_commResponse[(i<<2)+j] = 0x0F;
+				response[(i<<2)+j] = 0x0F;
 				break;
 				case 3:
-				_commResponse[(i<<2)+j] = 0xEF;
+				response[(i<<2)+j] = 0xEF;
 				break;
 			}
 		}
 #endif // TEENSY3_2
 #ifdef TEENSY4_0
 		for(int j = 0; j < 8; j++){
-			_commResponse[i*8+j] = btn.arr[i]>>(7-j) & 1;
+			response[i*8+j] = button.arr[i]>>(7-j) & 1;
 		}
 #endif // TEENSY4_0
 	}
@@ -2582,11 +2543,9 @@ void communicate(){
 		case 0x41:
 			//set the timer to call communicate() again in ~320 us when the probe response is done being sent
 			timer1.trigger(_originLength*8);
-			//create the response to be sent
-			setCommResponse();
 			//write the origin response
 			for(int i = 0; i< _originLength; i++){
-				Serial2.write(_commResponse[i]);
+				Serial2.write(_originResponse[i]);
 			}
 			//write a stop bit
 			Serial2.write(0xFF);
@@ -2604,7 +2563,7 @@ void communicate(){
 			//set the status to receiving the poll command
 			_commStatus = _commPoll;
 			//create the poll response
-			setCommResponse();
+			setCommResponse(_commResponse, btn);
 			break;
 		default:
 		  //got something strange, try waiting for a stop bit to syncronize
