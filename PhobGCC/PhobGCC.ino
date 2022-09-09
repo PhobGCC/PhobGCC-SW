@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -78,11 +78,6 @@ uint8_t hardwareR;
 uint8_t hardwareZ;
 uint8_t hardwareX;
 uint8_t hardwareY;
-
-float _aStickX;
-float _aStickY;
-float _cStickX;
-float _cStickY;
 
 
 //defining control configuration
@@ -2308,11 +2303,12 @@ void readSticks(int readA, int readC){
 	}
 	while((micros()-_lastMicros) < 1000);
 
+
 	//Serial.println(adcCount);
-	_aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
-	_aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
-	_cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
-	_cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
+	float aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
+	float aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
+	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
+	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
 
 	_dT = (micros() - _lastMicros)/1000.0;
 	_lastMicros = micros();
@@ -2321,11 +2317,11 @@ void readSticks(int readA, int readC){
 	float yZ;
 
 	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
-	xZ = linearize(_aStickX,_aFitCoeffsX);
-	yZ = linearize(_aStickY,_aFitCoeffsY);
+	xZ = linearize(aStickX,_aFitCoeffsX);
+	yZ = linearize(aStickY,_aFitCoeffsY);
 
-	float posCx = linearize(_cStickX,_cFitCoeffsX);
-	float posCy = linearize(_cStickY,_cFitCoeffsY);
+	float posCx = linearize(cStickX,_cFitCoeffsX);
+	float posCy = linearize(cStickY,_cFitCoeffsY);
 
 
 	//Run the kalman filter to eliminate snapback
