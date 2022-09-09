@@ -73,11 +73,13 @@ union Buttons{
   };
 }btn;
 
-uint8_t hardwareL;
-uint8_t hardwareR;
-uint8_t hardwareZ;
-uint8_t hardwareX;
-uint8_t hardwareY;
+union HardwareButtons{
+	uint8_t L;
+	uint8_t R;
+	uint8_t Z;
+	uint8_t X;
+	uint8_t Y;
+} _hardware;
 
 
 //defining control configuration
@@ -514,8 +516,8 @@ void loop() {
 	if(_currentCalStep >= 0){
 		if(_calAStick){
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
-				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+				adjustNotch(_currentCalStep, _dT, _hardware.Y, _hardware.X, btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
+				if(_hardware.Y || _hardware.X || (btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 					//linearize again
@@ -530,8 +532,8 @@ void loop() {
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
-				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+				adjustNotch(_currentCalStep, _dT, _hardware.Y, _hardware.X, btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
+				if(_hardware.Y || _hardware.X || (btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 					//linearize again
@@ -1326,13 +1328,13 @@ void readButtons(){
 	btn.Dl = !digitalRead(_pinDl);
 	btn.Dr = !digitalRead(_pinDr);
 
-	hardwareL = !digitalRead(_pinL);
-	hardwareR = !digitalRead(_pinR);
-	hardwareZ = !digitalRead(_pinZ);
-	hardwareX = !digitalRead(_pinX);
-	hardwareY = !digitalRead(_pinY);
+	_hardware.L = !digitalRead(_pinL);
+	_hardware.R = !digitalRead(_pinR);
+	_hardware.Z = !digitalRead(_pinZ);
+	_hardware.X = !digitalRead(_pinX);
+	_hardware.Y = !digitalRead(_pinY);
 
-	if(hardwareL && hardwareR && btn.A && btn.S) {
+	if(_hardware.L && _hardware.R && btn.A && btn.S) {
 		btn.L = (uint8_t) (1);
 		btn.R = (uint8_t) (1);
 		btn.A = (uint8_t) (1);
@@ -1436,10 +1438,10 @@ void readButtons(){
 
 	//check the dpad buttons to change the controller settings
 	if(!_safeMode && (_currentCalStep == -1)) {
-		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+		if(btn.A && _hardware.X && _hardware.Y && btn.S) { //Safe Mode Toggle
 			_safeMode = true;
 			freezeSticks(4000);
-		} else if (btn.A && hardwareZ && btn.Du) { //display version number
+		} else if (btn.A && _hardware.Z && btn.Du) { //display version number
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
 			btn.Ax = (uint8_t) 127.5;
@@ -1447,107 +1449,107 @@ void readButtons(){
 			btn.Cx = (uint8_t) 127.5 + versionHundreds;
 			btn.Cy = (uint8_t) 127.5 + versionOnes;
 			clearButtons(2000);
-		} else if (btn.A && btn.B && hardwareZ && btn.S) { //Soft Reset
+		} else if (btn.A && btn.B && _hardware.Z && btn.S) { //Soft Reset
 			resetDefaults(false);//don't reset sticks
 			freezeSticks(2000);
-		} else if (btn.A && btn.B && hardwareZ && btn.Dd) { //Hard Reset
+		} else if (btn.A && btn.B && _hardware.Z && btn.Dd) { //Hard Reset
 			resetDefaults(true);//do reset sticks
 			freezeSticks(2000);
-		} else if (btn.A && btn.B && hardwareL && hardwareR && btn.S) { //Toggle Auto-Initialize
+		} else if (btn.A && btn.B && _hardware.L && _hardware.R && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit();
-		} else if (hardwareX && hardwareY && btn.Du) { //Increase Rumble
+		} else if (_hardware.X && _hardware.Y && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
 			changeRumble(true);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000);
 #endif // RUMBLE
-		} else if (hardwareX && hardwareY && btn.Dd) { //Decrease Rumble
+		} else if (_hardware.X && _hardware.Y && btn.Dd) { //Decrease Rumble
 #ifdef RUMBLE
 			changeRumble(false);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000);
 #endif // RUMBLE
-		} else if (hardwareX && hardwareY && btn.B && !btn.A) { //Show current rumble setting
+		} else if (_hardware.X && _hardware.Y && btn.B && !btn.A) { //Show current rumble setting
 #ifdef RUMBLE
 			showRumble(2000);
 #else // RUMBLE
 			freezeSticks(2000);
 #endif // RUMBLE
-		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
+		} else if (btn.A && _hardware.X && _hardware.Y && _hardware.L) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
 			_calAStick = true;
 			_currentCalStep ++;
 			_advanceCal = true;
 			freezeSticks(2000);
-		} else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
+		} else if (btn.A && _hardware.X && _hardware.Y && _hardware.R) { //C-stick Calibration
 			Serial.println("Calibrating the C stick");
 			_calAStick = false;
 			_currentCalStep ++;
 			_advanceCal = true;
 			freezeSticks(2000);
-		} else if(hardwareL && hardwareX && btn.Du) { //Increase Analog X-Axis Snapback Filtering
+		} else if(_hardware.L && _hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
 			adjustSnapback(true, true, true);
-		} else if(hardwareL && hardwareX && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
+		} else if(_hardware.L && _hardware.X && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
 			adjustSnapback(true, true, false);
-		} else if(hardwareL && hardwareY && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
+		} else if(_hardware.L && _hardware.Y && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
 			adjustSnapback(true, false, true);
-		} else if(hardwareL && hardwareY && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+		} else if(_hardware.L && _hardware.Y && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
 			adjustSnapback(true, false, false);
-		} else if(hardwareL && btn.A && btn.Du) { //Increase X-axis Delay
+		} else if(_hardware.L && btn.A && btn.Du) { //Increase X-axis Delay
 			adjustSmoothing(true, true, true);
-		} else if(hardwareL && btn.A && btn.Dd) { //Decrease X-axis Delay
+		} else if(_hardware.L && btn.A && btn.Dd) { //Decrease X-axis Delay
 			adjustSmoothing(true, true, false);
-		} else if(hardwareL && btn.B && btn.Du) { //Increase Y-axis Delay
+		} else if(_hardware.L && btn.B && btn.Du) { //Increase Y-axis Delay
 			adjustSmoothing(true, false, true);
-		} else if(hardwareL && btn.B && btn.Dd) { //Decrease Y-axis Delay
+		} else if(_hardware.L && btn.B && btn.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(true, false, false);
-		} else if(hardwareL && btn.S && btn.Dd) { //Show Current Analog Settings
+		} else if(_hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
 			showAstickSettings();
-		} else if(hardwareR && hardwareX && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
+		} else if(_hardware.R && _hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(true, true, true);
-		} else if(hardwareR && hardwareX && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+		} else if(_hardware.R && _hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(true, true, false);
-		} else if(hardwareR && hardwareY && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
+		} else if(_hardware.R && _hardware.Y && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(true, false, true);
-		} else if(hardwareR && hardwareY && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+		} else if(_hardware.R && _hardware.Y && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(true, false, false);
-		} else if(hardwareR && btn.A && btn.Du) { //Increase C-stick X Offset
+		} else if(_hardware.R && btn.A && btn.Du) { //Increase C-stick X Offset
 			adjustCstickOffset(true, true, true);
-		} else if(hardwareR && btn.A && btn.Dd) { //Decrease C-stick X Offset
+		} else if(_hardware.R && btn.A && btn.Dd) { //Decrease C-stick X Offset
 			adjustCstickOffset(true, true, false);
-		} else if(hardwareR && btn.B && btn.Du) { //Increase C-stick Y Offset
+		} else if(_hardware.R && btn.B && btn.Du) { //Increase C-stick Y Offset
 			adjustCstickOffset(true, false, true);
-		} else if(hardwareR && btn.B && btn.Dd) { //Decrease C-stick Y Offset
+		} else if(_hardware.R && btn.B && btn.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(true, false, false);
-		} else if(hardwareR && btn.S && btn.Dd) { //Show Current C-stick SEttings
+		} else if(_hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
 			showCstickSettings();
-		} else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
+		} else if(_hardware.L && _hardware.Z && btn.S) { //Toggle Analog L
 			nextTriggerState(_lConfig, true);
-		} else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
+		} else if(_hardware.R && _hardware.Z && btn.S) { //Toggle Analog R
 			nextTriggerState(_rConfig, false);
-		} else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
+		} else if(_hardware.L && _hardware.Z && btn.Du) { //Increase L-Trigger Offset
 			adjustTriggerOffset(true, true, true);
-		} else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
+		} else if(_hardware.L && _hardware.Z && btn.Dd) { //Decrease L-trigger Offset
 			adjustTriggerOffset(true, true, false);
-		} else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
+		} else if(_hardware.R && _hardware.Z && btn.Du) { //Increase R-trigger Offset
 			adjustTriggerOffset(true, false, true);
-		} else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
+		} else if(_hardware.R && _hardware.Z && btn.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(true, false, false);
-		} else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
+		} else if(_hardware.X && _hardware.Z && btn.S) { //Swap X and Z
 			readJumpConfig(true, false);
 			freezeSticks(2000);
-		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
+		} else if(_hardware.Y && _hardware.Z && btn.S) { //Swap Y and Z
 			readJumpConfig(false, true);
 			freezeSticks(2000);
-		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
+		} else if(btn.A && _hardware.X && _hardware.Y && _hardware.Z) { // Reset X/Y/Z Config
 			readJumpConfig(false, false);
 			freezeSticks(2000);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
-		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+		if(btn.A && _hardware.X && _hardware.Y && btn.S) { //Safe Mode Toggle
 			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
 		} else {
 			safeModeAccumulator = 0.99*safeModeAccumulator;
@@ -1629,7 +1631,7 @@ void readButtons(){
 		}
 	}
 	//Undo Calibration using Z-button
-	if(hardwareZ && _undoCal && !_undoCalPressed) {
+	if(_hardware.Z && _undoCal && !_undoCalPressed) {
 		_undoCalPressed = true;
 		if(_currentCalStep % 2 == 0 && _currentCalStep < 32 && _currentCalStep != 0 ) {
 			//If it's measuring zero, go back to the previous zero
@@ -1658,13 +1660,13 @@ void readButtons(){
 				notchIndex = _notchAdjOrder[min(_currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			}
 		}
-	} else if(!hardwareZ) {
+	} else if(!_hardware.Z) {
 		_undoCalPressed = false;
 	}
 
 	//Advance Calibration Using L or R triggers
 	static float advanceCalAccumulator = 0.0;
-	if((hardwareL || hardwareR) && _advanceCal){// && !_advanceCalPressed){
+	if((_hardware.L || _hardware.R) && _advanceCal){// && !_advanceCalPressed){
 		advanceCalAccumulator = 0.96*advanceCalAccumulator + 0.04;
 	} else {
 		advanceCalAccumulator = 0.96*advanceCalAccumulator;
@@ -1815,11 +1817,11 @@ void freezeSticks(const int time) {
 	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
-	hardwareL = (uint8_t) 0;
-	hardwareR = (uint8_t) 0;
-	hardwareX = (uint8_t) 0;
-	hardwareY = (uint8_t) 0;
-	hardwareZ = (uint8_t) 0;
+	_hardware.L = (uint8_t) 0;
+	_hardware.R = (uint8_t) 0;
+	_hardware.X = (uint8_t) 0;
+	_hardware.Y = (uint8_t) 0;
+	_hardware.Z = (uint8_t) 0;
 
 	int startTime = millis();
 	int delta = 0;
@@ -1836,11 +1838,11 @@ void clearButtons(const int time) {
 	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
-	hardwareL = (uint8_t) 0;
-	hardwareR = (uint8_t) 0;
-	hardwareX = (uint8_t) 0;
-	hardwareY = (uint8_t) 0;
-	hardwareZ = (uint8_t) 0;
+	_hardware.L = (uint8_t) 0;
+	_hardware.R = (uint8_t) 0;
+	_hardware.X = (uint8_t) 0;
+	_hardware.Y = (uint8_t) 0;
+	_hardware.Z = (uint8_t) 0;
 
 	int startTime = millis();
 	int delta = 0;
@@ -2237,14 +2239,14 @@ void readSticks(int readA, int readC){
 				}
 				break;
 			case 4: //Digital => Analog Value state
-				if(hardwareL) {
+				if(_hardware.L) {
 					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
 				}
 				break;
 			case 5: //Digital => Analog Value + Digital state
-				if(hardwareL) {
+				if(_hardware.L) {
 					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
@@ -2271,14 +2273,14 @@ void readSticks(int readA, int readC){
 				}
 				break;
 			case 4: //Digital => Analog Value state
-				if(hardwareR) {
+				if(_hardware.R) {
 					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
 				}
 				break;
 			case 5: //Digital => Analog Value + Digital state
-				if(hardwareR) {
+				if(_hardware.R) {
 					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
