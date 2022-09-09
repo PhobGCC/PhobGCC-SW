@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-// #include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 #define BUILD_RELEASE
 //#define BUILD_DEV
@@ -2293,9 +2293,11 @@ void readSticks(int readA, int readC){
         break;
       case 4: // Mode 5: Digital => Analog Value state
       case 5: // Mode 6: Digital => Analog Value + Digital state
+      // TODO(kurttm): There's a bug here probably
         if((hardwareL && (_jumpConfig != 3 && _jumpConfig != 4))
-           || (btn.X && _jumpConfig == 3)
-           || (btn.Y && _jumpConfig == 4)) {
+           || (hardwareX && _jumpConfig == 3)
+           || (hardwareY && _jumpConfig == 4)
+           ) {
           btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
         } else {
           btn.La = (uint8_t) 0;
@@ -2328,8 +2330,8 @@ void readSticks(int readA, int readC){
       case 4: // Mode 5: Digital => Analog Value state
       case 5: // Mode 6: Digital => Analog Value + Digital state
         if((hardwareR && (_jumpConfig != 5 && _jumpConfig != 6))
-           || (btn.X && _jumpConfig == 5)
-           || (btn.Y && _jumpConfig == 6)) {
+           || (hardwareX && _jumpConfig == 5)
+           || (hardwareY && _jumpConfig == 6)) {
           btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
         } else {
           btn.Ra = (uint8_t) 0;
