@@ -84,6 +84,16 @@ float _aStickY;
 float _cStickX;
 float _cStickY;
 
+enum JumpConfig {
+	DEFAULT,
+	SWAP_XZ,
+	SWAP_YZ,
+  SWAP_XL,
+  SWAP_YL,
+  SWAP_XR,
+  SWAP_YR
+};
+
 
 //defining control configuration
 int _pinZSwappable = _pinZ;
@@ -91,7 +101,7 @@ int _pinLSwappable = _pinL;
 int _pinRSwappable = _pinR;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
-int _jumpConfig = 0;
+JumpConfig _jumpConfig = DEFAULT;
 const int _jumpConfigMin = 0;
 const int _jumpConfigMax = 6;
 int _lConfig = 0;
@@ -961,17 +971,17 @@ void setFastBaud(){
 int readEEPROM(){
   int numberOfNaN = 0;
 
-  //get the jump setting
-  EEPROM.get(_eepromJump, _jumpConfig);
-  if(_jumpConfig < _jumpConfigMin){
-    _jumpConfig = 0;
-    numberOfNaN++;
-  }
-  if(_jumpConfig > _jumpConfigMax){
-    _jumpConfig = 0;
-    numberOfNaN++;
-  }
-  setJump(_jumpConfig);
+	//get the jump setting
+	EEPROM.get(_eepromJump, _jumpConfig);
+	if(_jumpConfig < _jumpConfigMin){
+		_jumpConfig = DEFAULT;
+		numberOfNaN++;
+	}
+	if(_jumpConfig > _jumpConfigMax){
+		_jumpConfig = DEFAULT;
+		numberOfNaN++;
+	}
+	setJump(_jumpConfig);
 
   //get the L setting
   EEPROM.get(_eepromLToggle, _lConfig);
@@ -1193,9 +1203,9 @@ int readEEPROM(){
 void resetDefaults(bool resetSticks){
   Serial.println("RESETTING ALL DEFAULTS");
 
-  _jumpConfig = 0;
-  setJump(_jumpConfig);
-  EEPROM.put(_eepromJump,_jumpConfig);
+	_jumpConfig = DEFAULT;
+	setJump(_jumpConfig);
+	EEPROM.put(_eepromJump,_jumpConfig);
 
   _lConfig = _triggerDefault;
   _rConfig = _triggerDefault;
@@ -1462,104 +1472,104 @@ void readButtons(){
 #else // RUMBLE
       freezeSticks(2000);
 #endif // RUMBLE
-    } else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
-      Serial.println("Calibrating the A stick");
-      _calAStick = true;
-      _currentCalStep ++;
-      _advanceCal = true;
-      freezeSticks(2000);
-    } else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
-      Serial.println("Calibrating the C stick");
-      _calAStick = false;
-      _currentCalStep ++;
-      _advanceCal = true;
-      freezeSticks(2000);
-    } else if(hardwareL && hardwareX && btn.Du) { //Increase Analog X-Axis Snapback Filtering
-      adjustSnapback(true, true, true);
-    } else if(hardwareL && hardwareX && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
-      adjustSnapback(true, true, false);
-    } else if(hardwareL && hardwareY && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
-      adjustSnapback(true, false, true);
-    } else if(hardwareL && hardwareY && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
-      adjustSnapback(true, false, false);
-    } else if(hardwareL && btn.A && btn.Du) { //Increase X-axis Delay
-      adjustSmoothing(true, true, true);
-    } else if(hardwareL && btn.A && btn.Dd) { //Decrease X-axis Delay
-      adjustSmoothing(true, true, false);
-    } else if(hardwareL && btn.B && btn.Du) { //Increase Y-axis Delay
-      adjustSmoothing(true, false, true);
-    } else if(hardwareL && btn.B && btn.Dd) { //Decrease Y-axis Delay
-      adjustSmoothing(true, false, false);
-    } else if(hardwareL && btn.S && btn.Dd) { //Show Current Analog Settings
-      showAstickSettings();
-    } else if(hardwareR && hardwareX && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
-      adjustCstickSmoothing(true, true, true);
-    } else if(hardwareR && hardwareX && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
-      adjustCstickSmoothing(true, true, false);
-    } else if(hardwareR && hardwareY && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
-      adjustCstickSmoothing(true, false, true);
-    } else if(hardwareR && hardwareY && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
-      adjustCstickSmoothing(true, false, false);
-    } else if(hardwareR && btn.A && btn.Du) { //Increase C-stick X Offset
-      adjustCstickOffset(true, true, true);
-    } else if(hardwareR && btn.A && btn.Dd) { //Decrease C-stick X Offset
-      adjustCstickOffset(true, true, false);
-    } else if(hardwareR && btn.B && btn.Du) { //Increase C-stick Y Offset
-      adjustCstickOffset(true, false, true);
-    } else if(hardwareR && btn.B && btn.Dd) { //Decrease C-stick Y Offset
-      adjustCstickOffset(true, false, false);
-    } else if(hardwareR && btn.S && btn.Dd) { //Show Current C-stick SEttings
-      showCstickSettings();
-    } else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
-      nextTriggerState(_lConfig, true);
-    } else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
-      nextTriggerState(_rConfig, false);
-    } else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
-      adjustTriggerOffset(true, true, true);
-    } else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
-      adjustTriggerOffset(true, true, false);
-    } else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
-      adjustTriggerOffset(true, false, true);
-    } else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
-      adjustTriggerOffset(true, false, false);
-    } else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
-      readJumpConfig(true, false, false, false, false, false);
-      freezeSticks(2000);
-    } else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
-      readJumpConfig(false, true, false, false, false, false);
-      freezeSticks(2000);
+		} else if (btn.A && hardwareX && hardwareY && hardwareL) { //Analog Calibration
+			Serial.println("Calibrating the A stick");
+			_calAStick = true;
+			_currentCalStep ++;
+			_advanceCal = true;
+			freezeSticks(2000);
+		} else if (btn.A && hardwareX && hardwareY && hardwareR) { //C-stick Calibration
+			Serial.println("Calibrating the C stick");
+			_calAStick = false;
+			_currentCalStep ++;
+			_advanceCal = true;
+			freezeSticks(2000);
+		} else if(hardwareL && hardwareX && btn.Du) { //Increase Analog X-Axis Snapback Filtering
+			adjustSnapback(true, true, true);
+		} else if(hardwareL && hardwareX && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
+			adjustSnapback(true, true, false);
+		} else if(hardwareL && hardwareY && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
+			adjustSnapback(true, false, true);
+		} else if(hardwareL && hardwareY && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+			adjustSnapback(true, false, false);
+		} else if(hardwareL && btn.A && btn.Du) { //Increase X-axis Delay
+			adjustSmoothing(true, true, true);
+		} else if(hardwareL && btn.A && btn.Dd) { //Decrease X-axis Delay
+			adjustSmoothing(true, true, false);
+		} else if(hardwareL && btn.B && btn.Du) { //Increase Y-axis Delay
+			adjustSmoothing(true, false, true);
+		} else if(hardwareL && btn.B && btn.Dd) { //Decrease Y-axis Delay
+			adjustSmoothing(true, false, false);
+		} else if(hardwareL && btn.S && btn.Dd) { //Show Current Analog Settings
+			showAstickSettings();
+		} else if(hardwareR && hardwareX && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
+			adjustCstickSmoothing(true, true, true);
+		} else if(hardwareR && hardwareX && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+			adjustCstickSmoothing(true, true, false);
+		} else if(hardwareR && hardwareY && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
+			adjustCstickSmoothing(true, false, true);
+		} else if(hardwareR && hardwareY && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+			adjustCstickSmoothing(true, false, false);
+		} else if(hardwareR && btn.A && btn.Du) { //Increase C-stick X Offset
+			adjustCstickOffset(true, true, true);
+		} else if(hardwareR && btn.A && btn.Dd) { //Decrease C-stick X Offset
+			adjustCstickOffset(true, true, false);
+		} else if(hardwareR && btn.B && btn.Du) { //Increase C-stick Y Offset
+			adjustCstickOffset(true, false, true);
+		} else if(hardwareR && btn.B && btn.Dd) { //Decrease C-stick Y Offset
+			adjustCstickOffset(true, false, false);
+		} else if(hardwareR && btn.S && btn.Dd) { //Show Current C-stick SEttings
+			showCstickSettings();
+		} else if(hardwareL && hardwareZ && btn.S) { //Toggle Analog L
+			nextTriggerState(_lConfig, true);
+		} else if(hardwareR && hardwareZ && btn.S) { //Toggle Analog R
+			nextTriggerState(_rConfig, false);
+		} else if(hardwareL && hardwareZ && btn.Du) { //Increase L-Trigger Offset
+			adjustTriggerOffset(true, true, true);
+		} else if(hardwareL && hardwareZ && btn.Dd) { //Decrease L-trigger Offset
+			adjustTriggerOffset(true, true, false);
+		} else if(hardwareR && hardwareZ && btn.Du) { //Increase R-trigger Offset
+			adjustTriggerOffset(true, false, true);
+		} else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
+			adjustTriggerOffset(true, false, false);
+		} else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
+			readJumpConfig(SWAP_XZ);
+			freezeSticks(2000);
+		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
+			readJumpConfig(SWAP_YZ);
+			freezeSticks(2000);
     } else if(hardwareX && hardwareL && btn.S) { //Swap X and L
-      readJumpConfig(false, false, true, false, false, false);
+      readJumpConfig(SWAP_XL);
       freezeSticks(2000);
     } else if(hardwareY && hardwareL && btn.S) { //Swap Y and L
-      readJumpConfig(false, false, false, true, false, false);
+      readJumpConfig(SWAP_YL);
       freezeSticks(2000);
     } else if(hardwareX && hardwareR && btn.S) { //Swap X and L
-      readJumpConfig(false, false, false, false, true, false);
+      readJumpConfig(SWAP_XR);
       freezeSticks(2000);
     } else if(hardwareY && hardwareR && btn.S) { //Swap Y and L
-      readJumpConfig(false, false, false, false, false, true);
+      readJumpConfig(SWAP_YR);
       freezeSticks(2000);
-    } else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
-      readJumpConfig(false, false, false, false, false, false);
-      freezeSticks(2000);
-    }
-  } else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
-    static float safeModeAccumulator = 0.0;
-    if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
-      safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
-    } else {
-      safeModeAccumulator = 0.99*safeModeAccumulator;
-    }
-    if(safeModeAccumulator > 0.99){
-      safeModeAccumulator = 0;
-      if (!_running) {//wake it up if not already running
-        _running = true;
-      }
-      _safeMode = false;
-      freezeSticks(2000);
-    }
-  }
+		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
+			readJumpConfig(DEFAULT);
+			freezeSticks(2000);
+		}
+	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
+		static float safeModeAccumulator = 0.0;
+		if(btn.A && hardwareX && hardwareY && btn.S) { //Safe Mode Toggle
+			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
+		} else {
+			safeModeAccumulator = 0.99*safeModeAccumulator;
+		}
+		if(safeModeAccumulator > 0.99){
+			safeModeAccumulator = 0;
+			if (!_running) {//wake it up if not already running
+				_running = true;
+			}
+			_safeMode = false;
+			freezeSticks(2000);
+		}
+	}
 
   //Skip stick measurement and go to notch adjust using the start button while calibrating
   if(btn.S && (_currentCalStep >= 0 && _currentCalStep < 32)){
@@ -2124,100 +2134,91 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 
   clearButtons(250);
 }
-void readJumpConfig(bool _swapXZ, bool _swapYZ, bool _swapXL, bool _swapYL, bool _swapXR, bool _swapYR){
-  Serial.print("setting jump to: ");
-  if(_swapXZ){
-    if(_jumpConfig == 1){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 1;
-      Serial.println("X<->Z");
-    }
-  }else if(_swapYZ){
-    if(_jumpConfig == 2){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 2;
-      Serial.println("Y<->Z");
-    }
-  }else if(_swapXL){
-    if(_jumpConfig == 3){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 3;
-      Serial.println("X<->L");
-    }
-  }else if(_swapYL){
-    if(_jumpConfig == 4){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 4;
-      Serial.println("Y<->L");
-    }
-  }else if(_swapXR){
-    if(_jumpConfig == 5){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 5;
-      Serial.println("X<->R");
-    }
-  }else if(_swapYR){
-    if(_jumpConfig == 6){
-      _jumpConfig = 0;
-      Serial.println("normal again");
-    }else{
-      _jumpConfig = 6;
-      Serial.println("Y<->R");
-    }
-  }else{
-    Serial.println("normal");
-    _jumpConfig = 0;
-  }
-  EEPROM.put(_eepromJump,_jumpConfig);
-  setJump(_jumpConfig);
+void readJumpConfig(JumpConfig jumpConfig){
+	Serial.print("setting jump to: ");
+	if (_jumpConfig == jumpConfig) {
+		_jumpConfig = DEFAULT;
+		Serial.println("normal again");
+	} else {
+		_jumpConfig = jumpConfig;
+		switch (jumpConfig) {
+			case SWAP_XZ:
+				Serial.println("X<->Z");
+				break;
+			case SWAP_YZ:
+				Serial.println("Y<->Z");
+				break;
+			case SWAP_XL:
+				Serial.println("X<->L");
+				break;
+			case SWAP_YL:
+				Serial.println("Y<->L");
+				break;
+			case SWAP_XR:
+				Serial.println("X<->R");
+				break;
+			case SWAP_YR:
+				Serial.println("Y<->R");
+				break;
+			default:
+				Serial.println("normal");
+		}
+	}
+	EEPROM.put(_eepromJump,_jumpConfig);
+	setJump(_jumpConfig);
 }
 void setJump(int jumpConfig){
-  switch(jumpConfig){
-      case 1:
-        _pinZSwappable = _pinX;
-        _pinXSwappable = _pinZ;
-        _pinYSwappable = _pinY;
-        break;
-      case 2:
-        _pinZSwappable = _pinY;
-        _pinXSwappable = _pinX;
-        _pinYSwappable = _pinZ;
-        break;
-      case 3:
-        _pinLSwappable = _pinX;
-        _pinXSwappable = _pinL;
-        _pinYSwappable = _pinY;
-        break;
-      case 4:
-        _pinLSwappable = _pinY;
-        _pinXSwappable = _pinX;
-        _pinYSwappable = _pinL;
-        break;
-      case 5:
-        _pinRSwappable = _pinX;
-        _pinXSwappable = _pinR;
-        _pinYSwappable = _pinY;
-        break;
-      case 6:
-        _pinRSwappable = _pinY;
-        _pinXSwappable = _pinX;
-        _pinYSwappable = _pinR;
-        break;
-      default:
-        _pinZSwappable = _pinZ;
-        _pinXSwappable = _pinX;
-        _pinYSwappable = _pinY;
-  }
+	switch(jumpConfig){
+			case SWAP_XZ:
+				_pinZSwappable = _pinX;
+				_pinLSwappable = _pinL;
+				_pinRSwappable = _pinR;
+				_pinXSwappable = _pinZ;
+				_pinYSwappable = _pinY;
+				break;
+			case SWAP_YZ:
+				_pinZSwappable = _pinY;
+				_pinLSwappable = _pinL;
+				_pinRSwappable = _pinR;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinZ;
+				break;
+			case SWAP_XL:
+				_pinZSwappable = _pinZ;
+				_pinLSwappable = _pinX;
+				_pinRSwappable = _pinR;
+				_pinXSwappable = _pinL;
+				_pinYSwappable = _pinY;
+				break;
+			case SWAP_YL:
+				_pinZSwappable = _pinZ;
+				_pinLSwappable = _pinY;
+				_pinRSwappable = _pinR;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinL;
+				break;
+			case SWAP_XR:
+				_pinZSwappable = _pinZ;
+				_pinLSwappable = _pinL;
+				_pinRSwappable = _pinX;
+				_pinXSwappable = _pinR;
+				_pinYSwappable = _pinY;
+				break;
+			case SWAP_YR:
+				_pinZSwappable = _pinZ;
+				_pinLSwappable = _pinL;
+				_pinRSwappable = _pinY;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinR;
+				break;
+			default:
+				_pinZSwappable = _pinZ;
+				_pinLSwappable = _pinL;
+				_pinRSwappable = _pinR;
+				_pinXSwappable = _pinX;
+				_pinYSwappable = _pinY;
+	}
+}
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
   if(_lTrigger) {
