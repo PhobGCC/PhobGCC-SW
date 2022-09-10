@@ -33,44 +33,44 @@ using namespace Eigen;
 TeensyTimerTool::OneShotTimer timer1;
 
 union Buttons{
-	uint8_t arr[10];
-	struct {
+  uint8_t arr[10];
+  struct {
 
-				// byte 0
-		uint8_t A : 1;
-		uint8_t B : 1;
-		uint8_t X : 1;
-		uint8_t Y : 1;
-		uint8_t S : 1;
-		uint8_t orig : 1;
-		uint8_t errL : 1;
-		uint8_t errS : 1;
+        // byte 0
+    uint8_t A : 1;
+    uint8_t B : 1;
+    uint8_t X : 1;
+    uint8_t Y : 1;
+    uint8_t S : 1;
+    uint8_t orig : 1;
+    uint8_t errL : 1;
+    uint8_t errS : 1;
 
-		// byte 1
-		uint8_t Dl : 1;
-		uint8_t Dr : 1;
-		uint8_t Dd : 1;
-		uint8_t Du : 1;
-		uint8_t Z : 1;
-		uint8_t R : 1;
-		uint8_t L : 1;
-		uint8_t high : 1;
+    // byte 1
+    uint8_t Dl : 1;
+    uint8_t Dr : 1;
+    uint8_t Dd : 1;
+    uint8_t Du : 1;
+    uint8_t Z : 1;
+    uint8_t R : 1;
+    uint8_t L : 1;
+    uint8_t high : 1;
 
-		//byte 2-7
-		uint8_t Ax : 8;
-		uint8_t Ay : 8;
-		uint8_t Cx : 8;
-		uint8_t Cy : 8;
-		uint8_t La : 8;
-		uint8_t Ra : 8;
+    //byte 2-7
+    uint8_t Ax : 8;
+    uint8_t Ay : 8;
+    uint8_t Cx : 8;
+    uint8_t Cy : 8;
+    uint8_t La : 8;
+    uint8_t Ra : 8;
 
-		// magic byte 8 & 9 (only used in origin cmd)
-		// have something to do with rumble motor status???
-		// ignore these, they are magic numbers needed
-		// to make a cmd response work
-		uint8_t magic1 : 8;
-		uint8_t magic2 : 8;
-	};
+    // magic byte 8 & 9 (only used in origin cmd)
+    // have something to do with rumble motor status???
+    // ignore these, they are magic numbers needed
+    // to make a cmd response work
+    uint8_t magic1 : 8;
+    uint8_t magic2 : 8;
+  };
 }btn;
 
 uint8_t hardwareL;
@@ -87,23 +87,17 @@ float _cStickY;
 enum JumpConfig {
 	DEFAULT,
 	SWAP_XZ,
-	SWAP_YZ,
-	SWAP_XL,
-	SWAP_YL,
-	SWAP_XR,
-	SWAP_YR
+	SWAP_YZ
 };
 
 
 //defining control configuration
 int _pinZSwappable = _pinZ;
-int _pinLSwappable = _pinL;
-int _pinRSwappable = _pinR;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
 JumpConfig _jumpConfig = DEFAULT;
 const int _jumpConfigMin = 0;
-const int _jumpConfigMax = 6;
+const int _jumpConfigMax = 2;
 int _lConfig = 0;
 int _rConfig = 0;
 const int _triggerConfigMin = 0;
@@ -187,19 +181,19 @@ struct FilterGains {
 	float cYSmoothing;
 };
 FilterGains _gains {//these values are actually timestep-compensated for in runKalman
-		.maxStick = 100,
-		.xVelDecay = 0.1,
-		.yVelDecay = 0.1,
-		.xVelPosFactor = 0.01,
-		.yVelPosFactor = 0.01,
-		.xVelDamp = 0.125,
-		.yVelDamp = 0.125,
-		.velThresh = 1.00,
-		.accelThresh = 3.00,
-		.xSmoothing = 0.0,
-		.ySmoothing = 0.0,
-		.cXSmoothing = 0.0,
-		.cYSmoothing = 0.0
+    .maxStick = 100,
+    .xVelDecay = 0.1,
+    .yVelDecay = 0.1,
+    .xVelPosFactor = 0.01,
+    .yVelPosFactor = 0.01,
+    .xVelDamp = 0.125,
+    .yVelDamp = 0.125,
+    .velThresh = 1.00,
+    .accelThresh = 3.00,
+    .xSmoothing = 0.0,
+    .ySmoothing = 0.0,
+    .cXSmoothing = 0.0,
+    .cYSmoothing = 0.0
 };
 FilterGains _g;//this gets filled by recomputeGains();
 
@@ -217,7 +211,7 @@ float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const int _notCalibrating = -1;
 const float _maxStickAngle = 0.4886921906;//28 degrees; this is the max angular deflection of the stick.
-bool  _calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
+bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 bool _advanceCal = false;
 bool _advanceCalPressed = false;
 bool _undoCal = false;
@@ -345,31 +339,31 @@ const int _slowC4 = _slowDivider & 0x1F;
 volatile int _writeQueue = 0;
 
 const char _probeResponse[_probeLength] = {
-		0x08,0x08,0x0F,0xE8,
-		0x08,0x08,0x08,0x08,
-		0x08,0x08,0x08,0xEF};
+    0x08,0x08,0x0F,0xE8,
+    0x08,0x08,0x08,0x08,
+    0x08,0x08,0x08,0xEF};
 volatile char _originResponse[_originLength] = {
-		0x08,0x08,0x08,0x08,
-		0x0F,0x08,0x08,0x08,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0x08,0xEF,0xEF,0x08,
-		0x08,0xEF,0xEF,0x08,
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
 	0x08,0x08,0x08,0x08,
-		0x08,0x08,0x08,0x08};
+    0x08,0x08,0x08,0x08};
 volatile char _commResponse[_originLength] = {
-		0x08,0x08,0x08,0x08,
-		0x0F,0x08,0x08,0x08,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0xE8,0xEF,0xEF,0xEF,
-		0x08,0xEF,0xEF,0x08,
-		0x08,0xEF,0xEF,0x08,
+    0x08,0x08,0x08,0x08,
+    0x0F,0x08,0x08,0x08,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0xE8,0xEF,0xEF,0xEF,
+    0x08,0xEF,0xEF,0x08,
+    0x08,0xEF,0xEF,0x08,
 	0x08,0x08,0x08,0x08,
-		0x08,0x08,0x08,0x08};
+    0x08,0x08,0x08,0x08};
 
 
 volatile char _bitCount = 0;
@@ -399,35 +393,35 @@ int _errorCount = 0;
 int _reportCount = 0;
 
 const char _probeResponse[_probeLength] = {
-		0,0,0,0, 1,0,0,1,
-		0,0,0,0, 0,0,0,0,
-		0,0,0,0, 0,0,1,1};
+    0,0,0,0, 1,0,0,1,
+    0,0,0,0, 0,0,0,0,
+    0,0,0,0, 0,0,1,1};
 volatile char _originResponse[_originLength] = {
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0};
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0};
 volatile char _commResponse[_originLength] = {
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,1,1,1,1,1,1,1,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0};
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0};
 #endif // TEENSY4_0
 
 void setup() {
-		serialSetup();
+    serialSetup();
 	Serial.print("Software version 0.");
 	Serial.println(SW_VERSION);
 #ifdef BUILD_DEV
@@ -457,29 +451,29 @@ void setup() {
 
 	_currentCalStep = _notCalibrating;
 
-		for (int i = 0; i < MEDIANLEN; i++){
-				_xPosList[i] = 0;
-				_yPosList[i] = 0;
-		}
-		_xMedianIndex = 0;
-		_yMedianIndex = 0;
+    for (int i = 0; i < MEDIANLEN; i++){
+        _xPosList[i] = 0;
+        _yPosList[i] = 0;
+    }
+    _xMedianIndex = 0;
+    _yMedianIndex = 0;
 
-		_xPos = 0;
-		_yPos = 0;
-		_xPosFilt = 0;
-		_yPosFilt = 0;
-		_xVel = 0;
-		_yVel = 0;
-		_xVelFilt = 0;
-		_yVelFilt = 0;
-		_cXPos = 0;
-		_cYPos = 0;
+    _xPos = 0;
+    _yPos = 0;
+    _xPosFilt = 0;
+    _yPosFilt = 0;
+    _xVel = 0;
+    _yVel = 0;
+    _xVelFilt = 0;
+    _yVelFilt = 0;
+    _cXPos = 0;
+    _cYPos = 0;
 
 	_lastMicros = micros();
 
-		setPinModes();
+    setPinModes();
 
-		ADCSetup(adc, _ADCScale, _ADCScaleFactor);
+    ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
 	//measure the trigger values
 	initializeButtons(btn,trigL,trigR);
@@ -489,7 +483,7 @@ void setup() {
 
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
-		Serial2.addMemoryForRead(_serialBuffer,128);
+    Serial2.addMemoryForRead(_serialBuffer,128);
 	attachInterrupt(_pinInt, commInt, RISING);
 #ifdef HALFDUPLEX
 	Serial2.addMemoryForWrite(_writeBuffer, 128);
@@ -1356,29 +1350,49 @@ void readButtons(){
 		btn.S = (uint8_t) (1);
 	} else {
 		switch(_lConfig) {
-			case 2: // Mode 3: Analog Only Trigger state
-			case 4: // Mode 5: Digital => Analog Value state
+			case 0: //Default Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 2: //Analog Only Trigger state
 				btn.L = (uint8_t) 0;
 				break;
+			case 3: //Trigger Plug Emulation state
+				btn.L = !digitalRead(_pinL);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.L = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.L = !digitalRead(_pinL);
+				break;
 			default:
-				// Mode 1: Default Trigger state
-				// Mode 2: Digital Only Trigger state
-				// Mode 4: Trigger Plug Emulation state
-				// Mode 5: Digital -> Analog Value + Digital state
-				btn.L = !digitalRead(_pinLSwappable);
+				btn.L = !digitalRead(_pinL);
 		}
 
 		switch(_rConfig) {
-			case 2: // Mode 3: Analog Only Trigger state
-			case 4: // Mode 5: Digital => Analog Value state
+			case 0: //Default Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 1: //Digital Only Trigger state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 2: //Analog Only Trigger state
 				btn.R = (uint8_t) 0;
 				break;
+			case 3: //Trigger Plug Emulation state
+				btn.R = !digitalRead(_pinR);
+				break;
+			case 4: //Digital => Analog Value state
+				btn.R = (uint8_t) 0;
+				break;
+			case 5: //Digital -> Analog Value + Digital state
+				btn.R = !digitalRead(_pinR);
+				break;
 			default:
-				// Mode 1: Default Trigger state
-				// Mode 2: Digital Only Trigger state
-				// Mode 4: Trigger Plug Emulation state
-				// Mode 5: Digital -> Analog Value + Digital state
-				btn.R = !digitalRead(_pinRSwappable);
+				btn.R = !digitalRead(_pinR);
 		}
 	}
 
@@ -1537,18 +1551,6 @@ void readButtons(){
 			freezeSticks(2000);
 		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
 			readJumpConfig(SWAP_YZ);
-			freezeSticks(2000);
-		} else if(hardwareX && hardwareL && btn.S) { //Swap X and L
-			readJumpConfig(SWAP_XL);
-			freezeSticks(2000);
-		} else if(hardwareY && hardwareL && btn.S) { //Swap Y and L
-			readJumpConfig(SWAP_YL);
-			freezeSticks(2000);
-		} else if(hardwareX && hardwareR && btn.S) { //Swap X and L
-			readJumpConfig(SWAP_XR);
-			freezeSticks(2000);
-		} else if(hardwareY && hardwareR && btn.S) { //Swap Y and L
-			readJumpConfig(SWAP_YR);
 			freezeSticks(2000);
 		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
 			readJumpConfig(DEFAULT);
@@ -1821,7 +1823,7 @@ void freezeSticks(const int time) {
 	btn.Y = (uint8_t) 0;
 	btn.L = (uint8_t) 0;
 	btn.R = (uint8_t) 0;
-		btn.Z = (uint8_t) 0;
+	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
 	hardwareL = (uint8_t) 0;
@@ -1931,8 +1933,8 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
 	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
 	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
 
-		//recompute the intermediate gains used directly by the kalman filter
-		recomputeGains();
+    //recompute the intermediate gains used directly by the kalman filter
+    recomputeGains();
 
 	btn.Cx = (uint8_t) (_xSnapback + 127.5);
 	btn.Cy = (uint8_t) (_ySnapback + 127.5);
@@ -2148,18 +2150,6 @@ void readJumpConfig(JumpConfig jumpConfig){
 			case SWAP_YZ:
 				Serial.println("Y<->Z");
 				break;
-			case SWAP_XL:
-				Serial.println("X<->L");
-				break;
-			case SWAP_YL:
-				Serial.println("Y<->L");
-				break;
-			case SWAP_XR:
-				Serial.println("X<->R");
-				break;
-			case SWAP_YR:
-				Serial.println("Y<->R");
-				break;
 			default:
 				Serial.println("normal");
 		}
@@ -2171,54 +2161,19 @@ void setJump(int jumpConfig){
 	switch(jumpConfig){
 			case SWAP_XZ:
 				_pinZSwappable = _pinX;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinR;
 				_pinXSwappable = _pinZ;
 				_pinYSwappable = _pinY;
 				break;
 			case SWAP_YZ:
 				_pinZSwappable = _pinY;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinR;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinZ;
 				break;
-			case SWAP_XL:
-				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinX;
-				_pinRSwappable = _pinR;
-				_pinXSwappable = _pinL;
-				_pinYSwappable = _pinY;
-				break;
-			case SWAP_YL:
-				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinY;
-				_pinRSwappable = _pinR;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinL;
-				break;
-			case SWAP_XR:
-				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinX;
-				_pinXSwappable = _pinR;
-				_pinYSwappable = _pinY;
-				break;
-			case SWAP_YR:
-				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinY;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinR;
-				break;
 			default:
 				_pinZSwappable = _pinZ;
-				_pinLSwappable = _pinL;
-				_pinRSwappable = _pinR;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinY;
 	}
-}
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	if(_lTrigger) {
@@ -2267,38 +2222,36 @@ void initializeButtons(Buttons &thisbtn,int &startUpLa, int &startUpRa){
 }
 void readSticks(int readA, int readC){
 #ifdef USEADCSCALE
-		_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+    _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
-		// otherwise _ADCScale is 1
+    // otherwise _ADCScale is 1
 
 	//read the L and R sliders
 		switch(_lConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
-					// If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == 3 || _jumpConfig == 4)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
+			case 0: //Default Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 				break;
-			case 1: // Mode 2: Digital Only Trigger state
+			case 1: //Digital Only Trigger state
 				btn.La = (uint8_t) 0;
 				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-					// If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == 3 || _jumpConfig == 4)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
+			case 2: //Analog Only Trigger state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.La = adc->adc0->analogRead(_pinLa)>>4;
 				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
 					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
 				}
 				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-			// TODO(kurttm): There's a bug here probably
-				if((hardwareL && (_jumpConfig != 3 && _jumpConfig != 4))
-					 || (hardwareX && _jumpConfig == 3)
-					 || (hardwareY && _jumpConfig == 4)
-					 ) {
+			case 4: //Digital => Analog Value state
+				if(hardwareL) {
+					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(hardwareL) {
 					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 				} else {
 					btn.La = (uint8_t) 0;
@@ -2309,30 +2262,30 @@ void readSticks(int readA, int readC){
 		}
 
 		switch(_rConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
-					// If X/Y are swapped with L, ignore analoge input.
-				btn.Ra = (_jumpConfig == 5 || _jumpConfig == 6)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
+			case 0: //Default Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 				break;
-			case 1: // Mode 2: Digital Only Trigger state
+			case 1: //Digital Only Trigger state
 				btn.Ra = (uint8_t) 0;
 				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-					// If X/Y are swapped with R, ignore analoge input.
-				btn.Ra = (_jumpConfig == 5 || _jumpConfig == 6)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
+			case 2: //Analog Only Trigger state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				break;
+			case 3: //Trigger Plug Emulation state
+				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
 					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
 				}
 				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareR && (_jumpConfig != 5 && _jumpConfig != 6))
-					 || (hardwareX && _jumpConfig == 5)
-					 || (hardwareY && _jumpConfig == 6)) {
+			case 4: //Digital => Analog Value state
+				if(hardwareR) {
+					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(hardwareR) {
 					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 				} else {
 					btn.Ra = (uint8_t) 0;
@@ -2405,8 +2358,8 @@ void readSticks(int readA, int readC){
 
 	//Run a median filter to reduce noise
 #ifdef USEMEDIAN
-		runMedian(posAx, _xPosList, _xMedianIndex);
-		runMedian(posAy, _yPosList, _yMedianIndex);
+    runMedian(posAx, _xPosList, _xMedianIndex);
+    runMedian(posAy, _yPosList, _yMedianIndex);
 #endif
 
 	float remappedAx;
@@ -2603,7 +2556,7 @@ void communicate(){
 			//set the status to writing
 			_commStatus = _commWrite;
 			Serial.println("origin");
-			break;
+		  break;
 			
 		//poll
 		case 0x40:
@@ -2615,7 +2568,7 @@ void communicate(){
 			setCommResponse(_commResponse, btn);
 			break;
 		default:
-			//got something strange, try waiting for a stop bit to syncronize
+		  //got something strange, try waiting for a stop bit to syncronize
 			Serial.println("error");
 			Serial.println(_bitCount,DEC);
 
@@ -2623,7 +2576,7 @@ void communicate(){
 
 			uint8_t thisbyte = 0;
 			//wait until we get a stop bit
-			while(thisbyte != 0xFF){
+		  while(thisbyte != 0xFF){
 				while(!Serial2.available());
 				thisbyte = Serial2.read();
 				//Serial.println(thisbyte,BIN);
@@ -2632,7 +2585,7 @@ void communicate(){
 			_commStatus = _commIdle;
 			_bitCount = 0;
 			_writeQueue = 0;
-		}
+	  }
 	}
 	else if(_commStatus == _commPoll){
 		//we should now be finishing reading the poll command (which is longer than the others)
@@ -2654,7 +2607,7 @@ void communicate(){
 	}
 	else if(_commStatus == _commWrite){
 		//wait until we've written all the bits we intend to
-		while(_writeQueue > _bitCount){}
+ 		while(_writeQueue > _bitCount){}
 		
 		//reset the serial to the slow baudrate
 		resetSerial();
@@ -2932,7 +2885,7 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[]){
 	Serial.print("Collecting cal point for step: ");
 	Serial.println(currentStepIn);
-		const int currentStep = _calOrder[currentStepIn];
+    const int currentStep = _calOrder[currentStepIn];
 
 	Serial.print("Cal point number: ");
 	Serial.println(currentStep);
@@ -2961,7 +2914,7 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 
 #ifdef USEMEDIAN
 		runMedian(X, _xPosList, _xMedianIndex);
-		runMedian(Y, _yPosList, _yMedianIndex);
+    runMedian(Y, _yPosList, _yMedianIndex);
 #endif
 	}
 
@@ -3006,7 +2959,7 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	//create the expected output, what we want our curve to be fit too
 	//this is hard coded because it doesn't depend on the notch adjustments
 	//                   -100 -74.246        0     74.246         100, centered around 0-255
-		//It's not sin(45 deg) because it's a spherical motion, not planar.
+    //It's not sin(45 deg) because it's a spherical motion, not planar.
 	double x_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 	double y_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 
@@ -3066,46 +3019,46 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 
 void notchCalibrate(float xIn[], float yIn[], float xOut[], float yOut[], int regions, float allAffineCoeffs[][6], float regionAngles[]){
 	for(int i = 1; i <= regions; i++){
-			Serial.print("calibrating region: ");
-			Serial.println(i);
+      Serial.print("calibrating region: ");
+      Serial.println(i);
 
 		MatrixXf pointsIn(3,3);
 
-		MatrixXf pointsOut(3,3);
+    MatrixXf pointsOut(3,3);
 
-		if(i == (regions)){
-			Serial.println("final region");
-			pointsIn << xIn[0],xIn[i],xIn[1],
-								yIn[0],yIn[i],yIn[1],
-								1,1,1;
-			pointsOut << xOut[0],xOut[i],xOut[1],
-									 yOut[0],yOut[i],yOut[1],
-									 1,1,1;
-		}
-		else{
+    if(i == (regions)){
+      Serial.println("final region");
+      pointsIn << xIn[0],xIn[i],xIn[1],
+                yIn[0],yIn[i],yIn[1],
+                1,1,1;
+      pointsOut << xOut[0],xOut[i],xOut[1],
+                   yOut[0],yOut[i],yOut[1],
+                   1,1,1;
+    }
+    else{
 		pointsIn << xIn[0],xIn[i],xIn[i+1],
 								yIn[0],yIn[i],yIn[i+1],
 								1,1,1;
 		pointsOut << xOut[0],xOut[i],xOut[i+1],
 								 yOut[0],yOut[i],yOut[i+1],
 								 1,1,1;
-		}
+    }
 
-		Serial.println("In points:");
-		print_mtxf(pointsIn);
-		Serial.println("Out points:");
-		print_mtxf(pointsOut);
+    Serial.println("In points:");
+    print_mtxf(pointsIn);
+    Serial.println("Out points:");
+    print_mtxf(pointsOut);
 
 		MatrixXf A(3,3);
 
 		A = pointsOut*pointsIn.inverse();
-		//A = pointsOut.colPivHouseholderQr().solve(pointsIn);
+    //A = pointsOut.colPivHouseholderQr().solve(pointsIn);
 
 
-		Serial.println("The transform matrix is:");
-		print_mtxf(A);
+    Serial.println("The transform matrix is:");
+    print_mtxf(A);
 
-		Serial.println("The affine transform coefficients for this region are:");
+    Serial.println("The affine transform coefficients for this region are:");
 
 		for(int j = 0; j <2;j++){
 			for(int k = 0; k<3;k++){
@@ -3129,61 +3082,61 @@ float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
 }
 void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex){
-		//takes the value, inserts it into the value array, and then
-		// writes the median back to the value
-		valArray[medianIndex] = val;
-		medianIndex = (medianIndex + 1) % MEDIANLEN;
+    //takes the value, inserts it into the value array, and then
+    // writes the median back to the value
+    valArray[medianIndex] = val;
+    medianIndex = (medianIndex + 1) % MEDIANLEN;
 
-		//We'll hardcode different sort versions according to how long the median is
-		//These are derived from RawTherapee's median.h.
+    //We'll hardcode different sort versions according to how long the median is
+    //These are derived from RawTherapee's median.h.
 #if MEDIANLEN == 3
-		val = max(min(valArray[0], valArray[1]), min(valArray[2], max(valArray[0], valArray[1])));
+    val = max(min(valArray[0], valArray[1]), min(valArray[2], max(valArray[0], valArray[1])));
 #elif MEDIANLEN == 4
-		float maximin = max(min(valArray[0], valArray[1]), min(valArray[2], valArray[3]));
-		float minimax = min(max(valArray[0], valArray[1]), max(valArray[2], valArray[3]));
-		val = (maximin + minimax) / 2.0f;
+    float maximin = max(min(valArray[0], valArray[1]), min(valArray[2], valArray[3]));
+    float minimax = min(max(valArray[0], valArray[1]), max(valArray[2], valArray[3]));
+    val = (maximin + minimax) / 2.0f;
 #else //MEDIANLEN == 5
-		float tmpArray[MEDIANLEN];
-		float tmp;
-		tmp         = min(valArray[0], valArray[1]);
-		tmpArray[1] = max(valArray[0], valArray[1]);
-		tmpArray[0] = tmp;
-		tmp         = min(valArray[3], valArray[4]);
-		tmpArray[4] = max(valArray[3], valArray[4]);
-		tmpArray[3] = max(tmpArray[0], tmp);
-		tmpArray[1] = min(tmpArray[1], tmpArray[4]);
-		tmp         = min(tmpArray[1], valArray[2]);
-		tmpArray[2] = max(tmpArray[1], valArray[2]);
-		tmpArray[1] = tmp;
-		tmp         = min(tmpArray[2], tmpArray[3]);
-		val         = max(tmpArray[1], tmp);
+    float tmpArray[MEDIANLEN];
+    float tmp;
+    tmp         = min(valArray[0], valArray[1]);
+    tmpArray[1] = max(valArray[0], valArray[1]);
+    tmpArray[0] = tmp;
+    tmp         = min(valArray[3], valArray[4]);
+    tmpArray[4] = max(valArray[3], valArray[4]);
+    tmpArray[3] = max(tmpArray[0], tmp);
+    tmpArray[1] = min(tmpArray[1], tmpArray[4]);
+    tmp         = min(tmpArray[1], valArray[2]);
+    tmpArray[2] = max(tmpArray[1], valArray[2]);
+    tmpArray[1] = tmp;
+    tmp         = min(tmpArray[2], tmpArray[3]);
+    val         = max(tmpArray[1], tmp);
 #endif
 }
 void recomputeGains(){
-		//Recompute the intermediate gains used directly by the kalman filter
-		//This happens according to the time between loop iterations.
-		//Before, this happened every iteration of runKalman, but now
-		//the event loop runs at a fixed 1000 Hz
-		//Even if it's not *exactly* 1000 Hz, it should be constant enough.
-		//Hopefully.
-		//So now, this should be called any time _gains gets changed.
-		const float timeFactor = 1.0 / 1.2;
-		const float timeDivisor = 1.2 / 1.0;
-		_g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
-		_g.xVelDecay     = _gains.xVelDecay      * timeFactor;
-		_g.yVelDecay     = _gains.yVelDecay      * timeFactor;
-		_g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
-		_g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
-		_g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
-		_g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
-		_g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
-		_g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
-		_g.velThresh     = _g.velThresh*_g.velThresh;//square it because it's used squared
-		_g.accelThresh   = _g.accelThresh*_g.accelThresh;
-		_g.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
-		_g.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
-		_g.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
-		_g.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
+    //Recompute the intermediate gains used directly by the kalman filter
+    //This happens according to the time between loop iterations.
+    //Before, this happened every iteration of runKalman, but now
+    //the event loop runs at a fixed 1000 Hz
+    //Even if it's not *exactly* 1000 Hz, it should be constant enough.
+    //Hopefully.
+    //So now, this should be called any time _gains gets changed.
+    const float timeFactor = 1.0 / 1.2;
+    const float timeDivisor = 1.2 / 1.0;
+    _g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
+    _g.xVelDecay     = _gains.xVelDecay      * timeFactor;
+    _g.yVelDecay     = _gains.yVelDecay      * timeFactor;
+    _g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
+    _g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
+    _g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
+    _g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
+    _g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
+    _g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
+    _g.velThresh     = _g.velThresh*_g.velThresh;//square it because it's used squared
+    _g.accelThresh   = _g.accelThresh*_g.accelThresh;
+    _g.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
+    _g.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
+    _g.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
+    _g.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
 }
 void runKalman(const float xZ,const float yZ){
 	//Serial.println("Running Kalman");
@@ -3258,7 +3211,7 @@ void runKalman(const float xZ,const float yZ){
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		_xPosFilt = xPosWeight1*_xPos +
-								xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
+		            xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
 	} else {
 		_xPosFilt = _xPos;
 	}
@@ -3271,7 +3224,7 @@ void runKalman(const float xZ,const float yZ){
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		_yPosFilt = yPosWeight1*_yPos +
-								yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
+		            yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
 	} else {
 		_yPosFilt = _yPos;
 	}
@@ -3279,22 +3232,22 @@ void runKalman(const float xZ,const float yZ){
 
 
 void print_mtxf(const Eigen::MatrixXf& X){
-	 int i, j, nrow, ncol;
-	 nrow = X.rows();
-	 ncol = X.cols();
-	 Serial.print("nrow: "); Serial.println(nrow);
-	 Serial.print("ncol: "); Serial.println(ncol);
-	 Serial.println();
-	 for (i=0; i<nrow; i++)
-	 {
-			 for (j=0; j<ncol; j++)
-			 {
-					 Serial.print(X(i,j), 6);   // print 6 decimal places
-					 Serial.print(", ");
-			 }
-			 Serial.println();
-	 }
-	 Serial.println();
+   int i, j, nrow, ncol;
+   nrow = X.rows();
+   ncol = X.cols();
+   Serial.print("nrow: "); Serial.println(nrow);
+   Serial.print("ncol: "); Serial.println(ncol);
+   Serial.println();
+   for (i=0; i<nrow; i++)
+   {
+       for (j=0; j<ncol; j++)
+       {
+           Serial.print(X(i,j), 6);   // print 6 decimal places
+           Serial.print(", ");
+       }
+       Serial.println();
+   }
+   Serial.println();
 }
 
 /*
