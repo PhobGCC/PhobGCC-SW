@@ -1496,23 +1496,23 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 			_advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.L && hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
-			adjustSnapback(true, true, true);
+			adjustSnapback(true, true, true, btn, hardware);
 		} else if(hardware.L && hardware.X && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
-			adjustSnapback(true, true, false);
+			adjustSnapback(true, true, false, btn, hardware);
 		} else if(hardware.L && hardware.Y && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
-			adjustSnapback(true, false, true);
+			adjustSnapback(true, false, true, btn, hardware);
 		} else if(hardware.L && hardware.Y && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
-			adjustSnapback(true, false, false);
+			adjustSnapback(true, false, false, btn, hardware);
 		} else if(hardware.L && btn.A && btn.Du) { //Increase X-axis Delay
-			adjustSmoothing(true, true, true);
+			adjustSmoothing(true, true, true, btn, hardware);
 		} else if(hardware.L && btn.A && btn.Dd) { //Decrease X-axis Delay
-			adjustSmoothing(true, true, false);
+			adjustSmoothing(true, true, false, btn, hardware);
 		} else if(hardware.L && btn.B && btn.Du) { //Increase Y-axis Delay
-			adjustSmoothing(true, false, true);
+			adjustSmoothing(true, false, true, btn, hardware);
 		} else if(hardware.L && btn.B && btn.Dd) { //Decrease Y-axis Delay
-			adjustSmoothing(true, false, false);
+			adjustSmoothing(true, false, false, btn, hardware);
 		} else if(hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
-			showAstickSettings();
+			showAstickSettings(btn, hardware);
 		} else if(hardware.R && hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(true, true, true, btn, hardware);
 		} else if(hardware.R && hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
@@ -1905,7 +1905,7 @@ void changeAutoInit() {
 	EEPROM.put(_eepromAutoInit, _autoInit);
 }
 
-void adjustSnapback(bool _change, bool _xAxis, bool _increase){
+void adjustSnapback(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware){
 	Serial.println("adjusting snapback filtering");
 	if(_xAxis && _increase && _change){
 		_xSnapback = min(_xSnapback+1, _snapbackMax);
@@ -1935,15 +1935,15 @@ void adjustSnapback(bool _change, bool _xAxis, bool _increase){
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains();
 
-	_btn.Cx = (uint8_t) (_xSnapback + 127.5);
-	_btn.Cy = (uint8_t) (_ySnapback + 127.5);
+	btn.Cx = (uint8_t) (_xSnapback + 127.5);
+	btn.Cy = (uint8_t) (_ySnapback + 127.5);
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 
 	EEPROM.put(_eepromxSnapback,_xSnapback);
 	EEPROM.put(_eepromySnapback,_ySnapback);
 }
-void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
+void adjustSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("Adjusting Smoothing");
 	if (_xAxis && _increase && _change) {
 		_gains.xSmoothing = _gains.xSmoothing + 0.1;
@@ -1982,21 +1982,21 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase) {
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains();
 
-	_btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
-	_btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
-void showAstickSettings() {
+void showAstickSettings(Buttons &btn, HardwareButtons &hardware) {
 	//Snapback on A-stick
-	_btn.Ax = (uint8_t) (_xSnapback + 127.5);
-	_btn.Ay = (uint8_t) (_ySnapback + 127.5);
+	btn.Ax = (uint8_t) (_xSnapback + 127.5);
+	btn.Ay = (uint8_t) (_ySnapback + 127.5);
 
 	//Smoothing on C-stick
-	_btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
-	_btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
 void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("Adjusting C-Stick Smoothing");
