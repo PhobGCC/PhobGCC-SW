@@ -84,12 +84,18 @@ float _aStickY;
 float _cStickX;
 float _cStickY;
 
+enum JumpConfig {
+	DEFAULT,
+	SWAP_XZ,
+	SWAP_YZ
+};
+
 
 //defining control configuration
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
-int _jumpConfig = 0;
+JumpConfig _jumpConfig = DEFAULT;
 const int _jumpConfigMin = 0;
 const int _jumpConfigMax = 2;
 int _lConfig = 0;
@@ -962,11 +968,11 @@ int readEEPROM(){
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
 	if(_jumpConfig < _jumpConfigMin){
-		_jumpConfig = 0;
+		_jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
 	if(_jumpConfig > _jumpConfigMax){
-		_jumpConfig = 0;
+		_jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
 	setJump(_jumpConfig);
@@ -1191,7 +1197,7 @@ int readEEPROM(){
 void resetDefaults(bool resetSticks){
 	Serial.println("RESETTING ALL DEFAULTS");
 
-	_jumpConfig = 0;
+	_jumpConfig = DEFAULT;
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
@@ -1541,13 +1547,13 @@ void readButtons(){
 		} else if(hardwareR && hardwareZ && btn.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(true, false, false);
 		} else if(hardwareX && hardwareZ && btn.S) { //Swap X and Z
-			readJumpConfig(true, false);
+			readJumpConfig(SWAP_XZ);
 			freezeSticks(2000);
 		} else if(hardwareY && hardwareZ && btn.S) { //Swap Y and Z
-			readJumpConfig(false, true);
+			readJumpConfig(SWAP_YZ);
 			freezeSticks(2000);
 		} else if(btn.A && hardwareX && hardwareY && hardwareZ) { // Reset X/Y/Z Config
-			readJumpConfig(false, false);
+			readJumpConfig(DEFAULT);
 			freezeSticks(2000);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
@@ -2130,39 +2136,35 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 
 	clearButtons(250);
 }
-void readJumpConfig(bool _swapXZ, bool _swapYZ){
+void readJumpConfig(JumpConfig jumpConfig){
 	Serial.print("setting jump to: ");
-	if(_swapXZ){
-		if(_jumpConfig == 1){
-			_jumpConfig = 0;
-			Serial.println("normal again");
-		}else{
-			_jumpConfig = 1;
-			Serial.println("X<->Z");
+	if (_jumpConfig == jumpConfig) {
+		_jumpConfig = DEFAULT;
+		Serial.println("normal again");
+	} else {
+		_jumpConfig = jumpConfig;
+		switch (jumpConfig) {
+			case SWAP_XZ:
+				Serial.println("X<->Z");
+				break;
+			case SWAP_YZ:
+				Serial.println("Y<->Z");
+				break;
+			default:
+				Serial.println("normal");
 		}
-	}else if(_swapYZ){
-		if(_jumpConfig == 2){
-			_jumpConfig = 0;
-			Serial.println("normal again");
-		}else{
-			_jumpConfig = 2;
-			Serial.println("Y<->Z");
-		}
-	}else{
-		Serial.println("normal");
-		_jumpConfig = 0;
 	}
 	EEPROM.put(_eepromJump,_jumpConfig);
 	setJump(_jumpConfig);
 }
 void setJump(int jumpConfig){
 	switch(jumpConfig){
-			case 1:
+			case SWAP_XZ:
 				_pinZSwappable = _pinX;
 				_pinXSwappable = _pinZ;
 				_pinYSwappable = _pinY;
 				break;
-			case 2:
+			case SWAP_YZ:
 				_pinZSwappable = _pinY;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinZ;
