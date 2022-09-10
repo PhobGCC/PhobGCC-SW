@@ -73,7 +73,7 @@ union Buttons{
   };
 }_btn;
 
-union HardwareButtons{
+struct HardwareButtons{
 	uint8_t L;
 	uint8_t R;
 	uint8_t Z;
@@ -81,12 +81,18 @@ union HardwareButtons{
 	uint8_t Y;
 } _hardware;
 
+enum JumpConfig {
+	DEFAULT,
+	SWAP_XZ,
+	SWAP_YZ
+};
+
 
 //defining control configuration
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
-int _jumpConfig = 0;
+JumpConfig _jumpConfig = DEFAULT;
 const int _jumpConfigMin = 0;
 const int _jumpConfigMax = 2;
 int _lConfig = 0;
@@ -959,11 +965,11 @@ int readEEPROM(){
 	//get the jump setting
 	EEPROM.get(_eepromJump, _jumpConfig);
 	if(_jumpConfig < _jumpConfigMin){
-		_jumpConfig = 0;
+		_jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
 	if(_jumpConfig > _jumpConfigMax){
-		_jumpConfig = 0;
+		_jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
 	setJump(_jumpConfig);
@@ -1188,7 +1194,7 @@ int readEEPROM(){
 void resetDefaults(bool resetSticks){
 	Serial.println("RESETTING ALL DEFAULTS");
 
-	_jumpConfig = 0;
+	_jumpConfig = DEFAULT;
 	setJump(_jumpConfig);
 	EEPROM.put(_eepromJump,_jumpConfig);
 
@@ -1334,7 +1340,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 	hardware.X = !digitalRead(_pinX);
 	hardware.Y = !digitalRead(_pinY);
 
-	if(_hardware.L && _hardware.R && btn.A && btn.S) {
+	if(hardware.L && hardware.R && btn.A && btn.S) {
 		btn.L = (uint8_t) (1);
 		btn.R = (uint8_t) (1);
 		btn.A = (uint8_t) (1);
@@ -1342,48 +1348,48 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 	} else {
 		switch(_lConfig) {
 			case 0: //Default Trigger state
-				btn.L = !digitalRead(_pinL);
+				btn.L = hardware.L;
 				break;
 			case 1: //Digital Only Trigger state
-				btn.L = !digitalRead(_pinL);
+				btn.L = hardware.L;
 				break;
 			case 2: //Analog Only Trigger state
 				btn.L = (uint8_t) 0;
 				break;
 			case 3: //Trigger Plug Emulation state
-				btn.L = !digitalRead(_pinL);
+				btn.L = hardware.L;
 				break;
 			case 4: //Digital => Analog Value state
 				btn.L = (uint8_t) 0;
 				break;
 			case 5: //Digital -> Analog Value + Digital state
-				btn.L = !digitalRead(_pinL);
+				btn.L = hardware.L;
 				break;
 			default:
-				btn.L = !digitalRead(_pinL);
+				btn.L = hardware.L;
 		}
 
 		switch(_rConfig) {
 			case 0: //Default Trigger state
-				btn.R = !digitalRead(_pinR);
+				btn.R = hardware.R;
 				break;
 			case 1: //Digital Only Trigger state
-				btn.R = !digitalRead(_pinR);
+				btn.R = hardware.R;
 				break;
 			case 2: //Analog Only Trigger state
 				btn.R = (uint8_t) 0;
 				break;
 			case 3: //Trigger Plug Emulation state
-				btn.R = !digitalRead(_pinR);
+				btn.R = hardware.R;
 				break;
 			case 4: //Digital => Analog Value state
 				btn.R = (uint8_t) 0;
 				break;
 			case 5: //Digital -> Analog Value + Digital state
-				btn.R = !digitalRead(_pinR);
+				btn.R = hardware.R;
 				break;
 			default:
-				btn.R = !digitalRead(_pinR);
+				btn.R = hardware.R;
 		}
 	}
 
@@ -1538,13 +1544,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 		} else if(hardware.R && hardware.Z && btn.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(true, false, false);
 		} else if(hardware.X && hardware.Z && btn.S) { //Swap X and Z
-			readJumpConfig(true, false);
+			readJumpConfig(SWAP_XZ);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.Z && btn.S) { //Swap Y and Z
-			readJumpConfig(false, true);
+			readJumpConfig(SWAP_YZ);
 			freezeSticks(2000, btn, hardware);
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
-			readJumpConfig(false, false);
+			readJumpConfig(DEFAULT);
 			freezeSticks(2000, btn, hardware);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
@@ -2127,39 +2133,35 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 
 	clearButtons(250, _btn, _hardware);
 }
-void readJumpConfig(bool _swapXZ, bool _swapYZ){
+void readJumpConfig(JumpConfig jumpConfig){
 	Serial.print("setting jump to: ");
-	if(_swapXZ){
-		if(_jumpConfig == 1){
-			_jumpConfig = 0;
-			Serial.println("normal again");
-		}else{
-			_jumpConfig = 1;
-			Serial.println("X<->Z");
+	if (_jumpConfig == jumpConfig) {
+		_jumpConfig = DEFAULT;
+		Serial.println("normal again");
+	} else {
+		_jumpConfig = jumpConfig;
+		switch (jumpConfig) {
+			case SWAP_XZ:
+				Serial.println("X<->Z");
+				break;
+			case SWAP_YZ:
+				Serial.println("Y<->Z");
+				break;
+			default:
+				Serial.println("normal");
 		}
-	}else if(_swapYZ){
-		if(_jumpConfig == 2){
-			_jumpConfig = 0;
-			Serial.println("normal again");
-		}else{
-			_jumpConfig = 2;
-			Serial.println("Y<->Z");
-		}
-	}else{
-		Serial.println("normal");
-		_jumpConfig = 0;
 	}
 	EEPROM.put(_eepromJump,_jumpConfig);
 	setJump(_jumpConfig);
 }
 void setJump(int jumpConfig){
 	switch(jumpConfig){
-			case 1:
+			case SWAP_XZ:
 				_pinZSwappable = _pinX;
 				_pinXSwappable = _pinZ;
 				_pinYSwappable = _pinY;
 				break;
-			case 2:
+			case SWAP_YZ:
 				_pinZSwappable = _pinY;
 				_pinXSwappable = _pinX;
 				_pinYSwappable = _pinZ;
