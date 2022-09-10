@@ -84,7 +84,7 @@ float _aStickY;
 float _cStickX;
 float _cStickY;
 
-enum RemapConfig {
+enum JumpConfig {
   DEFAULT,
   SWAP_XZ,
   SWAP_YZ
@@ -94,7 +94,7 @@ enum RemapConfig {
 int _pinZSwappable = _pinZ;
 int _pinXSwappable = _pinX;
 int _pinYSwappable = _pinY;
-RemapConfig _jumpConfig = DEFAULT;
+JumpConfig _jumpConfig = DEFAULT;
 const int _jumpConfigMin = 0;
 const int _jumpConfigMax = 2;
 int _lConfig = 0;
@@ -2135,7 +2135,7 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 
   clearButtons(250);
 }
-void readJumpConfig(RemapConfig jumpConfig){
+void readJumpConfig(JumpConfig jumpConfig){
   Serial.print("setting jump to: ");
   if (_jumpConfig == jumpConfig) {
     _jumpConfig = DEFAULT;
