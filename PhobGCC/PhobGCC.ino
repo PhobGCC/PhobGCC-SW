@@ -522,7 +522,7 @@ void loop() {
 	if(_currentCalStep >= 0){
 		if(_calAStick){
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, _hardware.Y, _hardware.X, _btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
+				adjustNotch(_currentCalStep, _dT, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
@@ -532,13 +532,13 @@ void loop() {
 					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 				}
 			}else{//just show desired stick position
-				displayNotch(_currentCalStep, true, _notchAngleDefaults);
+				displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 			}
 			readSticks(true,false, _btn, _hardware);
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(_currentCalStep, _dT, _hardware.Y, _hardware.X, _btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
+				adjustNotch(_currentCalStep, _dT, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
@@ -548,7 +548,7 @@ void loop() {
 					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 				}
 			}else{//just show desired stick position
-				displayNotch(_currentCalStep, false, _notchAngleDefaults);
+				displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 			}
 			readSticks(false,true, _btn, _hardware);
 		}
@@ -1877,8 +1877,8 @@ void changeRumble(const bool increase, Buttons &btn, HardwareButtons &hardware) 
 }
 
 void showRumble(const int time, Buttons &btn, HardwareButtons &hardware) {
-	_btn.Cx = (uint8_t) 127;
-	_btn.Cy = (uint8_t) (_rumble + 127.5);
+	btn.Cx = (uint8_t) 127;
+	btn.Cy = (uint8_t) (_rumble + 127.5);
 	clearButtons(time, btn, hardware);
 
 	EEPROM.put(_eepromRumble, _rumble);
@@ -2781,7 +2781,12 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 //The notch adjustment is limited in order to control
 //1. displacement of points (max 12 units out of +/- 100, for now)
 //2. stretching of coordinates (max +/- 30%)
-void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool reset, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], int notchStatus[]){
+void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], int notchStatus[], Buttons &btn, HardwareButtons &hardware){
+	//set up variables based on current button state
+	bool CW = hardware.X;
+	bool CCW = hardware.Y;
+	bool reset = btn.B;
+
 	//This gets run after all the calibration points are collected
 	//So we subtract the number of calibration points and switch over to notch adjust order
 	const int notchIndex = _notchAdjOrder[currentStepIn-_noOfCalibrationPoints];
@@ -2791,11 +2796,11 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	float y = 0;
 	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
 	if(calibratingAStick){
-		_btn.Cx = (uint8_t) (x + 127.5);
-		_btn.Cy = (uint8_t) (y + 127.5);
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
 	}else{
-		_btn.Ax = (uint8_t) (x + 127.5);
-		_btn.Ay = (uint8_t) (y + 127.5);
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
 	}
 
 	//do nothing if it's not a valid notch to calibrate
@@ -2806,9 +2811,9 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 
 	//Adjust notch angle according to which button is pressed (do nothing for both buttons)
 	if(CW && !CCW){
-		notchAngles[notchIndex] += loopDelta*0.000075;
-	}else if(CCW && !CW){
 		notchAngles[notchIndex] -= loopDelta*0.000075;
+	}else if(CCW && !CW){
+		notchAngles[notchIndex] += loopDelta*0.000075;
 	}else if(reset){
 		notchAngles[notchIndex] = measuredNotchAngles[notchIndex];
 	}else{
@@ -2865,7 +2870,7 @@ void adjustNotch(int currentStepIn, float loopDelta, bool CW, bool CCW, bool res
 	notchAngles[notchIndex] = min(notchAngles[notchIndex], upperLimit);
 }
 //displayNotch is used in lieu of adjustNotch when doing basic calibration
-void displayNotch(const int currentStepIn, const bool calibratingAStick, const float notchAngles[]){
+void displayNotch(const int currentStepIn, const bool calibratingAStick, const float notchAngles[], Buttons &btn){
 	int currentStep = _calOrder[currentStepIn];
 	//display the desired value on the other stick
 	float x = 0;
@@ -2875,11 +2880,11 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 		calcStickValues(notchAngles[notchIndex], &x, &y);
 	}
 	if(calibratingAStick){
-		_btn.Cx = (uint8_t) (x + 127.5);
-		_btn.Cy = (uint8_t) (y + 127.5);
+		btn.Cx = (uint8_t) (x + 127.5);
+		btn.Cy = (uint8_t) (y + 127.5);
 	}else{
-		_btn.Ax = (uint8_t) (x + 127.5);
-		_btn.Ay = (uint8_t) (y + 127.5);
+		btn.Ax = (uint8_t) (x + 127.5);
+		btn.Ay = (uint8_t) (y + 127.5);
 	}
 }
 void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[]){
