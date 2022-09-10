@@ -1462,7 +1462,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 			resetDefaults(true);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
-			changeAutoInit();
+			changeAutoInit(btn, hardware);
 		} else if (hardware.X && hardware.Y && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
 			changeRumble(true, btn, hardware);
@@ -1887,7 +1887,7 @@ void showRumble(const int time, Buttons &btn, HardwareButtons &hardware) {
 //Make it so you don't need to press B.
 //This is only good if the sticks are calibrated, so
 // the setting auto-resets whenever you hard reset or recalibrate.
-void changeAutoInit() {
+void changeAutoInit(Buttons &btn, HardwareButtons &hardware) {
 	if(_autoInit == 0) {
 		_autoInit = 1;
 	} else {
@@ -1895,12 +1895,12 @@ void changeAutoInit() {
 	}
 
 	//move sticks up-right for on, down-left for off
-	_btn.Ax = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	_btn.Ay = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	_btn.Cx = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	_btn.Cy = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Ax = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Ay = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Cx = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Cy = (uint8_t) (_autoInit*100 - 50 + 127.5);
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 
 	EEPROM.put(_eepromAutoInit, _autoInit);
 }
