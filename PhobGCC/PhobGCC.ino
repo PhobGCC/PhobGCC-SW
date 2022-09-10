@@ -18,8 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 #define BUILD_RELEASE
 //#define BUILD_DEV
@@ -2273,61 +2272,73 @@ void readSticks(int readA, int readC){
 
 	//read the L and R sliders
 		switch(_lConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
+      case 0: // Mode 1: Default Trigger state
+      case 2: // Mode 3: Analog Only Trigger state
+          // If X/Y are swapped with L, ignore analog input.
+        btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
+          ? (uint8_t) 0 
+          : adc->adc0->analogRead(_pinLa)>>4;
+        break;
+      case 1: // Mode 2: Digital Only Trigger state
+        btn.La = (uint8_t) 0;
+        break;
+      case 3: // Mode 4: Trigger Plug Emulation state
 				// If X/Y are swapped with L, ignore analog input.
-				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
-				break;
-			case 1: // Mode 2: Digital Only Trigger state
-				btn.La = (uint8_t) 0;
-				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-				// If X/Y are swapped with L, ignore analog input.
-				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinLa)>>4;
-				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
-				}
-				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareL && (_jumpConfig != SWAP_XL && _jumpConfig != SWAP_YL))
-					 || (hardwareX && _jumpConfig == SWAP_XL)
-					 || (hardwareY && _jumpConfig == SWAP_YL)
-					 ) {
-					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
-		}
+        btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
+          ? (uint8_t) 0 
+          : adc->adc0->analogRead(_pinLa)>>4;
+        if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
+          btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+        }
+        break;
+      case 4: // Mode 5: Digital => Analog Value state
+      case 5: // Mode 6: Digital => Analog Value + Digital state
+        if((hardwareL && (_jumpConfig != SWAP_XL && _jumpConfig != SWAP_YL))
+           || (hardwareX && _jumpConfig == SWAP_XL)
+           || (hardwareY && _jumpConfig == SWAP_YL)
+           ) {
+          btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+        } else {
+          btn.La = (uint8_t) 0;
+        }
+        break;
+      default:
+        btn.La = adc->adc0->analogRead(_pinLa)>>4;
+    }
 
 		switch(_rConfig) {
-			case 0: // Mode 1: Default Trigger state
-			case 2: // Mode 3: Analog Only Trigger state
-					// If X/Y are swapped with L, ignore analoge input.
-				btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
-				break;
-			case 1: // Mode 2: Digital Only Trigger state
-				btn.Ra = (uint8_t) 0;
-				break;
-			case 3: // Mode 4: Trigger Plug Emulation state
-					// If X/Y are swapped with R, ignore analoge input.
-				btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
-					? (uint8_t) 0 
-					: adc->adc0->analogRead(_pinRa)>>4;
-				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
-				}
-				break;
-			case 4: // Mode 5: Digital => Analog Value state
-			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareR && (_jumpConfig != SWAP_XR && _jumpConfig != SWAP_YR))
-					 || (hardwareX && _jumpConfig == SWAP_XR)
-					 || (hardwareY && _jumpConfig == SWAP_YR)) {
-					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
-		}
+      case 0: // Mode 1: Default Trigger state
+      case 2: // Mode 3: Analog Only Trigger state
+          // If X/Y are swapped with L, ignore analog input.
+        btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
+          ? (uint8_t) 0 
+          : adc->adc0->analogRead(_pinRa)>>4;
+        break;
+      case 1: // Mode 2: Digital Only Trigger state
+        btn.Ra = (uint8_t) 0;
+        break;
+      case 3: // Mode 4: Trigger Plug Emulation state
+          // If X/Y are swapped with R, ignore analog input.
+        btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
+          ? (uint8_t) 0 
+          : adc->adc0->analogRead(_pinRa)>>4;
+        if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
+          btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+        }
+        break;
+      case 4: // Mode 5: Digital => Analog Value state
+      case 5: // Mode 6: Digital => Analog Value + Digital state
+        if((hardwareR && (_jumpConfig != SWAP_XR && _jumpConfig != SWAP_YR))
+           || (hardwareX && _jumpConfig == SWAP_XR)
+           || (hardwareY && _jumpConfig == SWAP_YR)) {
+          btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+        } else {
+          btn.Ra = (uint8_t) 0;
+        }
+        break;
+      default:
+        btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+    }
 
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
