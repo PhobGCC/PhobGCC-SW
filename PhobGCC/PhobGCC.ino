@@ -20,6 +20,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
+
 #define BUILD_RELEASE
 //#define BUILD_DEV
 
@@ -2274,7 +2275,7 @@ void readSticks(int readA, int readC){
 		switch(_lConfig) {
 			case 0: // Mode 1: Default Trigger state
 			case 2: // Mode 3: Analog Only Trigger state
-					// If X/Y are swapped with L, ignore analoge input.
+				// If X/Y are swapped with L, ignore analog input.
 				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinLa)>>4;
@@ -2283,7 +2284,7 @@ void readSticks(int readA, int readC){
 				btn.La = (uint8_t) 0;
 				break;
 			case 3: // Mode 4: Trigger Plug Emulation state
-					// If X/Y are swapped with L, ignore analoge input.
+				// If X/Y are swapped with L, ignore analog input.
 				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinLa)>>4;
