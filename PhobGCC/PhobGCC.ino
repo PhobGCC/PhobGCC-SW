@@ -1465,21 +1465,21 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 			changeAutoInit();
 		} else if (hardware.X && hardware.Y && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
-			changeRumble(true);
+			changeRumble(true, btn, hardware);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.X && hardware.Y && btn.Dd) { //Decrease Rumble
 #ifdef RUMBLE
-			changeRumble(false);
+			changeRumble(false, btn, hardware);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.X && hardware.Y && btn.B && !btn.A) { //Show current rumble setting
 #ifdef RUMBLE
-			showRumble(2000);
+			showRumble(2000, btn, hardware);
 #else // RUMBLE
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
@@ -1856,7 +1856,7 @@ void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 		delta = millis() - startTime;
 	}
 }
-void changeRumble(const bool increase) {
+void changeRumble(const bool increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("changing rumble");
 	if(increase) {
 		_rumble += 1;
@@ -1871,13 +1871,13 @@ void changeRumble(const bool increase) {
 	}
 
 	_rumblePower = calcRumblePower(_rumble);
-	showRumble(1000);
+	showRumble(1000, btn, hardware);
 }
 
-void showRumble(const int time) {
+void showRumble(const int time, Buttons &btn, HardwareButtons &hardware) {
 	_btn.Cx = (uint8_t) 127;
 	_btn.Cy = (uint8_t) (_rumble + 127.5);
-	clearButtons(time, _btn, _hardware);
+	clearButtons(time, btn, hardware);
 
 	EEPROM.put(_eepromRumble, _rumble);
 }
