@@ -2275,7 +2275,7 @@ void readSticks(int readA, int readC){
 			case 0: // Mode 1: Default Trigger state
 			case 2: // Mode 3: Analog Only Trigger state
 					// If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == 3 || _jumpConfig == 4)
+				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinLa)>>4;
 				break;
@@ -2284,7 +2284,7 @@ void readSticks(int readA, int readC){
 				break;
 			case 3: // Mode 4: Trigger Plug Emulation state
 					// If X/Y are swapped with L, ignore analoge input.
-				btn.La = (_jumpConfig == 3 || _jumpConfig == 4)
+				btn.La = (_jumpConfig == SWAP_XL || _jumpConfig == SWAP_YL)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinLa)>>4;
 				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
@@ -2293,9 +2293,9 @@ void readSticks(int readA, int readC){
 				break;
 			case 4: // Mode 5: Digital => Analog Value state
 			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareL && (_jumpConfig != 3 && _jumpConfig != 4))
-					 || (hardwareX && _jumpConfig == 3)
-					 || (hardwareY && _jumpConfig == 4)
+				if((hardwareL && (_jumpConfig != SWAP_XL && _jumpConfig != SWAP_YL))
+					 || (hardwareX && _jumpConfig == SWAP_XL)
+					 || (hardwareY && _jumpConfig == SWAP_YL)
 					 ) {
 					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
 		}
@@ -2304,7 +2304,7 @@ void readSticks(int readA, int readC){
 			case 0: // Mode 1: Default Trigger state
 			case 2: // Mode 3: Analog Only Trigger state
 					// If X/Y are swapped with L, ignore analoge input.
-				btn.Ra = (_jumpConfig == 5 || _jumpConfig == 6)
+				btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinRa)>>4;
 				break;
@@ -2313,7 +2313,7 @@ void readSticks(int readA, int readC){
 				break;
 			case 3: // Mode 4: Trigger Plug Emulation state
 					// If X/Y are swapped with R, ignore analoge input.
-				btn.Ra = (_jumpConfig == 5 || _jumpConfig == 6)
+				btn.Ra = (_jumpConfig == SWAP_XR || _jumpConfig == SWAP_YR)
 					? (uint8_t) 0 
 					: adc->adc0->analogRead(_pinRa)>>4;
 				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
@@ -2322,9 +2322,9 @@ void readSticks(int readA, int readC){
 				break;
 			case 4: // Mode 5: Digital => Analog Value state
 			case 5: // Mode 6: Digital => Analog Value + Digital state
-				if((hardwareR && (_jumpConfig != 5 && _jumpConfig != 6))
-					 || (hardwareX && _jumpConfig == 5)
-					 || (hardwareY && _jumpConfig == 6)) {
+				if((hardwareR && (_jumpConfig != SWAP_XR && _jumpConfig != SWAP_YR))
+					 || (hardwareX && _jumpConfig == SWAP_XR)
+					 || (hardwareY && _jumpConfig == SWAP_YR)) {
 					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
 		}
 
