@@ -1514,23 +1514,23 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 		} else if(hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
 			showAstickSettings();
 		} else if(hardware.R && hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
-			adjustCstickSmoothing(true, true, true);
+			adjustCstickSmoothing(true, true, true, btn, hardware);
 		} else if(hardware.R && hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
-			adjustCstickSmoothing(true, true, false);
+			adjustCstickSmoothing(true, true, false, btn, hardware);
 		} else if(hardware.R && hardware.Y && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
-			adjustCstickSmoothing(true, false, true);
+			adjustCstickSmoothing(true, false, true, btn, hardware);
 		} else if(hardware.R && hardware.Y && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
-			adjustCstickSmoothing(true, false, false);
+			adjustCstickSmoothing(true, false, false, btn, hardware);
 		} else if(hardware.R && btn.A && btn.Du) { //Increase C-stick X Offset
-			adjustCstickOffset(true, true, true);
+			adjustCstickOffset(true, true, true, btn, hardware);
 		} else if(hardware.R && btn.A && btn.Dd) { //Decrease C-stick X Offset
-			adjustCstickOffset(true, true, false);
+			adjustCstickOffset(true, true, false, btn, hardware);
 		} else if(hardware.R && btn.B && btn.Du) { //Increase C-stick Y Offset
-			adjustCstickOffset(true, false, true);
+			adjustCstickOffset(true, false, true, btn, hardware);
 		} else if(hardware.R && btn.B && btn.Dd) { //Decrease C-stick Y Offset
-			adjustCstickOffset(true, false, false);
+			adjustCstickOffset(true, false, false, btn, hardware);
 		} else if(hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
-			showCstickSettings();
+			showCstickSettings(btn, hardware);
 		} else if(hardware.L && hardware.Z && btn.S) { //Toggle Analog L
 			nextTriggerState(_lConfig, true, btn, hardware);
 		} else if(hardware.R && hardware.Z && btn.S) { //Toggle Analog R
@@ -1998,7 +1998,7 @@ void showAstickSettings() {
 
 	clearButtons(2000, _btn, _hardware);
 }
-void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase) {
+void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("Adjusting C-Stick Smoothing");
 	if (_xAxis && _increase && _change) {
 		_gains.cXSmoothing = _gains.cXSmoothing + 0.1;
@@ -2037,12 +2037,12 @@ void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase) {
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains();
 
-	_btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
-	_btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
-void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
+void adjustCstickOffset(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("Adjusting C-stick Offset");
 	if(_xAxis && _increase && _change) {
 		_cXOffset++;
@@ -2078,21 +2078,21 @@ void adjustCstickOffset(bool _change, bool _xAxis, bool _increase) {
 		Serial.println(_cYOffset);
 	}
 
-	_btn.Cx = (uint8_t) (127.5 + _cXOffset);
-	_btn.Cy = (uint8_t) (127.5 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + _cXOffset);
+	btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
-void showCstickSettings() {
+void showCstickSettings(Buttons &btn, HardwareButtons &hardware) {
 	//Snapback/smoothing on A-stick
-	_btn.Ax = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
-	_btn.Ay = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
+	btn.Ax = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
+	btn.Ay = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
 	//Smoothing on C-stick
-	_btn.Cx = (uint8_t) (127.5 + _cXOffset);
-	_btn.Cy = (uint8_t) (127.5 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + _cXOffset);
+	btn.Cy = (uint8_t) (127.5 + _cYOffset);
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
 void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	if(_lTrigger && _increase && _change) {
