@@ -534,7 +534,7 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, true, _notchAngleDefaults);
 			}
-			readSticks(true,false, _btn);
+			readSticks(true,false, _btn, _hardware);
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -550,12 +550,12 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, false, _notchAngleDefaults);
 			}
-			readSticks(false,true, _btn);
+			readSticks(false,true, _btn, _hardware);
 		}
 	}
 	else if(_running){
 		//if not calibrating read the sticks normally
-		readSticks(true,true, _btn);
+		readSticks(true,true, _btn, _hardware);
 	}
 }
 
@@ -2217,80 +2217,80 @@ void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	btn.Ra = startUpRa;
 
 }
-void readSticks(int readA, int readC, Buttons &btn){
+void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware){
 #ifdef USEADCSCALE
-    _ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
-    // otherwise _ADCScale is 1
+	// otherwise _ADCScale is 1
 
 	//read the L and R sliders
-		switch(_lConfig) {
-			case 0: //Default Trigger state
-				btn.La = adc->adc0->analogRead(_pinLa)>>4;
-				break;
-			case 1: //Digital Only Trigger state
+	switch(_lConfig) {
+		case 0: //Default Trigger state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			break;
+		case 1: //Digital Only Trigger state
+			btn.La = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			break;
+		case 3: //Trigger Plug Emulation state
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+			if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
+				btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+			}
+			break;
+		case 4: //Digital => Analog Value state
+			if(hardware.L) {
+				btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+			} else {
 				btn.La = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				btn.La = adc->adc0->analogRead(_pinLa)>>4;
-				break;
-			case 3: //Trigger Plug Emulation state
-				btn.La = adc->adc0->analogRead(_pinLa)>>4;
-				if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
-					btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(_hardware.L) {
-					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
-				} else {
-					btn.La = (uint8_t) 0;
-				}
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(_hardware.L) {
-					btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
-				} else {
-					btn.La = (uint8_t) 0;
-				}
-				break;
-			default:
-				btn.La = adc->adc0->analogRead(_pinLa)>>4;
-		}
+			}
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(hardware.L) {
+				btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+			} else {
+				btn.La = (uint8_t) 0;
+			}
+			break;
+		default:
+			btn.La = adc->adc0->analogRead(_pinLa)>>4;
+	}
 
-		switch(_rConfig) {
-			case 0: //Default Trigger state
-				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-				break;
-			case 1: //Digital Only Trigger state
+	switch(_rConfig) {
+		case 0: //Default Trigger state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			break;
+		case 1: //Digital Only Trigger state
+			btn.Ra = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			break;
+		case 3: //Trigger Plug Emulation state
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+			if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
+				btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+			}
+			break;
+		case 4: //Digital => Analog Value state
+			if(hardware.R) {
+				btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+			} else {
 				btn.Ra = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-				break;
-			case 3: //Trigger Plug Emulation state
-				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-				if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
-					btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(_hardware.R) {
-					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
-				} else {
-					btn.Ra = (uint8_t) 0;
-				}
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(_hardware.R) {
-					btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
-				} else {
-					btn.Ra = (uint8_t) 0;
-				}
-				break;
-			default:
-				btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-		}
+			}
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(hardware.R) {
+				btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+			} else {
+				btn.Ra = (uint8_t) 0;
+			}
+			break;
+		default:
+			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+	}
 
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
