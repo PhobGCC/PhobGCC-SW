@@ -1532,17 +1532,17 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 		} else if(hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
 			showCstickSettings();
 		} else if(hardware.L && hardware.Z && btn.S) { //Toggle Analog L
-			nextTriggerState(_lConfig, true);
+			nextTriggerState(_lConfig, true, btn, hardware);
 		} else if(hardware.R && hardware.Z && btn.S) { //Toggle Analog R
-			nextTriggerState(_rConfig, false);
+			nextTriggerState(_rConfig, false, btn, hardware);
 		} else if(hardware.L && hardware.Z && btn.Du) { //Increase L-Trigger Offset
-			adjustTriggerOffset(true, true, true);
+			adjustTriggerOffset(true, true, true, btn, hardware);
 		} else if(hardware.L && hardware.Z && btn.Dd) { //Decrease L-trigger Offset
-			adjustTriggerOffset(true, true, false);
+			adjustTriggerOffset(true, true, false, btn, hardware);
 		} else if(hardware.R && hardware.Z && btn.Du) { //Increase R-trigger Offset
-			adjustTriggerOffset(true, false, true);
+			adjustTriggerOffset(true, false, true, btn, hardware);
 		} else if(hardware.R && hardware.Z && btn.Dd) { //Decrease R-trigger Offset
-			adjustTriggerOffset(true, false, false);
+			adjustTriggerOffset(true, false, false, btn, hardware);
 		} else if(hardware.X && hardware.Z && btn.S) { //Swap X and Z
 			readJumpConfig(SWAP_XZ);
 			freezeSticks(2000, btn, hardware);
@@ -1841,6 +1841,8 @@ void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 	btn.B = (uint8_t) 0;
 	btn.X = (uint8_t) 0;
 	btn.Y = (uint8_t) 0;
+	btn.L = (uint8_t) 0;
+	btn.R = (uint8_t) 0;
 	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
@@ -2092,7 +2094,7 @@ void showCstickSettings() {
 
 	clearButtons(2000, _btn, _hardware);
 }
-void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
+void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	if(_lTrigger && _increase && _change) {
 		_LTriggerOffset++;
 		if(_LTriggerOffset > _triggerMax) {
@@ -2119,19 +2121,19 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase) {
 	EEPROM.put(_eepromROffset, _RTriggerOffset);
 
 	if(_LTriggerOffset > 99) {
-		_btn.Ax = (uint8_t) (127.5 + 100);
-		_btn.Cx = (uint8_t) (127.5 + _LTriggerOffset-100);
+		btn.Ax = (uint8_t) (127.5 + 100);
+		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset-100);
 	} else {
-		_btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
 	}
 	if(_RTriggerOffset > 99) {
-		_btn.Ay = (uint8_t) (127.5 + 100);
-		_btn.Cy = (uint8_t) (127.5 + _RTriggerOffset-100);
+		btn.Ay = (uint8_t) (127.5 + 100);
+		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset-100);
 	} else {
-		_btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
 	}
 
-	clearButtons(250, _btn, _hardware);
+	clearButtons(250, btn, hardware);
 }
 void readJumpConfig(JumpConfig jumpConfig){
 	Serial.print("setting jump to: ");
@@ -2172,7 +2174,7 @@ void setJump(int jumpConfig){
 				_pinYSwappable = _pinY;
 	}
 }
-void nextTriggerState(int _currentConfig, bool _lTrigger) {
+void nextTriggerState(int _currentConfig, bool _lTrigger, Buttons &btn, HardwareButtons &hardware) {
 	if(_lTrigger) {
 		if(_currentConfig >= _triggerConfigMax) {
 			_lConfig = 0;
@@ -2190,12 +2192,12 @@ void nextTriggerState(int _currentConfig, bool _lTrigger) {
 	EEPROM.put(_eepromRToggle, _rConfig);
 
 	//We want to one-index the modes for the users, so we add 1 here
-	_btn.Ay = (uint8_t) (127.5);
-	_btn.Ax = (uint8_t) (127.5 + _lConfig + 1);
-	_btn.Cy = (uint8_t) (127.5);
-	_btn.Cx = (uint8_t) (127.5 + _rConfig + 1);
+	btn.Ay = (uint8_t) (127.5);
+	btn.Ax = (uint8_t) (127.5 + _lConfig + 1);
+	btn.Cy = (uint8_t) (127.5);
+	btn.Cx = (uint8_t) (127.5 + _rConfig + 1);
 
-	clearButtons(2000, _btn, _hardware);
+	clearButtons(2000, btn, hardware);
 }
 void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
