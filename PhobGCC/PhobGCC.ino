@@ -33,44 +33,44 @@ using namespace Eigen;
 TeensyTimerTool::OneShotTimer timer1;
 
 union Buttons{
-  uint8_t arr[10];
-  struct {
+	uint8_t arr[10];
+	struct {
 
-        // byte 0
-    uint8_t A : 1;
-    uint8_t B : 1;
-    uint8_t X : 1;
-    uint8_t Y : 1;
-    uint8_t S : 1;
-    uint8_t orig : 1;
-    uint8_t errL : 1;
-    uint8_t errS : 1;
+				// byte 0
+		uint8_t A : 1;
+		uint8_t B : 1;
+		uint8_t X : 1;
+		uint8_t Y : 1;
+		uint8_t S : 1;
+		uint8_t orig : 1;
+		uint8_t errL : 1;
+		uint8_t errS : 1;
 
-    // byte 1
-    uint8_t Dl : 1;
-    uint8_t Dr : 1;
-    uint8_t Dd : 1;
-    uint8_t Du : 1;
-    uint8_t Z : 1;
-    uint8_t R : 1;
-    uint8_t L : 1;
-    uint8_t high : 1;
+		// byte 1
+		uint8_t Dl : 1;
+		uint8_t Dr : 1;
+		uint8_t Dd : 1;
+		uint8_t Du : 1;
+		uint8_t Z : 1;
+		uint8_t R : 1;
+		uint8_t L : 1;
+		uint8_t high : 1;
 
-    //byte 2-7
-    uint8_t Ax : 8;
-    uint8_t Ay : 8;
-    uint8_t Cx : 8;
-    uint8_t Cy : 8;
-    uint8_t La : 8;
-    uint8_t Ra : 8;
+		//byte 2-7
+		uint8_t Ax : 8;
+		uint8_t Ay : 8;
+		uint8_t Cx : 8;
+		uint8_t Cy : 8;
+		uint8_t La : 8;
+		uint8_t Ra : 8;
 
-    // magic byte 8 & 9 (only used in origin cmd)
-    // have something to do with rumble motor status???
-    // ignore these, they are magic numbers needed
-    // to make a cmd response work
-    uint8_t magic1 : 8;
-    uint8_t magic2 : 8;
-  };
+		// magic byte 8 & 9 (only used in origin cmd)
+		// have something to do with rumble motor status???
+		// ignore these, they are magic numbers needed
+		// to make a cmd response work
+		uint8_t magic1 : 8;
+		uint8_t magic2 : 8;
+	};
 }btn;
 
 uint8_t hardwareL;
@@ -88,10 +88,10 @@ enum JumpConfig {
 	DEFAULT,
 	SWAP_XZ,
 	SWAP_YZ,
-  SWAP_XL,
-  SWAP_YL,
-  SWAP_XR,
-  SWAP_YR
+	SWAP_XL,
+	SWAP_YL,
+	SWAP_XR,
+	SWAP_YR
 };
 
 
@@ -123,7 +123,7 @@ const int _triggerMax = 227;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 5;
 int calcRumblePower(const int rumble){
-  return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+	return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
 }
 int _rumblePower = calcRumblePower(_rumble);
 const int _rumbleMin = 0;
@@ -142,7 +142,7 @@ const float _snapbackMin = 0;
 const float _snapbackMax = 10;
 const float _snapbackDefault = 4;//0 disables the filter completely, 4 is the default
 float velDampFromSnapback(const int snapback){
-  return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
+	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 }
 
 // Values used for dealing with X/Y Smoothing in the CarVac Filter, for ledge-dashing
@@ -153,53 +153,53 @@ float _smoothingMax = 0.9;
 
 //New snapback Kalman filter parameters.
 struct FilterGains {
-  //What's the max stick distance from the center
-  float maxStick;
-  //filtered velocity terms
-  //how fast the filtered velocity falls off in the absence of stick movement.
-  //Probably don't touch this.
-  float xVelDecay;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
-  float yVelDecay;
-  //how much the current position disagreement impacts the filtered velocity.
-  //Probably don't touch this.
-  float xVelPosFactor;//0.01 default for 1.2ms timesteps, larger for bigger timesteps
-  float yVelPosFactor;
-  //how much to ignore filtered velocity when computing the new stick position.
-  //DO CHANGE THIS
-  //Higher gives shorter rise times and slower fall times (more pode, less snapback)
-  float xVelDamp;//0.125 default for 1.2ms timesteps, smaller for bigger timesteps
-  float yVelDamp;
-  //speed and accel thresholds below which we try to follow the stick better
-  //These may need tweaking according to how noisy the signal is
-  //If it's noisier, we may need to add additional filtering
-  //If the timesteps are *really small* then it may need to be increased to get
-  //  above the noise floor. Or some combination of filtering and playing with
-  //  the thresholds.
-  float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
-  float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
-  //This just applies a low-pass filter.
-  //The purpose is to provide delay for single-axis ledgedashes.
-  //Must be between 0 and 1. Larger = more smoothing and delay.
-  float xSmoothing;
-  float ySmoothing;
-  //Same thing but for C-stick
-  float cXSmoothing;
-  float cYSmoothing;
+	//What's the max stick distance from the center
+	float maxStick;
+	//filtered velocity terms
+	//how fast the filtered velocity falls off in the absence of stick movement.
+	//Probably don't touch this.
+	float xVelDecay;//0.1 default for 1.2ms timesteps, larger for bigger timesteps
+	float yVelDecay;
+	//how much the current position disagreement impacts the filtered velocity.
+	//Probably don't touch this.
+	float xVelPosFactor;//0.01 default for 1.2ms timesteps, larger for bigger timesteps
+	float yVelPosFactor;
+	//how much to ignore filtered velocity when computing the new stick position.
+	//DO CHANGE THIS
+	//Higher gives shorter rise times and slower fall times (more pode, less snapback)
+	float xVelDamp;//0.125 default for 1.2ms timesteps, smaller for bigger timesteps
+	float yVelDamp;
+	//speed and accel thresholds below which we try to follow the stick better
+	//These may need tweaking according to how noisy the signal is
+	//If it's noisier, we may need to add additional filtering
+	//If the timesteps are *really small* then it may need to be increased to get
+	//  above the noise floor. Or some combination of filtering and playing with
+	//  the thresholds.
+	float velThresh;//1 default for 1.2ms timesteps, larger for bigger timesteps
+	float accelThresh;//5 default for 1.2ms timesteps, larger for bigger timesteps
+	//This just applies a low-pass filter.
+	//The purpose is to provide delay for single-axis ledgedashes.
+	//Must be between 0 and 1. Larger = more smoothing and delay.
+	float xSmoothing;
+	float ySmoothing;
+	//Same thing but for C-stick
+	float cXSmoothing;
+	float cYSmoothing;
 };
 FilterGains _gains {//these values are actually timestep-compensated for in runKalman
-    .maxStick = 100,
-    .xVelDecay = 0.1,
-    .yVelDecay = 0.1,
-    .xVelPosFactor = 0.01,
-    .yVelPosFactor = 0.01,
-    .xVelDamp = 0.125,
-    .yVelDamp = 0.125,
-    .velThresh = 1.00,
-    .accelThresh = 3.00,
-    .xSmoothing = 0.0,
-    .ySmoothing = 0.0,
-    .cXSmoothing = 0.0,
-    .cYSmoothing = 0.0
+		.maxStick = 100,
+		.xVelDecay = 0.1,
+		.yVelDecay = 0.1,
+		.xVelPosFactor = 0.01,
+		.yVelPosFactor = 0.01,
+		.xVelDamp = 0.125,
+		.yVelDamp = 0.125,
+		.velThresh = 1.00,
+		.accelThresh = 3.00,
+		.xSmoothing = 0.0,
+		.ySmoothing = 0.0,
+		.cXSmoothing = 0.0,
+		.cYSmoothing = 0.0
 };
 FilterGains _g;//this gets filled by recomputeGains();
 
@@ -345,31 +345,31 @@ const int _slowC4 = _slowDivider & 0x1F;
 volatile int _writeQueue = 0;
 
 const char _probeResponse[_probeLength] = {
-    0x08,0x08,0x0F,0xE8,
-    0x08,0x08,0x08,0x08,
-    0x08,0x08,0x08,0xEF};
+		0x08,0x08,0x0F,0xE8,
+		0x08,0x08,0x08,0x08,
+		0x08,0x08,0x08,0xEF};
 volatile char _originResponse[_originLength] = {
-    0x08,0x08,0x08,0x08,
-    0x0F,0x08,0x08,0x08,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0x08,0xEF,0xEF,0x08,
-    0x08,0xEF,0xEF,0x08,
-  0x08,0x08,0x08,0x08,
-    0x08,0x08,0x08,0x08};
+		0x08,0x08,0x08,0x08,
+		0x0F,0x08,0x08,0x08,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0x08,0xEF,0xEF,0x08,
+		0x08,0xEF,0xEF,0x08,
+	0x08,0x08,0x08,0x08,
+		0x08,0x08,0x08,0x08};
 volatile char _commResponse[_originLength] = {
-    0x08,0x08,0x08,0x08,
-    0x0F,0x08,0x08,0x08,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0xE8,0xEF,0xEF,0xEF,
-    0x08,0xEF,0xEF,0x08,
-    0x08,0xEF,0xEF,0x08,
-  0x08,0x08,0x08,0x08,
-    0x08,0x08,0x08,0x08};
+		0x08,0x08,0x08,0x08,
+		0x0F,0x08,0x08,0x08,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0xE8,0xEF,0xEF,0xEF,
+		0x08,0xEF,0xEF,0x08,
+		0x08,0xEF,0xEF,0x08,
+	0x08,0x08,0x08,0x08,
+		0x08,0x08,0x08,0x08};
 
 
 volatile char _bitCount = 0;
@@ -399,173 +399,173 @@ int _errorCount = 0;
 int _reportCount = 0;
 
 const char _probeResponse[_probeLength] = {
-    0,0,0,0, 1,0,0,1,
-    0,0,0,0, 0,0,0,0,
-    0,0,0,0, 0,0,1,1};
+		0,0,0,0, 1,0,0,1,
+		0,0,0,0, 0,0,0,0,
+		0,0,0,0, 0,0,1,1};
 volatile char _originResponse[_originLength] = {
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0};
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0};
 volatile char _commResponse[_originLength] = {
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0};
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,1,1,1,1,1,1,1,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0};
 #endif // TEENSY4_0
 
 void setup() {
-    serialSetup();
-  Serial.print("Software version 0.");
-  Serial.println(SW_VERSION);
+		serialSetup();
+	Serial.print("Software version 0.");
+	Serial.println(SW_VERSION);
 #ifdef BUILD_DEV
-  Serial.println("This is not a stable version");
+	Serial.println("This is not a stable version");
 #endif
 
 #ifdef TEENSY4_0
-  //Force-underclock Teensy 4 to 150 MHz to lower power draw.
-  //set_arm_clock(150'000'000);
-  //for some reason, 150 MHz doesn't work with the new comms code. 300 seems to be enough.
-  set_arm_clock(300'000'000);
+	//Force-underclock Teensy 4 to 150 MHz to lower power draw.
+	//set_arm_clock(150'000'000);
+	//for some reason, 150 MHz doesn't work with the new comms code. 300 seems to be enough.
+	set_arm_clock(300'000'000);
 #endif //TEENSY4_0
 
-  const int numberOfNaN = readEEPROM();
-  Serial.print("Number of NaN in EEPROM: ");
-  Serial.println(numberOfNaN);
-  if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-    resetDefaults(true);//do reset sticks
-    readEEPROM();
-  }
+	const int numberOfNaN = readEEPROM();
+	Serial.print("Number of NaN in EEPROM: ");
+	Serial.println(numberOfNaN);
+	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
+		resetDefaults(true);//do reset sticks
+		readEEPROM();
+	}
 
-  //set some of the unused values in the message response
-  btn.errS = 0;
-  btn.errL = 0;
-  btn.orig = 0;
-  btn.high = 1;
+	//set some of the unused values in the message response
+	btn.errS = 0;
+	btn.errL = 0;
+	btn.orig = 0;
+	btn.high = 1;
 
-  _currentCalStep = _notCalibrating;
+	_currentCalStep = _notCalibrating;
 
-    for (int i = 0; i < MEDIANLEN; i++){
-        _xPosList[i] = 0;
-        _yPosList[i] = 0;
-    }
-    _xMedianIndex = 0;
-    _yMedianIndex = 0;
+		for (int i = 0; i < MEDIANLEN; i++){
+				_xPosList[i] = 0;
+				_yPosList[i] = 0;
+		}
+		_xMedianIndex = 0;
+		_yMedianIndex = 0;
 
-    _xPos = 0;
-    _yPos = 0;
-    _xPosFilt = 0;
-    _yPosFilt = 0;
-    _xVel = 0;
-    _yVel = 0;
-    _xVelFilt = 0;
-    _yVelFilt = 0;
-    _cXPos = 0;
-    _cYPos = 0;
+		_xPos = 0;
+		_yPos = 0;
+		_xPosFilt = 0;
+		_yPosFilt = 0;
+		_xVel = 0;
+		_yVel = 0;
+		_xVelFilt = 0;
+		_yVelFilt = 0;
+		_cXPos = 0;
+		_cYPos = 0;
 
-  _lastMicros = micros();
+	_lastMicros = micros();
 
-    setPinModes();
+		setPinModes();
 
-    ADCSetup(adc, _ADCScale, _ADCScaleFactor);
+		ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
-  //measure the trigger values
-  initializeButtons(btn,trigL,trigR);
-  //set the origin response before the sticks have been touched
-  //it will never be changed again after this
-  setCommResponse(_originResponse, btn);
+	//measure the trigger values
+	initializeButtons(btn,trigL,trigR);
+	//set the origin response before the sticks have been touched
+	//it will never be changed again after this
+	setCommResponse(_originResponse, btn);
 
 //set upt communication interrupts, serial, and timers
 #ifdef TEENSY4_0
-    Serial2.addMemoryForRead(_serialBuffer,128);
-  attachInterrupt(_pinInt, commInt, RISING);
+		Serial2.addMemoryForRead(_serialBuffer,128);
+	attachInterrupt(_pinInt, commInt, RISING);
 #ifdef HALFDUPLEX
-  Serial2.addMemoryForWrite(_writeBuffer, 128);
-  Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
-  //Serial2.setTX(8,true);
-  timer1.begin(resetSerial);
+	Serial2.addMemoryForWrite(_writeBuffer, 128);
+	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
+	//Serial2.setTX(8,true);
+	timer1.begin(resetSerial);
 #endif // HALFDUPLEX
 #endif // TEENSY4_0
 #ifndef HALFDUPLEX
-  Serial2.begin(_slowBaud);
+	Serial2.begin(_slowBaud);
 #endif // HALFDUPLEX
 
 #ifdef TEENSY3_2
 #ifdef HALFDUPLEX
-  Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
+	Serial2.begin(_slowBaud,SERIAL_HALF_DUPLEX);
 #endif // HALFDUPLEX
-  timer1.begin(communicate);
-  //timer2.begin(checkCmd);
-  //timer3.begin(writePole);
-  digitalWriteFast(12,HIGH);
-  //ARM_DEMCR |= ARM_DEMCR_TRCENA;
-  //ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
-  attachInterrupt(_pinInt, bitCounter, FALLING);
-  NVIC_SET_PRIORITY(IRQ_PORTC, 0);
+	timer1.begin(communicate);
+	//timer2.begin(checkCmd);
+	//timer3.begin(writePole);
+	digitalWriteFast(12,HIGH);
+	//ARM_DEMCR |= ARM_DEMCR_TRCENA;
+	//ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+	attachInterrupt(_pinInt, bitCounter, FALLING);
+	NVIC_SET_PRIORITY(IRQ_PORTC, 0);
 #endif // TEENSY3_2
 }
 
 void loop() {
-  //check if we should be reporting values yet
-  if((btn.B || _autoInit) && !_running){
-    Serial.println("Starting to report values");
-    _running=true;
-  }
+	//check if we should be reporting values yet
+	if((btn.B || _autoInit) && !_running){
+		Serial.println("Starting to report values");
+		_running=true;
+	}
 
-  //read the controllers buttons
-  readButtons();
+	//read the controllers buttons
+	readButtons();
 
-  //check to see if we are calibrating
-  if(_currentCalStep >= 0){
-    if(_calAStick){
-      if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-        adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
-        if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
-          //clean full cal points again, feeding updated angles in
-          cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
-          //linearize again
-          linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
-          //notchCalibrate again to update the affine transform
-          notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
-        }
-      }else{//just show desired stick position
-        displayNotch(_currentCalStep, true, _notchAngleDefaults);
-      }
-      readSticks(true,false);
-    }
-    else{
-      if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-        adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
-        if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
-          //clean full cal points again, feeding updated angles in
-          cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
-          //linearize again
-          linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
-          //notchCalibrate again to update the affine transform
-          notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
-        }
-      }else{//just show desired stick position
-        displayNotch(_currentCalStep, false, _notchAngleDefaults);
-      }
-      readSticks(false,true);
-    }
-  }
-  else if(_running){
-    //if not calibrating read the sticks normally
-    readSticks(true,true);
-  }
+	//check to see if we are calibrating
+	if(_currentCalStep >= 0){
+		if(_calAStick){
+			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus);
+				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+					//clean full cal points again, feeding updated angles in
+					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+					//linearize again
+					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
+					//notchCalibrate again to update the affine transform
+					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
+				}
+			}else{//just show desired stick position
+				displayNotch(_currentCalStep, true, _notchAngleDefaults);
+			}
+			readSticks(true,false);
+		}
+		else{
+			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+				adjustNotch(_currentCalStep, _dT, hardwareY, hardwareX, btn.B, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus);
+				if(hardwareY || hardwareX || (btn.B)){//only run this if the notch was adjusted
+					//clean full cal points again, feeding updated angles in
+					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+					//linearize again
+					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
+					//notchCalibrate again to update the affine transform
+					notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
+				}
+			}else{//just show desired stick position
+				displayNotch(_currentCalStep, false, _notchAngleDefaults);
+			}
+			readSticks(false,true);
+		}
+	}
+	else if(_running){
+		//if not calibrating read the sticks normally
+		readSticks(true,true);
+	}
 }
 
 #ifdef TEENSY4_0
@@ -573,119 +573,119 @@ void loop() {
 //commInt() will be called on every rising edge of a pulse that we receive
 //we will check if we have the expected amount of serial data yet, if we do we will do something with it, if we don't we will do nothing and wait for the next rising edge to check again
 void commInt() {
-  //check to see if we have the expected amount of data yet
-  if(Serial2.available() >= _bitQueue){
-    //check to see if we have been writing data, if have then we need to clear it and set the serial port back to low speed to be ready to receive the next command
-    if(_writing){
-      //Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
-      digitalWriteFast(_pinLED,LOW);
-      //wait for the stop bit to be read
+	//check to see if we have the expected amount of data yet
+	if(Serial2.available() >= _bitQueue){
+		//check to see if we have been writing data, if have then we need to clear it and set the serial port back to low speed to be ready to receive the next command
+		if(_writing){
+			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
+			digitalWriteFast(_pinLED,LOW);
+			//wait for the stop bit to be read
 
-      while(Serial2.available() <= _bitQueue){}
-      //check to see if we just reset reportCount to 0, if we have then we will report the data we just sent over to the PC over serial
-      if(_reportCount == 0){
-        char myBuffer[128];
-        for(int i = 0; i < _bitQueue+1; i++){
-          myBuffer[i] = (Serial2.read() > 0b11110000)+48;
-        }
-        //Serial.print("Sent: ");
-        //Serial.write(myBuffer,_bitQueue+1);
-        //Serial.println();
-      }
+			while(Serial2.available() <= _bitQueue){}
+			//check to see if we just reset reportCount to 0, if we have then we will report the data we just sent over to the PC over serial
+			if(_reportCount == 0){
+				char myBuffer[128];
+				for(int i = 0; i < _bitQueue+1; i++){
+					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
+				}
+				//Serial.print("Sent: ");
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
+			}
 
-      //flush and clear the any remaining data just to be sure
-      Serial2.flush();
-      Serial2.clear();
+			//flush and clear the any remaining data just to be sure
+			Serial2.flush();
+			Serial2.clear();
 
-      //turn the writing flag off, set the serial port to low speed, and set our expected bit queue to 8 to be ready to receive our next command
-      _writing = false;
-      Serial2.begin(_slowBaud);
-      _bitQueue = 8;
-    }
-    //if we are not writing, check to see if we were waiting for a poll command to finish
-    //if we are, we need to clear the data and send our poll response
-    else if(_waiting){
-      digitalWriteFast(_pinLED,LOW);
-      //wait for the stop bit to be received
-      while(Serial2.available() <= _bitQueue){}
+			//turn the writing flag off, set the serial port to low speed, and set our expected bit queue to 8 to be ready to receive our next command
+			_writing = false;
+			Serial2.begin(_slowBaud);
+			_bitQueue = 8;
+		}
+		//if we are not writing, check to see if we were waiting for a poll command to finish
+		//if we are, we need to clear the data and send our poll response
+		else if(_waiting){
+			digitalWriteFast(_pinLED,LOW);
+			//wait for the stop bit to be received
+			while(Serial2.available() <= _bitQueue){}
 #ifdef ENABLE_LED
-      digitalWriteFast(_pinLED,HIGH);
+			digitalWriteFast(_pinLED,HIGH);
 #endif //ENABLE_LED
-      //check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
-      if(_reportCount == 0){
-        Serial.print("Poll: ");
-        char myBuffer[128];
-        for(int i = 0; i < _bitQueue+1; i++){
-          myBuffer[i] = (Serial2.read() > 0b11110000)+48;
-        }
-        //Serial.write(myBuffer,_bitQueue+1);
-        //Serial.println();
-      }
+			//check to see if we just reset reportCount to 0, if we have then we will report the remainder of the poll response to the PC over serial
+			if(_reportCount == 0){
+				Serial.print("Poll: ");
+				char myBuffer[128];
+				for(int i = 0; i < _bitQueue+1; i++){
+					myBuffer[i] = (Serial2.read() > 0b11110000)+48;
+				}
+				//Serial.write(myBuffer,_bitQueue+1);
+				//Serial.println();
+			}
 
-      //clear any remaining data
-      Serial2.clear();
+			//clear any remaining data
+			Serial2.clear();
 
-      //clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
-      Serial2.clear();
-      _waiting = false;
-      setFastBaud();
+			//clear any remaining data, set the waiting flag to false, and set the serial port to high speed to be ready to send our poll response
+			Serial2.clear();
+			_waiting = false;
+			setFastBaud();
 
-      //set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
-      _writing = true;
-      _bitQueue = _pollLength/2;
+			//set the writing flag to true, set our expected bit queue to the poll response length -1 (to account for the stop bit)
+			_writing = true;
+			_bitQueue = _pollLength/2;
 
-      //write the poll response
-      for(int i = 0; i<_pollLength; i += 2){
-        if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
-          //short low period = 1
-          //long low period = 0
-          Serial2.write(0xEF);
-        } else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
-          Serial2.write(0xE8);
-        } else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
-          Serial2.write(0x0F);
-        } else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
-          Serial2.write(0x08);
-        }
-      }
-      //write stop bit to indicate end of response
-      Serial2.write(0xFF);
-    }
-    else{
-      //We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
-      //Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
-      digitalWriteFast(_pinLED,LOW);
+			//write the poll response
+			for(int i = 0; i<_pollLength; i += 2){
+				if(_commResponse[i] != 0 && _commResponse[i+1] != 0){
+					//short low period = 1
+					//long low period = 0
+					Serial2.write(0xEF);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] != 0){
+					Serial2.write(0xE8);
+				} else if (_commResponse[i] != 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x0F);
+				} else if (_commResponse[i] == 0 && _commResponse[i+1] == 0){
+					Serial2.write(0x08);
+				}
+			}
+			//write stop bit to indicate end of response
+			Serial2.write(0xFF);
+		}
+		else{
+			//We are not writing a response or waiting for a poll response to finish, so we must have received the start of a new command
+			//Set pin 13 (LED) low for debugging, if it flickers it means the teensy got stuck here somewhere
+			digitalWriteFast(_pinLED,LOW);
 
-      //increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
-      _reportCount++;
-      if(_reportCount > 64){
-        _reportCount = 0;
-      }
+			//increment the report count, will be used to only send a report every 64 commands to not overload the PC serial connection
+			_reportCount++;
+			if(_reportCount > 64){
+				_reportCount = 0;
+			}
 
-      //clear the command byte of previous data
-      _cmdByte = 0;
+			//clear the command byte of previous data
+			_cmdByte = 0;
 
-      //write the new data from the serial buffer into the command byte
-      for(int i = 0; i<8; i++){
-        _cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
+			//write the new data from the serial buffer into the command byte
+			for(int i = 0; i<8; i++){
+				_cmdByte = (_cmdByte<<1) | (Serial2.read() > 0b11110000);
 
-      }
+			}
 
-      //if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
-      //if(_reportCount==0){
-        //Serial.print("Received: ");
-        //Serial.println(_cmdByte,BIN);
-        //Serial.print("Error Count:");
-        //Serial.println(_errorCount);
-      //}
+			//if we just reset reportCount, report the command we received and the number of strange commands we've seen so far over serial
+			//if(_reportCount==0){
+				//Serial.print("Received: ");
+				//Serial.println(_cmdByte,BIN);
+				//Serial.print("Error Count:");
+				//Serial.println(_errorCount);
+			//}
 
-      //if the command byte is all 0s it is probe command, we will send a probe response
-      if(_cmdByte == 0b00000000){
-        //wait for the stop bit to be received and clear it
-        while(!Serial2.available()){}
-        Serial2.clear();
+			//if the command byte is all 0s it is probe command, we will send a probe response
+			if(_cmdByte == 0b00000000){
+				//wait for the stop bit to be received and clear it
+				while(!Serial2.available()){}
+				Serial2.clear();
 
-        //switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
+				//switch the hardware serial to high speed for sending the response, set the _writing flag to true, and set the expected bit queue length to the probe response length minus 1 (to account for the stop bit)
 				setFastBaud();
 				_writing = true;
 				_bitQueue = _probeLength/2;
