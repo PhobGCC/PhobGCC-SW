@@ -102,6 +102,11 @@ enum WhichAxis {
 	YAXIS
 };
 
+enum HardReset {
+	HARD,
+	SOFT
+};
+
 //defining control configuration
 struct ControlConfig{
 	int pinXSwappable;
@@ -127,6 +132,10 @@ struct ControlConfig{
 	const int rumbleMin;
 	const int rumbleMax;
 	const int rumbleDefault;
+	bool safeMode;
+	bool autoInit;
+	int lTrigInitial;
+	int rTrigInitial;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -151,7 +160,9 @@ ControlConfig _controls{
 	.rumble = 5,
 	.rumbleMin = 0,
 	.rumbleMax = 7,
-	.rumbleDefault = 5
+	.rumbleDefault = 5,
+	.safeMode = true,
+	.autoInit = false
 };
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
@@ -161,10 +172,6 @@ int calcRumblePower(const int rumble){
 	}
 }
 int _rumblePower = calcRumblePower(_controls.rumble);
-bool _safeMode = true;
-bool _autoInit = false;
-
-int _trigL,_trigR;
 
 ///// Values used for adjusting snapback in the CarVac Filter
 
@@ -477,7 +484,7 @@ void setup() {
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
 	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-		resetDefaults(true, _controls);//do reset sticks
+		resetDefaults(HARD, _controls);//do reset sticks
 		readEEPROM(_controls);
 	}
 
@@ -514,7 +521,7 @@ void setup() {
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
 	//measure the trigger values
-	initializeButtons(_btn,_trigL,_trigR);
+	initializeButtons(_btn,_controls.lTrigInitial,_controls.rTrigInitial);
 	//set the origin response before the sticks have been touched
 	//it will never be changed again after this
 	setCommResponse(_originResponse, _btn);
@@ -551,7 +558,7 @@ void setup() {
 
 void loop() {
 	//check if we should be reporting values yet
-	if((_btn.B || _autoInit) && !_running){
+	if((_btn.B || _controls.autoInit) && !_running){
 		Serial.println("Starting to report values");
 		_running=true;
 	}
@@ -1195,17 +1202,17 @@ int readEEPROM(ControlConfig &controls){
 	Serial.println(_rumblePower);
 
 	//Get the autoinit value
-	EEPROM.get(_eepromAutoInit, _autoInit);
-	if(_autoInit < 0) {
-		_autoInit = 0;
+	EEPROM.get(_eepromAutoInit, controls.autoInit);
+	if(controls.autoInit < 0) {
+		controls.autoInit = 0;
 		numberOfNaN++;
 	}
-	if(_autoInit > 1) {
-		_autoInit = 0;
+	if(controls.autoInit > 1) {
+		controls.autoInit = 0;
 		numberOfNaN++;
 	}
 	Serial.print("Auto init: ");
-	Serial.println(_autoInit);
+	Serial.println(controls.autoInit);
 
 	//get the calibration points collected during the last A stick calibration
 	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
@@ -1232,7 +1239,7 @@ int readEEPROM(ControlConfig &controls){
 	return numberOfNaN;
 }
 
-void resetDefaults(bool resetSticks, ControlConfig &controls){
+void resetDefaults(HardReset reset, ControlConfig &controls){
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULT;
@@ -1278,10 +1285,10 @@ void resetDefaults(bool resetSticks, ControlConfig &controls){
 	EEPROM.put(_eepromRumble, controls.rumble);
 
 	//always cancel auto init on reset, even if we don't reset the sticks
-	_autoInit = 0;
-	EEPROM.put(_eepromAutoInit, _autoInit);
+	controls.autoInit = 0;
+	EEPROM.put(_eepromAutoInit, controls.autoInit);
 
-	if(resetSticks){
+	if(reset == HARD){
 		for(int i = 0; i < _noOfNotches; i++){
 			_aNotchAngles[i] = _notchAngleDefaults[i];
 			_cNotchAngles[i] = _notchAngleDefaults[i];
@@ -1484,9 +1491,9 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 	*/
 
 	//check the dpad buttons to change the controller settings
-	if(!_safeMode && (_currentCalStep == -1)) {
+	if(!controls.safeMode && (_currentCalStep == -1)) {
 		if(btn.A && hardware.X && hardware.Y && btn.S) { //Safe Mode Toggle
-			_safeMode = true;
+			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
 		} else if (btn.A && hardware.Z && btn.Du) { //display version number
 			const int versionHundreds = floor(SW_VERSION/100.0);
@@ -1497,13 +1504,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			btn.Cy = (uint8_t) 127.5 + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
-			resetDefaults(false, controls);//don't reset sticks
+			resetDefaults(SOFT, controls);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
-			resetDefaults(true, controls);//do reset sticks
+			resetDefaults(HARD, controls);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
-			changeAutoInit(btn, hardware);
+			changeAutoInit(btn, hardware, controls);
 		} else if (hardware.X && hardware.Y && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
 			changeRumble(INCREASE, btn, hardware, controls);
@@ -1606,7 +1613,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			if (!_running) {//wake it up if not already running
 				_running = true;
 			}
-			_safeMode = false;
+			controls.safeMode = false;
 			freezeSticks(2000, btn, hardware);
 		}
 	}
@@ -1769,8 +1776,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				EEPROM.put(_eepromCPointsX, _tempCalPointsX);
 				EEPROM.put(_eepromCPointsY, _tempCalPointsY);
 				EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
-				_autoInit = 0;
-				EEPROM.put(_eepromAutoInit, _autoInit);
+				controls.autoInit = 0;
+				EEPROM.put(_eepromAutoInit, controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -1831,8 +1838,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				EEPROM.put(_eepromAPointsX, _tempCalPointsX);
 				EEPROM.put(_eepromAPointsY, _tempCalPointsY);
 				EEPROM.put(_eepromANotchAngles, _aNotchAngles);
-				_autoInit = 0;
-				EEPROM.put(_eepromAutoInit, _autoInit);
+				controls.autoInit = 0;
+				EEPROM.put(_eepromAutoInit, controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -1928,22 +1935,22 @@ void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, Control
 //Make it so you don't need to press B.
 //This is only good if the sticks are calibrated, so
 // the setting auto-resets whenever you hard reset or recalibrate.
-void changeAutoInit(Buttons &btn, HardwareButtons &hardware) {
-	if(_autoInit == 0) {
-		_autoInit = 1;
+void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+	if(controls.autoInit == 0) {
+		controls.autoInit = 1;
 	} else {
-		_autoInit = 0;
+		controls.autoInit = 0;
 	}
 
 	//move sticks up-right for on, down-left for off
-	btn.Ax = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	btn.Ay = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	btn.Cx = (uint8_t) (_autoInit*100 - 50 + 127.5);
-	btn.Cy = (uint8_t) (_autoInit*100 - 50 + 127.5);
+	btn.Ax = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
+	btn.Ay = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
+	btn.Cx = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
+	btn.Cy = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
 
 	clearButtons(2000, btn, hardware);
 
-	EEPROM.put(_eepromAutoInit, _autoInit);
+	EEPROM.put(_eepromAutoInit, controls.autoInit);
 }
 
 void adjustSnapback(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware){
@@ -2279,20 +2286,20 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 			break;
 		case 3: //Trigger Plug Emulation state
 			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + _trigL)) {
-				btn.La = (((uint8_t) (controls.lTriggerOffset)) + _trigL);
+			if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
+				btn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
 			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(hardware.L) {
-				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + _trigL, 255);
+				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
 			} else {
 				btn.La = (uint8_t) 0;
 			}
 			break;
 		case 5: //Digital => Analog Value + Digital state
 			if(hardware.L) {
-				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + _trigL, 255);
+				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
 			} else {
 				btn.La = (uint8_t) 0;
 			}
@@ -2313,20 +2320,20 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 			break;
 		case 3: //Trigger Plug Emulation state
 			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + _trigR)) {
-				btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + _trigR);
+			if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
+				btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
 			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + _trigR, 255);
+				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
 			} else {
 				btn.Ra = (uint8_t) 0;
 			}
 			break;
 		case 5: //Digital => Analog Value + Digital state
 			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + _trigR, 255);
+				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
 			} else {
 				btn.Ra = (uint8_t) 0;
 			}
