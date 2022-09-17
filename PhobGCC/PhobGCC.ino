@@ -87,6 +87,21 @@ enum JumpConfig {
 	SWAP_YZ
 };
 
+enum WhichTrigger {
+	LTRIGGER,
+	RTRIGGER
+};
+
+enum Increase {
+	INCREASE,
+	DECREASE
+};
+
+enum WhichAxis {
+	XAXIS,
+	YAXIS
+};
+
 //defining control configuration
 struct ControlConfig{
 	int pinXSwappable;
@@ -95,6 +110,15 @@ struct ControlConfig{
 	JumpConfig jumpConfig;
 	const int jumpConfigMin;
 	const int jumpConfigMax;
+	int lConfig;
+	int rConfig;
+	const int triggerConfigMin;
+	const int triggerConfigMax;
+	const int triggerDefault;
+	int lTriggerOffset;
+	int rTriggerOffset;
+	const int triggerMin;
+	const int triggerMax;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -102,24 +126,21 @@ ControlConfig _controls{
 	.pinZSwappable = _pinZ,
 	.jumpConfig = DEFAULT,
 	.jumpConfigMin = DEFAULT,
-	.jumpConfigMax = SWAP_YZ
+	.jumpConfigMax = SWAP_YZ,
+	.lConfig = 0,
+	.rConfig = 0,
+	.triggerConfigMin = 0,
+	.triggerConfigMax = 5,
+	.triggerDefault = 0,
+	.lTriggerOffset = 49,
+	.rTriggerOffset = 49,
+	.triggerMin = 49,
+	.triggerMax = 227
 };
-int _lConfig = 0;
-int _rConfig = 0;
-const int _triggerConfigMin = 0;
-const int _triggerConfigMax = 5;
-int _triggerDefault = 0;
-int _lTrigger = 0;
-int _rTrigger = 1;
-bool _changeTrigger = true;
 int _cXOffset = 0;
 int _cYOffset = 0;
 int _cMax = 127;
 int _cMin = -127;
-int _LTriggerOffset = 49;
-int _RTriggerOffset = 49;
-const int _triggerMin = 49;
-const int _triggerMax = 227;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 5;
 int calcRumblePower(const int rumble){
@@ -132,7 +153,7 @@ const int _rumbleDefault = 5;
 bool _safeMode = true;
 bool _autoInit = false;
 
-int trigL,trigR;
+int _trigL,_trigR;
 
 ///// Values used for adjusting snapback in the CarVac Filter
 
@@ -482,7 +503,7 @@ void setup() {
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
 	//measure the trigger values
-	initializeButtons(_btn,trigL,trigR);
+	initializeButtons(_btn,_trigL,_trigR);
 	//set the origin response before the sticks have been touched
 	//it will never be changed again after this
 	setCommResponse(_originResponse, _btn);
@@ -543,7 +564,7 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 			}
-			readSticks(true,false, _btn, _hardware);
+			readSticks(true,false, _btn, _hardware, _controls);
 		}
 		else{
 			if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -559,12 +580,12 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 			}
-			readSticks(false,true, _btn, _hardware);
+			readSticks(false,true, _btn, _hardware, _controls);
 		}
 	}
 	else if(_running){
 		//if not calibrating read the sticks normally
-		readSticks(true,true, _btn, _hardware);
+		readSticks(true,true, _btn, _hardware, _controls);
 	}
 }
 
@@ -984,24 +1005,24 @@ int readEEPROM(ControlConfig &controls){
 	setJump(controls);
 
 	//get the L setting
-	EEPROM.get(_eepromLToggle, _lConfig);
-	if(_lConfig < _triggerConfigMin) {
-		_lConfig = _triggerDefault;
+	EEPROM.get(_eepromLToggle, controls.lConfig);
+	if(controls.lConfig < controls.triggerConfigMin) {
+		controls.lConfig = controls.triggerDefault;
 		numberOfNaN++;
 	}
-	if(_lConfig > _triggerConfigMax) {
-		_lConfig = _triggerDefault;
+	if(controls.lConfig > controls.triggerConfigMax) {
+		controls.lConfig = controls.triggerDefault;
 		numberOfNaN++;
 	}
 
 	//get the R setting
-	EEPROM.get(_eepromRToggle, _rConfig);
-	if(_rConfig < _triggerConfigMin) {
-		_rConfig = _triggerDefault;
+	EEPROM.get(_eepromRToggle, controls.rConfig);
+	if(controls.rConfig < controls.triggerConfigMin) {
+		controls.rConfig = controls.triggerDefault;
 		numberOfNaN++;
 	}
-	if(_rConfig > _triggerConfigMax) {
-		_rConfig = _triggerDefault;
+	if(controls.rConfig > controls.triggerConfigMax) {
+		controls.rConfig = controls.triggerDefault;
 		numberOfNaN++;
 	}
 
@@ -1123,22 +1144,22 @@ int readEEPROM(ControlConfig &controls){
 	recomputeGains();
 
 	//get the L-trigger Offset value
-	EEPROM.get(_eepromLOffset, _LTriggerOffset);
-	if(_LTriggerOffset > _triggerMax) {
-		_LTriggerOffset = _triggerMax;
+	EEPROM.get(_eepromLOffset, controls.lTriggerOffset);
+	if(controls.lTriggerOffset > controls.triggerMax) {
+		controls.lTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
-	} else if(_LTriggerOffset < _triggerMin) {
-		_LTriggerOffset = _triggerMin;
+	} else if(controls.lTriggerOffset < controls.triggerMin) {
+		controls.lTriggerOffset = controls.triggerMin;
 		numberOfNaN++;
 	}
 
 	//get the R-trigger Offset value
-	EEPROM.get(_eepromROffset, _RTriggerOffset);
-	if(_RTriggerOffset > _triggerMax) {
-		_RTriggerOffset = _triggerMax;
+	EEPROM.get(_eepromROffset, controls.rTriggerOffset);
+	if(controls.rTriggerOffset > controls.triggerMax) {
+		controls.rTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
-	} else if(_RTriggerOffset < _triggerMin) {
-		_RTriggerOffset = _triggerMin;
+	} else if(controls.rTriggerOffset < controls.triggerMin) {
+		controls.rTriggerOffset = controls.triggerMin;
 		numberOfNaN++;
 	}
 
@@ -1207,10 +1228,10 @@ void resetDefaults(bool resetSticks, ControlConfig &controls){
 	setJump(controls);
 	EEPROM.put(_eepromJump,controls.jumpConfig);
 
-	_lConfig = _triggerDefault;
-	_rConfig = _triggerDefault;
-	EEPROM.put(_eepromLToggle, _lConfig);
-	EEPROM.put(_eepromRToggle, _rConfig);
+	controls.lConfig = controls.triggerDefault;
+	controls.rConfig = controls.triggerDefault;
+	EEPROM.put(_eepromLToggle, controls.lConfig);
+	EEPROM.put(_eepromRToggle, controls.rConfig);
 
 	_cXOffset = 0;
 	_cYOffset = 0;
@@ -1236,10 +1257,10 @@ void resetDefaults(bool resetSticks, ControlConfig &controls){
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains();
 
-	_LTriggerOffset = _triggerMin;
-	_RTriggerOffset = _triggerMin;
-	EEPROM.put(_eepromLOffset, _LTriggerOffset);
-	EEPROM.put(_eepromROffset, _RTriggerOffset);
+	controls.lTriggerOffset = controls.triggerMin;
+	controls.rTriggerOffset = controls.triggerMin;
+	EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
+	EEPROM.put(_eepromROffset, controls.rTriggerOffset);
 
 	_rumble = _rumbleDefault;
 	_rumblePower = calcRumblePower(_rumble);
@@ -1355,7 +1376,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		btn.A = (uint8_t) (1);
 		btn.S = (uint8_t) (1);
 	} else {
-		switch(_lConfig) {
+		switch(controls.lConfig) {
 			case 0: //Default Trigger state
 				btn.L = hardware.L;
 				break;
@@ -1378,7 +1399,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				btn.L = hardware.L;
 		}
 
-		switch(_rConfig) {
+		switch(controls.rConfig) {
 			case 0: //Default Trigger state
 				btn.R = hardware.R;
 				break;
@@ -1541,17 +1562,17 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		} else if(hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
 			showCstickSettings(btn, hardware);
 		} else if(hardware.L && hardware.Z && btn.S) { //Toggle Analog L
-			nextTriggerState(_lConfig, true, btn, hardware);
+			nextTriggerState(LTRIGGER, btn, hardware, controls);
 		} else if(hardware.R && hardware.Z && btn.S) { //Toggle Analog R
-			nextTriggerState(_rConfig, false, btn, hardware);
+			nextTriggerState(RTRIGGER, btn, hardware, controls);
 		} else if(hardware.L && hardware.Z && btn.Du) { //Increase L-Trigger Offset
-			adjustTriggerOffset(true, true, true, btn, hardware);
+			adjustTriggerOffset(LTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Z && btn.Dd) { //Decrease L-trigger Offset
-			adjustTriggerOffset(true, true, false, btn, hardware);
+			adjustTriggerOffset(LTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Z && btn.Du) { //Increase R-trigger Offset
-			adjustTriggerOffset(true, false, true, btn, hardware);
+			adjustTriggerOffset(RTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Z && btn.Dd) { //Decrease R-trigger Offset
-			adjustTriggerOffset(true, false, false, btn, hardware);
+			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.X && hardware.Z && btn.S) { //Swap X and Z
 			readJumpConfig(SWAP_XZ, controls);
 			freezeSticks(2000, btn, hardware);
@@ -2103,43 +2124,43 @@ void showCstickSettings(Buttons &btn, HardwareButtons &hardware) {
 
 	clearButtons(2000, btn, hardware);
 }
-void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase, Buttons &btn, HardwareButtons &hardware) {
-	if(_lTrigger && _increase && _change) {
-		_LTriggerOffset++;
-		if(_LTriggerOffset > _triggerMax) {
-			_LTriggerOffset = _triggerMax;
+void adjustTriggerOffset(WhichTrigger trigger, Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+	if(trigger == LTRIGGER && increase == INCREASE) {
+		controls.lTriggerOffset++;
+		if(controls.lTriggerOffset > controls.triggerMax) {
+			controls.lTriggerOffset = controls.triggerMax;
 		}
-	} else if(_lTrigger && !_increase && _change) {
-		_LTriggerOffset--;
-		if(_LTriggerOffset < _triggerMin) {
-			_LTriggerOffset = _triggerMin;
+	} else if(trigger == LTRIGGER && increase == DECREASE) {
+		controls.lTriggerOffset--;
+		if(controls.lTriggerOffset < controls.triggerMin) {
+			controls.lTriggerOffset = controls.triggerMin;
 		}
-	} else if(!_lTrigger && _increase && _change) {
-		_RTriggerOffset++;
-		if(_RTriggerOffset > _triggerMax) {
-			_RTriggerOffset = _triggerMax;
+	} else if(trigger == RTRIGGER && increase == INCREASE) {
+		controls.rTriggerOffset++;
+		if(controls.rTriggerOffset > controls.triggerMax) {
+			controls.rTriggerOffset = controls.triggerMax;
 		}
-	} else if(!_lTrigger && !_increase && _change) {
-		_RTriggerOffset--;
-		if(_RTriggerOffset < _triggerMin) {
-			_RTriggerOffset = _triggerMin;
+	} else if(trigger == RTRIGGER && increase == DECREASE) {
+		controls.rTriggerOffset--;
+		if(controls.rTriggerOffset < controls.triggerMin) {
+			controls.rTriggerOffset = controls.triggerMin;
 		}
 	}
 
-	EEPROM.put(_eepromLOffset, _LTriggerOffset);
-	EEPROM.put(_eepromROffset, _RTriggerOffset);
+	EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
+	EEPROM.put(_eepromROffset, controls.rTriggerOffset);
 
-	if(_LTriggerOffset > 99) {
+	if(controls.lTriggerOffset > 99) {
 		btn.Ax = (uint8_t) (127.5 + 100);
-		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset-100);
+		btn.Cx = (uint8_t) (127.5 + controls.lTriggerOffset-100);
 	} else {
-		btn.Cx = (uint8_t) (127.5 + _LTriggerOffset);
+		btn.Cx = (uint8_t) (127.5 + controls.lTriggerOffset);
 	}
-	if(_RTriggerOffset > 99) {
+	if(controls.rTriggerOffset > 99) {
 		btn.Ay = (uint8_t) (127.5 + 100);
-		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset-100);
+		btn.Cy = (uint8_t) (127.5 + controls.rTriggerOffset-100);
 	} else {
-		btn.Cy = (uint8_t) (127.5 + _RTriggerOffset);
+		btn.Cy = (uint8_t) (127.5 + controls.rTriggerOffset);
 	}
 
 	clearButtons(250, btn, hardware);
@@ -2183,28 +2204,28 @@ void setJump(ControlConfig &controls){
 				controls.pinYSwappable = _pinY;
 	}
 }
-void nextTriggerState(int _currentConfig, bool _lTrigger, Buttons &btn, HardwareButtons &hardware) {
-	if(_lTrigger) {
-		if(_currentConfig >= _triggerConfigMax) {
-			_lConfig = 0;
+void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+	if(trigger == LTRIGGER) {
+		if(controls.lConfig >= controls.triggerConfigMax) {
+			controls.lConfig = 0;
 		} else {
-			_lConfig = _currentConfig + 1;
+			controls.lConfig = controls.lConfig + 1;
 		}
 	} else {
-		if(_currentConfig >= _triggerConfigMax) {
-			_rConfig = 0;
+		if(controls.rConfig >= controls.triggerConfigMax) {
+			controls.rConfig = 0;
 		} else {
-			_rConfig = _currentConfig + 1;
+			controls.rConfig = controls.rConfig + 1;
 		}
 	}
-	EEPROM.put(_eepromLToggle, _lConfig);
-	EEPROM.put(_eepromRToggle, _rConfig);
+	EEPROM.put(_eepromLToggle, controls.lConfig);
+	EEPROM.put(_eepromRToggle, controls.rConfig);
 
 	//We want to one-index the modes for the users, so we add 1 here
 	btn.Ay = (uint8_t) (127.5);
-	btn.Ax = (uint8_t) (127.5 + _lConfig + 1);
+	btn.Ax = (uint8_t) (127.5 + controls.lConfig + 1);
 	btn.Cy = (uint8_t) (127.5);
-	btn.Cx = (uint8_t) (127.5 + _rConfig + 1);
+	btn.Cx = (uint8_t) (127.5 + controls.rConfig + 1);
 
 	clearButtons(2000, btn, hardware);
 }
@@ -2228,14 +2249,14 @@ void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	btn.Ra = startUpRa;
 
 }
-void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware){
+void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
 #ifdef USEADCSCALE
 	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
 	// otherwise _ADCScale is 1
 
 	//read the L and R sliders
-	switch(_lConfig) {
+	switch(controls.lConfig) {
 		case 0: //Default Trigger state
 			btn.La = adc->adc0->analogRead(_pinLa)>>4;
 			break;
@@ -2247,20 +2268,20 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware){
 			break;
 		case 3: //Trigger Plug Emulation state
 			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			if (btn.La > (((uint8_t) (_LTriggerOffset)) + trigL)) {
-				btn.La = (((uint8_t) (_LTriggerOffset)) + trigL);
+			if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + _trigL)) {
+				btn.La = (((uint8_t) (controls.lTriggerOffset)) + _trigL);
 			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(hardware.L) {
-				btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + _trigL, 255);
 			} else {
 				btn.La = (uint8_t) 0;
 			}
 			break;
 		case 5: //Digital => Analog Value + Digital state
 			if(hardware.L) {
-				btn.La = min(((uint8_t) (_LTriggerOffset)) + trigL, 255);
+				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + _trigL, 255);
 			} else {
 				btn.La = (uint8_t) 0;
 			}
@@ -2269,7 +2290,7 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware){
 			btn.La = adc->adc0->analogRead(_pinLa)>>4;
 	}
 
-	switch(_rConfig) {
+	switch(controls.rConfig) {
 		case 0: //Default Trigger state
 			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
 			break;
@@ -2281,20 +2302,20 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware){
 			break;
 		case 3: //Trigger Plug Emulation state
 			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			if (btn.Ra > (((uint8_t) (_RTriggerOffset)) + trigR)) {
-				btn.Ra = (((uint8_t) (_RTriggerOffset)) + trigR);
+			if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + _trigR)) {
+				btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + _trigR);
 			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + _trigR, 255);
 			} else {
 				btn.Ra = (uint8_t) 0;
 			}
 			break;
 		case 5: //Digital => Analog Value + Digital state
 			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (_RTriggerOffset)) + trigR, 255);
+				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + _trigR, 255);
 			} else {
 				btn.Ra = (uint8_t) 0;
 			}
