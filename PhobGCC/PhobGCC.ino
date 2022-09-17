@@ -123,6 +123,10 @@ struct ControlConfig{
 	int cYOffset;
 	const int cMax;
 	const int cMin;
+	int rumble;//0 is off, nonzero is on, higher is stronger
+	const int rumbleMin;
+	const int rumbleMax;
+	const int rumbleDefault;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -143,17 +147,20 @@ ControlConfig _controls{
 	.cXOffset = 0,
 	.cYOffset = 0,
 	.cMax = 127,
-	.cMin = -127
+	.cMin = -127,
+	.rumble = 5,
+	.rumbleMin = 0,
+	.rumbleMax = 7,
+	.rumbleDefault = 5
 };
-//rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
-int _rumble = 5;
 int calcRumblePower(const int rumble){
-	return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+	if(rumble > 0) {
+		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+	} else {
+		return 0;
+	}
 }
-int _rumblePower = calcRumblePower(_rumble);
-const int _rumbleMin = 0;
-const int _rumbleMax = 7;
-const int _rumbleDefault = 5;
+int _rumblePower = calcRumblePower(_controls.rumble);
 bool _safeMode = true;
 bool _autoInit = false;
 
@@ -835,7 +842,7 @@ void commInt() {
 
 			//actually write to the rumble pins after beginning the write
 #ifdef RUMBLE
-			if(_cmdByte & 0b00000001 && _rumble > 0){
+			if(_cmdByte & 0b00000001){
 				analogWrite(_pinBrake,0);
 				analogWrite(_pinRumble, _rumblePower);
 			}
@@ -1168,22 +1175,22 @@ int readEEPROM(ControlConfig &controls){
 	}
 
 	//Get the rumble value
-	EEPROM.get(_eepromRumble, _rumble);
+	EEPROM.get(_eepromRumble, controls.rumble);
 	Serial.print("Rumble value before fixing: ");
-	Serial.println(_rumble);
-	if(std::isnan(_rumble)) {
-		_rumble = _rumbleDefault;
+	Serial.println(controls.rumble);
+	if(std::isnan(controls.rumble)) {
+		controls.rumble = controls.rumbleDefault;
 		numberOfNaN++;
 	}
-	if(_rumble < _rumbleMin) {
-		_rumble = _rumbleMin;
+	if(controls.rumble < controls.rumbleMin) {
+		controls.rumble = controls.rumbleMin;
 	}
-	if(_rumble > _rumbleMax) {
-		_rumble = _rumbleMax;
+	if(controls.rumble > controls.rumbleMax) {
+		controls.rumble = controls.rumbleMax;
 	}
-	_rumblePower = calcRumblePower(_rumble);
+	_rumblePower = calcRumblePower(controls.rumble);
 	Serial.print("Rumble value: ");
-	Serial.println(_rumble);
+	Serial.println(controls.rumble);
 	Serial.print("Rumble power: ");
 	Serial.println(_rumblePower);
 
@@ -1266,9 +1273,9 @@ void resetDefaults(bool resetSticks, ControlConfig &controls){
 	EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
 	EEPROM.put(_eepromROffset, controls.rTriggerOffset);
 
-	_rumble = _rumbleDefault;
-	_rumblePower = calcRumblePower(_rumble);
-	EEPROM.put(_eepromRumble, _rumble);
+	controls.rumble = controls.rumbleDefault;
+	_rumblePower = calcRumblePower(controls.rumble);
+	EEPROM.put(_eepromRumble, controls.rumble);
 
 	//always cancel auto init on reset, even if we don't reset the sticks
 	_autoInit = 0;
@@ -1499,21 +1506,21 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			changeAutoInit(btn, hardware);
 		} else if (hardware.X && hardware.Y && btn.Du) { //Increase Rumble
 #ifdef RUMBLE
-			changeRumble(true, btn, hardware);
+			changeRumble(INCREASE, btn, hardware, controls);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.X && hardware.Y && btn.Dd) { //Decrease Rumble
 #ifdef RUMBLE
-			changeRumble(false, btn, hardware);
+			changeRumble(DECREASE, btn, hardware, controls);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.X && hardware.Y && btn.B && !btn.A) { //Show current rumble setting
 #ifdef RUMBLE
-			showRumble(2000, btn, hardware);
+			showRumble(2000, btn, hardware, controls);
 #else // RUMBLE
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
@@ -1892,30 +1899,30 @@ void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 		delta = millis() - startTime;
 	}
 }
-void changeRumble(const bool increase, Buttons &btn, HardwareButtons &hardware) {
+void changeRumble(const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	Serial.println("changing rumble");
-	if(increase) {
-		_rumble += 1;
+	if(increase == INCREASE) {
+		controls.rumble += 1;
 	} else {
-		_rumble -= 1;
+		controls.rumble -= 1;
 	}
-	if(_rumble > _rumbleMax) {
-		_rumble = _rumbleMax;
+	if(controls.rumble > controls.rumbleMax) {
+		controls.rumble = controls.rumbleMax;
 	}
-	if(_rumble < _rumbleMin) {
-		_rumble = _rumbleMin;
+	if(controls.rumble < controls.rumbleMin) {
+		controls.rumble = controls.rumbleMin;
 	}
 
-	_rumblePower = calcRumblePower(_rumble);
-	showRumble(1000, btn, hardware);
+	_rumblePower = calcRumblePower(controls.rumble);
+	showRumble(1000, btn, hardware, controls);
 }
 
-void showRumble(const int time, Buttons &btn, HardwareButtons &hardware) {
+void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	btn.Cx = (uint8_t) 127;
-	btn.Cy = (uint8_t) (_rumble + 127.5);
+	btn.Cy = (uint8_t) (controls.rumble + 127.5);
 	clearButtons(time, btn, hardware);
 
-	EEPROM.put(_eepromRumble, _rumble);
+	EEPROM.put(_eepromRumble, controls.rumble);
 }
 
 //Make it so you don't need to press B.
@@ -2076,7 +2083,7 @@ void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &b
 
 	clearButtons(2000, btn, hardware);
 }
-void adjustCstickOffset(WhichAxis axis, Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	Serial.println("Adjusting C-stick Offset");
 	if(axis == XAXIS && increase == INCREASE) {
 		controls.cXOffset++;
@@ -2128,7 +2135,7 @@ void showCstickSettings(Buttons &btn, HardwareButtons &hardware, ControlConfig &
 
 	clearButtons(2000, btn, hardware);
 }
-void adjustTriggerOffset(WhichTrigger trigger, Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER && increase == INCREASE) {
 		controls.lTriggerOffset++;
 		if(controls.lTriggerOffset > controls.triggerMax) {
