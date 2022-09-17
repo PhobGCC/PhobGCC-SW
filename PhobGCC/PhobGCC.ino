@@ -87,14 +87,23 @@ enum JumpConfig {
 	SWAP_YZ
 };
 
-
 //defining control configuration
-int _pinZSwappable = _pinZ;
-int _pinXSwappable = _pinX;
-int _pinYSwappable = _pinY;
-JumpConfig _jumpConfig = DEFAULT;
-const int _jumpConfigMin = 0;
-const int _jumpConfigMax = 2;
+struct ControlConfig{
+	int pinXSwappable;
+	int pinYSwappable;
+	int pinZSwappable;
+	JumpConfig jumpConfig;
+	const int jumpConfigMin;
+	const int jumpConfigMax;
+};
+ControlConfig _controls{
+	.pinXSwappable = _pinX,
+	.pinYSwappable = _pinY,
+	.pinZSwappable = _pinZ,
+	.jumpConfig = DEFAULT,
+	.jumpConfigMin = DEFAULT,
+	.jumpConfigMax = SWAP_YZ
+};
 int _lConfig = 0;
 int _rConfig = 0;
 const int _triggerConfigMin = 0;
@@ -432,12 +441,12 @@ void setup() {
 	set_arm_clock(300'000'000);
 #endif //TEENSY4_0
 
-	const int numberOfNaN = readEEPROM();
+	const int numberOfNaN = readEEPROM(_controls);
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
 	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-		resetDefaults(true);//do reset sticks
-		readEEPROM();
+		resetDefaults(true, _controls);//do reset sticks
+		readEEPROM(_controls);
 	}
 
 	//set some of the unused values in the message response
@@ -516,7 +525,7 @@ void loop() {
 	}
 
 	//read the controllers buttons
-	readButtons(_btn, _hardware);
+	readButtons(_btn, _hardware, _controls);
 
 	//check to see if we are calibrating
 	if(_currentCalStep >= 0){
@@ -959,20 +968,20 @@ void setFastBaud(){
 	IMXRT_LPUART4.BAUD = LPUART_BAUD_OSR(osr-1) | LPUART_BAUD_SBR(div);
 }
 #endif // TEENSY4_0
-int readEEPROM(){
+int readEEPROM(ControlConfig &controls){
 	int numberOfNaN = 0;
 
 	//get the jump setting
-	EEPROM.get(_eepromJump, _jumpConfig);
-	if(_jumpConfig < _jumpConfigMin){
-		_jumpConfig = DEFAULT;
+	EEPROM.get(_eepromJump, controls.jumpConfig);
+	if(controls.jumpConfig < controls.jumpConfigMin){
+		controls.jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
-	if(_jumpConfig > _jumpConfigMax){
-		_jumpConfig = DEFAULT;
+	if(controls.jumpConfig > controls.jumpConfigMax){
+		controls.jumpConfig = DEFAULT;
 		numberOfNaN++;
 	}
-	setJump(_jumpConfig);
+	setJump(controls);
 
 	//get the L setting
 	EEPROM.get(_eepromLToggle, _lConfig);
@@ -1191,12 +1200,12 @@ int readEEPROM(){
 	return numberOfNaN;
 }
 
-void resetDefaults(bool resetSticks){
+void resetDefaults(bool resetSticks, ControlConfig &controls){
 	Serial.println("RESETTING ALL DEFAULTS");
 
-	_jumpConfig = DEFAULT;
-	setJump(_jumpConfig);
-	EEPROM.put(_eepromJump,_jumpConfig);
+	controls.jumpConfig = DEFAULT;
+	setJump(controls);
+	EEPROM.put(_eepromJump,controls.jumpConfig);
 
 	_lConfig = _triggerDefault;
 	_rConfig = _triggerDefault;
@@ -1322,12 +1331,12 @@ void setPinModes(){
 	bounceDd.attach(_pinDd);
 	bounceDd.interval(1000);
 }
-void readButtons(Buttons &btn, HardwareButtons &hardware){
+void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
 	btn.A = !digitalRead(_pinA);
 	btn.B = !digitalRead(_pinB);
-	btn.X = !digitalRead(_pinXSwappable);
-	btn.Y = !digitalRead(_pinYSwappable);
-	btn.Z = !digitalRead(_pinZSwappable);
+	btn.X = !digitalRead(controls.pinXSwappable);
+	btn.Y = !digitalRead(controls.pinYSwappable);
+	btn.Z = !digitalRead(controls.pinZSwappable);
 	btn.S = !digitalRead(_pinS);
 	btn.Du = !digitalRead(_pinDu);
 	btn.Dd = !digitalRead(_pinDd);
@@ -1456,10 +1465,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 			btn.Cy = (uint8_t) 127.5 + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
-			resetDefaults(false);//don't reset sticks
+			resetDefaults(false, controls);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
-			resetDefaults(true);//do reset sticks
+			resetDefaults(true, controls);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware);
@@ -1544,13 +1553,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware){
 		} else if(hardware.R && hardware.Z && btn.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(true, false, false, btn, hardware);
 		} else if(hardware.X && hardware.Z && btn.S) { //Swap X and Z
-			readJumpConfig(SWAP_XZ);
+			readJumpConfig(SWAP_XZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.Z && btn.S) { //Swap Y and Z
-			readJumpConfig(SWAP_YZ);
+			readJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
-			readJumpConfig(DEFAULT);
+			readJumpConfig(DEFAULT, controls);
 			freezeSticks(2000, btn, hardware);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
@@ -2135,13 +2144,13 @@ void adjustTriggerOffset(bool _change, bool _lTrigger, bool _increase, Buttons &
 
 	clearButtons(250, btn, hardware);
 }
-void readJumpConfig(JumpConfig jumpConfig){
+void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 	Serial.print("setting jump to: ");
-	if (_jumpConfig == jumpConfig) {
-		_jumpConfig = DEFAULT;
+	if (controls.jumpConfig == jumpConfig) {
+		controls.jumpConfig = DEFAULT;
 		Serial.println("normal again");
 	} else {
-		_jumpConfig = jumpConfig;
+		controls.jumpConfig = jumpConfig;
 		switch (jumpConfig) {
 			case SWAP_XZ:
 				Serial.println("X<->Z");
@@ -2153,25 +2162,25 @@ void readJumpConfig(JumpConfig jumpConfig){
 				Serial.println("normal");
 		}
 	}
-	EEPROM.put(_eepromJump,_jumpConfig);
-	setJump(_jumpConfig);
+	EEPROM.put(_eepromJump,controls.jumpConfig);
+	setJump(controls);
 }
-void setJump(int jumpConfig){
-	switch(jumpConfig){
+void setJump(ControlConfig &controls){
+	switch(controls.jumpConfig){
 			case SWAP_XZ:
-				_pinZSwappable = _pinX;
-				_pinXSwappable = _pinZ;
-				_pinYSwappable = _pinY;
+				controls.pinZSwappable = _pinX;
+				controls.pinXSwappable = _pinZ;
+				controls.pinYSwappable = _pinY;
 				break;
 			case SWAP_YZ:
-				_pinZSwappable = _pinY;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinZ;
+				controls.pinZSwappable = _pinY;
+				controls.pinXSwappable = _pinX;
+				controls.pinYSwappable = _pinZ;
 				break;
 			default:
-				_pinZSwappable = _pinZ;
-				_pinXSwappable = _pinX;
-				_pinYSwappable = _pinY;
+				controls.pinZSwappable = _pinZ;
+				controls.pinXSwappable = _pinX;
+				controls.pinYSwappable = _pinY;
 	}
 }
 void nextTriggerState(int _currentConfig, bool _lTrigger, Buttons &btn, HardwareButtons &hardware) {
