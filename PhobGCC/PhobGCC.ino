@@ -136,6 +136,11 @@ struct ControlConfig{
 	bool autoInit;
 	int lTrigInitial;
 	int rTrigInitial;
+	int xSnapback;//0 disables the filter entirely, 4 is default
+	int ySnapback;
+	const int snapbackMin;
+	const int snapbackMax;
+	const int snapbackDefault;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -162,8 +167,16 @@ ControlConfig _controls{
 	.rumbleMax = 7,
 	.rumbleDefault = 5,
 	.safeMode = true,
-	.autoInit = false
+	.autoInit = false,
+	.lTrigInitial = 0,
+	.rTrigInitial = 0,
+	.xSnapback = 4,
+	.ySnapback = 4,
+	.snapbackMin = 0,
+	.snapbackMax = 10,
+	.snapbackDefault = 4
 };
+
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
 		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
@@ -173,13 +186,6 @@ int calcRumblePower(const int rumble){
 }
 int _rumblePower = calcRumblePower(_controls.rumble);
 
-///// Values used for adjusting snapback in the CarVac Filter
-
-int _xSnapback = 4;
-int _ySnapback = 4;
-const float _snapbackMin = 0;
-const float _snapbackMax = 10;
-const float _snapbackDefault = 4;//0 disables the filter completely, 4 is the default
 float velDampFromSnapback(const int snapback){
 	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 }
@@ -1065,32 +1071,32 @@ int readEEPROM(ControlConfig &controls){
 	}
 
 	//get the x-axis snapback correction
-	EEPROM.get(_eepromxSnapback, _xSnapback);
+	EEPROM.get(_eepromxSnapback, controls.xSnapback);
 	Serial.print("the xSnapback value from eeprom is:");
-	Serial.println(_xSnapback);
-	if(_xSnapback < _snapbackMin) {
-		_xSnapback = _snapbackMin;
+	Serial.println(controls.xSnapback);
+	if(controls.xSnapback < controls.snapbackMin) {
+		controls.xSnapback = controls.snapbackMin;
 		numberOfNaN++;
-	} else if (_xSnapback > _snapbackMax) {
-		_xSnapback = _snapbackMax;
+	} else if (controls.xSnapback > controls.snapbackMax) {
+		controls.xSnapback = controls.snapbackMax;
 		numberOfNaN++;
 	}
-	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
+	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	Serial.print("the xVelDamp value from eeprom is:");
 	Serial.println(_gains.xVelDamp);
 
 	//get the y-ayis snapback correction
-	EEPROM.get(_eepromySnapback, _ySnapback);
+	EEPROM.get(_eepromySnapback, controls.ySnapback);
 	Serial.print("the ySnapback value from eeprom is:");
-	Serial.println(_ySnapback);
-	if(_ySnapback < _snapbackMin) {
-		_ySnapback = _snapbackMin;
+	Serial.println(controls.ySnapback);
+	if(controls.ySnapback < controls.snapbackMin) {
+		controls.ySnapback = controls.snapbackMin;
 		numberOfNaN++;
-	} else if (_ySnapback > _snapbackMax) {
-		_ySnapback = _snapbackMax;
+	} else if (controls.ySnapback > controls.snapbackMax) {
+		controls.ySnapback = controls.snapbackMax;
 		numberOfNaN++;
 	}
-	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
+	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 	Serial.print("the yVelDamp value from eeprom is:");
 	Serial.println(_gains.yVelDamp);
 
@@ -1256,12 +1262,12 @@ void resetDefaults(HardReset reset, ControlConfig &controls){
 	EEPROM.put(_eepromcXOffset, controls.cXOffset);
 	EEPROM.put(_eepromcYOffset, controls.cYOffset);
 
-	_xSnapback = _snapbackDefault;
-	EEPROM.put(_eepromxSnapback,_xSnapback);
-	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
-	_ySnapback = _snapbackDefault;
-	EEPROM.put(_eepromySnapback,_ySnapback);
-	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
+	controls.xSnapback = controls.snapbackDefault;
+	EEPROM.put(_eepromxSnapback,controls.xSnapback);
+	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	controls.ySnapback = controls.snapbackDefault;
+	EEPROM.put(_eepromySnapback,controls.ySnapback);
+	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
 	_gains.xSmoothing = _smoothingMin;
 	EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
@@ -1544,13 +1550,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			_advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.L && hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
-			adjustSnapback(true, true, true, btn, hardware);
+			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
-			adjustSnapback(true, true, false, btn, hardware);
+			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
-			adjustSnapback(true, false, true, btn, hardware);
+			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
-			adjustSnapback(true, false, false, btn, hardware);
+			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && btn.A && btn.Du) { //Increase X-axis Delay
 			adjustSmoothing(true, true, true, btn, hardware);
 		} else if(hardware.L && btn.A && btn.Dd) { //Decrease X-axis Delay
@@ -1560,7 +1566,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		} else if(hardware.L && btn.B && btn.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(true, false, false, btn, hardware);
 		} else if(hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
-			showAstickSettings(btn, hardware);
+			showAstickSettings(btn, hardware, controls);
 		} else if(hardware.R && hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(true, true, true, btn, hardware);
 		} else if(hardware.R && hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
@@ -1953,43 +1959,43 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	EEPROM.put(_eepromAutoInit, controls.autoInit);
 }
 
-void adjustSnapback(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware){
+void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
 	Serial.println("adjusting snapback filtering");
-	if(_xAxis && _increase && _change){
-		_xSnapback = min(_xSnapback+1, _snapbackMax);
+	if(axis == XAXIS && increase == INCREASE){
+		controls.xSnapback = min(controls.xSnapback+1, controls.snapbackMax);
 		Serial.print("x snapback filtering increased to:");
-		Serial.println(_xSnapback);
+		Serial.println(controls.xSnapback);
 	}
-	else if(_xAxis && !_increase && _change){
-		_xSnapback = max(_xSnapback-1, _snapbackMin);
+	else if(axis == XAXIS && increase == DECREASE){
+		controls.xSnapback = max(controls.xSnapback-1, controls.snapbackMin);
 		Serial.print("x snapback filtering decreased to:");
-		Serial.println(_xSnapback);
+		Serial.println(controls.xSnapback);
 	}
 
-	if(!_xAxis && _increase && _change){
-		_ySnapback = min(_ySnapback+1, _snapbackMax);
+	if(axis == YAXIS && increase == INCREASE){
+		controls.ySnapback = min(controls.ySnapback+1, controls.snapbackMax);
 		Serial.print("y snapback filtering increased to:");
-		Serial.println(_ySnapback);
+		Serial.println(controls.ySnapback);
 	}
-	else if(!_xAxis && !_increase && _change){
-		_ySnapback = max(_ySnapback-1, _snapbackMin);
+	else if(axis == YAXIS && increase == DECREASE){
+		controls.ySnapback = max(controls.ySnapback-1, controls.snapbackMin);
 		Serial.print("y snapback filtering decreased to:");
-		Serial.println(_ySnapback);
+		Serial.println(controls.ySnapback);
 	}
 
-	_gains.xVelDamp = velDampFromSnapback(_xSnapback);
-	_gains.yVelDamp = velDampFromSnapback(_ySnapback);
+	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains();
 
-	btn.Cx = (uint8_t) (_xSnapback + 127.5);
-	btn.Cy = (uint8_t) (_ySnapback + 127.5);
+	btn.Cx = (uint8_t) (controls.xSnapback + 127.5);
+	btn.Cy = (uint8_t) (controls.ySnapback + 127.5);
 
 	clearButtons(2000, btn, hardware);
 
-	EEPROM.put(_eepromxSnapback,_xSnapback);
-	EEPROM.put(_eepromySnapback,_ySnapback);
+	EEPROM.put(_eepromxSnapback,controls.xSnapback);
+	EEPROM.put(_eepromySnapback,controls.ySnapback);
 }
 void adjustSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
 	Serial.println("Adjusting Smoothing");
@@ -2035,10 +2041,10 @@ void adjustSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, Ha
 
 	clearButtons(2000, btn, hardware);
 }
-void showAstickSettings(Buttons &btn, HardwareButtons &hardware) {
+void showAstickSettings(Buttons &btn, HardwareButtons &hardware, const ControlConfig &controls) {
 	//Snapback on A-stick
-	btn.Ax = (uint8_t) (_xSnapback + 127.5);
-	btn.Ay = (uint8_t) (_ySnapback + 127.5);
+	btn.Ax = (uint8_t) (controls.xSnapback + 127.5);
+	btn.Ay = (uint8_t) (controls.ySnapback + 127.5);
 
 	//Smoothing on C-stick
 	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
@@ -2379,7 +2385,7 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 
 
 	//Run the kalman filter to eliminate snapback
-	runKalman(xZ,yZ);
+	runKalman(xZ,yZ, controls);
 	//Run a simple low-pass filter
 	static float _oldPosAx = 0;
 	static float _oldPosAy = 0;
@@ -3191,7 +3197,7 @@ void recomputeGains(){
     _g.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
     _g.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
 }
-void runKalman(const float xZ,const float yZ){
+void runKalman(const float xZ,const float yZ, ControlConfig &controls){
 	//Serial.println("Running Kalman");
 
 	//save previous values of state
@@ -3255,8 +3261,8 @@ void runKalman(const float xZ,const float yZ){
 	//  with the filtered velocity damped, and the overall term weighted inverse of the previous term
 	//term 3: the integral error correction term
 
-	//But if we _xSnapback or _ySnapback is zero, we skip the calculation
-	if(_xSnapback != 0){
+	//But if we xSnapback or ySnapback is zero, we skip the calculation
+	if(controls.xSnapback != 0){
 		_xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
 
 		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
@@ -3269,7 +3275,7 @@ void runKalman(const float xZ,const float yZ){
 		_xPosFilt = _xPos;
 	}
 
-	if(_ySnapback != 0){
+	if(controls.ySnapback != 0){
 		_yVelFilt = velWeight1*_yVel + (1-_g.yVelDecay)*velWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
 
 		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
