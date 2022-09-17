@@ -119,6 +119,10 @@ struct ControlConfig{
 	int rTriggerOffset;
 	const int triggerMin;
 	const int triggerMax;
+	int cXOffset;
+	int cYOffset;
+	const int cMax;
+	const int cMin;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -135,12 +139,12 @@ ControlConfig _controls{
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
 	.triggerMin = 49,
-	.triggerMax = 227
+	.triggerMax = 227,
+	.cXOffset = 0,
+	.cYOffset = 0,
+	.cMax = 127,
+	.cMin = -127
 };
-int _cXOffset = 0;
-int _cYOffset = 0;
-int _cMax = 127;
-int _cMin = -127;
 //rumble config; 0 is off, nonzero is on. Higher values are stronger, max 7
 int _rumble = 5;
 int calcRumblePower(const int rumble){
@@ -1027,22 +1031,22 @@ int readEEPROM(ControlConfig &controls){
 	}
 
 	//get the C-stick X offset
-	EEPROM.get(_eepromcXOffset, _cXOffset);
-	if(_cXOffset > _cMax) {
-		_cXOffset = 0;
+	EEPROM.get(_eepromcXOffset, controls.cXOffset);
+	if(controls.cXOffset > controls.cMax) {
+		controls.cXOffset = 0;
 		numberOfNaN++;
-	} else if(_cXOffset < _cMin) {
-		_cXOffset = 0;
+	} else if(controls.cXOffset < controls.cMin) {
+		controls.cXOffset = 0;
 		numberOfNaN++;
 	}
 
 	//get the C-stick Y offset
-	EEPROM.get(_eepromcYOffset, _cYOffset);
-	if(_cYOffset > _cMax) {
-		_cYOffset = 0;
+	EEPROM.get(_eepromcYOffset, controls.cYOffset);
+	if(controls.cYOffset > controls.cMax) {
+		controls.cYOffset = 0;
 		numberOfNaN++;
-	} else if(_cYOffset < _cMin) {
-		_cYOffset = 0;
+	} else if(controls.cYOffset < controls.cMin) {
+		controls.cYOffset = 0;
 		numberOfNaN++;
 	}
 
@@ -1233,10 +1237,10 @@ void resetDefaults(bool resetSticks, ControlConfig &controls){
 	EEPROM.put(_eepromLToggle, controls.lConfig);
 	EEPROM.put(_eepromRToggle, controls.rConfig);
 
-	_cXOffset = 0;
-	_cYOffset = 0;
-	EEPROM.put(_eepromcXOffset, _cXOffset);
-	EEPROM.put(_eepromcYOffset, _cYOffset);
+	controls.cXOffset = 0;
+	controls.cYOffset = 0;
+	EEPROM.put(_eepromcXOffset, controls.cXOffset);
+	EEPROM.put(_eepromcYOffset, controls.cYOffset);
 
 	_xSnapback = _snapbackDefault;
 	EEPROM.put(_eepromxSnapback,_xSnapback);
@@ -1552,15 +1556,15 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		} else if(hardware.R && hardware.Y && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(true, false, false, btn, hardware);
 		} else if(hardware.R && btn.A && btn.Du) { //Increase C-stick X Offset
-			adjustCstickOffset(true, true, true, btn, hardware);
+			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && btn.A && btn.Dd) { //Decrease C-stick X Offset
-			adjustCstickOffset(true, true, false, btn, hardware);
+			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && btn.B && btn.Du) { //Increase C-stick Y Offset
-			adjustCstickOffset(true, false, true, btn, hardware);
+			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && btn.B && btn.Dd) { //Decrease C-stick Y Offset
-			adjustCstickOffset(true, false, false, btn, hardware);
+			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
-			showCstickSettings(btn, hardware);
+			showCstickSettings(btn, hardware, controls);
 		} else if(hardware.L && hardware.Z && btn.S) { //Toggle Analog L
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
 		} else if(hardware.R && hardware.Z && btn.S) { //Toggle Analog R
@@ -2072,55 +2076,55 @@ void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &b
 
 	clearButtons(2000, btn, hardware);
 }
-void adjustCstickOffset(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
+void adjustCstickOffset(WhichAxis axis, Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	Serial.println("Adjusting C-stick Offset");
-	if(_xAxis && _increase && _change) {
-		_cXOffset++;
-		if(_cXOffset > _cMax) {
-			_cXOffset = _cMax;
+	if(axis == XAXIS && increase == INCREASE) {
+		controls.cXOffset++;
+		if(controls.cXOffset > controls.cMax) {
+			controls.cXOffset = controls.cMax;
 		}
-		EEPROM.put(_eepromcXOffset, _cXOffset);
+		EEPROM.put(_eepromcXOffset, controls.cXOffset);
 		Serial.print("X offset increased to:");
-		Serial.println(_cXOffset);
-	} else if(_xAxis && !_increase && _change) {
-		_cXOffset--;
-		if(_cXOffset < _cMin) {
-			_cXOffset = _cMin;
+		Serial.println(controls.cXOffset);
+	} else if(axis == XAXIS && increase == DECREASE) {
+		controls.cXOffset--;
+		if(controls.cXOffset < controls.cMin) {
+			controls.cXOffset = controls.cMin;
 		}
-		EEPROM.put(_eepromcXOffset, _cXOffset);
+		EEPROM.put(_eepromcXOffset, controls.cXOffset);
 		Serial.print("X offset decreased to:");
-		Serial.println(_cXOffset);
-	} else if(!_xAxis && _increase && _change) {
-		_cYOffset++;
-		if(_cYOffset > _cMax) {
-			_cYOffset = _cMax;
+		Serial.println(controls.cXOffset);
+	} else if(axis == YAXIS && increase == INCREASE) {
+		controls.cYOffset++;
+		if(controls.cYOffset > controls.cMax) {
+			controls.cYOffset = controls.cMax;
 		}
-		EEPROM.put(_eepromcYOffset, _cYOffset);
+		EEPROM.put(_eepromcYOffset, controls.cYOffset);
 		Serial.print("Y offset increased to:");
-		Serial.println(_cYOffset);
-	} else if(!_xAxis && !_increase && _change) {
-		_cYOffset--;
-		if(_cYOffset < _cMin) {
-			_cYOffset = _cMin;
+		Serial.println(controls.cYOffset);
+	} else if(axis == YAXIS && increase == DECREASE) {
+		controls.cYOffset--;
+		if(controls.cYOffset < controls.cMin) {
+			controls.cYOffset = controls.cMin;
 		}
-		EEPROM.put(_eepromcYOffset, _cYOffset);
+		EEPROM.put(_eepromcYOffset, controls.cYOffset);
 		Serial.print("Y offset decreased to:");
-		Serial.println(_cYOffset);
+		Serial.println(controls.cYOffset);
 	}
 
-	btn.Cx = (uint8_t) (127.5 + _cXOffset);
-	btn.Cy = (uint8_t) (127.5 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + controls.cXOffset);
+	btn.Cy = (uint8_t) (127.5 + controls.cYOffset);
 
 	clearButtons(2000, btn, hardware);
 }
-void showCstickSettings(Buttons &btn, HardwareButtons &hardware) {
+void showCstickSettings(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
 	//Snapback/smoothing on A-stick
 	btn.Ax = (uint8_t) (127.5 + (_gains.cXSmoothing * 10));
 	btn.Ay = (uint8_t) (127.5 + (_gains.cYSmoothing * 10));
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (127.5 + _cXOffset);
-	btn.Cy = (uint8_t) (127.5 + _cYOffset);
+	btn.Cx = (uint8_t) (127.5 + controls.cXOffset);
+	btn.Cy = (uint8_t) (127.5 + controls.cYOffset);
 
 	clearButtons(2000, btn, hardware);
 }
@@ -2402,8 +2406,8 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 	//Clamp values from -125 to +125
 	remappedAx = min(125, max(-125, remappedAx));
 	remappedAy = min(125, max(-125, remappedAy));
-	remappedCx = min(125, max(-125, remappedCx+_cXOffset));
-	remappedCy = min(125, max(-125, remappedCy+_cYOffset));
+	remappedCx = min(125, max(-125, remappedCx+controls.cXOffset));
+	remappedCy = min(125, max(-125, remappedCy+controls.cYOffset));
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
