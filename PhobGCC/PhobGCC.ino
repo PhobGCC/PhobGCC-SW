@@ -1394,58 +1394,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 	hardware.X = !digitalRead(_pinX);
 	hardware.Y = !digitalRead(_pinY);
 
-	if(hardware.L && hardware.R && btn.A && btn.S) {
-		btn.L = (uint8_t) (1);
-		btn.R = (uint8_t) (1);
-		btn.A = (uint8_t) (1);
-		btn.S = (uint8_t) (1);
-	} else {
-		switch(controls.lConfig) {
-			case 0: //Default Trigger state
-				btn.L = hardware.L;
-				break;
-			case 1: //Digital Only Trigger state
-				btn.L = hardware.L;
-				break;
-			case 2: //Analog Only Trigger state
-				btn.L = (uint8_t) 0;
-				break;
-			case 3: //Trigger Plug Emulation state
-				btn.L = hardware.L;
-				break;
-			case 4: //Digital => Analog Value state
-				btn.L = (uint8_t) 0;
-				break;
-			case 5: //Digital -> Analog Value + Digital state
-				btn.L = hardware.L;
-				break;
-			default:
-				btn.L = hardware.L;
-		}
-
-		switch(controls.rConfig) {
-			case 0: //Default Trigger state
-				btn.R = hardware.R;
-				break;
-			case 1: //Digital Only Trigger state
-				btn.R = hardware.R;
-				break;
-			case 2: //Analog Only Trigger state
-				btn.R = (uint8_t) 0;
-				break;
-			case 3: //Trigger Plug Emulation state
-				btn.R = hardware.R;
-				break;
-			case 4: //Digital => Analog Value state
-				btn.R = (uint8_t) 0;
-				break;
-			case 5: //Digital -> Analog Value + Digital state
-				btn.R = hardware.R;
-				break;
-			default:
-				btn.R = hardware.R;
-		}
-	}
+	//We apply the triggers in readSticks so we can minimize race conditions
+	// between trigger analog/digital so we don't get ADT vulnerability in mode 6
 
 	bounceDr.update();
 	bounceDu.update();
@@ -2245,10 +2195,21 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 	EEPROM.put(_eepromLToggle, controls.lConfig);
 	EEPROM.put(_eepromRToggle, controls.rConfig);
 
+	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
+	//(user-facing mode 5)
+	int lConfig = controls.lConfig;
+	int rConfig = controls.rConfig;
+	int triggerConflict = 0;
+	if(rConfig == 4 && (lConfig == 0 || lConfig == 2 || lConfig == 3)) {
+		triggerConflict = -100;
+	}
+	if(lConfig == 4 && (rConfig == 0 || rConfig == 2 || rConfig == 3)) {
+		triggerConflict = -100;
+	}
 	//We want to one-index the modes for the users, so we add 1 here
-	btn.Ay = (uint8_t) (127.5);
+	btn.Ay = (uint8_t) (127.5 + triggerConflict);
 	btn.Ax = (uint8_t) (127.5 + controls.lConfig + 1);
-	btn.Cy = (uint8_t) (127.5);
+	btn.Cy = (uint8_t) (127.5 + triggerConflict);
 	btn.Cx = (uint8_t) (127.5 + controls.rConfig + 1);
 
 	clearButtons(2000, btn, hardware);
@@ -2280,72 +2241,142 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 	// otherwise _ADCScale is 1
 
 	//read the L and R sliders
-	switch(controls.lConfig) {
-		case 0: //Default Trigger state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			break;
-		case 1: //Digital Only Trigger state
-			btn.La = (uint8_t) 0;
-			break;
-		case 2: //Analog Only Trigger state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			break;
-		case 3: //Trigger Plug Emulation state
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-			if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
-				btn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
-			}
-			break;
-		case 4: //Digital => Analog Value state
-			if(hardware.L) {
-				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
-			} else {
-				btn.La = (uint8_t) 0;
-			}
-			break;
-		case 5: //Digital => Analog Value + Digital state
-			if(hardware.L) {
-				btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
-			} else {
-				btn.La = (uint8_t) 0;
-			}
-			break;
-		default:
-			btn.La = adc->adc0->analogRead(_pinLa)>>4;
-	}
 
-	switch(controls.rConfig) {
-		case 0: //Default Trigger state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			break;
-		case 1: //Digital Only Trigger state
-			btn.Ra = (uint8_t) 0;
-			break;
-		case 2: //Analog Only Trigger state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			break;
-		case 3: //Trigger Plug Emulation state
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
-			if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
-				btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
-			}
-			break;
-		case 4: //Digital => Analog Value state
-			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
-			} else {
+	//set up lockout for mode 5; it's not permissible to have analog trigger
+	// inputs available while mode 5 is active
+	//when a trigger is in lockout due to the other being mode 5,
+	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
+	//(the above modes are 1-indexed, user-facing values)
+	const bool lockoutL = controls.rConfig == 4;
+	const bool lockoutR = controls.lConfig == 4;
+
+	if(hardware.L && hardware.R && btn.A && btn.S) {
+		btn.L = (uint8_t) (1);
+		btn.R = (uint8_t) (1);
+		btn.A = (uint8_t) (1);
+		btn.S = (uint8_t) (1);
+	} else {
+		switch(controls.lConfig) {
+			case 0: //Default Trigger state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				btn.L  = hardware.L;
+				btn.La = (uint8_t) 0;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = (uint8_t) 0;
+					btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = adc->adc0->analogRead(_pinLa)>>4;
+					if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
+						btn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				btn.L = (uint8_t) 0;
+				if(hardware.L) {
+					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				btn.L = hardware.L;
+				if(hardware.L) {
+					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			default:
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = adc->adc0->analogRead(_pinLa)>>4;
+				}
+		}
+
+		switch(controls.rConfig) {
+			case 0: //Default Trigger state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				btn.R  = hardware.R;
 				btn.Ra = (uint8_t) 0;
-			}
-			break;
-		case 5: //Digital => Analog Value + Digital state
-			if(hardware.R) {
-				btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
-			} else {
-				btn.Ra = (uint8_t) 0;
-			}
-			break;
-		default:
-			btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = (uint8_t) 0;
+					btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+					if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
+						btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				btn.R = (uint8_t) 0;
+				if(hardware.R) {
+					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				btn.R = hardware.R;
+				if(hardware.R) {
+					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			default:
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = adc->adc0->analogRead(_pinRa)>>4;
+				}
+		}
 	}
 
 	unsigned int adcCount = 0;
