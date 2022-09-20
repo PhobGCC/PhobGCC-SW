@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -141,6 +141,8 @@ struct ControlConfig{
 	const int snapbackMin;
 	const int snapbackMax;
 	const int snapbackDefault;
+	const float smoothingMin;
+	const float smoothingMax;
 };
 ControlConfig _controls{
 	.pinXSwappable = _pinX,
@@ -174,27 +176,10 @@ ControlConfig _controls{
 	.ySnapback = 4,
 	.snapbackMin = 0,
 	.snapbackMax = 10,
-	.snapbackDefault = 4
+	.snapbackDefault = 4,
+	.smoothingMin = 0,
+	.smoothingMax = 0.9
 };
-
-int calcRumblePower(const int rumble){
-	if(rumble > 0) {
-		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
-	} else {
-		return 0;
-	}
-}
-int _rumblePower = calcRumblePower(_controls.rumble);
-
-float velDampFromSnapback(const int snapback){
-	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
-}
-
-// Values used for dealing with X/Y Smoothing in the CarVac Filter, for ledge-dashing
-// also used for C-stick snapback filtering
-
-float _smoothingMin = 0.0;
-float _smoothingMax = 0.9;
 
 //New snapback Kalman filter parameters.
 struct FilterGains {
@@ -231,7 +216,8 @@ struct FilterGains {
 	float cXSmoothing;
 	float cYSmoothing;
 };
-FilterGains _gains {//these values are actually timestep-compensated for in runKalman
+
+FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequency
     .maxStick = 100,
     .xVelDecay = 0.1,
     .yVelDecay = 0.1,
@@ -246,15 +232,22 @@ FilterGains _gains {//these values are actually timestep-compensated for in runK
     .cXSmoothing = 0.0,
     .cYSmoothing = 0.0
 };
-FilterGains _g;//this gets filled by recomputeGains();
+FilterGains _normGains;//this gets filled by recomputeGains();
 
-//////values used to determine how much large of a region will count as being "in a notch"
+int calcRumblePower(const int rumble){
+	if(rumble > 0) {
+		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+	} else {
+		return 0;
+	}
+}
+int _rumblePower = calcRumblePower(_controls.rumble);
 
-const float _marginAngle = 1.50/100.0; //angle range(+/-) in radians that will be collapsed down to the ideal angle
-const float _tightAngle = 0.1/100.0;//angle range(+/-) in radians that the margin region will be collapsed down to, found that having a small value worked better for the transform than 0
+float velDampFromSnapback(const int snapback){
+	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
+}
 
 //////values used for calibration
-const int _analogCenter = 127;
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
 const int _noOfAdjNotches = 12;
@@ -486,12 +479,12 @@ void setup() {
 	set_arm_clock(300'000'000);
 #endif //TEENSY4_0
 
-	const int numberOfNaN = readEEPROM(_controls);
+	const int numberOfNaN = readEEPROM(_controls, _gains);
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
 	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-		resetDefaults(HARD, _controls);//do reset sticks
-		readEEPROM(_controls);
+		resetDefaults(HARD, _controls, _gains);//do reset sticks
+		readEEPROM(_controls, _gains);
 	}
 
 	//set some of the unused values in the message response
@@ -570,7 +563,7 @@ void loop() {
 	}
 
 	//read the controllers buttons
-	readButtons(_btn, _hardware, _controls);
+	readButtons(_btn, _hardware, _controls, _gains);
 
 	//check to see if we are calibrating
 	if(_currentCalStep >= 0){
@@ -1013,7 +1006,7 @@ void setFastBaud(){
 	IMXRT_LPUART4.BAUD = LPUART_BAUD_OSR(osr-1) | LPUART_BAUD_SBR(div);
 }
 #endif // TEENSY4_0
-int readEEPROM(ControlConfig &controls){
+int readEEPROM(ControlConfig &controls, FilterGains &gains){
 	int numberOfNaN = 0;
 
 	//get the jump setting
@@ -1081,9 +1074,9 @@ int readEEPROM(ControlConfig &controls){
 		controls.xSnapback = controls.snapbackMax;
 		numberOfNaN++;
 	}
-	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	Serial.print("the xVelDamp value from eeprom is:");
-	Serial.println(_gains.xVelDamp);
+	Serial.println(gains.xVelDamp);
 
 	//get the y-ayis snapback correction
 	EEPROM.get(_eepromySnapback, controls.ySnapback);
@@ -1096,72 +1089,72 @@ int readEEPROM(ControlConfig &controls){
 		controls.ySnapback = controls.snapbackMax;
 		numberOfNaN++;
 	}
-	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
+	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 	Serial.print("the yVelDamp value from eeprom is:");
-	Serial.println(_gains.yVelDamp);
+	Serial.println(gains.yVelDamp);
 
 	//get the x-axis smoothing value
-	EEPROM.get(_eepromxSmoothing, _gains.xSmoothing);
+	EEPROM.get(_eepromxSmoothing, gains.xSmoothing);
 	Serial.print("the xSmoothing value from eeprom is:");
-	Serial.println(_gains.xSmoothing);
-	if(std::isnan(_gains.xSmoothing)){
-		_gains.xSmoothing = _smoothingMin;
+	Serial.println(gains.xSmoothing);
+	if(std::isnan(gains.xSmoothing)){
+		gains.xSmoothing = controls.smoothingMin;
 		Serial.print("the xSmoothing value was adjusted to:");
-		Serial.println(_gains.xSmoothing);
+		Serial.println(gains.xSmoothing);
 		numberOfNaN++;
 	}
-	if(_gains.xSmoothing > _smoothingMax) {
-		_gains.xSmoothing = _smoothingMax;
-	} else if(_gains.xSmoothing < _smoothingMin) {
-		_gains.xSmoothing = _smoothingMin;
+	if(gains.xSmoothing > controls.smoothingMax) {
+		gains.xSmoothing = controls.smoothingMax;
+	} else if(gains.xSmoothing < controls.smoothingMin) {
+		gains.xSmoothing = controls.smoothingMin;
 	}
 
 	//get the y-axis smoothing value
-	EEPROM.get(_eepromySmoothing, _gains.ySmoothing);
+	EEPROM.get(_eepromySmoothing, gains.ySmoothing);
 	Serial.print("the ySmoothing value from eeprom is:");
-	Serial.println(_gains.ySmoothing);
-	if(std::isnan(_gains.ySmoothing)){
-		_gains.ySmoothing = _smoothingMin;
+	Serial.println(gains.ySmoothing);
+	if(std::isnan(gains.ySmoothing)){
+		gains.ySmoothing = controls.smoothingMin;
 		Serial.print("the ySmoothing value was adjusted to:");
-		Serial.println(_gains.ySmoothing);
+		Serial.println(gains.ySmoothing);
 		numberOfNaN++;
 	}
-	if(_gains.ySmoothing > _smoothingMax) {
-		_gains.ySmoothing = _smoothingMax;
-	} else if(_gains.ySmoothing < _smoothingMin) {
-		_gains.ySmoothing = _smoothingMin;
+	if(gains.ySmoothing > controls.smoothingMax) {
+		gains.ySmoothing = controls.smoothingMax;
+	} else if(gains.ySmoothing < controls.smoothingMin) {
+		gains.ySmoothing = controls.smoothingMin;
 	}
 
 	//get the c-stick x-axis smoothing value
-	EEPROM.get(_eepromCxSmoothing, _gains.cXSmoothing);
+	EEPROM.get(_eepromCxSmoothing, gains.cXSmoothing);
 	Serial.print("the cXSmoothing value from eeprom is:");
-	Serial.println(_gains.cXSmoothing);
-	if(std::isnan(_gains.cXSmoothing)){
-		_gains.cXSmoothing = _smoothingMin;
+	Serial.println(gains.cXSmoothing);
+	if(std::isnan(gains.cXSmoothing)){
+		gains.cXSmoothing = controls.smoothingMin;
 		Serial.print("the cXSmoothing value was adjusted to:");
-		Serial.println(_gains.cXSmoothing);
+		Serial.println(gains.cXSmoothing);
 		numberOfNaN++;
 	}
-	if(_gains.cXSmoothing > _smoothingMax) {
-		_gains.cXSmoothing = _smoothingMax;
-	} else if(_gains.cXSmoothing < _smoothingMin) {
-		_gains.cXSmoothing = _smoothingMin;
+	if(gains.cXSmoothing > controls.smoothingMax) {
+		gains.cXSmoothing = controls.smoothingMax;
+	} else if(gains.cXSmoothing < controls.smoothingMin) {
+		gains.cXSmoothing = controls.smoothingMin;
 	}
 
 	//get the c-stick y-axis smoothing value
-	EEPROM.get(_eepromCySmoothing, _gains.cYSmoothing);
+	EEPROM.get(_eepromCySmoothing, gains.cYSmoothing);
 	Serial.print("the cYSmoothing value from eeprom is:");
-	Serial.println(_gains.cYSmoothing);
-	if(std::isnan(_gains.cYSmoothing)){
-		_gains.cYSmoothing = _smoothingMin;
+	Serial.println(gains.cYSmoothing);
+	if(std::isnan(gains.cYSmoothing)){
+		gains.cYSmoothing = controls.smoothingMin;
 		Serial.print("the cYSmoothing value was adjusted to:");
-		Serial.println(_gains.cYSmoothing);
+		Serial.println(gains.cYSmoothing);
 		numberOfNaN++;
 	}
-	if(_gains.cYSmoothing > _smoothingMax) {
-		_gains.cYSmoothing = _smoothingMax;
-	} else if(_gains.cYSmoothing < _smoothingMin) {
-		_gains.cYSmoothing = _smoothingMin;
+	if(gains.cYSmoothing > controls.smoothingMax) {
+		gains.cYSmoothing = controls.smoothingMax;
+	} else if(gains.cYSmoothing < controls.smoothingMin) {
+		gains.cYSmoothing = controls.smoothingMin;
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
@@ -1245,7 +1238,7 @@ int readEEPROM(ControlConfig &controls){
 	return numberOfNaN;
 }
 
-void resetDefaults(HardReset reset, ControlConfig &controls){
+void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains){
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULTJUMP;
@@ -1264,20 +1257,20 @@ void resetDefaults(HardReset reset, ControlConfig &controls){
 
 	controls.xSnapback = controls.snapbackDefault;
 	EEPROM.put(_eepromxSnapback,controls.xSnapback);
-	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	controls.ySnapback = controls.snapbackDefault;
 	EEPROM.put(_eepromySnapback,controls.ySnapback);
-	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
+	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
-	_gains.xSmoothing = _smoothingMin;
-	EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
-	_gains.ySmoothing = _smoothingMin;
-	EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+	gains.xSmoothing = controls.smoothingMin;
+	EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+	gains.ySmoothing = controls.smoothingMin;
+	EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 
-	_gains.cXSmoothing = _smoothingMin;
-	EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
-	_gains.cYSmoothing = _smoothingMin;
-	EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
+	gains.cXSmoothing = controls.smoothingMin;
+	EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+	gains.cYSmoothing = controls.smoothingMin;
+	EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains();
 
@@ -1376,7 +1369,7 @@ void setPinModes(){
 	bounceDd.attach(_pinDd);
 	bounceDd.interval(1000);
 }
-void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
+void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains){
 	btn.A = !digitalRead(_pinA);
 	btn.B = !digitalRead(_pinB);
 	btn.X = !digitalRead(controls.pinXSwappable);
@@ -1510,10 +1503,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			btn.Cy = (uint8_t) 127.5 + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
-			resetDefaults(SOFT, controls);//don't reset sticks
+			resetDefaults(SOFT, controls, gains);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
-			resetDefaults(HARD, controls);//do reset sticks
+			resetDefaults(HARD, controls, gains);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
@@ -1550,31 +1543,31 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			_advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.L && hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
-			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls);
+			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && hardware.X && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
-			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls);
+			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && hardware.Y && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
-			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls);
+			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && hardware.Y && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
-			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls);
+			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && btn.A && btn.Du) { //Increase X-axis Delay
-			adjustSmoothing(true, true, true, btn, hardware);
+			adjustSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && btn.A && btn.Dd) { //Decrease X-axis Delay
-			adjustSmoothing(true, true, false, btn, hardware);
+			adjustSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && btn.B && btn.Du) { //Increase Y-axis Delay
-			adjustSmoothing(true, false, true, btn, hardware);
+			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && btn.B && btn.Dd) { //Decrease Y-axis Delay
-			adjustSmoothing(true, false, false, btn, hardware);
+			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
 			showAstickSettings(btn, hardware, controls);
 		} else if(hardware.R && hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
-			adjustCstickSmoothing(true, true, true, btn, hardware);
+			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.R && hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
-			adjustCstickSmoothing(true, true, false, btn, hardware);
+			adjustCstickSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.R && hardware.Y && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
-			adjustCstickSmoothing(true, false, true, btn, hardware);
+			adjustCstickSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains);
 		} else if(hardware.R && hardware.Y && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
-			adjustCstickSmoothing(true, false, false, btn, hardware);
+			adjustCstickSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains);
 		} else if(hardware.R && btn.A && btn.Du) { //Increase C-stick X Offset
 			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && btn.A && btn.Dd) { //Decrease C-stick X Offset
@@ -1959,7 +1952,7 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	EEPROM.put(_eepromAutoInit, controls.autoInit);
 }
 
-void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
+void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains){
 	Serial.println("adjusting snapback filtering");
 	if(axis == XAXIS && increase == INCREASE){
 		controls.xSnapback = min(controls.xSnapback+1, controls.snapbackMax);
@@ -1983,8 +1976,8 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 		Serial.println(controls.ySnapback);
 	}
 
-	_gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
-	_gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
+	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains();
@@ -1997,47 +1990,47 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 	EEPROM.put(_eepromxSnapback,controls.xSnapback);
 	EEPROM.put(_eepromySnapback,controls.ySnapback);
 }
-void adjustSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
+void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains) {
 	Serial.println("Adjusting Smoothing");
-	if (_xAxis && _increase && _change) {
-		_gains.xSmoothing = _gains.xSmoothing + 0.1;
-		if(_gains.xSmoothing > _smoothingMax) {
-			_gains.xSmoothing = _smoothingMax;
+	if (axis == XAXIS && increase == INCREASE) {
+		gains.xSmoothing = gains.xSmoothing + 0.1;
+		if(gains.xSmoothing > controls.smoothingMax) {
+			gains.xSmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
+		EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
 		Serial.print("X Smoothing increased to:");
-		Serial.println(_gains.xSmoothing);
-	} else if(_xAxis && !_increase && _change) {
-		_gains.xSmoothing = _gains.xSmoothing - 0.1;
-		if(_gains.xSmoothing < _smoothingMin) {
-			_gains.xSmoothing = _smoothingMin;
+		Serial.println(gains.xSmoothing);
+	} else if(axis == XAXIS && increase == DECREASE) {
+		gains.xSmoothing = gains.xSmoothing - 0.1;
+		if(gains.xSmoothing < controls.smoothingMin) {
+			gains.xSmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromxSmoothing, _gains.xSmoothing);
+		EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
 		Serial.print("X Smoothing decreased to:");
-		Serial.println(_gains.xSmoothing);
-	} else if(!_xAxis && _increase && _change) {
-		_gains.ySmoothing = _gains.ySmoothing + 0.1;
-		if (_gains.ySmoothing > _smoothingMax) {
-			_gains.ySmoothing = _smoothingMax;
+		Serial.println(gains.xSmoothing);
+	} else if(axis == YAXIS && increase == INCREASE) {
+		gains.ySmoothing = gains.ySmoothing + 0.1;
+		if (gains.ySmoothing > controls.smoothingMax) {
+			gains.ySmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+		EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 		Serial.print("Y Smoothing increased to:");
-		Serial.println(_gains.ySmoothing);
-	} else if(!_xAxis && !_increase && _change) {
-		_gains.ySmoothing = _gains.ySmoothing - 0.1;
-		if (_gains.ySmoothing < _smoothingMin) {
-			_gains.ySmoothing = _smoothingMin;
+		Serial.println(gains.ySmoothing);
+	} else if(axis == YAXIS && increase == DECREASE) {
+		gains.ySmoothing = gains.ySmoothing - 0.1;
+		if (gains.ySmoothing < controls.smoothingMin) {
+			gains.ySmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromySmoothing, _gains.ySmoothing);
+		EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 		Serial.print("Y Smoothing decreased to:");
-		Serial.println(_gains.ySmoothing);
+		Serial.println(gains.ySmoothing);
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains();
 
-	btn.Cx = (uint8_t) (127.5 + (_gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (127.5 + (_gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (127.5 + (gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (127.5 + (gains.ySmoothing * 10));
 
 	clearButtons(2000, btn, hardware);
 }
@@ -2052,36 +2045,36 @@ void showAstickSettings(Buttons &btn, HardwareButtons &hardware, const ControlCo
 
 	clearButtons(2000, btn, hardware);
 }
-void adjustCstickSmoothing(bool _change, bool _xAxis, bool _increase, Buttons &btn, HardwareButtons &hardware) {
+void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains) {
 	Serial.println("Adjusting C-Stick Smoothing");
-	if (_xAxis && _increase && _change) {
+	if (axis == XAXIS && increase == INCREASE) {
 		_gains.cXSmoothing = _gains.cXSmoothing + 0.1;
-		if(_gains.cXSmoothing > _smoothingMax) {
-			_gains.cXSmoothing = _smoothingMax;
+		if(_gains.cXSmoothing > controls.smoothingMax) {
+			_gains.cXSmoothing = controls.smoothingMax;
 		}
 		EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing increased to:");
 		Serial.println(_gains.cXSmoothing);
-	} else if(_xAxis && !_increase && _change) {
+	} else if(axis == XAXIS && increase == DECREASE) {
 		_gains.cXSmoothing = _gains.cXSmoothing - 0.1;
-		if(_gains.cXSmoothing < _smoothingMin) {
-			_gains.cXSmoothing = _smoothingMin;
+		if(_gains.cXSmoothing < controls.smoothingMin) {
+			_gains.cXSmoothing = controls.smoothingMin;
 		}
 		EEPROM.put(_eepromCxSmoothing, _gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing decreased to:");
 		Serial.println(_gains.cXSmoothing);
-	} else if(!_xAxis && _increase && _change) {
+	} else if(axis == YAXIS && increase == INCREASE) {
 		_gains.cYSmoothing = _gains.cYSmoothing + 0.1;
-		if (_gains.cYSmoothing > _smoothingMax) {
-			_gains.cYSmoothing = _smoothingMax;
+		if (_gains.cYSmoothing > controls.smoothingMax) {
+			_gains.cYSmoothing = controls.smoothingMax;
 		}
 		EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing increased to:");
 		Serial.println(_gains.cYSmoothing);
-	} else if(!_xAxis && !_increase && _change) {
+	} else if(axis == YAXIS && increase == DECREASE) {
 		_gains.cYSmoothing = _gains.cYSmoothing - 0.1;
-		if (_gains.cYSmoothing < _smoothingMin) {
-			_gains.cYSmoothing = _smoothingMin;
+		if (_gains.cYSmoothing < controls.smoothingMin) {
+			_gains.cYSmoothing = controls.smoothingMin;
 		}
 		EEPROM.put(_eepromCySmoothing, _gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing decreased to:");
@@ -2255,10 +2248,11 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 }
 void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
-	btn.Ax = _analogCenter;
-	btn.Ay = _analogCenter;
-	btn.Cx = _analogCenter;
-	btn.Cy = _analogCenter;
+	//We choose 127 for this, and elsewhere we use an offset of 127.5 truncated to int in order to round properly
+	btn.Ax = 127;
+	btn.Ay = 127;
+	btn.Cx = 127;
+	btn.Cy = 127;
 
 	//read the ADC inputs for the analog triggers a few times and choose the startup value to be the maximum that was recorded
 	//these values could be used as offsets to set particular trigger values
@@ -2389,8 +2383,8 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 	//Run a simple low-pass filter
 	static float _oldPosAx = 0;
 	static float _oldPosAy = 0;
-	float posAx = _g.xSmoothing*_xPosFilt + (1-_g.xSmoothing)*_oldPosAx;
-	float posAy = _g.ySmoothing*_yPosFilt + (1-_g.ySmoothing)*_oldPosAy;
+	float posAx = _normGains.xSmoothing*_xPosFilt + (1-_normGains.xSmoothing)*_oldPosAx;
+	float posAy = _normGains.ySmoothing*_yPosFilt + (1-_normGains.ySmoothing)*_oldPosAy;
 	_oldPosAx = posAx;
 	_oldPosAy = posAy;
 
@@ -2399,9 +2393,9 @@ void readSticks(int readA, int readC, Buttons &btn, HardwareButtons &hardware, C
 	float oldCY = _cYPos;
 	_cXPos = posCx;
 	_cYPos = posCy;
-	float xWeight1 = _g.cXSmoothing;
+	float xWeight1 = _normGains.cXSmoothing;
 	float xWeight2 = 1-xWeight1;
-	float yWeight1 = _g.cYSmoothing;
+	float yWeight1 = _normGains.cYSmoothing;
 	float yWeight2 = 1-yWeight1;
 
 	_cXPos = xWeight1*_cXPos + xWeight2*oldCX;
@@ -2996,7 +2990,7 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 
 #ifdef USEMEDIAN
 		runMedian(X, _xPosList, _xMedianIndex);
-    runMedian(Y, _yPosList, _yMedianIndex);
+		runMedian(Y, _yPosList, _yMedianIndex);
 #endif
 	}
 
@@ -3204,21 +3198,21 @@ void recomputeGains(){
     //So now, this should be called any time _gains gets changed.
     const float timeFactor = 1.0 / 1.2;
     const float timeDivisor = 1.2 / 1.0;
-    _g.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
-    _g.xVelDecay     = _gains.xVelDecay      * timeFactor;
-    _g.yVelDecay     = _gains.yVelDecay      * timeFactor;
-    _g.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
-    _g.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
-    _g.xVelDamp      = _gains.xVelDamp       * timeDivisor;
-    _g.yVelDamp      = _gains.yVelDamp       * timeDivisor;
-    _g.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
-    _g.accelThresh   = 1/(_gains.accelThresh * timeFactor);
-    _g.velThresh     = _g.velThresh*_g.velThresh;//square it because it's used squared
-    _g.accelThresh   = _g.accelThresh*_g.accelThresh;
-    _g.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
-    _g.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
-    _g.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
-    _g.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
+    _normGains.maxStick      = _gains.maxStick*_gains.maxStick;//we actually use the square
+    _normGains.xVelDecay     = _gains.xVelDecay      * timeFactor;
+    _normGains.yVelDecay     = _gains.yVelDecay      * timeFactor;
+    _normGains.xVelPosFactor = _gains.xVelPosFactor  * timeFactor;
+    _normGains.yVelPosFactor = _gains.yVelPosFactor  * timeFactor;
+    _normGains.xVelDamp      = _gains.xVelDamp       * timeDivisor;
+    _normGains.yVelDamp      = _gains.yVelDamp       * timeDivisor;
+    _normGains.velThresh     = 1/(_gains.velThresh   * timeFactor);//slight optimization by using the inverse
+    _normGains.accelThresh   = 1/(_gains.accelThresh * timeFactor);
+    _normGains.velThresh     = _normGains.velThresh*_normGains.velThresh;//square it because it's used squared
+    _normGains.accelThresh   = _normGains.accelThresh*_normGains.accelThresh;
+    _normGains.xSmoothing    = pow(1-_gains.xSmoothing, timeDivisor);
+    _normGains.ySmoothing    = pow(1-_gains.ySmoothing, timeDivisor);
+    _normGains.cXSmoothing   = pow(1-_gains.cXSmoothing, timeDivisor);
+    _normGains.cYSmoothing   = pow(1-_gains.cYSmoothing, timeDivisor);
 }
 void runKalman(const float xZ,const float yZ, ControlConfig &controls){
 	//Serial.println("Running Kalman");
@@ -3254,7 +3248,7 @@ void runKalman(const float xZ,const float yZ, ControlConfig &controls){
 	const float oldYPosDiff = oldYPos - oldYPosFilt;
 
 	//compute stick position exponents for weights
-	const float stickDistance2 = min(_g.maxStick, _xPos*_xPos + _yPos*_yPos)/_g.maxStick;//0-1
+	const float stickDistance2 = min(_normGains.maxStick, _xPos*_xPos + _yPos*_yPos)/_normGains.maxStick;//0-1
 	const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
 	//the current velocity weight for the filtered velocity is the stick r^2
@@ -3286,27 +3280,27 @@ void runKalman(const float xZ,const float yZ, ControlConfig &controls){
 
 	//But if we xSnapback or ySnapback is zero, we skip the calculation
 	if(controls.xSnapback != 0){
-		_xVelFilt = velWeight1*_xVel + (1-_g.xVelDecay)*velWeight2*oldXVelFilt + _g.xVelPosFactor*oldXPosDiff;
+		_xVelFilt = velWeight1*_xVel + (1-_normGains.xVelDecay)*velWeight2*oldXVelFilt + _normGains.xVelPosFactor*oldXPosDiff;
 
-		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_g.velThresh + xAccel*xAccel*_g.accelThresh);
+		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*_normGains.velThresh + xAccel*xAccel*_normGains.accelThresh);
 		const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		_xPosFilt = xPosWeight1*_xPos +
-		            xPosWeight2*(oldXPosFilt + (1-_g.xVelDamp)*_xVelFilt);
+		            xPosWeight2*(oldXPosFilt + (1-_normGains.xVelDamp)*_xVelFilt);
 	} else {
 		_xPosFilt = _xPos;
 	}
 
 	if(controls.ySnapback != 0){
-		_yVelFilt = velWeight1*_yVel + (1-_g.yVelDecay)*velWeight2*oldYVelFilt + _g.yVelPosFactor*oldYPosDiff;
+		_yVelFilt = velWeight1*_yVel + (1-_normGains.yVelDecay)*velWeight2*oldYVelFilt + _normGains.yVelPosFactor*oldYPosDiff;
 
-		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_g.velThresh + yAccel*yAccel*_g.accelThresh);
+		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*_normGains.velThresh + yAccel*yAccel*_normGains.accelThresh);
 		const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		_yPosFilt = yPosWeight1*_yPos +
-		            yPosWeight2*(oldYPosFilt + (1-_g.yVelDamp)*_yVelFilt);
+		            yPosWeight2*(oldYPosFilt + (1-_normGains.yVelDamp)*_yVelFilt);
 	} else {
 		_yPosFilt = _yPos;
 	}
