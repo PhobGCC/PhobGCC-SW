@@ -2917,15 +2917,17 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 
 	//Now, in order to apply stretch leniency to angles within the deadzone,
 	// we need to figure out whether the previous angle or next angle was a cardinal.
-	//If the previous one is a cardinal AND the angle is in the deadzone, we make the upperstretchlimit bigger.
-	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) < (17*M_PI/180)){
-		upperStretchLimit = prevAngle + 1.6*(thisMeasAngle-prevMeasAngle);
+	//If the previous one is a cardinal AND the angle is in the deadzone, we make the upperstretchlimit bigger, only if it can't reach 0.3000.
+	const float minThreshold  = 0.1500/0.9750;//radians; we don't want to fix things smaller than this
+	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
+	const float deadzonePlus  = 0.3000/0.9500;//radians; we want to make sure the adjustment can make it here
+	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
+		upperStretchLimit = prevAngle + max(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
 	}
 	//If the next one is a cardinal AND the angle is in the deadzone, we make the lowerstretchlimit smaller.
-	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) < (17*M_PI/180)){
-		lowerStretchLimit = nextAngle - 1.6*(nextMeasAngle-thisMeasAngle);
+	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
+		lowerStretchLimit = nextAngle - max(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
 	}
-
 
 	float lowerDistortLimit  = max(lowerCompressLimit, lowerStretchLimit);
 	float upperDistortLimit  = min(upperCompressLimit, upperStretchLimit);
