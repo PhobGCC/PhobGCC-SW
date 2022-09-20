@@ -18,7 +18,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 //#include "src/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "src/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "src/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+//#include "src/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -82,7 +82,7 @@ struct HardwareButtons{
 } _hardware;
 
 enum JumpConfig {
-	DEFAULT,
+	DEFAULTJUMP,
 	SWAP_XZ,
 	SWAP_YZ
 };
@@ -146,8 +146,8 @@ ControlConfig _controls{
 	.pinXSwappable = _pinX,
 	.pinYSwappable = _pinY,
 	.pinZSwappable = _pinZ,
-	.jumpConfig = DEFAULT,
-	.jumpConfigMin = DEFAULT,
+	.jumpConfig = DEFAULTJUMP,
+	.jumpConfigMin = DEFAULTJUMP,
 	.jumpConfigMax = SWAP_YZ,
 	.lConfig = 0,
 	.rConfig = 0,
@@ -1019,11 +1019,11 @@ int readEEPROM(ControlConfig &controls){
 	//get the jump setting
 	EEPROM.get(_eepromJump, controls.jumpConfig);
 	if(controls.jumpConfig < controls.jumpConfigMin){
-		controls.jumpConfig = DEFAULT;
+		controls.jumpConfig = DEFAULTJUMP;
 		numberOfNaN++;
 	}
 	if(controls.jumpConfig > controls.jumpConfigMax){
-		controls.jumpConfig = DEFAULT;
+		controls.jumpConfig = DEFAULTJUMP;
 		numberOfNaN++;
 	}
 	setJump(controls);
@@ -1248,7 +1248,7 @@ int readEEPROM(ControlConfig &controls){
 void resetDefaults(HardReset reset, ControlConfig &controls){
 	Serial.println("RESETTING ALL DEFAULTS");
 
-	controls.jumpConfig = DEFAULT;
+	controls.jumpConfig = DEFAULTJUMP;
 	setJump(controls);
 	EEPROM.put(_eepromJump,controls.jumpConfig);
 
@@ -1604,7 +1604,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			readJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
-			readJumpConfig(DEFAULT, controls);
+			readJumpConfig(DEFAULTJUMP, controls);
 			freezeSticks(2000, btn, hardware);
 		}
 	} else if (_currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
@@ -2192,7 +2192,7 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 	Serial.print("setting jump to: ");
 	if (controls.jumpConfig == jumpConfig) {
-		controls.jumpConfig = DEFAULT;
+		controls.jumpConfig = DEFAULTJUMP;
 		Serial.println("normal again");
 	} else {
 		controls.jumpConfig = jumpConfig;
@@ -2885,6 +2885,8 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	}
 	*/
 
+	bool isDiagonal = false;
+
 	//Now we need to determine the stretch/compression limit
 	//Figure out the previous and next notch angles.
 	//For most they're the adjacent notches.
@@ -2894,6 +2896,7 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	if((notchIndex - 2) % 4 == 0){
 		prevIndex = (notchIndex-2+_noOfNotches) % _noOfNotches;
 		nextIndex = (notchIndex+2) % _noOfNotches;
+		isDiagonal = true;
 	}
 	float prevAngle = notchAngles[prevIndex];
 	float nextAngle = notchAngles[nextIndex];
@@ -2906,15 +2909,35 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	if(nextMeasAngle < thisMeasAngle){
 		nextMeasAngle += 2*M_PI;
 	}
-	float lowerStretchLimit = max(prevAngle + 0.7*(thisMeasAngle-prevMeasAngle), nextAngle - 1.3*(nextMeasAngle-thisMeasAngle));
-	float upperStretchLimit = min(prevAngle + 1.3*(thisMeasAngle-prevMeasAngle), nextAngle - 0.7*(nextMeasAngle-thisMeasAngle));
-	if(upperStretchLimit < lowerStretchLimit){
-		upperStretchLimit += 2*M_PI;
+
+	float lowerCompressLimit = prevAngle + 0.7*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
+	float lowerStretchLimit  = nextAngle - 1.3*(nextMeasAngle-thisMeasAngle);//how far we can stretch when reducing the angle
+	float upperCompressLimit = nextAngle - 0.7*(nextMeasAngle-thisMeasAngle);//how far we can squish when increasing the angle
+	float upperStretchLimit  = prevAngle + 1.3*(thisMeasAngle-prevMeasAngle);//how far we can stretch when increasing the angle
+
+	//Now, in order to apply stretch leniency to angles within the deadzone,
+	// we need to figure out whether the previous angle or next angle was a cardinal.
+	//If the previous one is a cardinal AND the angle is in the deadzone, we make the upperstretchlimit bigger, only if it can't reach 0.3000.
+	const float minThreshold  = 0.1500/0.9750;//radians; we don't want to fix things smaller than this
+	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
+	const float deadzonePlus  = 0.3000/0.9500;//radians; we want to make sure the adjustment can make it here
+	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
+		upperStretchLimit = prevAngle + max(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
+	}
+	//If the next one is a cardinal AND the angle is in the deadzone, we make the lowerstretchlimit smaller.
+	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
+		lowerStretchLimit = nextAngle - max(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
+	}
+
+	float lowerDistortLimit  = max(lowerCompressLimit, lowerStretchLimit);
+	float upperDistortLimit  = min(upperCompressLimit, upperStretchLimit);
+	if(upperDistortLimit < lowerDistortLimit){
+		upperDistortLimit += 2*M_PI;
 	}
 
 	//Combine the limits
-	float lowerLimit = lowerStretchLimit;//max(lowerStretchLimit, lowerPosLimit);
-	float upperLimit = upperStretchLimit;//min(upperStretchLimit, upperPosLimit);
+	float lowerLimit = lowerDistortLimit;//max(lowerStretchLimit, lowerPosLimit);
+	float upperLimit = upperDistortLimit;//min(upperStretchLimit, upperPosLimit);
 	if(upperLimit < lowerLimit){
 		upperLimit += 2*M_PI;
 	}
