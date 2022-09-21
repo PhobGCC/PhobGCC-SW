@@ -41,8 +41,6 @@ const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
 
 
-
-
 float _dT;
 bool _running = false;
 
