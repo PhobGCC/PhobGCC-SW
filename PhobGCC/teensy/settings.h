@@ -1,0 +1,60 @@
+#ifndef SETTINGS_H
+#define SETTINGS_H
+
+#include <EEPROM.h>
+
+#include "../common/stick.h"
+
+//Reimplement all the functions in this header for each platform.
+//Include the appropriate one in each per-board file.
+
+namespace Eeprom {
+	//index values to store data into eeprom
+	const int _bytesPerFloat = 4;
+	const int _eepromAPointsX = 0;
+	const int _eepromAPointsY = _eepromAPointsX+_noOfCalibrationPoints*_bytesPerFloat;
+	const int _eepromCPointsX = _eepromAPointsY+_noOfCalibrationPoints*_bytesPerFloat;
+	const int _eepromCPointsY = _eepromCPointsX+_noOfCalibrationPoints*_bytesPerFloat;
+	const int _eepromxSnapback = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
+	const int _eepromySnapback = _eepromxSnapback+_bytesPerFloat;
+	const int _eepromJump = _eepromySnapback+_bytesPerFloat;
+	const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
+	const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
+	const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
+	const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
+	const int _eepromcXOffset = _eepromRToggle+_bytesPerFloat;
+	const int _eepromcYOffset = _eepromcXOffset+_bytesPerFloat;
+	const int _eepromxSmoothing = _eepromcYOffset+_bytesPerFloat;
+	const int _eepromySmoothing = _eepromxSmoothing+_bytesPerFloat;
+	const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
+	const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
+	const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
+	const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
+	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
+	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
+};
+
+#include "../common/structsAndEnums.h"
+
+JumpConfig getJumpSetting() {
+	JumpConfig output;
+	EEPROM.get(Eeprom::_eepromJump, output);
+	return output;
+};
+
+void setJumpSetting(const JumpConfig jump) {
+	EEPROM.put(Eeprom::_eepromJump, jump);
+};
+
+int getLSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromLToggle, output);
+	return output;
+};
+
+void setLSetting(const int L) {
+	EEPROM.put(Eeprom::_eepromLToggle, L);
+};
+
+
+#endif //SETTINGS_H

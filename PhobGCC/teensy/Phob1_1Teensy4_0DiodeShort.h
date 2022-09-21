@@ -3,9 +3,10 @@
 
 #include <ADC.h>
 #include <VREF.h>
+#include "settings.h"
 
-//Hardware specific code for PhobGCC board revision 1.1 with a Teensy 3.2
-#define TEENSY3_2
+//Hardware specific code for PhobGCC board revision 1.1 with a Teensy 4.0
+#define TEENSY4_0
 
 //Hardware specific code for half duplex—using one pin for both TX and RX
 #define HALFDUPLEX
@@ -17,12 +18,10 @@ const int _pinL = 12;
 const int _pinR = 3;
 const int _pinAx = 15;
 const int _pinAy = 14;
-//const int _pinCx = 21;
-//const int _pinCy = 22;
 const int _pinCx = 22;
 const int _pinCy = 21;
-const int _pinRX = 9;
-const int _pinTX = 10;
+const int _pinRX = 7;
+const int _pinTX = 8;
 const int _pinDr = 6;
 const int _pinDu = 18;
 const int _pinDl = 17;
@@ -34,13 +33,13 @@ const int _pinB = 20;
 const int _pinZ = 0;
 const int _pinS = 19;
 const int _pinLED = 13;
-const int _pinInt = 9;
+const int _pinInt = 7;
 
 //don't #define USEADCSCALE
 
 void serialSetup() {
-    Serial.begin(57600);
-    Serial.println("This is the header for board revision 1.1 with a Teensy 3.2.");
+    Serial.begin(115200);
+    Serial.println("This is the header for board revision 1.1 with a Teensy 4.0.");
 }
 
 void ADCSetup(ADC * adc,
@@ -53,4 +52,7 @@ void ADCSetup(ADC * adc,
 
 }
 
+//must include at the end
+#include "../common/phobGCC.h"
+#include "comms.h"
 #endif // BOARD_H

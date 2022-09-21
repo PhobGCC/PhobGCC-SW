@@ -3,9 +3,13 @@
 
 #include <ADC.h>
 #include <VREF.h>
+#include "settings.h"
 
 //Hardware specific code for PhobGCC board revision 1.1 with a Teensy 3.2
 #define TEENSY3_2
+
+//Hardware specific code for half duplex—using one pin for both TX and RX
+#define HALFDUPLEX
 
 //defining which pin is what on the teensy
 const int _pinLa = 16;
@@ -14,8 +18,6 @@ const int _pinL = 12;
 const int _pinR = 3;
 const int _pinAx = 15;
 const int _pinAy = 14;
-//const int _pinCx = 21;
-//const int _pinCy = 22;
 const int _pinCx = 22;
 const int _pinCy = 21;
 const int _pinRX = 9;
@@ -50,4 +52,7 @@ void ADCSetup(ADC * adc,
 
 }
 
+//must include at the end
+#include "../common/phobGCC.h"
+#include "comms.h"
 #endif // BOARD_H
