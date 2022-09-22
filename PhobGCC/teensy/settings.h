@@ -56,5 +56,15 @@ void setLSetting(const int L) {
 	EEPROM.put(Eeprom::_eepromLToggle, L);
 };
 
+int getRSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromRToggle, output);
+	return output;
+};
+
+void setRSetting(const int R) {
+	EEPROM.put(Eeprom::_eepromRToggle, R);
+};
+
 
 #endif //SETTINGS_H

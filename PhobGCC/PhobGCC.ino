@@ -192,7 +192,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the R setting
-	EEPROM.get(_eepromRToggle, controls.rConfig);
+	//EEPROM.get(_eepromRToggle, controls.rConfig);
+	controls.rConfig = getRSetting();
 	if(controls.rConfig < controls.triggerConfigMin) {
 		controls.rConfig = controls.triggerDefault;
 		numberOfNaN++;
@@ -410,7 +411,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.rConfig = controls.triggerDefault;
 	//EEPROM.put(_eepromLToggle, controls.lConfig);
 	setLSetting(controls.lConfig);
-	EEPROM.put(_eepromRToggle, controls.rConfig);
+	//EEPROM.put(_eepromRToggle, controls.rConfig);
+	setRSetting(controls.rConfig);
 
 	controls.cXOffset = 0;
 	controls.cYOffset = 0;
@@ -1335,7 +1337,8 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 	}
 	//EEPROM.put(_eepromLToggle, controls.lConfig);
 	setLSetting(controls.lConfig);
-	EEPROM.put(_eepromRToggle, controls.rConfig);
+	//EEPROM.put(_eepromRToggle, controls.rConfig);
+	setRSetting(controls.rConfig);
 
 	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
 	//(user-facing mode 5)
