@@ -227,7 +227,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 
 	//get the C-stick X offset
-	EEPROM.get(_eepromcXOffset, controls.cXOffset);
+	//EEPROM.get(_eepromcXOffset, controls.cXOffset);
+	controls.cXOffset = getCXOffsetSetting();
 	if(controls.cXOffset > controls.cMax) {
 		controls.cXOffset = 0;
 		numberOfNaN++;
@@ -237,7 +238,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the C-stick Y offset
-	EEPROM.get(_eepromcYOffset, controls.cYOffset);
+	//EEPROM.get(_eepromcYOffset, controls.cYOffset);
+	controls.cYOffset = getCYOffsetSetting();
 	if(controls.cYOffset > controls.cMax) {
 		controls.cYOffset = 0;
 		numberOfNaN++;
@@ -418,8 +420,10 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.cXOffset = 0;
 	controls.cYOffset = 0;
-	EEPROM.put(_eepromcXOffset, controls.cXOffset);
-	EEPROM.put(_eepromcYOffset, controls.cYOffset);
+	//EEPROM.put(_eepromcXOffset, controls.cXOffset);
+	setCXOffsetSetting(controls.cXOffset);
+	//EEPROM.put(_eepromcYOffset, controls.cYOffset);
+	setCYOffsetSetting(controls.cYOffset);
 
 	controls.xSnapback = controls.snapbackDefault;
 	EEPROM.put(_eepromxSnapback,controls.xSnapback);
@@ -1199,7 +1203,8 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset > controls.cMax) {
 			controls.cXOffset = controls.cMax;
 		}
-		EEPROM.put(_eepromcXOffset, controls.cXOffset);
+		//EEPROM.put(_eepromcXOffset, controls.cXOffset);
+		setCXOffsetSetting(controls.cXOffset);
 		Serial.print("X offset increased to:");
 		Serial.println(controls.cXOffset);
 	} else if(axis == XAXIS && increase == DECREASE) {
@@ -1207,7 +1212,8 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset < controls.cMin) {
 			controls.cXOffset = controls.cMin;
 		}
-		EEPROM.put(_eepromcXOffset, controls.cXOffset);
+		//EEPROM.put(_eepromcXOffset, controls.cXOffset);
+		setCXOffsetSetting(controls.cXOffset);
 		Serial.print("X offset decreased to:");
 		Serial.println(controls.cXOffset);
 	} else if(axis == YAXIS && increase == INCREASE) {
@@ -1215,7 +1221,8 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset > controls.cMax) {
 			controls.cYOffset = controls.cMax;
 		}
-		EEPROM.put(_eepromcYOffset, controls.cYOffset);
+		//EEPROM.put(_eepromcYOffset, controls.cYOffset);
+		setCYOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset increased to:");
 		Serial.println(controls.cYOffset);
 	} else if(axis == YAXIS && increase == DECREASE) {
@@ -1223,7 +1230,8 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset < controls.cMin) {
 			controls.cYOffset = controls.cMin;
 		}
-		EEPROM.put(_eepromcYOffset, controls.cYOffset);
+		//EEPROM.put(_eepromcYOffset, controls.cYOffset);
+		setCYOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset decreased to:");
 		Serial.println(controls.cYOffset);
 	}
