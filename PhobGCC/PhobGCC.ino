@@ -204,7 +204,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the L-trigger Offset value
-	EEPROM.get(_eepromLOffset, controls.lTriggerOffset);
+	//EEPROM.get(_eepromLOffset, controls.lTriggerOffset);
+	controls.lTriggerOffset = getLOffsetSetting();
 	if(controls.lTriggerOffset > controls.triggerMax) {
 		controls.lTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
@@ -214,7 +215,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the R-trigger Offset value
-	EEPROM.get(_eepromROffset, controls.rTriggerOffset);
+	//EEPROM.get(_eepromROffset, controls.rTriggerOffset);
+	controls.rTriggerOffset = getROffsetSetting();
 	if(controls.rTriggerOffset > controls.triggerMax) {
 		controls.rTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
@@ -440,8 +442,10 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;
-	EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
-	EEPROM.put(_eepromROffset, controls.rTriggerOffset);
+	//EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
+	setLOffsetSetting(controls.lTriggerOffset);
+	//EEPROM.put(_eepromROffset, controls.rTriggerOffset);
+	setROffsetSetting(controls.rTriggerOffset);
 
 	controls.rumble = controls.rumbleDefault;
 	_rumblePower = calcRumblePower(controls.rumble);
@@ -1263,8 +1267,10 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 		}
 	}
 
-	EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
-	EEPROM.put(_eepromROffset, controls.rTriggerOffset);
+	//EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
+	setLOffsetSetting(controls.lTriggerOffset);
+	//EEPROM.put(_eepromROffset, controls.rTriggerOffset);
+	setROffsetSetting(controls.rTriggerOffset);
 
 	if(controls.lTriggerOffset > 99) {
 		btn.Ax = (uint8_t) (127.5 + 100);

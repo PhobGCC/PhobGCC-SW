@@ -66,5 +66,24 @@ void setRSetting(const int R) {
 	EEPROM.put(Eeprom::_eepromRToggle, R);
 };
 
+int getLOffsetSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromLOffset, output);
+	return output;
+};
+
+void setLOffsetSetting(const int L) {
+	EEPROM.put(Eeprom::_eepromLOffset, L);
+};
+
+int getROffsetSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromROffset, output);
+	return output;
+};
+
+void setROffsetSetting(const int R) {
+	EEPROM.put(Eeprom::_eepromROffset, R);
+};
 
 #endif //SETTINGS_H
