@@ -20,14 +20,12 @@ const int _noOfCalibrationPoints = _noOfNotches * 2;
 const int _noOfAdjNotches = 12;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
-const int _notCalibrating = -1;
 const float _maxStickAngle = 0.4886921906;//28 degrees; this is the max angular deflection of the stick.
 bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 bool _advanceCal = false;
 bool _advanceCalPressed = false;
 bool _undoCal = false;
 bool _undoCalPressed = false;
-int _currentCalStep; //keeps track of which caliblration step is active, -1 means calibration is not running
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
 const int _calibrationPoints = _noOfNotches+1; //number of calibration points for the c-stick and a-stick for a controller without notches
 float _cleanedPointsX[_noOfNotches+1]; //array to hold the x coordinates of the stick positions for calibration
