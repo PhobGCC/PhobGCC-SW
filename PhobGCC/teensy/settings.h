@@ -186,4 +186,52 @@ void setAutoInitSetting(const int autoInit) {
 	EEPROM.put(Eeprom::_eepromAutoInit, autoInit);
 };
 
+void getAPointsXSetting(float points[]) {
+	EEPROM.get(Eeprom::_eepromAPointsX, points);
+};
+
+void setAPointsXSetting(float points[]) {
+	EEPROM.put(Eeprom::_eepromAPointsX, points);
+};
+
+void getAPointsYSetting(float points[]) {
+	EEPROM.get(Eeprom::_eepromAPointsY, points);
+};
+
+void setAPointsYSetting(float points[]) {
+	EEPROM.put(Eeprom::_eepromAPointsY, points);
+};
+
+void getCPointsXSetting(float points[]) {
+	EEPROM.get(Eeprom::_eepromCPointsX, points);
+};
+
+void setCPointsXSetting(float points[]) {
+	EEPROM.put(Eeprom::_eepromCPointsX, points);
+};
+
+void getCPointsYSetting(float points[]) {
+	EEPROM.get(Eeprom::_eepromCPointsY, points);
+};
+
+void setCPointsYSetting(float points[]) {
+	EEPROM.put(Eeprom::_eepromCPointsY, points);
+};
+
+void getANotchAnglesSetting(float angles[]) {
+	EEPROM.get(Eeprom::_eepromANotchAngles, angles);
+};
+
+void setANotchAnglesSetting(float angles[]) {
+	EEPROM.put(Eeprom::_eepromANotchAngles, angles);
+};
+
+void getCNotchAnglesSetting(float angles[]) {
+	EEPROM.get(Eeprom::_eepromCNotchAngles, angles);
+};
+
+void setCNotchAnglesSetting(float angles[]) {
+	EEPROM.put(Eeprom::_eepromCNotchAngles, angles);
+};
+
 #endif //SETTINGS_H

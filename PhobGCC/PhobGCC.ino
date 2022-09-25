@@ -385,9 +385,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(controls.autoInit);
 
 	//get the calibration points collected during the last A stick calibration
-	EEPROM.get(_eepromAPointsX, _tempCalPointsX);
-	EEPROM.get(_eepromAPointsY, _tempCalPointsY);
-	EEPROM.get(_eepromANotchAngles, _aNotchAngles);
+	//EEPROM.get(_eepromAPointsX, _tempCalPointsX);
+	getAPointsXSetting(_tempCalPointsX);
+	//EEPROM.get(_eepromAPointsY, _tempCalPointsY);
+	getAPointsYSetting(_tempCalPointsY);
+	//EEPROM.get(_eepromANotchAngles, _aNotchAngles);
+	getANotchAnglesSetting(_aNotchAngles);
 	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
@@ -396,9 +399,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_aNotchAngles,_aFitCoeffsX,_aFitCoeffsY,_aAffineCoeffs,_aBoundaryAngles);
 
 	//get the calibration points collected during the last A stick calibration
-	EEPROM.get(_eepromCPointsX, _tempCalPointsX);
-	EEPROM.get(_eepromCPointsY, _tempCalPointsY);
-	EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
+	//EEPROM.get(_eepromCPointsX, _tempCalPointsX);
+	getCPointsXSetting(_tempCalPointsX);
+	//EEPROM.get(_eepromCPointsY, _tempCalPointsY);
+	getCPointsYSetting(_tempCalPointsY);
+	//EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
+	getCNotchAnglesSetting(_cNotchAngles);
 	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
@@ -476,15 +482,19 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 			_aNotchAngles[i] = _notchAngleDefaults[i];
 			_cNotchAngles[i] = _notchAngleDefaults[i];
 		}
-		EEPROM.put(_eepromANotchAngles,_aNotchAngles);
-		EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
+		//EEPROM.put(_eepromANotchAngles,_aNotchAngles);
+		setANotchAnglesSetting(_aNotchAngles);
+		//EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
+		setCNotchAnglesSetting(_cNotchAngles);
 
 		for(int i = 0; i < _noOfCalibrationPoints; i++){
 			_tempCalPointsX[i] = _defaultCalPointsX[i];
 			_tempCalPointsY[i] = _defaultCalPointsY[i];
 		}
-		EEPROM.put(_eepromAPointsX,_tempCalPointsX);
-		EEPROM.put(_eepromAPointsY,_tempCalPointsY);
+		//EEPROM.put(_eepromAPointsX,_tempCalPointsX);
+		setAPointsXSetting(_tempCalPointsX);
+		//EEPROM.put(_eepromAPointsY,_tempCalPointsY);
+		setAPointsYSetting(_tempCalPointsY);
 
 		Serial.println("A calibration points stored in EEPROM");
 		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
@@ -497,8 +507,10 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 			_tempCalPointsX[i] = _defaultCalPointsX[i];
 			_tempCalPointsY[i] = _defaultCalPointsY[i];
 		}
-		EEPROM.put(_eepromCPointsX,_tempCalPointsX);
-		EEPROM.put(_eepromCPointsY,_tempCalPointsY);
+		//EEPROM.put(_eepromCPointsX,_tempCalPointsX);
+		setCPointsXSetting(_tempCalPointsX);
+		//EEPROM.put(_eepromCPointsY,_tempCalPointsY);
+		setCPointsYSetting(_tempCalPointsY);
 
 		Serial.println("C calibration points stored in EEPROM");
 		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
@@ -772,9 +784,12 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 		} else if(_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			EEPROM.get(_eepromAPointsX, _tempCalPointsX);
-			EEPROM.get(_eepromAPointsY, _tempCalPointsY);
-			EEPROM.get(_eepromANotchAngles, _aNotchAngles);
+			//EEPROM.get(_eepromAPointsX, _tempCalPointsX);
+			getAPointsXSetting(_tempCalPointsX);
+			//EEPROM.get(_eepromAPointsY, _tempCalPointsY);
+			getAPointsYSetting(_tempCalPointsY);
+			//EEPROM.get(_eepromANotchAngles, _aNotchAngles);
+			getANotchAnglesSetting(_aNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float tempCalPointsX[_noOfCalibrationPoints];
 			float tempCalPointsY[_noOfCalibrationPoints];
@@ -891,9 +906,12 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
-				EEPROM.put(_eepromCPointsX, _tempCalPointsX);
-				EEPROM.put(_eepromCPointsY, _tempCalPointsY);
-				EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
+				//EEPROM.put(_eepromCPointsX, _tempCalPointsX);
+				setCPointsXSetting(_tempCalPointsX);
+				//EEPROM.put(_eepromCPointsY, _tempCalPointsY);
+				setCPointsYSetting(_tempCalPointsY);
+				//EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
+				setCNotchAnglesSetting(_cNotchAngles);
 				controls.autoInit = 0;
 				//EEPROM.put(_eepromAutoInit, controls.autoInit);
 				setAutoInitSetting(controls.autoInit);
@@ -954,9 +972,12 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(_currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
-				EEPROM.put(_eepromAPointsX, _tempCalPointsX);
-				EEPROM.put(_eepromAPointsY, _tempCalPointsY);
-				EEPROM.put(_eepromANotchAngles, _aNotchAngles);
+				//EEPROM.put(_eepromAPointsX, _tempCalPointsX);
+				setAPointsXSetting(_tempCalPointsX);
+				//EEPROM.put(_eepromAPointsY, _tempCalPointsY);
+				setAPointsYSetting(_tempCalPointsY);
+				//EEPROM.put(_eepromANotchAngles, _aNotchAngles);
+				setANotchAnglesSetting(_aNotchAngles);
 				controls.autoInit = 0;
 				//EEPROM.put(_eepromAutoInit, controls.autoInit);
 				setAutoInitSetting(controls.autoInit);
