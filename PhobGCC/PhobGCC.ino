@@ -1,7 +1,6 @@
 //This software uses bits of code from GoodDoge's Dogebawx project, which was the initial starting point: https://github.com/DogeSSBM/DogeBawx
 
 #include <math.h>
-#include <EEPROM.h>
 #include <ADC.h>
 #include <VREF.h>
 
@@ -140,7 +139,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	int numberOfNaN = 0;
 
 	//get the jump setting
-	//EEPROM.get(_eepromJump, controls.jumpConfig);
 	controls.jumpConfig = getJumpSetting();
 	if(controls.jumpConfig < controls.jumpConfigMin){
 		controls.jumpConfig = DEFAULTJUMP;
@@ -153,7 +151,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	setJump(controls);
 
 	//get the L setting
-	//EEPROM.get(_eepromLToggle, controls.lConfig);
 	controls.lConfig = getLSetting();
 	if(controls.lConfig < controls.triggerConfigMin) {
 		controls.lConfig = controls.triggerDefault;
@@ -165,7 +162,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the R setting
-	//EEPROM.get(_eepromRToggle, controls.rConfig);
 	controls.rConfig = getRSetting();
 	if(controls.rConfig < controls.triggerConfigMin) {
 		controls.rConfig = controls.triggerDefault;
@@ -177,7 +173,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the L-trigger Offset value
-	//EEPROM.get(_eepromLOffset, controls.lTriggerOffset);
 	controls.lTriggerOffset = getLOffsetSetting();
 	if(controls.lTriggerOffset > controls.triggerMax) {
 		controls.lTriggerOffset = controls.triggerMax;
@@ -188,7 +183,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the R-trigger Offset value
-	//EEPROM.get(_eepromROffset, controls.rTriggerOffset);
 	controls.rTriggerOffset = getROffsetSetting();
 	if(controls.rTriggerOffset > controls.triggerMax) {
 		controls.rTriggerOffset = controls.triggerMax;
@@ -200,7 +194,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 
 	//get the C-stick X offset
-	//EEPROM.get(_eepromcXOffset, controls.cXOffset);
 	controls.cXOffset = getCXOffsetSetting();
 	if(controls.cXOffset > controls.cMax) {
 		controls.cXOffset = 0;
@@ -211,7 +204,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the C-stick Y offset
-	//EEPROM.get(_eepromcYOffset, controls.cYOffset);
 	controls.cYOffset = getCYOffsetSetting();
 	if(controls.cYOffset > controls.cMax) {
 		controls.cYOffset = 0;
@@ -222,7 +214,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the x-axis snapback correction
-	//EEPROM.get(_eepromxSnapback, controls.xSnapback);
 	controls.xSnapback = getXSnapbackSetting();
 	Serial.print("the xSnapback value from eeprom is:");
 	Serial.println(controls.xSnapback);
@@ -238,7 +229,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(gains.xVelDamp);
 
 	//get the y-ayis snapback correction
-	//EEPROM.get(_eepromySnapback, controls.ySnapback);
 	controls.ySnapback = getYSnapbackSetting();
 	Serial.print("the ySnapback value from eeprom is:");
 	Serial.println(controls.ySnapback);
@@ -254,7 +244,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(gains.yVelDamp);
 
 	//get the x-axis smoothing value
-	//EEPROM.get(_eepromxSmoothing, gains.xSmoothing);
 	gains.xSmoothing = getXSmoothingSetting();
 	Serial.print("the xSmoothing value from eeprom is:");
 	Serial.println(gains.xSmoothing);
@@ -271,7 +260,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the y-axis smoothing value
-	//EEPROM.get(_eepromySmoothing, gains.ySmoothing);
 	gains.ySmoothing = getYSmoothingSetting();
 	Serial.print("the ySmoothing value from eeprom is:");
 	Serial.println(gains.ySmoothing);
@@ -288,7 +276,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the c-stick x-axis smoothing value
-	//EEPROM.get(_eepromCxSmoothing, gains.cXSmoothing);
 	gains.cXSmoothing = getCxSmoothingSetting();
 	Serial.print("the cXSmoothing value from eeprom is:");
 	Serial.println(gains.cXSmoothing);
@@ -305,7 +292,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the c-stick y-axis smoothing value
-	//EEPROM.get(_eepromCySmoothing, gains.cYSmoothing);
 	gains.cYSmoothing = getCySmoothingSetting();
 	Serial.print("the cYSmoothing value from eeprom is:");
 	Serial.println(gains.cYSmoothing);
@@ -325,7 +311,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	recomputeGains(gains, normGains);
 
 	//Get the rumble value
-	//EEPROM.get(_eepromRumble, controls.rumble);
 	controls.rumble = getRumbleSetting();
 	Serial.print("Rumble value before fixing: ");
 	Serial.println(controls.rumble);
@@ -346,7 +331,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(_rumblePower);
 
 	//Get the autoinit value
-	//EEPROM.get(_eepromAutoInit, controls.autoInit);
 	controls.autoInit = getAutoInitSetting();
 	if(controls.autoInit < 0) {
 		controls.autoInit = 0;
@@ -360,11 +344,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(controls.autoInit);
 
 	//get the calibration points collected during the last A stick calibration
-	//EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 	getAPointsXSetting(_tempCalPointsX);
-	//EEPROM.get(_eepromAPointsY, _tempCalPointsY);
 	getAPointsYSetting(_tempCalPointsY);
-	//EEPROM.get(_eepromANotchAngles, _aNotchAngles);
 	getANotchAnglesSetting(_aNotchAngles);
 	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 	Serial.println("calibration points cleaned");
@@ -374,11 +355,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_aNotchAngles,_aFitCoeffsX,_aFitCoeffsY,_aAffineCoeffs,_aBoundaryAngles);
 
 	//get the calibration points collected during the last A stick calibration
-	//EEPROM.get(_eepromCPointsX, _tempCalPointsX);
 	getCPointsXSetting(_tempCalPointsX);
-	//EEPROM.get(_eepromCPointsY, _tempCalPointsY);
 	getCPointsYSetting(_tempCalPointsY);
-	//EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
 	getCNotchAnglesSetting(_cNotchAngles);
 	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 	Serial.println("calibration points cleaned");
@@ -395,63 +373,48 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.jumpConfig = DEFAULTJUMP;
 	setJump(controls);
-	//EEPROM.put(_eepromJump,controls.jumpConfig);
 	setJumpSetting(controls.jumpConfig);
 
 	controls.lConfig = controls.triggerDefault;
 	controls.rConfig = controls.triggerDefault;
-	//EEPROM.put(_eepromLToggle, controls.lConfig);
 	setLSetting(controls.lConfig);
-	//EEPROM.put(_eepromRToggle, controls.rConfig);
 	setRSetting(controls.rConfig);
 
 	controls.cXOffset = 0;
 	controls.cYOffset = 0;
-	//EEPROM.put(_eepromcXOffset, controls.cXOffset);
 	setCXOffsetSetting(controls.cXOffset);
-	//EEPROM.put(_eepromcYOffset, controls.cYOffset);
 	setCYOffsetSetting(controls.cYOffset);
 
 	controls.xSnapback = controls.snapbackDefault;
-	//EEPROM.put(_eepromxSnapback,controls.xSnapback);
 	setXSnapbackSetting(controls.xSnapback);
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	controls.ySnapback = controls.snapbackDefault;
-	//EEPROM.put(_eepromySnapback,controls.ySnapback);
 	setYSnapbackSetting(controls.ySnapback);
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
 	gains.xSmoothing = controls.smoothingMin;
-	//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
 	setXSmoothingSetting(gains.xSmoothing);
 	gains.ySmoothing = controls.smoothingMin;
-	//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 	setYSmoothingSetting(gains.ySmoothing);
 
 	gains.cXSmoothing = controls.smoothingMin;
-	//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
 	setCxSmoothingSetting(gains.cXSmoothing);
 	gains.cYSmoothing = controls.smoothingMin;
-	//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
 	setCySmoothingSetting(gains.cYSmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;
-	//EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
 	setLOffsetSetting(controls.lTriggerOffset);
-	//EEPROM.put(_eepromROffset, controls.rTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
 
 	controls.rumble = controls.rumbleDefault;
 	_rumblePower = calcRumblePower(controls.rumble);
-	//EEPROM.put(_eepromRumble, controls.rumble);
 	setRumbleSetting(controls.rumble);
 
 	//always cancel auto init on reset, even if we don't reset the sticks
 	controls.autoInit = 0;
-	//EEPROM.put(_eepromAutoInit, controls.autoInit);
 	setAutoInitSetting(controls.autoInit);
 
 	if(reset == HARD){
@@ -459,18 +422,14 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 			_aNotchAngles[i] = _notchAngleDefaults[i];
 			_cNotchAngles[i] = _notchAngleDefaults[i];
 		}
-		//EEPROM.put(_eepromANotchAngles,_aNotchAngles);
 		setANotchAnglesSetting(_aNotchAngles);
-		//EEPROM.put(_eepromCNotchAngles,_cNotchAngles);
 		setCNotchAnglesSetting(_cNotchAngles);
 
 		for(int i = 0; i < _noOfCalibrationPoints; i++){
 			_tempCalPointsX[i] = _defaultCalPointsX[i];
 			_tempCalPointsY[i] = _defaultCalPointsY[i];
 		}
-		//EEPROM.put(_eepromAPointsX,_tempCalPointsX);
 		setAPointsXSetting(_tempCalPointsX);
-		//EEPROM.put(_eepromAPointsY,_tempCalPointsY);
 		setAPointsYSetting(_tempCalPointsY);
 
 		Serial.println("A calibration points stored in EEPROM");
@@ -484,9 +443,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 			_tempCalPointsX[i] = _defaultCalPointsX[i];
 			_tempCalPointsY[i] = _defaultCalPointsY[i];
 		}
-		//EEPROM.put(_eepromCPointsX,_tempCalPointsX);
 		setCPointsXSetting(_tempCalPointsX);
-		//EEPROM.put(_eepromCPointsY,_tempCalPointsY);
 		setCPointsYSetting(_tempCalPointsY);
 
 		Serial.println("C calibration points stored in EEPROM");
@@ -731,11 +688,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 		if(!_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			//EEPROM.get(_eepromCPointsX, _tempCalPointsX);
 			getCPointsXSetting(_tempCalPointsX);
-			//EEPROM.get(_eepromCPointsY, _tempCalPointsY);
 			getCPointsYSetting(_tempCalPointsY);
-			//EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
 			getCNotchAnglesSetting(_cNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float tempCalPointsX[_noOfCalibrationPoints];
@@ -764,11 +718,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 		} else if(_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			//EEPROM.get(_eepromAPointsX, _tempCalPointsX);
 			getAPointsXSetting(_tempCalPointsX);
-			//EEPROM.get(_eepromAPointsY, _tempCalPointsY);
 			getAPointsYSetting(_tempCalPointsY);
-			//EEPROM.get(_eepromANotchAngles, _aNotchAngles);
 			getANotchAnglesSetting(_aNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float tempCalPointsX[_noOfCalibrationPoints];
@@ -886,14 +837,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
-				//EEPROM.put(_eepromCPointsX, _tempCalPointsX);
 				setCPointsXSetting(_tempCalPointsX);
-				//EEPROM.put(_eepromCPointsY, _tempCalPointsY);
 				setCPointsYSetting(_tempCalPointsY);
-				//EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
 				setCNotchAnglesSetting(_cNotchAngles);
 				controls.autoInit = 0;
-				//EEPROM.put(_eepromAutoInit, controls.autoInit);
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
@@ -952,14 +899,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
-				//EEPROM.put(_eepromAPointsX, _tempCalPointsX);
 				setAPointsXSetting(_tempCalPointsX);
-				//EEPROM.put(_eepromAPointsY, _tempCalPointsY);
 				setAPointsYSetting(_tempCalPointsY);
-				//EEPROM.put(_eepromANotchAngles, _aNotchAngles);
 				setANotchAnglesSetting(_aNotchAngles);
 				controls.autoInit = 0;
-				//EEPROM.put(_eepromAutoInit, controls.autoInit);
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
@@ -1050,7 +993,6 @@ void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, Control
 	btn.Cy = (uint8_t) (controls.rumble + 127.5);
 	clearButtons(time, btn, hardware);
 
-	//EEPROM.put(_eepromRumble, controls.rumble);
 	setRumbleSetting(controls.rumble);
 }
 
@@ -1072,7 +1014,6 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 
 	clearButtons(2000, btn, hardware);
 
-	//EEPROM.put(_eepromAutoInit, controls.autoInit);
 	setAutoInitSetting(controls.autoInit);
 }
 
@@ -1111,9 +1052,7 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 
 	clearButtons(2000, btn, hardware);
 
-	//EEPROM.put(_eepromxSnapback,controls.xSnapback);
 	setXSnapbackSetting(controls.xSnapback);
-	//EEPROM.put(_eepromySnapback,controls.ySnapback);
 	setYSnapbackSetting(controls.ySnapback);
 }
 void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
@@ -1123,7 +1062,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(gains.xSmoothing > controls.smoothingMax) {
 			gains.xSmoothing = controls.smoothingMax;
 		}
-		//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
 		setXSmoothingSetting(gains.xSmoothing);
 		Serial.print("X Smoothing increased to:");
 		Serial.println(gains.xSmoothing);
@@ -1132,7 +1070,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(gains.xSmoothing < controls.smoothingMin) {
 			gains.xSmoothing = controls.smoothingMin;
 		}
-		//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
 		setXSmoothingSetting(gains.xSmoothing);
 		Serial.print("X Smoothing decreased to:");
 		Serial.println(gains.xSmoothing);
@@ -1141,7 +1078,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (gains.ySmoothing > controls.smoothingMax) {
 			gains.ySmoothing = controls.smoothingMax;
 		}
-		//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 		setYSmoothingSetting(gains.ySmoothing);
 		Serial.print("Y Smoothing increased to:");
 		Serial.println(gains.ySmoothing);
@@ -1150,7 +1086,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (gains.ySmoothing < controls.smoothingMin) {
 			gains.ySmoothing = controls.smoothingMin;
 		}
-		//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
 		setYSmoothingSetting(gains.ySmoothing);
 		Serial.print("Y Smoothing decreased to:");
 		Serial.println(gains.ySmoothing);
@@ -1182,7 +1117,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(gains.cXSmoothing > controls.smoothingMax) {
 			gains.cXSmoothing = controls.smoothingMax;
 		}
-		//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
 		setCxSmoothingSetting(gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing increased to:");
 		Serial.println(gains.cXSmoothing);
@@ -1191,7 +1125,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(gains.cXSmoothing < controls.smoothingMin) {
 			gains.cXSmoothing = controls.smoothingMin;
 		}
-		//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
 		setCxSmoothingSetting(gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing decreased to:");
 		Serial.println(gains.cXSmoothing);
@@ -1200,7 +1133,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (gains.cYSmoothing > controls.smoothingMax) {
 			gains.cYSmoothing = controls.smoothingMax;
 		}
-		//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
 		setCySmoothingSetting(gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing increased to:");
 		Serial.println(gains.cYSmoothing);
@@ -1209,7 +1141,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (gains.cYSmoothing < controls.smoothingMin) {
 			gains.cYSmoothing = controls.smoothingMin;
 		}
-		//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
 		setCySmoothingSetting(gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing decreased to:");
 		Serial.println(gains.cYSmoothing);
@@ -1230,7 +1161,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset > controls.cMax) {
 			controls.cXOffset = controls.cMax;
 		}
-		//EEPROM.put(_eepromcXOffset, controls.cXOffset);
 		setCXOffsetSetting(controls.cXOffset);
 		Serial.print("X offset increased to:");
 		Serial.println(controls.cXOffset);
@@ -1239,7 +1169,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset < controls.cMin) {
 			controls.cXOffset = controls.cMin;
 		}
-		//EEPROM.put(_eepromcXOffset, controls.cXOffset);
 		setCXOffsetSetting(controls.cXOffset);
 		Serial.print("X offset decreased to:");
 		Serial.println(controls.cXOffset);
@@ -1248,7 +1177,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset > controls.cMax) {
 			controls.cYOffset = controls.cMax;
 		}
-		//EEPROM.put(_eepromcYOffset, controls.cYOffset);
 		setCYOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset increased to:");
 		Serial.println(controls.cYOffset);
@@ -1257,7 +1185,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset < controls.cMin) {
 			controls.cYOffset = controls.cMin;
 		}
-		//EEPROM.put(_eepromcYOffset, controls.cYOffset);
 		setCYOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset decreased to:");
 		Serial.println(controls.cYOffset);
@@ -1302,9 +1229,7 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 		}
 	}
 
-	//EEPROM.put(_eepromLOffset, controls.lTriggerOffset);
 	setLOffsetSetting(controls.lTriggerOffset);
-	//EEPROM.put(_eepromROffset, controls.rTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
 
 	if(controls.lTriggerOffset > 99) {
@@ -1340,7 +1265,6 @@ void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 				Serial.println("normal");
 		}
 	}
-	//EEPROM.put(_eepromJump,controls.jumpConfig);
 	setJumpSetting(controls.jumpConfig);
 	setJump(controls);
 }
@@ -1376,9 +1300,7 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 			controls.rConfig = controls.rConfig + 1;
 		}
 	}
-	//EEPROM.put(_eepromLToggle, controls.lConfig);
 	setLSetting(controls.lConfig);
-	//EEPROM.put(_eepromRToggle, controls.rConfig);
 	setRSetting(controls.rConfig);
 
 	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
