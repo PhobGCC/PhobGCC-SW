@@ -249,7 +249,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the x-axis snapback correction
-	EEPROM.get(_eepromxSnapback, controls.xSnapback);
+	//EEPROM.get(_eepromxSnapback, controls.xSnapback);
+	controls.xSnapback = getXSnapbackSetting();
 	Serial.print("the xSnapback value from eeprom is:");
 	Serial.println(controls.xSnapback);
 	if(controls.xSnapback < controls.snapbackMin) {
@@ -264,7 +265,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(gains.xVelDamp);
 
 	//get the y-ayis snapback correction
-	EEPROM.get(_eepromySnapback, controls.ySnapback);
+	//EEPROM.get(_eepromySnapback, controls.ySnapback);
+	controls.ySnapback = getYSnapbackSetting();
 	Serial.print("the ySnapback value from eeprom is:");
 	Serial.println(controls.ySnapback);
 	if(controls.ySnapback < controls.snapbackMin) {
@@ -279,7 +281,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(gains.yVelDamp);
 
 	//get the x-axis smoothing value
-	EEPROM.get(_eepromxSmoothing, gains.xSmoothing);
+	//EEPROM.get(_eepromxSmoothing, gains.xSmoothing);
+	gains.xSmoothing = getXSmoothingSetting();
 	Serial.print("the xSmoothing value from eeprom is:");
 	Serial.println(gains.xSmoothing);
 	if(std::isnan(gains.xSmoothing)){
@@ -295,7 +298,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the y-axis smoothing value
-	EEPROM.get(_eepromySmoothing, gains.ySmoothing);
+	//EEPROM.get(_eepromySmoothing, gains.ySmoothing);
+	gains.ySmoothing = getYSmoothingSetting();
 	Serial.print("the ySmoothing value from eeprom is:");
 	Serial.println(gains.ySmoothing);
 	if(std::isnan(gains.ySmoothing)){
@@ -426,16 +430,20 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	setCYOffsetSetting(controls.cYOffset);
 
 	controls.xSnapback = controls.snapbackDefault;
-	EEPROM.put(_eepromxSnapback,controls.xSnapback);
+	//EEPROM.put(_eepromxSnapback,controls.xSnapback);
+	setXSnapbackSetting(controls.xSnapback);
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	controls.ySnapback = controls.snapbackDefault;
-	EEPROM.put(_eepromySnapback,controls.ySnapback);
+	//EEPROM.put(_eepromySnapback,controls.ySnapback);
+	setYSnapbackSetting(controls.ySnapback);
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
 	gains.xSmoothing = controls.smoothingMin;
-	EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+	//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+	setXSmoothingSetting(gains.xSmoothing);
 	gains.ySmoothing = controls.smoothingMin;
-	EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+	//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+	setYSmoothingSetting(gains.ySmoothing);
 
 	gains.cXSmoothing = controls.smoothingMin;
 	EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
@@ -1094,8 +1102,10 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 
 	clearButtons(2000, btn, hardware);
 
-	EEPROM.put(_eepromxSnapback,controls.xSnapback);
-	EEPROM.put(_eepromySnapback,controls.ySnapback);
+	//EEPROM.put(_eepromxSnapback,controls.xSnapback);
+	setXSnapbackSetting(controls.xSnapback);
+	//EEPROM.put(_eepromySnapback,controls.ySnapback);
+	setYSnapbackSetting(controls.ySnapback);
 }
 void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
 	Serial.println("Adjusting Smoothing");
@@ -1104,7 +1114,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(gains.xSmoothing > controls.smoothingMax) {
 			gains.xSmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+		//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+		setXSmoothingSetting(gains.xSmoothing);
 		Serial.print("X Smoothing increased to:");
 		Serial.println(gains.xSmoothing);
 	} else if(axis == XAXIS && increase == DECREASE) {
@@ -1112,7 +1123,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(gains.xSmoothing < controls.smoothingMin) {
 			gains.xSmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+		//EEPROM.put(_eepromxSmoothing, gains.xSmoothing);
+		setXSmoothingSetting(gains.xSmoothing);
 		Serial.print("X Smoothing decreased to:");
 		Serial.println(gains.xSmoothing);
 	} else if(axis == YAXIS && increase == INCREASE) {
@@ -1120,7 +1132,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (gains.ySmoothing > controls.smoothingMax) {
 			gains.ySmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+		//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+		setYSmoothingSetting(gains.ySmoothing);
 		Serial.print("Y Smoothing increased to:");
 		Serial.println(gains.ySmoothing);
 	} else if(axis == YAXIS && increase == DECREASE) {
@@ -1128,7 +1141,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (gains.ySmoothing < controls.smoothingMin) {
 			gains.ySmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+		//EEPROM.put(_eepromySmoothing, gains.ySmoothing);
+		setYSmoothingSetting(gains.ySmoothing);
 		Serial.print("Y Smoothing decreased to:");
 		Serial.println(gains.ySmoothing);
 	}
