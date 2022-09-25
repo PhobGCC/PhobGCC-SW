@@ -186,52 +186,88 @@ void setAutoInitSetting(const int autoInit) {
 	EEPROM.put(Eeprom::_eepromAutoInit, autoInit);
 };
 
-void getAPointsXSetting(float points[]) {
-	EEPROM.get(Eeprom::_eepromAPointsX, points);
+//pulls 32 points from eeprom
+void getFloatPoints(const int eepromAddress, float array[32]) {
+	float tempArray[32];
+	EEPROM.get(eepromAddress, tempArray);
+	for(int i = 0; i < 32; i++) {
+		array[i] = tempArray[i];
+	}
+}
+
+//writes 32 points to eeprom
+void setFloatPoints(const int eepromAddress, const float array[32]) {
+	float tempArray[32];
+	for(int i = 0; i < 32; i++) {
+		tempArray[i] = array[i];
+	}
+	EEPROM.put(eepromAddress, tempArray);
+}
+
+void getAPointsXSetting(float points[32]) {
+	getFloatPoints(Eeprom::_eepromAPointsX, points);
 };
 
-void setAPointsXSetting(float points[]) {
-	EEPROM.put(Eeprom::_eepromAPointsX, points);
+void setAPointsXSetting(const float points[32]) {
+	setFloatPoints(Eeprom::_eepromAPointsX, points);
 };
 
-void getAPointsYSetting(float points[]) {
-	EEPROM.get(Eeprom::_eepromAPointsY, points);
+void getAPointsYSetting(float points[32]) {
+	getFloatPoints(Eeprom::_eepromAPointsY, points);
 };
 
-void setAPointsYSetting(float points[]) {
-	EEPROM.put(Eeprom::_eepromAPointsY, points);
+void setAPointsYSetting(const float points[32]) {
+	setFloatPoints(Eeprom::_eepromAPointsY, points);
 };
 
-void getCPointsXSetting(float points[]) {
-	EEPROM.get(Eeprom::_eepromCPointsX, points);
+void getCPointsXSetting(float points[32]) {
+	getFloatPoints(Eeprom::_eepromCPointsX, points);
 };
 
-void setCPointsXSetting(float points[]) {
-	EEPROM.put(Eeprom::_eepromCPointsX, points);
+void setCPointsXSetting(const float points[32]) {
+	setFloatPoints(Eeprom::_eepromCPointsX, points);
 };
 
-void getCPointsYSetting(float points[]) {
-	EEPROM.get(Eeprom::_eepromCPointsY, points);
+void getCPointsYSetting(float points[32]) {
+	getFloatPoints(Eeprom::_eepromCPointsY, points);
 };
 
-void setCPointsYSetting(float points[]) {
-	EEPROM.put(Eeprom::_eepromCPointsY, points);
+void setCPointsYSetting(const float points[32]) {
+	setFloatPoints(Eeprom::_eepromCPointsY, points);
 };
 
-void getANotchAnglesSetting(float angles[]) {
-	EEPROM.get(Eeprom::_eepromANotchAngles, angles);
+//pulls 16 points from eeprom
+void getFloatNotches(const int eepromAddress, float array[16]) {
+	float tempArray[16];
+	EEPROM.get(eepromAddress, tempArray);
+	for(int i = 0; i < 16; i++) {
+		array[i] = tempArray[i];
+	}
+}
+
+//writes 32 points to eeprom
+void setFloatNotches(const int eepromAddress, const float array[16]) {
+	float tempArray[16];
+	for(int i = 0; i < 16; i++) {
+		tempArray[i] = array[i];
+	}
+	EEPROM.put(eepromAddress, tempArray);
+}
+
+void getANotchAnglesSetting(float angles[16]) {
+	getFloatNotches(Eeprom::_eepromANotchAngles, angles);
 };
 
-void setANotchAnglesSetting(float angles[]) {
-	EEPROM.put(Eeprom::_eepromANotchAngles, angles);
+void setANotchAnglesSetting(const float angles[16]) {
+	setFloatNotches(Eeprom::_eepromANotchAngles, angles);
 };
 
-void getCNotchAnglesSetting(float angles[]) {
-	EEPROM.get(Eeprom::_eepromCNotchAngles, angles);
+void getCNotchAnglesSetting(float angles[16]) {
+	getFloatNotches(Eeprom::_eepromCNotchAngles, angles);
 };
 
-void setCNotchAnglesSetting(float angles[]) {
-	EEPROM.put(Eeprom::_eepromCNotchAngles, angles);
+void setCNotchAnglesSetting(const float angles[16]) {
+	setFloatNotches(Eeprom::_eepromCNotchAngles, angles);
 };
 
 #endif //SETTINGS_H
