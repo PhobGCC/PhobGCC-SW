@@ -16,38 +16,7 @@
 
 extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
-/*
-//index values to store data into eeprom
-const int _bytesPerFloat = 4;
-const int _eepromAPointsX = 0;
-const int _eepromAPointsY = _eepromAPointsX+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromCPointsX = _eepromAPointsY+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromCPointsY = _eepromCPointsX+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromxSnapback = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
-const int _eepromySnapback = _eepromxSnapback+_bytesPerFloat;
-const int _eepromJump = _eepromySnapback+_bytesPerFloat;
-const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
-const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
-const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
-const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
-const int _eepromcXOffset = _eepromRToggle+_bytesPerFloat;
-const int _eepromcYOffset = _eepromcXOffset+_bytesPerFloat;
-const int _eepromxSmoothing = _eepromcYOffset+_bytesPerFloat;
-const int _eepromySmoothing = _eepromxSmoothing+_bytesPerFloat;
-const int _eepromLOffset = _eepromySmoothing+_bytesPerFloat;
-const int _eepromROffset = _eepromLOffset+_bytesPerFloat;
-const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
-const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
-const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
-const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
-*/
-
-
 float _dT;
-bool _running = false;
-
-
-
 
 void setup() {
     serialSetup();
@@ -112,16 +81,18 @@ void setup() {
 }
 
 void loop() {
+	static bool running = false;
+
 	//check if we should be reporting values yet
-	if((_btn.B || _controls.autoInit) && !_running){
+	if((_btn.B || _controls.autoInit) && !running){
 		Serial.println("Starting to report values");
-		_running=true;
+		running=true;
 	}
 
 	static int currentCalStep = -1;//-1 means not calibrating
 
 	//read the controllers buttons
-	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep);
+	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
@@ -158,7 +129,7 @@ void loop() {
 			readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _dT);
 		}
 	}
-	else if(_running){
+	else if(running){
 		//if not calibrating read the sticks normally
 		readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _dT);
 	}
@@ -562,7 +533,7 @@ void setPinModes(){
 	pinMode(_pinCx,INPUT_DISABLE);
 	pinMode(_pinCy,INPUT_DISABLE);
 }
-void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep){
+void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running){
 	btn.A = !digitalRead(_pinA);
 	btn.B = !digitalRead(_pinB);
 	btn.X = !digitalRead(controls.pinXSwappable);
@@ -746,8 +717,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		}
 		if(safeModeAccumulator > 0.99){
 			safeModeAccumulator = 0;
-			if (!_running) {//wake it up if not already running
-				_running = true;
+			if (!running) {//wake it up if not already running
+				running = true;
 			}
 			controls.safeMode = false;
 			freezeSticks(2000, btn, hardware);
