@@ -16,6 +16,7 @@
 
 extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
+/*
 //index values to store data into eeprom
 const int _bytesPerFloat = 4;
 const int _eepromAPointsX = 0;
@@ -39,6 +40,7 @@ const int _eepromCxSmoothing = _eepromROffset+_bytesPerFloat;
 const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
+*/
 
 
 float _dT;
@@ -315,7 +317,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the c-stick x-axis smoothing value
-	EEPROM.get(_eepromCxSmoothing, gains.cXSmoothing);
+	//EEPROM.get(_eepromCxSmoothing, gains.cXSmoothing);
+	gains.cXSmoothing = getCxSmoothingSetting();
 	Serial.print("the cXSmoothing value from eeprom is:");
 	Serial.println(gains.cXSmoothing);
 	if(std::isnan(gains.cXSmoothing)){
@@ -331,7 +334,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the c-stick y-axis smoothing value
-	EEPROM.get(_eepromCySmoothing, gains.cYSmoothing);
+	//EEPROM.get(_eepromCySmoothing, gains.cYSmoothing);
+	gains.cYSmoothing = getCySmoothingSetting();
 	Serial.print("the cYSmoothing value from eeprom is:");
 	Serial.println(gains.cYSmoothing);
 	if(std::isnan(gains.cYSmoothing)){
@@ -454,9 +458,11 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	setYSmoothingSetting(gains.ySmoothing);
 
 	gains.cXSmoothing = controls.smoothingMin;
-	EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+	//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+	setCxSmoothingSetting(gains.cXSmoothing);
 	gains.cYSmoothing = controls.smoothingMin;
-	EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+	//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+	setCySmoothingSetting(gains.cYSmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
@@ -754,9 +760,12 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 		if(!_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			EEPROM.get(_eepromCPointsX, _tempCalPointsX);
-			EEPROM.get(_eepromCPointsY, _tempCalPointsY);
-			EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
+			//EEPROM.get(_eepromCPointsX, _tempCalPointsX);
+			getCPointsXSetting(_tempCalPointsX);
+			//EEPROM.get(_eepromCPointsY, _tempCalPointsY);
+			getCPointsYSetting(_tempCalPointsY);
+			//EEPROM.get(_eepromCNotchAngles, _cNotchAngles);
+			getCNotchAnglesSetting(_cNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float tempCalPointsX[_noOfCalibrationPoints];
 			float tempCalPointsY[_noOfCalibrationPoints];
@@ -1202,7 +1211,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(gains.cXSmoothing > controls.smoothingMax) {
 			gains.cXSmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+		//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+		setCxSmoothingSetting(gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing increased to:");
 		Serial.println(gains.cXSmoothing);
 	} else if(axis == XAXIS && increase == DECREASE) {
@@ -1210,7 +1220,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(gains.cXSmoothing < controls.smoothingMin) {
 			gains.cXSmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+		//EEPROM.put(_eepromCxSmoothing, gains.cXSmoothing);
+		setCxSmoothingSetting(gains.cXSmoothing);
 		Serial.print("C-Stick X Smoothing decreased to:");
 		Serial.println(gains.cXSmoothing);
 	} else if(axis == YAXIS && increase == INCREASE) {
@@ -1218,7 +1229,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (gains.cYSmoothing > controls.smoothingMax) {
 			gains.cYSmoothing = controls.smoothingMax;
 		}
-		EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+		//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+		setCySmoothingSetting(gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing increased to:");
 		Serial.println(gains.cYSmoothing);
 	} else if(axis == YAXIS && increase == DECREASE) {
@@ -1226,7 +1238,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (gains.cYSmoothing < controls.smoothingMin) {
 			gains.cYSmoothing = controls.smoothingMin;
 		}
-		EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+		//EEPROM.put(_eepromCySmoothing, gains.cYSmoothing);
+		setCySmoothingSetting(gains.cYSmoothing);
 		Serial.print("C-Stick Y Smoothing decreased to:");
 		Serial.println(gains.cYSmoothing);
 	}
