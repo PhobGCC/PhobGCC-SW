@@ -124,7 +124,7 @@ struct ControlConfig{
 	const int rumbleMax;
 	const int rumbleDefault;
 	bool safeMode;
-	bool autoInit;
+	int autoInit;
 	int lTrigInitial;
 	int rTrigInitial;
 	int xSnapback;//0 disables the filter entirely, 4 is default

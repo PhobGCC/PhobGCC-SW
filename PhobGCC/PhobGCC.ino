@@ -350,7 +350,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	recomputeGains(gains, normGains);
 
 	//Get the rumble value
-	EEPROM.get(_eepromRumble, controls.rumble);
+	//EEPROM.get(_eepromRumble, controls.rumble);
+	controls.rumble = getRumbleSetting();
 	Serial.print("Rumble value before fixing: ");
 	Serial.println(controls.rumble);
 	if(std::isnan(controls.rumble)) {
@@ -370,7 +371,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(_rumblePower);
 
 	//Get the autoinit value
-	EEPROM.get(_eepromAutoInit, controls.autoInit);
+	//EEPROM.get(_eepromAutoInit, controls.autoInit);
+	controls.autoInit = getAutoInitSetting();
 	if(controls.autoInit < 0) {
 		controls.autoInit = 0;
 		numberOfNaN++;
@@ -461,11 +463,13 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.rumble = controls.rumbleDefault;
 	_rumblePower = calcRumblePower(controls.rumble);
-	EEPROM.put(_eepromRumble, controls.rumble);
+	//EEPROM.put(_eepromRumble, controls.rumble);
+	setRumbleSetting(controls.rumble);
 
 	//always cancel auto init on reset, even if we don't reset the sticks
 	controls.autoInit = 0;
-	EEPROM.put(_eepromAutoInit, controls.autoInit);
+	//EEPROM.put(_eepromAutoInit, controls.autoInit);
+	setAutoInitSetting(controls.autoInit);
 
 	if(reset == HARD){
 		for(int i = 0; i < _noOfNotches; i++){
@@ -891,7 +895,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				EEPROM.put(_eepromCPointsY, _tempCalPointsY);
 				EEPROM.put(_eepromCNotchAngles, _cNotchAngles);
 				controls.autoInit = 0;
-				EEPROM.put(_eepromAutoInit, controls.autoInit);
+				//EEPROM.put(_eepromAutoInit, controls.autoInit);
+				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -953,7 +958,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				EEPROM.put(_eepromAPointsY, _tempCalPointsY);
 				EEPROM.put(_eepromANotchAngles, _aNotchAngles);
 				controls.autoInit = 0;
-				EEPROM.put(_eepromAutoInit, controls.autoInit);
+				//EEPROM.put(_eepromAutoInit, controls.autoInit);
+				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
 				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				Serial.println("calibration points cleaned");
@@ -1043,7 +1049,8 @@ void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, Control
 	btn.Cy = (uint8_t) (controls.rumble + 127.5);
 	clearButtons(time, btn, hardware);
 
-	EEPROM.put(_eepromRumble, controls.rumble);
+	//EEPROM.put(_eepromRumble, controls.rumble);
+	setRumbleSetting(controls.rumble);
 }
 
 //Make it so you don't need to press B.
@@ -1064,7 +1071,8 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 
 	clearButtons(2000, btn, hardware);
 
-	EEPROM.put(_eepromAutoInit, controls.autoInit);
+	//EEPROM.put(_eepromAutoInit, controls.autoInit);
+	setAutoInitSetting(controls.autoInit);
 }
 
 void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){

@@ -166,4 +166,24 @@ void setCySmoothingSetting(const float Y) {
 	EEPROM.put(Eeprom::_eepromCySmoothing, Y);
 };
 
+int getRumbleSetting() {
+	float output;
+	EEPROM.get(Eeprom::_eepromRumble, output);
+	return output;
+};
+
+void setRumbleSetting(const int rumble) {
+	EEPROM.put(Eeprom::_eepromRumble, rumble);
+};
+
+int getAutoInitSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromAutoInit, output);
+	return output;
+};
+
+void setAutoInitSetting(const int autoInit) {
+	EEPROM.put(Eeprom::_eepromAutoInit, autoInit);
+};
+
 #endif //SETTINGS_H
