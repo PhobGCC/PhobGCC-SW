@@ -167,7 +167,7 @@ void setCySmoothingSetting(const float Y) {
 };
 
 int getRumbleSetting() {
-	float output;
+	int output;
 	EEPROM.get(Eeprom::_eepromRumble, output);
 	return output;
 };
