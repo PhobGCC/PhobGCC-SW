@@ -90,8 +90,12 @@ void loop() {
 
 	static int currentCalStep = -1;//-1 means not calibrating
 
+	//Set up persistent storage for calibration points
+	static float tempCalPointsX[_noOfCalibrationPoints];
+	static float tempCalPointsY[_noOfCalibrationPoints];
+
 	//read the controllers buttons
-	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running);
+	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
@@ -100,7 +104,7 @@ void loop() {
 				adjustNotch(currentCalStep, _dT, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
-					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+					cleanCalPoints(tempCalPointsX, tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 					//linearize again
 					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 					//notchCalibrate again to update the affine transform
@@ -116,7 +120,7 @@ void loop() {
 				adjustNotch(currentCalStep, _dT, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
-					cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+					cleanCalPoints(tempCalPointsX, tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 					//linearize again
 					linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 					//notchCalibrate again to update the affine transform
@@ -344,10 +348,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(controls.autoInit);
 
 	//get the calibration points collected during the last A stick calibration
-	getAPointsXSetting(_tempCalPointsX);
-	getAPointsYSetting(_tempCalPointsY);
+	float tempCalPointsX[_noOfCalibrationPoints];
+	float tempCalPointsY[_noOfCalibrationPoints];
+	getAPointsXSetting(tempCalPointsX);
+	getAPointsYSetting(tempCalPointsY);
 	getANotchAnglesSetting(_aNotchAngles);
-	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+	cleanCalPoints(tempCalPointsX, tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 	Serial.println("A stick linearized");
@@ -355,10 +361,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//stickCal(_cleanedPointsX,_cleanedPointsY,_aNotchAngles,_aFitCoeffsX,_aFitCoeffsY,_aAffineCoeffs,_aBoundaryAngles);
 
 	//get the calibration points collected during the last A stick calibration
-	getCPointsXSetting(_tempCalPointsX);
-	getCPointsYSetting(_tempCalPointsY);
+	getCPointsXSetting(tempCalPointsX);
+	getCPointsYSetting(tempCalPointsY);
 	getCNotchAnglesSetting(_cNotchAngles);
-	cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+	cleanCalPoints(tempCalPointsX, tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 	Serial.println("C stick linearized");
@@ -425,29 +431,21 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		setANotchAnglesSetting(_aNotchAngles);
 		setCNotchAnglesSetting(_cNotchAngles);
 
-		for(int i = 0; i < _noOfCalibrationPoints; i++){
-			_tempCalPointsX[i] = _defaultCalPointsX[i];
-			_tempCalPointsY[i] = _defaultCalPointsY[i];
-		}
-		setAPointsXSetting(_tempCalPointsX);
-		setAPointsYSetting(_tempCalPointsY);
+		setAPointsXSetting(_defaultCalPointsX);
+		setAPointsYSetting(_defaultCalPointsY);
 
 		Serial.println("A calibration points stored in EEPROM");
-		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 		Serial.println("A calibration points cleaned");
 		linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 		Serial.println("A stick linearized");
 		notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 
-		for(int i = 0; i < _noOfCalibrationPoints; i++){
-			_tempCalPointsX[i] = _defaultCalPointsX[i];
-			_tempCalPointsY[i] = _defaultCalPointsY[i];
-		}
-		setCPointsXSetting(_tempCalPointsX);
-		setCPointsYSetting(_tempCalPointsY);
+		setCPointsXSetting(_defaultCalPointsX);
+		setCPointsYSetting(_defaultCalPointsY);
 
 		Serial.println("C calibration points stored in EEPROM");
-		cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 		Serial.println("C calibration points cleaned");
 		linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 		Serial.println("C stick linearized");
@@ -490,7 +488,7 @@ void setPinModes(){
 	pinMode(_pinCx,INPUT_DISABLE);
 	pinMode(_pinCy,INPUT_DISABLE);
 }
-void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running){
+void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[]){
 	btn.A = !digitalRead(_pinA);
 	btn.B = !digitalRead(_pinB);
 	btn.X = !digitalRead(controls.pinXSwappable);
@@ -682,66 +680,67 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		}
 	}
 
+
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(btn.S && (currentCalStep >= 0 && currentCalStep < 32)){
 		currentCalStep = _noOfCalibrationPoints;
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 		if(!_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			getCPointsXSetting(_tempCalPointsX);
-			getCPointsYSetting(_tempCalPointsY);
+			getCPointsXSetting(tempCalPointsX);
+			getCPointsYSetting(tempCalPointsY);
 			getCNotchAnglesSetting(_cNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
-			float tempCalPointsX[_noOfCalibrationPoints];
-			float tempCalPointsY[_noOfCalibrationPoints];
-			stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+			float temptempCalPointsX[_noOfCalibrationPoints];
+			float temptempCalPointsY[_noOfCalibrationPoints];
+			stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 			//clean the stripped calibration points, use default angles
-			cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+			cleanCalPoints(temptempCalPointsX, temptempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 			linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 			notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 			//apply the calibration to the original measured values including any tertiaries; we don't care about the angles
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 			float transformedX[_noOfNotches+1];
 			float transformedY[_noOfNotches+1];
 			transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _cFitCoeffsX, _cFitCoeffsY, _cAffineCoeffs, _cBoundaryAngles);
 			//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
 			computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
 			//clean full cal points again, feeding those angles in
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 			//clear unused notch angles
 			cleanNotches(_cNotchAngles, _measuredNotchAngles, _cNotchStatus);
 			//clean full cal points again again, feeding those measured angles in for missing tertiary notches
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 			//linearize again
 			linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 			//notchCalibrate again
 			notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 		} else if(_calAStick){
 			//get the calibration points collected during the last A stick calibration
-			getAPointsXSetting(_tempCalPointsX);
-			getAPointsYSetting(_tempCalPointsY);
+			getAPointsXSetting(tempCalPointsX);
+			getAPointsYSetting(tempCalPointsY);
 			getANotchAnglesSetting(_aNotchAngles);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
-			float tempCalPointsX[_noOfCalibrationPoints];
-			float tempCalPointsY[_noOfCalibrationPoints];
-			stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+			float temptempCalPointsX[_noOfCalibrationPoints];
+			float temptempCalPointsY[_noOfCalibrationPoints];
+			stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 			//clean the stripped calibration points, use default angles
-			cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+			cleanCalPoints(temptempCalPointsX, temptempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 			linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 			notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 			//apply the calibration to the original measured values including any tertiaries; we don't care about the angles
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 			float transformedX[_noOfNotches+1];
 			float transformedY[_noOfNotches+1];
 			transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _aFitCoeffsX, _aFitCoeffsY, _aAffineCoeffs, _aBoundaryAngles);
 			//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
 			computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
 			//clean full cal points again, feeding those angles in
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 			//clear unused notch angles
 			cleanNotches(_aNotchAngles, _measuredNotchAngles, _aNotchStatus);
 			//clean full cal points again again, feeding those measured angles in for missing tertiary notches
-			cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 			//linearize again
 			linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 			//notchCalibrate again
@@ -793,7 +792,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		_advanceCalPressed = true;
 		if (!_calAStick){
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(_calAStick, currentCalStep,_tempCalPointsX,_tempCalPointsY, _pinList);
+				collectCalPoints(_calAStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
@@ -804,26 +803,26 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 				Serial.println("finished collecting the calibration points for the C stick");
 				//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
-				float tempCalPointsX[_noOfCalibrationPoints];
-				float tempCalPointsY[_noOfCalibrationPoints];
-				stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+				float temptempCalPointsX[_noOfCalibrationPoints];
+				float temptempCalPointsY[_noOfCalibrationPoints];
+				stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 				//clean the stripped calibration points, use default angles
-				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				cleanCalPoints(temptempCalPointsX, temptempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 				//apply the calibration to the original measured values including any tertiaries; we don't care about the angles
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				float transformedX[_noOfNotches+1];
 				float transformedY[_noOfNotches+1];
 				transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _cFitCoeffsX, _cFitCoeffsY, _cAffineCoeffs, _cBoundaryAngles);
 				//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
 				computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
 				//clean full cal points again, feeding those angles in
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				//clear unused notch angles
 				cleanNotches(_cNotchAngles, _measuredNotchAngles, _cNotchStatus);
 				//clean full cal points again again, feeding those measured angles in for missing tertiary notches
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				//linearize again
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 				//notchCalibrate again
@@ -837,13 +836,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
-				setCPointsXSetting(_tempCalPointsX);
-				setCPointsYSetting(_tempCalPointsY);
+				setCPointsXSetting(tempCalPointsX);
+				setCPointsYSetting(tempCalPointsY);
 				setCNotchAnglesSetting(_cNotchAngles);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _cNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _cNotchStatus);
 				Serial.println("calibration points cleaned");
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 				Serial.println("C stick linearized");
@@ -856,7 +855,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			Serial.println("Current step:");
 			Serial.println(currentCalStep);
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(_calAStick, currentCalStep,_tempCalPointsX,_tempCalPointsY, _pinList);
+				collectCalPoints(_calAStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfCalibrationPoints) {//don't undo at the beginning of collection or notch adjust
@@ -866,26 +865,26 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 				//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
-				float tempCalPointsX[_noOfCalibrationPoints];
-				float tempCalPointsY[_noOfCalibrationPoints];
-				stripCalPoints(_tempCalPointsX, _tempCalPointsY, tempCalPointsX, tempCalPointsY);
+				float temptempCalPointsX[_noOfCalibrationPoints];
+				float temptempCalPointsY[_noOfCalibrationPoints];
+				stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 				//clean the stripped calibration points, use default angles
-				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				cleanCalPoints(temptempCalPointsX, temptempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 				notchCalibrate(_cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 				//apply the calibration to the original measured values including any tertiaries; we don't care about the angles
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				float transformedX[_noOfNotches+1];
 				float transformedY[_noOfNotches+1];
 				transformCalPoints(_cleanedPointsX, _cleanedPointsY, transformedX, transformedY, _aFitCoeffsX, _aFitCoeffsY, _aAffineCoeffs, _aBoundaryAngles);
 				//compute the angles for those notches into _measuredNotchAngles, using the default angles for the diagonals
 				computeStickAngles(transformedX, transformedY, _measuredNotchAngles);
 				//clean full cal points again, feeding those angles in
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _measuredNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				//clear unused notch angles
 				cleanNotches(_aNotchAngles, _measuredNotchAngles, _aNotchStatus);
 				//clean full cal points again again, feeding those measured angles in for missing tertiary notches
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				//linearize again
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 				//notchCalibrate again
@@ -899,13 +898,13 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
-				setAPointsXSetting(_tempCalPointsX);
-				setAPointsYSetting(_tempCalPointsY);
+				setAPointsXSetting(tempCalPointsX);
+				setAPointsYSetting(tempCalPointsY);
 				setANotchAnglesSetting(_aNotchAngles);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
-				cleanCalPoints(_tempCalPointsX, _tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
+				cleanCalPoints(tempCalPointsX, tempCalPointsY, _aNotchAngles, _cleanedPointsX, _cleanedPointsY, _notchPointsX, _notchPointsY, _aNotchStatus);
 				Serial.println("calibration points cleaned");
 				linearizeCal(_cleanedPointsX, _cleanedPointsY, _cleanedPointsX, _cleanedPointsY, _aFitCoeffsX, _aFitCoeffsY);
 				Serial.println("A stick linearized");

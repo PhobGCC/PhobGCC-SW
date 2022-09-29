@@ -65,8 +65,6 @@ float _aAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for 
 float _cAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the c-stick
 float _aBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the a-stick
 float _cBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the c-stick
-float _tempCalPointsX[(_noOfNotches)*2]; //temporary storage for the x coordinate points collected during calibration before the are cleaned and put into _cleanedPointsX
-float _tempCalPointsY[(_noOfNotches)*2]; //temporary storage for the y coordinate points collected during calibration before the are cleaned and put into _cleanedPointsY
 
 float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
