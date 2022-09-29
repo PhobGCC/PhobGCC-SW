@@ -28,8 +28,6 @@ bool _undoCal = false;
 bool _undoCalPressed = false;
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
 const int _calibrationPoints = _noOfNotches+1; //number of calibration points for the c-stick and a-stick for a controller without notches
-float _cleanedPointsX[_noOfNotches+1]; //array to hold the x coordinates of the stick positions for calibration
-float _cleanedPointsY[_noOfNotches+1]; //array to hold the y coordinates of the stick positions for calibration
 float _notchPointsX[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
 float _notchPointsY[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
 //                                                         right                     notch 1                   up right                  notch 2                   up                        notch 3                   up left                   notch 4                   left                      notch 5                   down left                 notch 6                   down                      notch 7                   down right                notch 8
@@ -548,7 +546,7 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 	Outputs:
 		linearization fit coefficients for X and Y
 *******************/
-void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitCoeffsX[], float fitCoeffsY[]){
+void linearizeCal(const float inX[], const float inY[], float outX[], float outY[], float fitCoeffsX[], float fitCoeffsY[]){
 	Serial.println("beginning linearization");
 
 	//do the curve fit first
@@ -631,7 +629,7 @@ void linearizeCal(float inX[],float inY[],float outX[], float outY[], float fitC
 	}
 };
 
-void notchCalibrate(float xIn[], float yIn[], float xOut[], float yOut[], int regions, float allAffineCoeffs[][6], float regionAngles[]){
+void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, float allAffineCoeffs[][6], float regionAngles[]){
 	for(int i = 1; i <= regions; i++){
 	Serial.print("calibrating region: ");
 	Serial.println(i);
