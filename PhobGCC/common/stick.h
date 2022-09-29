@@ -27,9 +27,6 @@ bool _advanceCalPressed = false;
 bool _undoCal = false;
 bool _undoCalPressed = false;
 bool _notched = false; //keeps track of whether or not the controller has firefox notches
-const int _calibrationPoints = _noOfNotches+1; //number of calibration points for the c-stick and a-stick for a controller without notches
-float _notchPointsX[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
-float _notchPointsY[_noOfNotches+1]; //array to hold the x coordinates of the notches for calibration
 //                                                         right                     notch 1                   up right                  notch 2                   up                        notch 3                   up left                   notch 4                   left                      notch 5                   down left                 notch 6                   down                      notch 7                   down right                notch 8
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15           16           17           18           19           20           21           22           23           24           25           26           27           28           29           30           31
 
