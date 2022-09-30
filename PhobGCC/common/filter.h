@@ -161,4 +161,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	}
 };
 
+float runPodeSim(const float input, const filterGains &normGains){
+	blah
+}
+
 #endif //FILTER_H
