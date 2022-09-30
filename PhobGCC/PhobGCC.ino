@@ -582,10 +582,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		} else if (btn.A && hardware.Z && btn.Du) { //display version number
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
-			btn.Ax = (uint8_t) 127.5;
-			btn.Ay = (uint8_t) 127.5;
-			btn.Cx = (uint8_t) 127.5 + versionHundreds;
-			btn.Cy = (uint8_t) 127.5 + versionOnes;
+			btn.Ax = (uint8_t) _floatOrigin;
+			btn.Ay = (uint8_t) _floatOrigin;
+			btn.Cx = (uint8_t) _floatOrigin + versionHundreds;
+			btn.Cy = (uint8_t) _floatOrigin + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
 			resetDefaults(SOFT, controls, gains, normGains);//don't reset sticks
@@ -1038,8 +1038,8 @@ void changeRumble(const Increase increase, Buttons &btn, HardwareButtons &hardwa
 }
 
 void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
-	btn.Cx = (uint8_t) 127;
-	btn.Cy = (uint8_t) (controls.rumble + 127.5);
+	btn.Cx = (uint8_t) _intOrigin;
+	btn.Cy = (uint8_t) (controls.rumble + _floatOrigin);
 	clearButtons(time, btn, hardware);
 
 	setRumbleSetting(controls.rumble);
@@ -1056,10 +1056,10 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	}
 
 	//move sticks up-right for on, down-left for off
-	btn.Ax = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
-	btn.Ay = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
-	btn.Cx = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
-	btn.Cy = (uint8_t) (controls.autoInit*100 - 50 + 127.5);
+	btn.Ax = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
+	btn.Ay = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
+	btn.Cx = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
+	btn.Cy = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
 
 	clearButtons(2000, btn, hardware);
 
@@ -1096,8 +1096,8 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
     //recompute the intermediate gains used directly by the kalman filter
     recomputeGains(gains, normGains);
 
-	btn.Cx = (uint8_t) (controls.xSnapback + 127.5);
-	btn.Cy = (uint8_t) (controls.ySnapback + 127.5);
+	btn.Cx = (uint8_t) (controls.xSnapback + _floatOrigin);
+	btn.Cy = (uint8_t) (controls.ySnapback + _floatOrigin);
 
 	clearButtons(2000, btn, hardware);
 
@@ -1143,19 +1143,19 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
-	btn.Cx = (uint8_t) (127.5 + (gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (127.5 + (gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + (gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (_floatOrigin + (gains.ySmoothing * 10));
 
 	clearButtons(2000, btn, hardware);
 }
 void showAstickSettings(Buttons &btn, HardwareButtons &hardware, const ControlConfig &controls, FilterGains &gains) {
 	//Snapback on A-stick
-	btn.Ax = (uint8_t) (controls.xSnapback + 127.5);
-	btn.Ay = (uint8_t) (controls.ySnapback + 127.5);
+	btn.Ax = (uint8_t) (controls.xSnapback + _floatOrigin);
+	btn.Ay = (uint8_t) (controls.ySnapback + _floatOrigin);
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (127.5 + (gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (127.5 + (gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + (gains.xSmoothing * 10));
+	btn.Cy = (uint8_t) (_floatOrigin + (gains.ySmoothing * 10));
 
 	clearButtons(2000, btn, hardware);
 }
@@ -1198,8 +1198,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
-	btn.Cx = (uint8_t) (127.5 + (gains.cXSmoothing * 10));
-	btn.Cy = (uint8_t) (127.5 + (gains.cYSmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + (gains.cXSmoothing * 10));
+	btn.Cy = (uint8_t) (_floatOrigin + (gains.cYSmoothing * 10));
 
 	clearButtons(2000, btn, hardware);
 }
@@ -1239,19 +1239,19 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		Serial.println(controls.cYOffset);
 	}
 
-	btn.Cx = (uint8_t) (127.5 + controls.cXOffset);
-	btn.Cy = (uint8_t) (127.5 + controls.cYOffset);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
 
 	clearButtons(2000, btn, hardware);
 }
 void showCstickSettings(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains) {
 	//Snapback/smoothing on A-stick
-	btn.Ax = (uint8_t) (127.5 + (gains.cXSmoothing * 10));
-	btn.Ay = (uint8_t) (127.5 + (gains.cYSmoothing * 10));
+	btn.Ax = (uint8_t) (_floatOrigin + (gains.cXSmoothing * 10));
+	btn.Ay = (uint8_t) (_floatOrigin + (gains.cYSmoothing * 10));
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (127.5 + controls.cXOffset);
-	btn.Cy = (uint8_t) (127.5 + controls.cYOffset);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
 
 	clearButtons(2000, btn, hardware);
 }
@@ -1282,16 +1282,16 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	setROffsetSetting(controls.rTriggerOffset);
 
 	if(controls.lTriggerOffset > 99) {
-		btn.Ax = (uint8_t) (127.5 + 100);
-		btn.Cx = (uint8_t) (127.5 + controls.lTriggerOffset-100);
+		btn.Ax = (uint8_t) (_floatOrigin + 100);
+		btn.Cx = (uint8_t) (_floatOrigin + controls.lTriggerOffset-100);
 	} else {
-		btn.Cx = (uint8_t) (127.5 + controls.lTriggerOffset);
+		btn.Cx = (uint8_t) (_floatOrigin + controls.lTriggerOffset);
 	}
 	if(controls.rTriggerOffset > 99) {
-		btn.Ay = (uint8_t) (127.5 + 100);
-		btn.Cy = (uint8_t) (127.5 + controls.rTriggerOffset-100);
+		btn.Ay = (uint8_t) (_floatOrigin + 100);
+		btn.Cy = (uint8_t) (_floatOrigin + controls.rTriggerOffset-100);
 	} else {
-		btn.Cy = (uint8_t) (127.5 + controls.rTriggerOffset);
+		btn.Cy = (uint8_t) (_floatOrigin + controls.rTriggerOffset);
 	}
 
 	clearButtons(250, btn, hardware);
@@ -1364,20 +1364,20 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 		triggerConflict = -100;
 	}
 	//We want to one-index the modes for the users, so we add 1 here
-	btn.Ay = (uint8_t) (127.5 + triggerConflict);
-	btn.Ax = (uint8_t) (127.5 + controls.lConfig + 1);
-	btn.Cy = (uint8_t) (127.5 + triggerConflict);
-	btn.Cx = (uint8_t) (127.5 + controls.rConfig + 1);
+	btn.Ay = (uint8_t) (_floatOrigin + triggerConflict);
+	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+	btn.Cy = (uint8_t) (_floatOrigin + triggerConflict);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
 
 	clearButtons(2000, btn, hardware);
 }
 void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
-	//We choose 127 for this, and elsewhere we use an offset of 127.5 truncated to int in order to round properly
-	btn.Ax = 127;
-	btn.Ay = 127;
-	btn.Cx = 127;
-	btn.Cy = 127;
+	//We choose 127 (_intOrigin) for this, and elsewhere we use an offset of 127.5 (_floatOrigin) truncated to int in order to round properly
+	btn.Ax = _intOrigin;
+	btn.Ay = _intOrigin;
+	btn.Cx = _intOrigin;
+	btn.Cy = _intOrigin;
 
 	//read the ADC inputs for the analog triggers a few times and choose the startup value to be the maximum that was recorded
 	//these values could be used as offsets to set particular trigger values
