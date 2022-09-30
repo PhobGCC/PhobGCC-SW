@@ -14,6 +14,10 @@
 
 ADC *adc = new ADC();
 
+//origin values, useful for writing readable stick positions
+const int _intOrigin = 127;
+const float _floatOrigin = 127.5;
+
 //////values used for calibration
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
@@ -403,11 +407,11 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	float y = 0;
 	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
 	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + 127.5);
-		btn.Cy = (uint8_t) (y + 127.5);
+		btn.Cx = (uint8_t) (x + _floatOrigin);
+		btn.Cy = (uint8_t) (y + _floatOrigin);
 	}else{
-		btn.Ax = (uint8_t) (x + 127.5);
-		btn.Ay = (uint8_t) (y + 127.5);
+		btn.Ax = (uint8_t) (x + _floatOrigin);
+		btn.Ay = (uint8_t) (y + _floatOrigin);
 	}
 
 	//do nothing if it's not a valid notch to calibrate
@@ -511,11 +515,11 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 		calcStickValues(notchAngles[notchIndex], &x, &y);
 	}
 	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + 127.5);
-		btn.Cy = (uint8_t) (y + 127.5);
+		btn.Cx = (uint8_t) (x + _floatOrigin);
+		btn.Cy = (uint8_t) (y + _floatOrigin);
 	}else{
-		btn.Ax = (uint8_t) (x + 127.5);
-		btn.Ay = (uint8_t) (y + 127.5);
+		btn.Ax = (uint8_t) (x + _floatOrigin);
+		btn.Ay = (uint8_t) (y + _floatOrigin);
 	}
 };
 
@@ -957,23 +961,23 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(readA){
-		float diffAx = (remappedAx+127.5)-btn.Ax;
+		float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
 		if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
-			btn.Ax = (uint8_t) (remappedAx+127.5);
+			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
 		}
-		float diffAy = (remappedAy+127.5)-btn.Ay;
+		float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
 		if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-			btn.Ay = (uint8_t) (remappedAy+127.5);
+			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 		}
 	}
 	if(readC){
-		float diffCx = (remappedCx+127.5)-btn.Cx;
+		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
 		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-			btn.Cx = (uint8_t) (remappedCx+127.5);
+			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
 		}
-		float diffCy = (remappedCy+127.5)-btn.Cy;
+		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
 		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-			btn.Cy = (uint8_t) (remappedCy+127.5);
+			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
 		}
 	}
 };
