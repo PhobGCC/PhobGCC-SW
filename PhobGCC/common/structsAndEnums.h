@@ -22,6 +22,11 @@ enum WhichAxis {
 	YAXIS
 };
 
+enum WhichStick {
+    ASTICK,
+    CSTICK
+};
+
 enum HardReset {
 	HARD,
 	SOFT

@@ -21,45 +21,49 @@ const int _noOfAdjNotches = 12;
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 const float _maxStickAngle = 0.4886921906;//28 degrees; this is the max angular deflection of the stick.
-bool	_calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
-bool _advanceCal = false;
-bool _advanceCalPressed = false;
-bool _undoCal = false;
-bool _undoCalPressed = false;
-bool _notched = false; //keeps track of whether or not the controller has firefox notches
+
+bool _calAStick = true; //determines which stick is being calibrated (if false then calibrate the c-stick)
 //                                                         right                     notch 1                   up right                  notch 2                   up                        notch 3                   up left                   notch 4                   left                      notch 5                   down left                 notch 6                   down                      notch 7                   down right                notch 8
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15           16           17           18           19           20           21           22           23           24           25           26           27           28           29           30           31
 
 const float _defaultCalPointsX[_noOfCalibrationPoints] =  {0.3010610568,0.3603937084,0.3010903951,0.3000194135,0.3005567843,0.3471911134,0.3006904343,0.3009976295,0.3000800899,0.300985051, 0.3001020858,0.300852804, 0.3008746305,0.2548450139,0.3001434092,0.3012600593,0.3011594091,0.2400535218,0.3014621077,0.3011248469,0.3010860944,0.2552106305,0.3002197989,0.3001679513,0.3004438517,0.300486505, 0.3002766984,0.3012828579,0.3014959877,0.346512936, 0.3013398149,0.3007809916};
 const float _defaultCalPointsY[_noOfCalibrationPoints] =  {0.300092277, 0.3003803475,0.3002205792,0.301004752, 0.3001241394,0.3464200104,0.3001331245,0.3011881186,0.3010685972,0.3606900641,0.3001520488,0.3010662947,0.3008837105,0.3461478452,0.3011732026,0.3007367683,0.3011345742,0.3000566197,0.3006843288,0.3009673425,0.3011228978,0.2547579852,0.3011177285,0.301264851, 0.3002376991,0.2403885431,0.3006540818,0.3010588401,0.3011093054,0.2555000655,0.300080276, 0.3008482317};
+
 //                                                         right        up          left          down         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
-const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,       16, 17,       24, 25,      4, 5,        12, 13,      20, 21,      28, 29,      2, 3,        6, 7,        10, 11,      14, 15,      18, 19,      22, 23,      26, 27,      30, 31};
 //                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
-const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
-//const float _notchRange[_noOfNotches] =                 {0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0, 0,           M_PI*1/16.0, M_PI/16.0,   M_PI*1/16.0};
-const float _notchAdjustStretchLimit = 0.3;
 float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
 float _measuredNotchAngles[_noOfNotches];
-const int _notchStatusDefaults[_noOfNotches] =            {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 int _aNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 int _cNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 float _cNotchAngles[_noOfNotches];
+
+//Defaults
+//                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
+//                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
+const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,       16, 17,       24, 25,      4, 5,        12, 13,      20, 21,      28, 29,      2, 3,        6, 7,        10, 11,      14, 15,      18, 19,      22, 23,      26, 27,      30, 31};
+const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
+const int _notchStatusDefaults[_noOfNotches] =            {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
+const float _notchAdjustStretchLimit = 0.3;
 const int _cardinalNotch = 3;
 const int _secondaryNotch = 2;
 const int _tertiaryNotchActive = 1;
 const int _tertiaryNotchInactive = 0;
 const int _fitOrder = 3; //fit order used in the linearization step
-float _aFitCoeffsX[_fitOrder+1]; //coefficients for linearizing the X axis of the a-stick
-float _aFitCoeffsY[_fitOrder+1]; //coefficients for linearizing the Y axis of the a-stick
-float _cFitCoeffsX[_fitOrder+1]; //coefficients for linearizing the Y axis of the c-stick
-float _cFitCoeffsY[_fitOrder+1]; //coefficients for linearizing the Y axis of the c-stick
+
+//these are the linearization coefficients
+float _aFitCoeffsX[_fitOrder+1];
+float _aFitCoeffsY[_fitOrder+1];
+float _cFitCoeffsX[_fitOrder+1];
+float _cFitCoeffsY[_fitOrder+1];
+
+//these are the notch remap parameters
 float _aAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the a-stick
 float _cAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the c-stick
-float _aBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the a-stick
-float _cBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the c-stick
+float _aBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the a-stick (in the plane)
+float _cBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the c-stick (in the plane)
 
 float linearize(float point, float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
@@ -487,7 +491,7 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 	}
 };
 
-void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin){
+void collectCalPoints(const WhichStick whichStick, const int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin){
 	Serial.print("Collecting cal point for step: ");
 	Serial.println(currentStepIn);
     const int currentStep = _calOrder[currentStepIn];
@@ -501,7 +505,7 @@ void collectCalPoints(bool aStick, int currentStepIn, float calPointsX[], float 
 		X = 0;
 		Y = 0;
 		for(int i = 0; i < 128; i++){
-			if(aStick){
+			if(whichStick == ASTICK){
 #ifdef USEADCSCALE
 				_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
@@ -913,8 +917,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	float remappedAy;
 	float remappedCx;
 	float remappedCy;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _aAffineCoeffs, _aBoundaryAngles,_noOfNotches);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _cAffineCoeffs, _cBoundaryAngles,_noOfNotches);
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _aAffineCoeffs, _aBoundaryAngles, _noOfNotches);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _cAffineCoeffs, _cBoundaryAngles, _noOfNotches);
 
 	//Clamp values from -125 to +125
 	remappedAx = min(125, max(-125, remappedAx));

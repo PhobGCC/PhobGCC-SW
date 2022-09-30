@@ -90,16 +90,17 @@ void loop() {
 
 	static int currentCalStep = -1;//-1 means not calibrating
 
-	//Set up persistent storage for calibration points
+	//Set up persistent storage for calibration
 	static float tempCalPointsX[_noOfCalibrationPoints];
 	static float tempCalPointsY[_noOfCalibrationPoints];
+	static WhichStick whichStick = ASTICK;
 
 	//read the controllers buttons
-	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY);
+	readButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
-		if(_calAStick){
+		if(whichStick == ASTICK){
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
 				adjustNotch(currentCalStep, _dT, true, _measuredNotchAngles, _aNotchAngles, _aNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
@@ -119,7 +120,7 @@ void loop() {
 			}
 			readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _dT);
 		}
-		else{
+		else{//WHICHSTICK == CSTICK
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
 				adjustNotch(currentCalStep, _dT, false, _measuredNotchAngles, _cNotchAngles, _cNotchStatus, _btn, _hardware);
 				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
@@ -507,7 +508,7 @@ void setPinModes(){
 	pinMode(_pinCx,INPUT_DISABLE);
 	pinMode(_pinCy,INPUT_DISABLE);
 }
-void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[]){
+void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick){
 	btn.A = !digitalRead(_pinA);
 	btn.B = !digitalRead(_pinB);
 	btn.X = !digitalRead(controls.pinXSwappable);
@@ -571,6 +572,8 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 	* Increase/Decrease R-Trigger Offset:  ZR+Du/Dd
 	*/
 
+	static bool advanceCal = false;
+
 	//check the dpad buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
 		if(btn.A && hardware.X && hardware.Y && btn.S) { //Safe Mode Toggle
@@ -614,15 +617,15 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 #endif // RUMBLE
 		} else if (btn.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
-			_calAStick = true;
+			whichStick = ASTICK;
 			currentCalStep ++;
-			_advanceCal = true;
+			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
 			Serial.println("Calibrating the C stick");
-			_calAStick = false;
+			whichStick = CSTICK;
 			currentCalStep ++;
-			_advanceCal = true;
+			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.L && hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
 			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
@@ -704,7 +707,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 	if(btn.S && (currentCalStep >= 0 && currentCalStep < 32)){
 		currentCalStep = _noOfCalibrationPoints;
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
-		if(!_calAStick){
+		if(whichStick == CSTICK){
 			//get the calibration points collected during the last A stick calibration
 			getCPointsXSetting(tempCalPointsX);
 			getCPointsYSetting(tempCalPointsY);
@@ -738,7 +741,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
 			//notchCalibrate again
 			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
-		} else if(_calAStick){
+		} else if(whichStick == ASTICK){
 			//get the calibration points collected during the last A stick calibration
 			getAPointsXSetting(tempCalPointsX);
 			getAPointsYSetting(tempCalPointsY);
@@ -775,8 +778,10 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		}
 	}
 	//Undo Calibration using Z-button
-	if(hardware.Z && _undoCal && !_undoCalPressed) {
-		_undoCalPressed = true;
+	static bool undoCal = false;
+	static bool undoCalPressed = false;
+	if(hardware.Z && undoCal && !undoCalPressed) {
+		undoCalPressed = true;
 		if(currentCalStep % 2 == 0 && currentCalStep < 32 && currentCalStep != 0 ) {
 			//If it's measuring zero, go back to the previous zero
 			currentCalStep --;
@@ -789,14 +794,14 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			//We can go directly between notches when adjusting notches
 			currentCalStep --;
 		}
-		if(!_calAStick){
+		if(whichStick == CSTICK){
 			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			while((currentCalStep >= _noOfCalibrationPoints) && (_cNotchStatus[notchIndex] == _tertiaryNotchInactive) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
 				currentCalStep--;
 				notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			}
-		} else if(_calAStick){
+		} else if(whichStick == ASTICK){
 			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 			while((currentCalStep >= _noOfCalibrationPoints) && (_aNotchStatus[notchIndex] == _tertiaryNotchInactive) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
 				//skip to the next valid notch
@@ -805,27 +810,29 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 		}
 	} else if(!hardware.Z) {
-		_undoCalPressed = false;
+		undoCalPressed = false;
 	}
 
 	//Advance Calibration Using L or R triggers
 	static float advanceCalAccumulator = 0.0;
-	if((hardware.L || hardware.R) && _advanceCal){// && !_advanceCalPressed){
+	if((hardware.L || hardware.R) && advanceCal){
 		advanceCalAccumulator = 0.96*advanceCalAccumulator + 0.04;
 	} else {
 		advanceCalAccumulator = 0.96*advanceCalAccumulator;
 	}
-	if(advanceCalAccumulator > 0.75 && !_advanceCalPressed){
-		_advanceCalPressed = true;
-		if (!_calAStick){
+
+	static bool advanceCalPressed = false;
+	if(advanceCalAccumulator > 0.75 && !advanceCalPressed){
+		advanceCalPressed = true;
+		if (whichStick == CSTICK){
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(_calAStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
+				collectCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
-				_undoCal = true;
+				undoCal = true;
 			} else {
-				_undoCal = false;
+				undoCal = false;
 			}
 			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 				Serial.println("finished collecting the calibration points for the C stick");
@@ -883,20 +890,20 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				Serial.println("C stick linearized");
 				notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 				currentCalStep = -1;
-				_advanceCal = false;
+				advanceCal = false;
 			}
 		}
-		else if (_calAStick){
+		else if (whichStick == ASTICK){
 			Serial.println("Current step:");
 			Serial.println(currentCalStep);
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(_calAStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
+				collectCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfCalibrationPoints) {//don't undo at the beginning of collection or notch adjust
-				_undoCal = true;
+				undoCal = true;
 			} else {
-				_undoCal = false;
+				undoCal = false;
 			}
 			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 				//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
@@ -953,11 +960,11 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				Serial.println("A stick linearized");
 				notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 				currentCalStep = -1;
-				_advanceCal = false;
+				advanceCal = false;
 			}
 		}
 	} else if(advanceCalAccumulator <= 0.25) {
-		_advanceCalPressed = false;
+		advanceCalPressed = false;
 	}
 }
 void freezeSticks(const int time, Buttons &btn, HardwareButtons &hardware) {
