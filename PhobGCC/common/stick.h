@@ -61,12 +61,6 @@ const float _defaultCalPointsY[_noOfCalibrationPoints] =  {
 	0.3011093054,0.2555000655,//down right
 	0.3000802760,0.3008482317};
 
-//                                                         right        up          left          down         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
-//                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
-//                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
-float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
-float _measuredNotchAngles[_noOfNotches];
-float _cNotchAngles[_noOfNotches];
 
 //Defaults
 //                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
