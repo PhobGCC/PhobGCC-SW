@@ -945,8 +945,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
     runMedian(posAy, yPosList, yMedianIndex);
 #endif
 
-	//Run a pode simulation to extend time at the rim
-	//runPodeSim(posAx, posAy, posAx, posAy, normGains);
+	//Run a secondary filter to extend time at the rim
+	//runWaveShaping(posAx, posAy, posAx, posAy, normGains);
 
 	float remappedAx;
 	float remappedAy;

@@ -161,20 +161,20 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	}
 };
 
-//This straight-up simulates an idealized sort of pode:
+//This simulates an idealized sort of pode:
 // if the stick is moving fast, it responds poorly, while
 // if the stick is moving slowly, it follows closely.
 //It's not suitable to be the sole filter, but when put after
 // the smart snapback filter, it should be able to hold the
 // output at the rim longer when released.
-void runPodeSim(const float xPos, const float yPos, float &xPode, float &yPode, const FilterGains &normGains){
+void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const FilterGains &normGains){
 	static float oldXPos = 0;
 	static float oldYPos = 0;
 	static float oldXVel = 0;
 	static float oldYVel = 0;
 
-	static float oldXPode = 0;
-	static float oldYPode = 0;
+	static float oldXOut = 0;
+	static float oldYOut = 0;
 
 	const float xVel = xPos - oldXPos;
 	const float yVel = yPos - oldYPos;
@@ -186,16 +186,16 @@ void runPodeSim(const float xPos, const float yPos, float &xPode, float &yPode, 
 	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh/32);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
-	xPode = oldXPode*oldXPosWeight + xPos*newXPosWeight;
-	yPode = oldYPode*oldYPosWeight + yPos*newYPosWeight;
+	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
+	yOut = oldYOut*oldYPosWeight + yPos*newYPosWeight;
 
 	oldXPos = xPos;
 	oldYPos = yPos;
 	oldXVel = xVel;
 	oldYVel = yVel;
 
-	oldXPode = xPode;
-	oldYPode = yPode;
+	oldXOut = xOut;
+	oldYOut = yOut;
 }
 
 #endif //FILTER_H
