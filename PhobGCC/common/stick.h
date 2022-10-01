@@ -66,8 +66,8 @@ const float _defaultCalPointsY[_noOfCalibrationPoints] =  {
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
 float _aNotchAngles[_noOfNotches] =                       {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
 float _measuredNotchAngles[_noOfNotches];
-int _aNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
-int _cNotchStatus[_noOfNotches] =                         {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
+NotchStatus _aNotchStatus[_noOfNotches] =           {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
+NotchStatus _cNotchStatus[_noOfNotches] =           {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
 float _cNotchAngles[_noOfNotches];
 
 //Defaults
@@ -75,7 +75,7 @@ float _cNotchAngles[_noOfNotches];
 //                                                         0            1            2            3            4            5            6            7            8            9            10           11           12           13           14           15
 const int _calOrder[_noOfCalibrationPoints] =             {0, 1,        8, 9,       16, 17,       24, 25,      4, 5,        12, 13,      20, 21,      28, 29,      2, 3,        6, 7,        10, 11,      14, 15,      18, 19,      22, 23,      26, 27,      30, 31};
 const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0,    M_PI*2/8.0,  M_PI*3/8.0,  M_PI*4/8.0,  M_PI*5/8.0,  M_PI*6/8.0,  M_PI*7/8.0,  M_PI*8/8.0,  M_PI*9/8.0,  M_PI*10/8.0, M_PI*11/8.0, M_PI*12/8.0, M_PI*13/8.0, M_PI*14/8.0, M_PI*15/8.0};
-const int _notchStatusDefaults[_noOfNotches] =            {3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1,           3,           1,           2,           1};
+const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 const float _notchAdjustStretchLimit = 0.3;
@@ -177,9 +177,9 @@ void computeStickAngles(float xInput[], float yInput[], float stickAngles[]){
 	}
 };
 //sets notches to measured values if absent
-void cleanNotches(float notchAngles[], float measuredNotchAngles[], int notchStatus[]){
+void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus notchStatus[]){
 	for(int i=0; i < _noOfNotches; i++){
-		if(notchStatus[i] == _tertiaryNotchInactive){
+		if(notchStatus[i] == TERT_INACTIVE){
 			notchAngles[i] = measuredNotchAngles[i];
 		}
 	}
@@ -249,7 +249,7 @@ void transformCalPoints(float xInput[], float yInput[], float xOutput[], float y
 	take the x and y coordinates and notch angles collected during the calibration procedure,
 	and generate the cleaned (non-redundant) x and y stick coordinates and the corresponding x and y notch coordinates
 *******************/
-void cleanCalPoints(const float calPointsX[], const float calPointsY[], const float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[], int notchStatus[]){
+void cleanCalPoints(const float calPointsX[], const float calPointsY[], const float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[], NotchStatus notchStatus[]){
 
 	Serial.println("The raw calibration points (x,y) are:");
 	for(int i = 0; i< _noOfCalibrationPoints; i++){
@@ -361,7 +361,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 			Serial.println(i+1);
 
 			//Mark that notch adjustment should be skipped for this
-			notchStatus[i] = _tertiaryNotchInactive;
+			notchStatus[i] = TERT_INACTIVE;
 		}else{
 			notchStatus[i] = _notchStatusDefaults[i];
 		}
@@ -392,7 +392,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 //The notch adjustment is limited in order to control
 //1. displacement of points (max 12 units out of +/- 100, for now)
 //2. stretching of coordinates (max +/- 30%)
-void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], int notchStatus[], Buttons &btn, HardwareButtons &hardware){
+void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[], Buttons &btn, HardwareButtons &hardware){
 	//set up variables based on current button state
 	bool CW = hardware.X;
 	bool CCW = hardware.Y;
@@ -416,7 +416,7 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 
 	//do nothing if it's not a valid notch to calibrate
 	//it'll skip them anyway but just in case
-	if(notchStatus[notchIndex] == _tertiaryNotchInactive){
+	if(notchStatus[notchIndex] == TERT_INACTIVE){
 		return;
 	}
 

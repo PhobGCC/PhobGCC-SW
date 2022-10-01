@@ -23,13 +23,20 @@ enum WhichAxis {
 };
 
 enum WhichStick {
-    ASTICK,
-    CSTICK
+	ASTICK,
+	CSTICK
 };
 
 enum HardReset {
 	HARD,
 	SOFT
+};
+
+enum NotchStatus {
+	TERT_INACTIVE,
+	TERT_ACTIVE,
+	SECONDARY,
+	CARDINAL
 };
 
 struct Pins{
