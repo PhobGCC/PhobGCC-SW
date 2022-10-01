@@ -203,36 +203,36 @@ void setFloatPoints(const int eepromAddress, const float array[32]) {
 	EEPROM.put(eepromAddress, tempArray);
 }
 
-void getAPointsXSetting(float points[32]) {
-	getFloatPoints(Eeprom::_eepromAPointsX, points);
+void getPointsSetting(float points[32], const WhichStick whichStick, const WhichAxis whichAxis) {
+	if(whichStick == ASTICK) {
+		if(whichAxis == XAXIS) {
+			getFloatPoints(Eeprom::_eepromAPointsX, points);
+		} else {
+			getFloatPoints(Eeprom::_eepromAPointsY, points);
+		}
+	} else {
+		if(whichAxis == XAXIS) {
+			getFloatPoints(Eeprom::_eepromCPointsX, points);
+		} else {
+			getFloatPoints(Eeprom::_eepromCPointsY, points);
+		}
+	}
 };
 
-void setAPointsXSetting(const float points[32]) {
-	setFloatPoints(Eeprom::_eepromAPointsX, points);
-};
-
-void getAPointsYSetting(float points[32]) {
-	getFloatPoints(Eeprom::_eepromAPointsY, points);
-};
-
-void setAPointsYSetting(const float points[32]) {
-	setFloatPoints(Eeprom::_eepromAPointsY, points);
-};
-
-void getCPointsXSetting(float points[32]) {
-	getFloatPoints(Eeprom::_eepromCPointsX, points);
-};
-
-void setCPointsXSetting(const float points[32]) {
-	setFloatPoints(Eeprom::_eepromCPointsX, points);
-};
-
-void getCPointsYSetting(float points[32]) {
-	getFloatPoints(Eeprom::_eepromCPointsY, points);
-};
-
-void setCPointsYSetting(const float points[32]) {
-	setFloatPoints(Eeprom::_eepromCPointsY, points);
+void setPointsSetting(const float points[32], const WhichStick whichStick, const WhichAxis whichAxis) {
+	if(whichStick == ASTICK) {
+		if(whichAxis == XAXIS) {
+			setFloatPoints(Eeprom::_eepromAPointsX, points);
+		} else {
+			setFloatPoints(Eeprom::_eepromAPointsY, points);
+		}
+	} else {
+		if(whichAxis == XAXIS) {
+			setFloatPoints(Eeprom::_eepromCPointsX, points);
+		} else {
+			setFloatPoints(Eeprom::_eepromCPointsY, points);
+		}
+	}
 };
 
 //pulls 16 points from eeprom
@@ -253,20 +253,21 @@ void setFloatNotches(const int eepromAddress, const float array[16]) {
 	EEPROM.put(eepromAddress, tempArray);
 }
 
-void getANotchAnglesSetting(float angles[16]) {
-	getFloatNotches(Eeprom::_eepromANotchAngles, angles);
-};
+//combination getter and setter
+void getNotchAnglesSetting(float angles[16], const WhichStick whichStick) {
+	if (whichStick == ASTICK) {
+		getFloatNotches(Eeprom::_eepromANotchAngles, angles);
+	} else {
+		getFloatNotches(Eeprom::_eepromCNotchAngles, angles);
+	}
+}
 
-void setANotchAnglesSetting(const float angles[16]) {
-	setFloatNotches(Eeprom::_eepromANotchAngles, angles);
-};
-
-void getCNotchAnglesSetting(float angles[16]) {
-	getFloatNotches(Eeprom::_eepromCNotchAngles, angles);
-};
-
-void setCNotchAnglesSetting(const float angles[16]) {
-	setFloatNotches(Eeprom::_eepromCNotchAngles, angles);
-};
+void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) {
+	if (whichStick == ASTICK) {
+		setFloatNotches(Eeprom::_eepromANotchAngles, angles);
+	} else {
+		setFloatNotches(Eeprom::_eepromCNotchAngles, angles);
+	}
+}
 
 #endif //SETTINGS_H

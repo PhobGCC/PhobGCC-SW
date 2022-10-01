@@ -363,9 +363,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	float tempCalPointsX[_noOfCalibrationPoints];
 	float tempCalPointsY[_noOfCalibrationPoints];
 	float notchAngles[_noOfNotches];
-	getAPointsXSetting(tempCalPointsX);
-	getAPointsYSetting(tempCalPointsY);
-	getANotchAnglesSetting(notchAngles);
+	getPointsSetting(tempCalPointsX, ASTICK, XAXIS);
+	getPointsSetting(tempCalPointsY, ASTICK, YAXIS);
+	getNotchAnglesSetting(notchAngles, ASTICK);
 
 	float cleanedPointsX[_noOfNotches+1];
 	float cleanedPointsY[_noOfNotches+1];
@@ -380,9 +380,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 
 	//get the calibration points collected during the last A stick calibration
-	getCPointsXSetting(tempCalPointsX);
-	getCPointsYSetting(tempCalPointsY);
-	getCNotchAnglesSetting(notchAngles);
+	getPointsSetting(tempCalPointsX, CSTICK, XAXIS);
+	getPointsSetting(tempCalPointsY, CSTICK, YAXIS);
+	getNotchAnglesSetting(notchAngles, ASTICK);
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, _cFitCoeffsX, _cFitCoeffsY);
@@ -446,11 +446,11 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		for(int i = 0; i < _noOfNotches; i++){
 			notchAngles[i] = _notchAngleDefaults[i];
 		}
-		setANotchAnglesSetting(notchAngles);
-		setCNotchAnglesSetting(notchAngles);
+		setNotchAnglesSetting(notchAngles, ASTICK);
+		setNotchAnglesSetting(notchAngles, CSTICK);
 
-		setAPointsXSetting(_defaultCalPointsX);
-		setAPointsYSetting(_defaultCalPointsY);
+		setPointsSetting(_defaultCalPointsX, ASTICK, XAXIS);
+		setPointsSetting(_defaultCalPointsY, ASTICK, YAXIS);
 		Serial.println("A calibration points stored in EEPROM");
 
 		float cleanedPointsX[_noOfNotches+1];
@@ -465,8 +465,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		Serial.println("A stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _aAffineCoeffs, _aBoundaryAngles);
 
-		setCPointsXSetting(_defaultCalPointsX);
-		setCPointsYSetting(_defaultCalPointsY);
+		setPointsSetting(_defaultCalPointsX, CSTICK, XAXIS);
+		setPointsSetting(_defaultCalPointsY, CSTICK, YAXIS);
 		Serial.println("C calibration points stored in EEPROM");
 
 		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
@@ -713,9 +713,9 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 		if(whichStick == CSTICK){
 			//get the calibration points collected during the last A stick calibration
-			getCPointsXSetting(tempCalPointsX);
-			getCPointsYSetting(tempCalPointsY);
-			getCNotchAnglesSetting(notchAngles);
+			getPointsSetting(tempCalPointsX, whichStick, XAXIS);
+			getPointsSetting(tempCalPointsY, whichStick, YAXIS);
+			getNotchAnglesSetting(notchAngles, whichStick);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float temptempCalPointsX[_noOfCalibrationPoints];
 			float temptempCalPointsY[_noOfCalibrationPoints];
@@ -747,9 +747,9 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _cAffineCoeffs, _cBoundaryAngles);
 		} else if(whichStick == ASTICK){
 			//get the calibration points collected during the last A stick calibration
-			getAPointsXSetting(tempCalPointsX);
-			getAPointsYSetting(tempCalPointsY);
-			getANotchAnglesSetting(notchAngles);
+			getPointsSetting(tempCalPointsX, whichStick, XAXIS);
+			getPointsSetting(tempCalPointsY, whichStick, YAXIS);
+			getNotchAnglesSetting(notchAngles, whichStick);
 			//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
 			float temptempCalPointsX[_noOfCalibrationPoints];
 			float temptempCalPointsY[_noOfCalibrationPoints];
@@ -844,7 +844,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				float temptempCalPointsX[_noOfCalibrationPoints];
 				float temptempCalPointsY[_noOfCalibrationPoints];
 				//Recall the previous notch angles
-				getANotchAnglesSetting(notchAngles);
+				getNotchAnglesSetting(notchAngles, whichStick);
 				stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 				//clean the stripped calibration points, use default angles
 				float cleanedPointsX[_noOfNotches+1];
@@ -880,9 +880,9 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the C stick");
-				setCPointsXSetting(tempCalPointsX);
-				setCPointsYSetting(tempCalPointsY);
-				setCNotchAnglesSetting(notchAngles);
+				setPointsSetting(tempCalPointsX, whichStick, XAXIS);
+				setPointsSetting(tempCalPointsY, whichStick, YAXIS);
+				setNotchAnglesSetting(notchAngles, whichStick);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
@@ -917,7 +917,7 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 				float temptempCalPointsY[_noOfCalibrationPoints];
 				stripCalPoints(tempCalPointsX, tempCalPointsY, temptempCalPointsX, temptempCalPointsY);
 				//Recall the previous notch angles
-				getANotchAnglesSetting(notchAngles);
+				getNotchAnglesSetting(notchAngles, whichStick);
 				//clean the stripped calibration points, use default angles
 				float cleanedPointsX[_noOfNotches+1];
 				float cleanedPointsY[_noOfNotches+1];
@@ -952,9 +952,9 @@ void readButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &control
 			}
 			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
 				Serial.println("finished adjusting notches for the A stick");
-				setAPointsXSetting(tempCalPointsX);
-				setAPointsYSetting(tempCalPointsY);
-				setANotchAnglesSetting(notchAngles);
+				setPointsSetting(tempCalPointsX, whichStick, XAXIS);
+				setPointsSetting(tempCalPointsY, whichStick, YAXIS);
+				setNotchAnglesSetting(notchAngles, whichStick);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
 				Serial.println("calibration points stored in EEPROM");
