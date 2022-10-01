@@ -4,6 +4,7 @@
 #include <EEPROM.h>
 
 #include "../common/stick.h"
+#include "../common/structsAndEnums.h"
 
 //Reimplement all the functions in this header for each platform.
 //Include the appropriate one in each per-board file.
@@ -33,8 +34,6 @@ namespace Eeprom {
 	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
 };
-
-#include "../common/structsAndEnums.h"
 
 JumpConfig getJumpSetting() {
 	JumpConfig output;

@@ -14,6 +14,10 @@
 
 ADC *adc = new ADC();
 
+//ADC reference values for Phob 1.0; may need to be moved into hardware-specific section
+float _ADCScale = 1;
+float _ADCScaleFactor = 1;
+
 //origin values, useful for writing readable stick positions
 const int _intOrigin = 127;
 const float _floatOrigin = 127.5;
@@ -22,8 +26,7 @@ const float _floatOrigin = 127.5;
 const int _noOfNotches = 16;
 const int _noOfCalibrationPoints = _noOfNotches * 2;
 const int _noOfAdjNotches = 12;
-float _ADCScale = 1;
-float _ADCScaleFactor = 1;
+const int _fitOrder = 3; //fit order used in the linearization step
 const float _maxStickAngle = 0.4886921906;//28 degrees; this is the max angular deflection of the stick.
 
 const float _defaultCalPointsX[_noOfCalibrationPoints] =  {
@@ -70,12 +73,6 @@ const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0
 const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
-const float _notchAdjustStretchLimit = 0.3;
-const int _cardinalNotch = 3;
-const int _secondaryNotch = 2;
-const int _tertiaryNotchActive = 1;
-const int _tertiaryNotchInactive = 0;
-const int _fitOrder = 3; //fit order used in the linearization step
 
 //these are the linearization coefficients
 float _aFitCoeffsX[_fitOrder+1];
