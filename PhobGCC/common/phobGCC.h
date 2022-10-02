@@ -951,9 +951,9 @@ void setPinModes(){
 	pinMode(_pinCy,INPUT_DISABLE);
 }
 
-void processButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
-	readButtons(btn, hardware, controls);
+	readButtons(pin, btn, hardware, controls);
 
 	//We apply the triggers in readSticks so we can minimize race conditions
 	// between trigger analog/digital so we don't get ADT vulnerability in mode 6
@@ -1282,6 +1282,268 @@ void processButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	}
 }
 
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
+	readADCScale(_ADCScale, _ADCScaleFactor);
 
+	//read the L and R sliders
+
+	//set up lockout for mode 5; it's not permissible to have analog trigger
+	// inputs available while mode 5 is active
+	//when a trigger is in lockout due to the other being mode 5,
+	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
+	//(the above modes are 1-indexed, user-facing values)
+	const bool lockoutL = controls.rConfig == 4;
+	const bool lockoutR = controls.lConfig == 4;
+
+	if(hardware.L && hardware.R && btn.A && btn.S) {
+		btn.L = (uint8_t) (1);
+		btn.R = (uint8_t) (1);
+		btn.A = (uint8_t) (1);
+		btn.S = (uint8_t) (1);
+	} else {
+		switch(controls.lConfig) {
+			case 0: //Default Trigger state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = readLa(pin);
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				btn.L  = hardware.L;
+				btn.La = (uint8_t) 0;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = (uint8_t) 0;
+					btn.La = readLa(pin);
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = readLa(pin);
+					if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
+						btn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				btn.L = (uint8_t) 0;
+				if(hardware.L) {
+					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				btn.L = hardware.L;
+				if(hardware.L) {
+					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					btn.La = (uint8_t) 0;
+				}
+				break;
+			default:
+				if(lockoutL){
+					btn.L  = (uint8_t) 0;
+					btn.La = (uint8_t) 0;
+				} else {
+					btn.L  = hardware.L;
+					btn.La = readLa(pin);
+				}
+		}
+
+		switch(controls.rConfig) {
+			case 0: //Default Trigger state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = readRa(pin);
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				btn.R  = hardware.R;
+				btn.Ra = (uint8_t) 0;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = (uint8_t) 0;
+					btn.Ra = readRa(pin);
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = readRa(pin);
+					if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
+						btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				btn.R = (uint8_t) 0;
+				if(hardware.R) {
+					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				btn.R = hardware.R;
+				if(hardware.R) {
+					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					btn.Ra = (uint8_t) 0;
+				}
+				break;
+			default:
+				if(lockoutR){
+					btn.R  = (uint8_t) 0;
+					btn.Ra = (uint8_t) 0;
+				} else {
+					btn.R  = hardware.R;
+					btn.Ra = readRa(pin);
+				}
+		}
+	}
+
+	unsigned int adcCount = 0;
+	unsigned int aXSum = 0;
+	unsigned int aYSum = 0;
+	unsigned int cXSum = 0;
+	unsigned int cYSum = 0;
+
+	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
+	//This is for denoising and making sure the loop runs at 1000 Hz
+	static unsigned int lastMicros = micros();
+	do{
+		adcCount++;
+		aXSum += readAx(pin);
+		aYSum += readAy(pin);
+		cXSum += readCx(pin);
+		cYSum += readCy(pin);
+	}
+	while((micros()-lastMicros) < 1000);
+
+
+	//Serial.println(adcCount);
+	float aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
+	float aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
+	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
+	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
+
+	dT = (micros() - lastMicros)/1000.0;
+	lastMicros = micros();
+	//create the measurement value to be used in the kalman filter
+	float xZ;
+	float yZ;
+
+	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
+	xZ = linearize(aStickX, aStickParams.fitCoeffsX);
+	yZ = linearize(aStickY, aStickParams.fitCoeffsY);
+
+	float posCx = linearize(cStickX, cStickParams.fitCoeffsX);
+	float posCy = linearize(cStickY, cStickParams.fitCoeffsY);
+
+
+	//Run the kalman filter to eliminate snapback
+	static float xPosFilt = 0;//output of kalman filter
+	static float yPosFilt = 0;//output of kalman filter
+	runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
+
+	float shapedAx = xPosFilt;
+	float shapedAy = yPosFilt;
+	//Run a secondary filter to extend time at the rim
+	//runWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, normGains);
+
+	//Run a simple low-pass filter
+	static float oldPosAx = 0;
+	static float oldPosAy = 0;
+	float posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
+	float posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
+	oldPosAx = posAx;
+	oldPosAy = posAy;
+
+	//Run a simple low-pass filter on the C-stick
+	static float cXPos = 0;
+	static float cYPos = 0;
+	float oldCX = cXPos;
+	float oldCY = cYPos;
+	cXPos = posCx;
+	cYPos = posCy;
+	float xWeight1 = normGains.cXSmoothing;
+	float xWeight2 = 1-xWeight1;
+	float yWeight1 = normGains.cYSmoothing;
+	float yWeight2 = 1-yWeight1;
+
+	cXPos = xWeight1*cXPos + xWeight2*oldCX;
+	cYPos = yWeight1*cYPos + yWeight2*oldCY;
+
+	posCx = cXPos;
+	posCy = cYPos;
+
+	//Run a median filter to reduce noise
+#ifdef USEMEDIAN
+	static float xPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering;
+	static float yPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering
+	static unsigned int xMedianIndex = 0;
+	static unsigned int yMedianIndex = 0;
+    runMedian(posAx, xPosList, xMedianIndex);
+    runMedian(posAy, yPosList, yMedianIndex);
+#endif
+
+	float remappedAx;
+	float remappedAy;
+	float remappedCx;
+	float remappedCy;
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams);
+
+	//Clamp values from -125 to +125
+	remappedAx = min(125, max(-125, remappedAx));
+	remappedAy = min(125, max(-125, remappedAy));
+	remappedCx = min(125, max(-125, remappedCx+controls.cXOffset));
+	remappedCy = min(125, max(-125, remappedCy+controls.cYOffset));
+
+	float hystVal = 0.3;
+	//assign the remapped values to the button struct
+	if(readA){
+		float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
+		if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
+		}
+		float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
+		if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+		}
+	}
+	if(readC){
+		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+		}
+		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
+		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
+		}
+	}
+};
 
 #endif //PHOBGCC_H

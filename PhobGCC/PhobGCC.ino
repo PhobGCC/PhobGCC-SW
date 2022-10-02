@@ -71,7 +71,7 @@ void loop() {
 	static float measuredNotchAngles[_noOfNotches];
 
 	//read the controllers buttons
-	processButtons(_btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+	processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
