@@ -137,7 +137,7 @@ void angleOnSphere(const float x, const float y, float& angle){
  * this is so we can get the original values of the notches after the affine transform.
  * there need to be _noOfCalibrationPoints values in the inputs and outputs.
  */
-void stripCalPoints(float calPointsX[], float calPointsY[], float strippedPointsX[], float strippedPointsY[]){
+void stripCalPoints(const float calPointsX[], const float calPointsY[], float strippedPointsX[], float strippedPointsY[]){
 	for(int i=0; i < _noOfCalibrationPoints; i++){
 		//start off by just copying them wholesale
 		strippedPointsX[i] = calPointsX[i];
@@ -712,6 +712,7 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 	Serial.println(stickParams.boundaryAngles[i-1]);
 	}
 };
+
 void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
 #ifdef USEADCSCALE
 	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
