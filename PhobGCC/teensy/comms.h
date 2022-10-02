@@ -149,6 +149,7 @@ void setCommResponse(volatile char response[], Buttons &button){
 
 
 #ifdef TEENSY4_0
+#ifdef HALFDUPLEX
 void resetSerial(){
 #ifdef ENABLE_LED
 	digitalWriteFast(_pinLED,!digitalReadFast(_pinLED));
@@ -547,6 +548,7 @@ void commInt() {
 	digitalWriteFast(_pinLED,HIGH);
 #endif //ENABLE_LED
 };
+#endif //HALFDUPLEX
 
 #endif // TEENSY4_0
 
