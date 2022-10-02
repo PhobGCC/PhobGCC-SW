@@ -181,9 +181,21 @@ void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut
 	const float xVelSmooth = 0.5*(xVel + oldXVel);
 	const float yVelSmooth = 0.5*(yVel + oldYVel);
 
-	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh/32);
+	//The lower this value, the stronger the effect.
+	//Per Rienne's experimentation:
+	//Minimum setting should be 500; this does nearly nothing
+	//Sweetspot for higher stick speeds is 200-240
+	//Sweetspot for lower stick speeds is 160-200
+	//Frame timing goes weird around 160
+	//max functional setting probably 80
+	//extreme pode is like 32-80
+	//32 should be the limit
+	const float xDivisor = 32;
+	const float yDivisor = 32;
+
+	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh/xDivisor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh/32);
+	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh/yDivisor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
