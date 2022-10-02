@@ -530,7 +530,7 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardw
 	clearButtons(2000, btn, hardware);
 }
 
-void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
+void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
 	//We choose 127 (_intOrigin) for this, and elsewhere we use an offset of 127.5 (_floatOrigin) truncated to int in order to round properly
 	btn.Ax = _intOrigin;
@@ -543,8 +543,8 @@ void initializeButtons(Buttons &btn,int &startUpLa, int &startUpRa){
 	startUpLa = 0;
 	startUpRa = 0;
 	for(int i = 0; i <64; i++){
-		startUpLa = max(startUpLa,adc->adc0->analogRead(_pinLa)>>4);
-		startUpRa = max(startUpRa,adc->adc0->analogRead(_pinRa)>>4);
+		startUpLa = max(startUpLa,readLa(pin));
+		startUpRa = max(startUpRa,readRa(pin));
 	}
 	//set the trigger values to this measured startup value
 	btn.La = startUpLa;
