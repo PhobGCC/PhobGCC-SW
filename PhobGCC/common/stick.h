@@ -74,19 +74,19 @@ const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACT
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 
-//these are the linearization coefficients
-float _aFitCoeffsX[_fitOrder+1];
-float _aFitCoeffsY[_fitOrder+1];
-float _cFitCoeffsX[_fitOrder+1];
-float _cFitCoeffsY[_fitOrder+1];
+struct StickParams{
+	//these are the linearization coefficients
+	float fitCoeffsX[_fitOrder+1];
+	float fitCoeffsY[_fitOrder+1];
 
-//these are the notch remap parameters
-float _aAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the a-stick
-float _cAffineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the c-stick
-float _aBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the a-stick (in the plane)
-float _cBoundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the c-stick (in the plane)
+	//these are the notch remap parameters
+	float affineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the stick
+	float boundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the stick (in the plane)
+};
+StickParams _aStickParams;
+StickParams _cStickParams;
 
-float linearize(float point, float coefficients[]){
+float linearize(const float point, const float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
 };
 
@@ -178,12 +178,12 @@ void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus 
 	notchRemap
 	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
-void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoeffs[][6], float regionAngles[], int regions){
+void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams){
 	//determine the angle between the x unit vector and the current position vector
 	float angle = atan2f(yIn,xIn);
 
 	//unwrap the angle based on the first region boundary
-	if(angle < regionAngles[0]){
+	if(angle < stickParams.boundaryAngles[0]){
 		angle += M_PI*2;
 	}
 
@@ -193,15 +193,15 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
 	//int region = regions*2-1;
 	int region = regions-1;
 	for(int i = 1; i < regions; i++){
-		if(angle < regionAngles[i]){
+		if(angle < stickParams.boundaryAngles[i]){
 			region = i-1;
 			break;
 		}
 	}
 
 	//Apply the affine transformation using the coefficients found during calibration
-	*xOut = affineCoeffs[region][0]*xIn + affineCoeffs[region][1]*yIn + affineCoeffs[region][2];
-	*yOut = affineCoeffs[region][3]*xIn + affineCoeffs[region][4]*yIn + affineCoeffs[region][5];
+	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn + stickParams.affineCoeffs[region][2];
+	*yOut = stickParams.affineCoeffs[region][3]*xIn + stickParams.affineCoeffs[region][4]*yIn + stickParams.affineCoeffs[region][5];
 
 	if((abs(*xOut)<5) && (abs(*yOut)>95)){
 		*xOut = 0;
@@ -221,13 +221,13 @@ void notchRemap(float xIn, float yIn, float* xOut, float* yOut, float affineCoef
  * remaps the cleaned calibration points from raw measurements to output coordinates
  * This seems redundant but we're feeding it coordinates without non-diagonal notches
  */
-void transformCalPoints(float xInput[], float yInput[], float xOutput[], float yOutput[], float fitCoeffsX[], float fitCoeffsY[], float affineCoeffs[][6], float boundaryAngles[]){
+void transformCalPoints(const float xInput[], const float yInput[], float xOutput[], float yOutput[], const StickParams &stickParams){
 	for(int i=0; i < _noOfNotches+1; i++){
-		float xValue = linearize(xInput[i], fitCoeffsX);
-		float yValue = linearize(yInput[i], fitCoeffsY);
+		float xValue = linearize(xInput[i], stickParams.fitCoeffsX);
+		float yValue = linearize(yInput[i], stickParams.fitCoeffsY);
 		float outX;
 		float outY;
-		notchRemap(xValue, yValue, &outX, &outY, affineCoeffs, boundaryAngles, _noOfNotches);
+		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
 	}
@@ -568,7 +568,7 @@ void collectCalPoints(const WhichStick whichStick, const int currentStepIn, floa
 	Outputs:
 		linearization fit coefficients for X and Y
 *******************/
-void linearizeCal(const float inX[], const float inY[], float outX[], float outY[], float fitCoeffsX[], float fitCoeffsY[]){
+void linearizeCal(const float inX[], const float inY[], float outX[], float outY[], StickParams &stickParams){
 	Serial.println("beginning linearization");
 
 	//do the curve fit first
@@ -621,37 +621,37 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 
 	//write these coefficients to the array that was passed in, this is our first output
 	for(int i = 0; i < (_fitOrder+1); i++){
-		fitCoeffsX[i] = tempCoeffsX[i];
-		fitCoeffsY[i] = tempCoeffsY[i];
+		stickParams.fitCoeffsX[i] = tempCoeffsX[i];
+		stickParams.fitCoeffsY[i] = tempCoeffsY[i];
 	}
 
 	//we will now take out the offset, making the range -100 to 100 instead of 28 to 228
 	//calculate the offset
-	float xZeroError = linearize((float)fitPointsX[2],fitCoeffsX);
-	float yZeroError = linearize((float)fitPointsY[2],fitCoeffsY);
+	float xZeroError = linearize((float)fitPointsX[2], stickParams.fitCoeffsX);
+	float yZeroError = linearize((float)fitPointsY[2], stickParams.fitCoeffsY);
 
 	//Adjust the fit's constant coefficient so that the stick zero position is 0
-	fitCoeffsX[3] = fitCoeffsX[3] - xZeroError;
-	fitCoeffsY[3] = fitCoeffsY[3] - yZeroError;
+	stickParams.fitCoeffsX[3] = stickParams.fitCoeffsX[3] - xZeroError;
+	stickParams.fitCoeffsY[3] = stickParams.fitCoeffsY[3] - yZeroError;
 
 	Serial.println("The fit coefficients are  are (x,y):");
 	for(int i = 0; i < 4; i++){
-		Serial.print(fitCoeffsX[i]);
+		Serial.print(stickParams.fitCoeffsX[i]);
 		Serial.print(",");
-		Serial.println(fitCoeffsY[i]);
+		Serial.println(stickParams.fitCoeffsY[i]);
 	}
 
 	Serial.println("The linearized points are:");
 	for(int i = 0; i <= _noOfNotches; i++){
-		outX[i] = linearize(inX[i],fitCoeffsX);
-		outY[i] = linearize(inY[i],fitCoeffsY);
+		outX[i] = linearize(inX[i], stickParams.fitCoeffsX);
+		outY[i] = linearize(inY[i], stickParams.fitCoeffsY);
 		Serial.print(outX[i],8);
 		Serial.print(",");
 		Serial.println(outY[i],8);
 	}
 };
 
-void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, float allAffineCoeffs[][6], float regionAngles[]){
+void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
 	for(int i = 1; i <= regions; i++){
 	Serial.print("calibrating region: ");
 	Serial.println(i);
@@ -696,23 +696,23 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 
 	for(int j = 0; j <2;j++){
 		for(int k = 0; k<3;k++){
-			allAffineCoeffs[i-1][j*3+k] = A(j,k);
-			Serial.print(allAffineCoeffs[i-1][j*3+k]);
+			stickParams.affineCoeffs[i-1][j*3+k] = A(j,k);
+			Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
 			Serial.print(",");
 		}
 	}
 
 	Serial.println();
 	Serial.println("The angle defining this  regions is:");
-	regionAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
+	stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
 	//unwrap the angles so that the first has the smallest value
-	if(regionAngles[i-1] < regionAngles[0]){
-		regionAngles[i-1] += M_PI*2;
+	if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
+		stickParams.boundaryAngles[i-1] += M_PI*2;
 	}
-	Serial.println(regionAngles[i-1]);
+	Serial.println(stickParams.boundaryAngles[i-1]);
 	}
 };
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, float &dT){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
 #ifdef USEADCSCALE
 	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
@@ -887,11 +887,11 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	float yZ;
 
 	//linearize the analog stick inputs by multiplying by the coefficients found during calibration (3rd order fit)
-	xZ = linearize(aStickX,_aFitCoeffsX);
-	yZ = linearize(aStickY,_aFitCoeffsY);
+	xZ = linearize(aStickX, aStickParams.fitCoeffsX);
+	yZ = linearize(aStickY, aStickParams.fitCoeffsY);
 
-	float posCx = linearize(cStickX,_cFitCoeffsX);
-	float posCy = linearize(cStickY,_cFitCoeffsY);
+	float posCx = linearize(cStickX, cStickParams.fitCoeffsX);
+	float posCy = linearize(cStickY, cStickParams.fitCoeffsY);
 
 
 	//Run the kalman filter to eliminate snapback
@@ -941,8 +941,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	float remappedAy;
 	float remappedCx;
 	float remappedCy;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _aAffineCoeffs, _aBoundaryAngles, _noOfNotches);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _cAffineCoeffs, _cBoundaryAngles, _noOfNotches);
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams);
 
 	//Clamp values from -125 to +125
 	remappedAx = min(125, max(-125, remappedAx));
