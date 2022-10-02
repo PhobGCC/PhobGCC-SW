@@ -900,11 +900,17 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	static float xPosFilt = 0;//output of kalman filter
 	static float yPosFilt = 0;//output of kalman filter
 	runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
+
+	float shapedAx = xPosFilt;
+	float shapedAy = yPosFilt;
+	//Run a secondary filter to extend time at the rim
+	//runWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, normGains);
+
 	//Run a simple low-pass filter
 	static float oldPosAx = 0;
 	static float oldPosAy = 0;
-	float posAx = normGains.xSmoothing*xPosFilt + (1-normGains.xSmoothing)*oldPosAx;
-	float posAy = normGains.ySmoothing*yPosFilt + (1-normGains.ySmoothing)*oldPosAy;
+	float posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
+	float posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
 	oldPosAx = posAx;
 	oldPosAy = posAy;
 
@@ -935,9 +941,6 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
     runMedian(posAx, xPosList, xMedianIndex);
     runMedian(posAy, yPosList, yMedianIndex);
 #endif
-
-	//Run a secondary filter to extend time at the rim
-	//runWaveShaping(posAx, posAy, posAx, posAy, normGains);
 
 	float remappedAx;
 	float remappedAy;
