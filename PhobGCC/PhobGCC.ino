@@ -25,12 +25,12 @@ void setup() {
 	set_arm_clock(300'000'000);
 #endif //TEENSY4_0
 
-	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, _extrasConfig);
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
 	if(numberOfNaN > 3){//by default it seems 4 end up NaN on Teensy 4
-		resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);//do reset sticks
-		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+		resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams, _extrasConfig);//do reset sticks
+		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, _extrasConfig);
 	}
 
 	//set some of the unused values in the message response
@@ -47,6 +47,9 @@ void setup() {
 	initializeButtons(_pinList, _btn,_controls.lTrigInitial,_controls.rTrigInitial);
 	//set the origin response before the sticks have been touched
 	//it will never be changed again after this
+
+	//start up user-enabled extras
+	extrasInit();
 
 	commsSetup(_btn);
 }
@@ -71,7 +74,7 @@ void loop() {
 	static float measuredNotchAngles[_noOfNotches];
 
 	//read the controllers buttons
-	processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+	processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams, _extrasConfig);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
@@ -93,7 +96,7 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 			}
-			readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+			readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _extrasConfig, _dT);
 		}
 		else{//WHICHSTICK == CSTICK
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -113,11 +116,11 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 			}
-			readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+			readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _extrasConfig, _dT);
 		}
 	}
 	else if(running){
 		//if not calibrating read the sticks normally
-		readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+		readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _extrasConfig, _dT);
 	}
 }

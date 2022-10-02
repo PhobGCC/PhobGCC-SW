@@ -39,6 +39,12 @@ enum NotchStatus {
 	CARDINAL
 };
 
+enum ExtrasHooks {
+	HOOK_DEFAULT, //unused
+	HOOK_POST_NOTCH_REMAPPING_A,
+	HOOK_POST_NOTCH_REMAPPING_C,
+};
+
 struct Pins{
 	int pinLa;
 	int pinRa;
@@ -181,6 +187,22 @@ struct FilterGains {
 	//Same thing but for C-stick
 	float cXSmoothing;
 	float cYSmoothing;
+};
+
+enum ExtrasEssConfig {
+	EXTRAS_ESS_DISABLED,
+	EXTRAS_ESS_ENABLED
+};
+
+struct ExtrasConfig{
+	ExtrasEssConfig essEnable;
+};
+
+struct Extra{
+	ExtrasHooks hook;
+	void* hookFn;
+	void* checkButtonsFn;
+	void* configureFn;
 };
 
 Buttons _btn;

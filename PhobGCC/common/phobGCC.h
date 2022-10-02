@@ -9,12 +9,13 @@
 //#include "../teensy/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
-//#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
+//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 #include "structsAndEnums.h"
 #include "filter.h"
 #include "stick.h"
+#include "../extras/extras.h"
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -588,7 +589,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 };
 
 
-int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
+int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
 	int numberOfNaN = 0;
 
 	//get the jump setting
@@ -826,10 +827,20 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println("C stick linearized");
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 
+	//read extras
+	extrasConfig.essEnable = getEssSetting();
+	if (extrasConfig.essEnable < EXTRAS_ESS_DISABLED){
+		extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
+		numberOfNaN++;
+	} else if (extrasConfig.essEnable > EXTRAS_ESS_ENABLED){
+		extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
+		numberOfNaN++;
+	}
+
 	return numberOfNaN;
 }
 
-void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
+void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULTJUMP;
@@ -877,6 +888,10 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	//always cancel auto init on reset, even if we don't reset the sticks
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
+
+	//set extras
+	extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
+	setEssSetting(extrasConfig.essEnable);
 
 	if(reset == HARD){
 		float notchAngles[_noOfNotches];
@@ -951,7 +966,7 @@ void setPinModes(){
 	pinMode(_pinCy,INPUT_DISABLE);
 }
 
-void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
 	//Gather the button data from the hardware
 	readButtons(pin, btn, hardware, controls);
 
@@ -1017,10 +1032,10 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 			btn.Cy = (uint8_t) _floatOrigin + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
-			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
+			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams, _extrasConfig);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
-			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
+			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams, _extrasConfig);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
@@ -1113,6 +1128,10 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
 			readJumpConfig(DEFAULTJUMP, controls);
 			freezeSticks(2000, btn, hardware);
+		} else {
+			if (extrasCheckConfigurationButtons(btn, hardware, extrasConfig)) {
+				clearButtons(2000, btn, hardware);
+			}
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
@@ -1282,7 +1301,7 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, const ExtrasConfig &extrasConfig, float &dT){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 	//read the L and R sliders
@@ -1522,25 +1541,39 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	remappedCx = min(125, max(-125, remappedCx+controls.cXOffset));
 	remappedCy = min(125, max(-125, remappedCy+controls.cYOffset));
 
+	//Run user-added filters or plug-ins (if enabled)
+	bool skipAHyst = extrasPostNotchRemappingA(&remappedAx, &remappedAy, extrasConfig);
+	bool skipCHyst = extrasPostNotchRemappingC(&remappedCx, &remappedCy, extrasConfig);
+
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(readA){
-		float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
-		if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+		if (!skipAHyst) {
+			float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
+			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+				btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
+			}
+			float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
+			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+			}
+		} else {
 			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-		}
-		float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
-		if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
-			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);			
 		}
 	}
 	if(readC){
-		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
-		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+		if (!skipCHyst) {
+			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+			}
+			float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
+			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+				btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
+			}
+		} else {
 			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
-		}
-		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
-		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
 			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
 		}
 	}

@@ -33,6 +33,7 @@ namespace Eeprom {
 	const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
+	const int _eepromEssEnable = _eepromAutoInit+_bytesPerFloat;
 };
 
 JumpConfig getJumpSetting() {
@@ -268,6 +269,18 @@ void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) 
 	} else {
 		setFloatNotches(Eeprom::_eepromCNotchAngles, angles);
 	}
+}
+
+//Extras
+
+void setEssSetting(const ExtrasEssConfig enable){
+	EEPROM.put(Eeprom::_eepromEssEnable, enable);
+}
+
+ExtrasEssConfig getEssSetting(){
+	ExtrasEssConfig output;
+	EEPROM.get(Eeprom::_eepromEssEnable, output);
+	return output;
 }
 
 #endif //SETTINGS_H
