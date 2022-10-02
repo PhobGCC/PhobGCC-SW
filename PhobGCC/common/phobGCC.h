@@ -3,10 +3,6 @@
 
 //Must be included at the end of the board header file, but before comms.h
 
-#include "structsAndEnums.h"
-#include "filter.h"
-#include "stick.h"
-
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
 //#include "../teensy/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
 //#include "../teensy/Phob1_0Teensy3_2DiodeShort.h"// For PhobGCC board 1.0 with Teensy 3.2 and the diode shorted
@@ -15,6 +11,10 @@
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 #include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+
+#include "structsAndEnums.h"
+#include "filter.h"
+#include "stick.h"
 
 //#define BUILD_RELEASE
 #define BUILD_DEV
@@ -952,23 +952,8 @@ void setPinModes(){
 }
 
 void processButtons(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
-	//TODO: move pin reading to a board-specific readButtons();
-	btn.A = !digitalRead(_pinA);
-	btn.B = !digitalRead(_pinB);
-	btn.X = !digitalRead(controls.pinXSwappable);
-	btn.Y = !digitalRead(controls.pinYSwappable);
-	btn.Z = !digitalRead(controls.pinZSwappable);
-	btn.S = !digitalRead(_pinS);
-	btn.Du = !digitalRead(_pinDu);
-	btn.Dd = !digitalRead(_pinDd);
-	btn.Dl = !digitalRead(_pinDl);
-	btn.Dr = !digitalRead(_pinDr);
-
-	hardware.L = !digitalRead(_pinL);
-	hardware.R = !digitalRead(_pinR);
-	hardware.Z = !digitalRead(_pinZ);
-	hardware.X = !digitalRead(_pinX);
-	hardware.Y = !digitalRead(_pinY);
+	//Gather the button data from the hardware
+	readButtons(btn, hardware, controls);
 
 	//We apply the triggers in readSticks so we can minimize race conditions
 	// between trigger analog/digital so we don't get ADT vulnerability in mode 6
