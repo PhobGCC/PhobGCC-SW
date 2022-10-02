@@ -714,6 +714,7 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 };
 
 void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
+	//TODO: move analog reads to board-specific functions that get called from here, probably put readSticks in phobGCC.h
 #ifdef USEADCSCALE
 	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
