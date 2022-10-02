@@ -81,6 +81,5 @@ void ADCSetup(ADC * adc,
 eeprom _settings();
 
 //must include at the end
-#include "../common/phobGCC.h"
 #include "comms.h"
 #endif // BOARD_H

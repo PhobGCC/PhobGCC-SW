@@ -1,7 +1,7 @@
 #ifndef COMMS_H
 #define COMMS_H
 
-//This must be included at the end of the board header file, after phobGCC.h
+//This must be included at the end of the Teensy board header file
 
 #include "TeensyTimerTool.h"
 #include "../common/structsAndEnums.h"

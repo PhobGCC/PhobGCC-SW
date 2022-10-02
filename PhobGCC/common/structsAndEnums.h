@@ -183,4 +183,10 @@ struct FilterGains {
 	float cYSmoothing;
 };
 
+Buttons _btn;
+
+HardwareButtons _hardware;
+
+int _rumblePower = 0;//just so it isn't uninitialized at startup
+
 #endif //ENUMS_H
