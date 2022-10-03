@@ -3,6 +3,7 @@
 
 #include <ADC.h>
 #include <VREF.h>
+#include "settings.h"
 
 //Hardware-specific code for PhobGCC board revision 1.0 with a Teensy 3.2
 #define TEENSY3_2
@@ -14,8 +15,6 @@ const int _pinL = 13;
 const int _pinR = 3;
 const int _pinAx = 15;
 const int _pinAy = 14;
-//const int _pinCx = 21;
-//const int _pinCy = 22;
 const int _pinCx = 22;
 const int _pinCy = 21;
 const int _pinRX = 9;
@@ -78,4 +77,10 @@ void ADCSetup(ADC * adc,
     Serial.println(ADCScaleFactor);
 }
 
+//Settings class, in this case the eeprom emulation for the teensy
+eeprom _settings();
+
+//must include at the end
+#include "readHardware.h"
+#include "comms.h"
 #endif // BOARD_H
