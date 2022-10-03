@@ -114,10 +114,6 @@ namespace extrasEss {
 		return true; //disable hyst
 	}
 
-	bool checkButtons(Buttons &btn, HardwareButtons &hardware) {
-		return (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48) && btn.A && btn.Dd);
-	}
-
 	void toggleEss(ExtrasConfig &extrasConfig, Buttons &btn) {
 		if (extrasConfig.essEnable) {
 			Serial.println("Extra: Disabling ESS");
@@ -127,7 +123,7 @@ namespace extrasEss {
 			extrasConfig.essEnable = EXTRAS_ESS_ENABLED;
 		}
 
-		setEssSetting(extrasConfig.essEnable);
+		setExtrasSettingInt(EepromExtras::_eepromEssEnable, extrasConfig.essEnable);
 
 		if (extrasConfig.essEnable == EXTRAS_ESS_ENABLED) {
 			btn.Ay = (uint8_t) (127.5 + 50);

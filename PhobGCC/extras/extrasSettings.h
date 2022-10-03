@@ -2,31 +2,19 @@
 #define EXTRAS_SETTINGS_H
 
 namespace EepromExtras {
-	//index values to store data into eeprom
+	//index values to store data into eeprom, you have 40 words / 160 bytes to work with
 	const int _bytesPerFloat = 4;
-	const int _eepromStart = Eeprom::_eepromExtras;
 	//add in extras settings below
-	const int _eepromEssEnable = _eepromStart;
-	const int _eepromDummyValue = _eepromEssEnable+_bytesPerFloat; //Example usage, will remove later
+	const int _eepromEssEnable = 0;
+	const int _eepromDummyValue = _eepromEssEnable+_bytesPerFloat;//Example usage, will remove later
 };
-
-//ESS settings
-void setEssSetting(const ExtrasEssConfig enable){
-	EEPROM.put(EepromExtras::_eepromEssEnable, enable);
-}
-
-ExtrasEssConfig getEssSetting(){
-	ExtrasEssConfig output;
-	EEPROM.get(EepromExtras::_eepromEssEnable, output);
-	return output;
-}
 
 //Extras framework functions for resetting defaults and reading EEPROM 
 
 void extrasResetDefaults(HardReset reset, ExtrasConfig &extrasConfig) {
 	//ESS
 	extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
-	setEssSetting(extrasConfig.essEnable);
+	setExtrasSettingInt(EepromExtras::_eepromEssEnable, extrasConfig.essEnable);
 
 	if(reset == HARD){
 		//pass
@@ -37,7 +25,7 @@ int extrasReadEEPROM(ExtrasConfig &extrasConfig) {
 	int numberOfNaN = 0;
 
 	//ESS
-	extrasConfig.essEnable = getEssSetting();
+	extrasConfig.essEnable = (ExtrasEssConfig)getExtrasSettingInt(EepromExtras::_eepromEssEnable);
 	if (extrasConfig.essEnable < EXTRAS_ESS_DISABLED){
 		extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
 		numberOfNaN++;

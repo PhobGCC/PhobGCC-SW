@@ -276,4 +276,25 @@ void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) 
 	}
 }
 
+//Extras
+int getExtrasSettingInt(const int offset) {
+	int output;
+	EEPROM.get(Eeprom::_eepromExtras+offset, output);
+	return output;
+}
+
+void setExtrasSettingInt(const int offset, const int value) {
+	EEPROM.put(Eeprom::_eepromExtras+offset, value);
+}
+
+float getExtrasSettingFloat(const int offset) {
+	float output;
+	EEPROM.get(Eeprom::_eepromExtras+offset, output);
+	return output;
+}
+
+void setExtrasSettingFloat(const int offset, const float value) {
+	EEPROM.put(Eeprom::_eepromExtras+offset, value);
+}
+
 #endif //SETTINGS_H

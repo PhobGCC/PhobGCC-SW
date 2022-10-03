@@ -10,6 +10,14 @@ enum ExtrasEssConfig {
 
 //Structs and Enums for the extras framework
 
+enum ExtrasConfigButtonCombo{
+	EXTRAS_BTNCONFIG_STICKS_UP,
+	EXTRAS_BTNCONFIG_STICKS_DOWN,
+	EXTRAS_BTNCONFIG_STICKS_LEFT,
+	EXTRAS_BTNCONFIG_STICKS_RIGHT,
+	EXTRAS_BTNCONFIG_SIZE
+};
+
 enum ExtrasHookType{
 	HOOK_DEFAULT, //unused
 	HOOK_POST_NOTCH_REMAPPING_A,
@@ -23,11 +31,6 @@ struct ExtrasConfig{
 struct ExtrasHook{
 	ExtrasHookType hookType;
 	void* hookFn;
-};
-
-struct ExtrasConfigAction{
-	void* checkButtonsFn;
-	void* configureFn;
 };
 
 #endif //EXTRAS_ENUMS_H

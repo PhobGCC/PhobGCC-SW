@@ -9,6 +9,9 @@
 #define EXTRAS_ESS
 // ------------------------------------------------------
 
+#include "extrasStructsAndEnums.h"
+#include "extrasSettings.h"
+
 #include "ess/ess.h"
 
 //Add in user-defined configuration options here
@@ -16,18 +19,19 @@ ExtrasConfig _extrasConfig {
 	.essEnable = EXTRAS_ESS_DISABLED
 };
 
-//Currently supports 20 extras, can easily be changed however.
-static const int _extrasMax = 20;
+//Common callback function types that should be used for the different ways we interact with extras
+typedef bool(*ExtrasPostNotchRemapFn)(float*, float*, const ExtrasConfig&); //Returns if we should skip hyst
+typedef void(*ExtrasConfigureFn)(ExtrasConfig&, Buttons&); //Used for making configuration changes
 
+static const int _hooksMax = 16;
 static int extrasHooksRegistered = 0;
-static ExtrasHook extrasHooks[_extrasMax];
+static ExtrasHook extrasHooks[_hooksMax];
 
-static int extrasConfigActionsRegistered = 0;
-static ExtrasConfigAction extrasConfigActions[_extrasMax];
+static ExtrasConfigureFn configureFunctions[EXTRAS_BTNCONFIG_SIZE] = {NULL};
 
 void extrasRegisterHook(ExtrasHookType hookType, void* hookFn){
-	if (extrasHooksRegistered >= _extrasMax){
-		Serial.println("Too many extras hooks registered! Aborting...");
+	if (extrasHooksRegistered >= _hooksMax){
+		Serial.println("Extras: Too many extras hooks registered! Aborting...");
 		return;
 	}
 	extrasHooks[extrasHooksRegistered].hookType = hookType;
@@ -35,20 +39,13 @@ void extrasRegisterHook(ExtrasHookType hookType, void* hookFn){
 	extrasHooksRegistered++;
 }
 
-void extrasRegisterConfig(void* checkButtonsFn, void* configureFn){
-	if (extrasConfigActionsRegistered >= _extrasMax){
-		Serial.println("Too many extras configs registered! Aborting...");
+void extrasRegisterConfig(ExtrasConfigButtonCombo buttonCombo, ExtrasConfigureFn configureFn){
+	if (configureFunctions[buttonCombo]){
+		Serial.println("Extras: Button combo already registered! Aborting...");
 		return;
 	}
-	extrasConfigActions[extrasConfigActionsRegistered].checkButtonsFn = checkButtonsFn;
-	extrasConfigActions[extrasConfigActionsRegistered].configureFn = configureFn;
-	extrasConfigActionsRegistered++;
+	configureFunctions[buttonCombo] = configureFn;
 }
-
-//Common callback function types that should be used for the different ways we interact with extras
-typedef bool(*ExtrasPostNotchRemapFn)(float*, float*, const ExtrasConfig&); //Returns if we should skip hyst
-typedef bool(*ExtrasCheckButtonsFn)(Buttons&, HardwareButtons&); //Returns if a configuration button combination is pressed
-typedef void(*ExtrasConfigureFn)(ExtrasConfig&, Buttons&); //Used for making configuration changes
 
 //Different hooks for extras are defined below; more can be added.
 
@@ -82,26 +79,50 @@ bool extrasPostNotchRemappingC(float* Cx, float* Cy, const ExtrasConfig &extrasC
 	return skipHyst;
 }
 
+//We provide 4 different button combinations to open up a user-defined configuration function.
+//The combination is A + Dpad Down with both the Analog and C-Sticks pointing in one of 4 cardinal directions.
 bool extrasCheckConfigurationButtons(Buttons &btn, HardwareButtons &hardware, ExtrasConfig &extrasConfig){
-	for(int i=0; i<extrasConfigActionsRegistered; i++){
-		ExtrasConfigAction configAction = extrasConfigActions[i];
-		ExtrasCheckButtonsFn checkButtonsFn = (ExtrasCheckButtonsFn)(configAction.checkButtonsFn);
-		if (checkButtonsFn(btn, hardware)) {
-			ExtrasConfigureFn configureFn = (ExtrasConfigureFn)(configAction.configureFn);
+	ExtrasConfigureFn configureFn;
+	// Up
+	if (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48) && btn.A && btn.Dd) {
+		configureFn = configureFunctions[EXTRAS_BTNCONFIG_STICKS_UP];
+		if (configureFn) {
 			configureFn(extrasConfig, btn);
-			return true; //clear buttons on return
+			return true;
+		}
+	// Down
+	} else if (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48) && btn.A && btn.Dd) {
+		configureFn = configureFunctions[EXTRAS_BTNCONFIG_STICKS_DOWN];
+		if (configureFn) {
+			configureFn(extrasConfig, btn);
+			return true;
+		}
+	// Left
+	} else if (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48) && btn.A && btn.Dd) {
+		configureFn = configureFunctions[EXTRAS_BTNCONFIG_STICKS_LEFT];
+		if (configureFn) {
+			configureFn(extrasConfig, btn);
+			return true;
+		}
+	// Right
+	} else if (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48) && btn.A && btn.Dd) {
+		configureFn = configureFunctions[EXTRAS_BTNCONFIG_STICKS_RIGHT];
+		if (configureFn) {
+			configureFn(extrasConfig, btn);
+			return true;
 		}
 	}
 	return false;
 }
 
-//Each extra and plugin can define how they integrate into the code here.
+//Each extra can define how they integrate into the code here.
+//Make sure two extras don't have the same registered configuration button combo!
 void extrasInit() {
 	Serial.println("Extra: Setting up extras!");
 
 #ifdef EXTRAS_ESS
 	extrasRegisterHook(HOOK_POST_NOTCH_REMAPPING_A, (void*)extrasEss::hook);
-	extrasRegisterConfig((void*)extrasEss::checkButtons, (void*)extrasEss::toggleEss);
+	extrasRegisterConfig(EXTRAS_BTNCONFIG_STICKS_RIGHT, extrasEss::toggleEss);
 	Serial.println("Extra: ESS functionality enabled.");
 #endif
 

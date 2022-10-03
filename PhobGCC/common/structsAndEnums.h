@@ -1,8 +1,6 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-#include "../extras/extrasStructsAndEnums.h"
-
 enum JumpConfig {
 	DEFAULTJUMP,
 	SWAP_XZ,
