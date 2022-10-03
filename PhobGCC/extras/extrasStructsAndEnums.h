@@ -10,7 +10,7 @@ enum ExtrasEssConfig {
 
 //Structs and Enums for the extras framework
 
-enum ExtrasHooks {
+enum ExtrasHookType{
 	HOOK_DEFAULT, //unused
 	HOOK_POST_NOTCH_REMAPPING_A,
 	HOOK_POST_NOTCH_REMAPPING_C,
@@ -21,11 +21,11 @@ struct ExtrasConfig{
 };
 
 struct ExtrasHook{
-	ExtrasHooks hook;
+	ExtrasHookType hookType;
 	void* hookFn;
 };
 
-struct ExtrasConfigFunction{
+struct ExtrasConfigAction{
 	void* checkButtonsFn;
 	void* configureFn;
 };

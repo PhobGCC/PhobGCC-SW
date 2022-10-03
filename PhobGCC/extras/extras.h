@@ -22,31 +22,33 @@ static const int _extrasMax = 20;
 static int extrasHooksRegistered = 0;
 static ExtrasHook extrasHooks[_extrasMax];
 
-static int extrasConfigFunctionsRegistered = 0;
-static ExtrasConfigFunction extrasConfigFunctions[_extrasMax];
+static int extrasConfigActionsRegistered = 0;
+static ExtrasConfigAction extrasConfigActions[_extrasMax];
 
-void extrasRegisterHook(ExtrasHook hook){
+void extrasRegisterHook(ExtrasHookType hookType, void* hookFn){
 	if (extrasHooksRegistered >= _extrasMax){
 		Serial.println("Too many extras hooks registered! Aborting...");
 		return;
 	}
-	extrasHooks[extrasHooksRegistered] = hook;
+	extrasHooks[extrasHooksRegistered].hookType = hookType;
+	extrasHooks[extrasHooksRegistered].hookFn = hookFn;
 	extrasHooksRegistered++;
 }
 
-void extrasRegisterConfig(ExtrasConfigFunction configFunction){
-	if (extrasConfigFunctionsRegistered >= _extrasMax){
+void extrasRegisterConfig(void* checkButtonsFn, void* configureFn){
+	if (extrasConfigActionsRegistered >= _extrasMax){
 		Serial.println("Too many extras configs registered! Aborting...");
 		return;
 	}
-	extrasConfigFunctions[extrasConfigFunctionsRegistered] = configFunction;
-	extrasConfigFunctionsRegistered++;
+	extrasConfigActions[extrasConfigActionsRegistered].checkButtonsFn = checkButtonsFn;
+	extrasConfigActions[extrasConfigActionsRegistered].configureFn = configureFn;
+	extrasConfigActionsRegistered++;
 }
 
 //Common callback function types that should be used for the different ways we interact with extras
 typedef bool(*ExtrasPostNotchRemapFn)(float*, float*, const ExtrasConfig&); //Returns if we should skip hyst
 typedef bool(*ExtrasCheckButtonsFn)(Buttons&, HardwareButtons&); //Returns if a configuration button combination is pressed
-typedef void(*ExtrasConfigurationFn)(ExtrasConfig&, Buttons&); //Used for making configuration changes
+typedef void(*ExtrasConfigureFn)(ExtrasConfig&, Buttons&); //Used for making configuration changes
 
 //Different hooks for extras are defined below; more can be added.
 
@@ -56,9 +58,9 @@ bool extrasPostNotchRemappingA(float* Ax, float* Ay, const ExtrasConfig &extrasC
 	bool skipHyst = false;
 	for(int i=0; i<extrasHooksRegistered; i++){
 		ExtrasHook hook = extrasHooks[i];
-		if (hook.hook == HOOK_POST_NOTCH_REMAPPING_A){
-			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)(hook.hookFn);
-			if (fn(Ax, Ay, extrasConfig)) {
+		if (hook.hookType == HOOK_POST_NOTCH_REMAPPING_A){
+			ExtrasPostNotchRemapFn hookFn = (ExtrasPostNotchRemapFn)(hook.hookFn);
+			if (hookFn(Ax, Ay, extrasConfig)) {
 				skipHyst = true;
 			}
 		}
@@ -70,9 +72,9 @@ bool extrasPostNotchRemappingC(float* Cx, float* Cy, const ExtrasConfig &extrasC
 	bool skipHyst = false;
 	for(int i=0; i<extrasHooksRegistered; i++){
 		ExtrasHook hook = extrasHooks[i];
-		if (hook.hook == HOOK_POST_NOTCH_REMAPPING_C){
-			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)hook.hook;
-			if (fn(Cx, Cy, extrasConfig)) {
+		if (hook.hookType == HOOK_POST_NOTCH_REMAPPING_C){
+			ExtrasPostNotchRemapFn hookFn = (ExtrasPostNotchRemapFn)(hook.hookFn);
+			if (hookFn(Cx, Cy, extrasConfig)) {
 				skipHyst = true;
 			}
 		}
@@ -81,12 +83,12 @@ bool extrasPostNotchRemappingC(float* Cx, float* Cy, const ExtrasConfig &extrasC
 }
 
 bool extrasCheckConfigurationButtons(Buttons &btn, HardwareButtons &hardware, ExtrasConfig &extrasConfig){
-	for(int i=0; i<extrasConfigFunctionsRegistered; i++){
-		ExtrasConfigFunction configFunction = extrasConfigFunctions[i];
-		ExtrasCheckButtonsFn buttonsFn = (ExtrasCheckButtonsFn)(configFunction.checkButtonsFn);
-		if (buttonsFn(btn, hardware)) {
-			ExtrasConfigurationFn configFn = (ExtrasConfigurationFn)(configFunction.configureFn);
-			configFn(extrasConfig, btn);
+	for(int i=0; i<extrasConfigActionsRegistered; i++){
+		ExtrasConfigAction configAction = extrasConfigActions[i];
+		ExtrasCheckButtonsFn checkButtonsFn = (ExtrasCheckButtonsFn)(configAction.checkButtonsFn);
+		if (checkButtonsFn(btn, hardware)) {
+			ExtrasConfigureFn configureFn = (ExtrasConfigureFn)(configAction.configureFn);
+			configureFn(extrasConfig, btn);
 			return true; //clear buttons on return
 		}
 	}
@@ -96,16 +98,10 @@ bool extrasCheckConfigurationButtons(Buttons &btn, HardwareButtons &hardware, Ex
 //Each extra and plugin can define how they integrate into the code here.
 void extrasInit() {
 	Serial.println("Extra: Setting up extras!");
-	struct ExtrasHook hook;
-	struct ExtrasConfigFunction configFunction;
 
 #ifdef EXTRAS_ESS
-	hook.hook   = HOOK_POST_NOTCH_REMAPPING_A;
-	hook.hookFn = (void*)extrasEss::hook;
-	configFunction.checkButtonsFn = (void*)extrasEss::checkButtons;
-	configFunction.configureFn    = (void*)extrasEss::toggleEss;
-	extrasRegisterHook(hook);
-	extrasRegisterConfig(configFunction);
+	extrasRegisterHook(HOOK_POST_NOTCH_REMAPPING_A, (void*)extrasEss::hook);
+	extrasRegisterConfig((void*)extrasEss::checkButtons, (void*)extrasEss::toggleEss);
 	Serial.println("Extra: ESS functionality enabled.");
 #endif
 
