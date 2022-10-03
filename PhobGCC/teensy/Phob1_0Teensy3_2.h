@@ -4,6 +4,7 @@
 #include <ADC.h>
 #include <VREF.h>
 #include "settings.h"
+#include "../extras/extrasSettings.h"
 
 //Hardware-specific code for PhobGCC board revision 1.0 with a Teensy 3.2
 #define TEENSY3_2

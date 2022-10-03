@@ -33,7 +33,12 @@ namespace Eeprom {
 	const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
-	const int _eepromEssEnable = _eepromAutoInit+_bytesPerFloat;
+	/* 40 words of memory for extras, 160 bytes of the 1080 available.
+	 * This should be enough for a long enough time for a static allocation
+	 * until we move on from the teensy.
+	 */
+	const int _extrasAllocation = 40*_bytesPerFloat;
+	const int _eepromExtras = _eepromAutoInit+_extrasAllocation;
 };
 
 JumpConfig getJumpSetting() {
@@ -269,18 +274,6 @@ void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) 
 	} else {
 		setFloatNotches(Eeprom::_eepromCNotchAngles, angles);
 	}
-}
-
-//Extras
-
-void setEssSetting(const ExtrasEssConfig enable){
-	EEPROM.put(Eeprom::_eepromEssEnable, enable);
-}
-
-ExtrasEssConfig getEssSetting(){
-	ExtrasEssConfig output;
-	EEPROM.get(Eeprom::_eepromEssEnable, output);
-	return output;
 }
 
 #endif //SETTINGS_H

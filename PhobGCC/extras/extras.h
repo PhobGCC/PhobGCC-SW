@@ -9,25 +9,38 @@
 #define EXTRAS_ESS
 // ------------------------------------------------------
 
-#include "../common/phobGCC.h"
-#include "ess.h"
+#include "ess/ess.h"
 
+//Add in user-defined configuration options here
 ExtrasConfig _extrasConfig {
 	.essEnable = EXTRAS_ESS_DISABLED
 };
 
-//Currently supports 10 extras, can easily be changed however.
-static const int _extrasMax = 10;
-static int extrasRegistered = 0;
-static Extra extras[_extrasMax];
+//Currently supports 20 extras, can easily be changed however.
+static const int _extrasMax = 20;
 
-void extrasRegister(Extra extra){
-	if (extrasRegistered >= _extrasMax){
-		Serial.println("Too many extras registered! Aborting...");
+static int extrasHooksRegistered = 0;
+static ExtrasHook extrasHooks[_extrasMax];
+
+static int extrasConfigFunctionsRegistered = 0;
+static ExtrasConfigFunction extrasConfigFunctions[_extrasMax];
+
+void extrasRegisterHook(ExtrasHook hook){
+	if (extrasHooksRegistered >= _extrasMax){
+		Serial.println("Too many extras hooks registered! Aborting...");
 		return;
 	}
-	extras[extrasRegistered] = extra;
-	extrasRegistered++;
+	extrasHooks[extrasHooksRegistered] = hook;
+	extrasHooksRegistered++;
+}
+
+void extrasRegisterConfig(ExtrasConfigFunction configFunction){
+	if (extrasConfigFunctionsRegistered >= _extrasMax){
+		Serial.println("Too many extras configs registered! Aborting...");
+		return;
+	}
+	extrasConfigFunctions[extrasConfigFunctionsRegistered] = configFunction;
+	extrasConfigFunctionsRegistered++;
 }
 
 //Common callback function types that should be used for the different ways we interact with extras
@@ -41,10 +54,10 @@ typedef void(*ExtrasConfigurationFn)(ExtrasConfig&, Buttons&); //Used for making
 //function type used in the callback should return whether or not it wishes to do so.
 bool extrasPostNotchRemappingA(float* Ax, float* Ay, const ExtrasConfig &extrasConfig){
 	bool skipHyst = false;
-	for(int i=0; i<extrasRegistered; i++){
-		Extra extra = extras[i];
-		if (extra.hook == HOOK_POST_NOTCH_REMAPPING_A){
-			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)(extra.hookFn);
+	for(int i=0; i<extrasHooksRegistered; i++){
+		ExtrasHook hook = extrasHooks[i];
+		if (hook.hook == HOOK_POST_NOTCH_REMAPPING_A){
+			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)(hook.hookFn);
 			if (fn(Ax, Ay, extrasConfig)) {
 				skipHyst = true;
 			}
@@ -55,10 +68,10 @@ bool extrasPostNotchRemappingA(float* Ax, float* Ay, const ExtrasConfig &extrasC
 
 bool extrasPostNotchRemappingC(float* Cx, float* Cy, const ExtrasConfig &extrasConfig){
 	bool skipHyst = false;
-	for(int i=0; i<extrasRegistered; i++){
-		Extra extra = extras[i];
-		if (extra.hook == HOOK_POST_NOTCH_REMAPPING_C){
-			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)extra.hook;
+	for(int i=0; i<extrasHooksRegistered; i++){
+		ExtrasHook hook = extrasHooks[i];
+		if (hook.hook == HOOK_POST_NOTCH_REMAPPING_C){
+			ExtrasPostNotchRemapFn fn = (ExtrasPostNotchRemapFn)hook.hook;
 			if (fn(Cx, Cy, extrasConfig)) {
 				skipHyst = true;
 			}
@@ -68,11 +81,11 @@ bool extrasPostNotchRemappingC(float* Cx, float* Cy, const ExtrasConfig &extrasC
 }
 
 bool extrasCheckConfigurationButtons(Buttons &btn, HardwareButtons &hardware, ExtrasConfig &extrasConfig){
-	for(int i=0; i<extrasRegistered; i++){
-		Extra extra = extras[i];
-		ExtrasCheckButtonsFn buttonsFn = (ExtrasCheckButtonsFn)(extra.checkButtonsFn);
+	for(int i=0; i<extrasConfigFunctionsRegistered; i++){
+		ExtrasConfigFunction configFunction = extrasConfigFunctions[i];
+		ExtrasCheckButtonsFn buttonsFn = (ExtrasCheckButtonsFn)(configFunction.checkButtonsFn);
 		if (buttonsFn(btn, hardware)) {
-			ExtrasConfigurationFn configFn = (ExtrasConfigurationFn)(extra.configureFn);
+			ExtrasConfigurationFn configFn = (ExtrasConfigurationFn)(configFunction.configureFn);
 			configFn(extrasConfig, btn);
 			return true; //clear buttons on return
 		}
@@ -83,14 +96,16 @@ bool extrasCheckConfigurationButtons(Buttons &btn, HardwareButtons &hardware, Ex
 //Each extra and plugin can define how they integrate into the code here.
 void extrasInit() {
 	Serial.println("Extra: Setting up extras!");
-	struct Extra extra; //Can keep reusing due to pass-by-value
+	struct ExtrasHook hook;
+	struct ExtrasConfigFunction configFunction;
 
 #ifdef EXTRAS_ESS
-	extra.hook           = HOOK_POST_NOTCH_REMAPPING_A;
-	extra.hookFn         = (void*)extrasEss::hook;
-	extra.checkButtonsFn = (void*)extrasEss::checkButtons;
-	extra.configureFn    = (void*)extrasEss::toggleEss;
-	extrasRegister(extra);
+	hook.hook   = HOOK_POST_NOTCH_REMAPPING_A;
+	hook.hookFn = (void*)extrasEss::hook;
+	configFunction.checkButtonsFn = (void*)extrasEss::checkButtons;
+	configFunction.configureFn    = (void*)extrasEss::toggleEss;
+	extrasRegisterHook(hook);
+	extrasRegisterConfig(configFunction);
 	Serial.println("Extra: ESS functionality enabled.");
 #endif
 

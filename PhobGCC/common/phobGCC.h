@@ -9,8 +9,8 @@
 //#include "../teensy/Phob1_1Teensy3_2.h"          // For PhobGCC board 1.1 with Teensy 3.2
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
-#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+//#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 #include "structsAndEnums.h"
 #include "filter.h"
@@ -827,15 +827,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println("C stick linearized");
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 
-	//read extras
-	extrasConfig.essEnable = getEssSetting();
-	if (extrasConfig.essEnable < EXTRAS_ESS_DISABLED){
-		extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
-		numberOfNaN++;
-	} else if (extrasConfig.essEnable > EXTRAS_ESS_ENABLED){
-		extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
-		numberOfNaN++;
-	}
+	numberOfNaN += extrasReadEEPROM(extrasConfig);
 
 	return numberOfNaN;
 }
@@ -889,9 +881,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
 
-	//set extras
-	extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
-	setEssSetting(extrasConfig.essEnable);
+	extrasResetDefaults(reset, extrasConfig);
 
 	if(reset == HARD){
 		float notchAngles[_noOfNotches];
