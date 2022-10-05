@@ -49,8 +49,8 @@ enum ExtrasSlot{
 };
 
 union IntOrFloat{
-    int intValue;
-    float floatValue;
+	int intValue;
+	float floatValue;
 };
 
 struct ExtrasConfig{
