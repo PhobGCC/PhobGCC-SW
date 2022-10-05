@@ -1,7 +1,7 @@
 #ifndef EXTRAS_ESS_H
 #define EXTRAS_ESS_H
 
-namespace extrasEss {
+namespace ess {
 	/* This namespace uses GPLv3 Licensed code from Skuzee's ESS Adapter 
 	 * code to reverse WiiVC mapping in Ocarina of Time. Please check out      
 	 * the source for that here: https://github.com/Skuzee/ESS-Adapter 
@@ -10,6 +10,20 @@ namespace extrasEss {
 	// ALL COMMENTS REGARDING HOW THIS WORKS HAVE BEEN REMOVED.
 	// Please refer to the original code for notes. This code is
 	// likely never changing unless we implement a float interpretation.
+
+	ExtrasSlot extrasEssConfigSlot = EXTRAS_UNSET;
+
+	enum EssSettings{
+		ESS_SETTING_ENABLE,
+		ESS_SETTING_UNUSED1,
+		ESS_SETTING_UNUSED2,
+		ESS_SETTING_UNUSED3
+	};
+
+	enum EssSettingEnable{
+		ESS_DISABLED,
+		ESS_ENABLED
+	};
 
 	const char one_dimensional_map[] = "\x00\x00\x10\x10\x11\x11\x12\x12\x13\x13\x14\x14\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f  !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,,---...///00001111222333344445555666677778888899999::::;;;;;<<<<<=====>>>>>??????@@@";
 	const char triangular_map[] = ",,-,.,.,/,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9,:,:,;,;,<,<,<,=,=,>,>,>,?,?,?,@,--.-.-/-0-0-1-1-2-2-3-3-4-4-5-5-6-6-7-7-8-8-9-9-9-:-:-;-;-<-<-<-=-=->->->-?-?-?-@,..../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-//0/0/1/1/2/2/3/3/4/4/5/5/6/6/7/7/8/8/9/9/9/:/:/;/;/</</</=/=/>/>/>/>/>/?-?-000010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0>/>/>/>/>/>/>/0010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0=0>/>/>/>/>/>/11112121313141415151616171718181919191:1:1;1;1<1<1<1=0=0=0>/>/>/>/>/>/112121313141415151616171718181919191:1:1;1;1<1<1<1<1<1=0=0>/>/>/>/>/2222323242425252626272728282929292:2:2;2;2<1<1<1<1<1<1=0=0>/>/>/>/22323242425252626272728282929292:2:2;2;2;2<1<1<1<1<1<1<1=0=0>/>/333343435353636373738383939393:3:3;3;3;3;3<1<1<1<1<1<1<1=0=0>/3343435353636373738383939393:3:3;3;3;3;3;3<1<1<1<1<1<1<1<1=044445454646474748484949494:4:4:4;3;3;3;3;3<1<1<1<1<1<1<1<1445454646474748484949494:4:4:4:4;3;3;3;3;3;3<1<1<1<1<1<1555565657575858595959595:4:4:4:4;3;3;3;3;3;3<1<1<1<1<1556565757585859595959595:4:4:4:4;3;3;3;3;3;3<1<1<1<1666676768686869595959595:4:4:4:4;3;3;3;3;3;3;3<1<1667676868686959595959595:4:4:4:4:4;3;3;3;3;3;3<1777777868686959595959595:4:4:4:4:4;3;3;3;3;3;3777777868686869595959595:4:4:4:4:4;3;3;3;3;377777786868686959595959595:4:4:4:4:4;3;3;377777786868686959595959595:4:4:4:4:4;3;377777786868686959595959595:4:4:4:4:4;377777786868686959595959595:4:4:4:4:477777786868686959595959595:4:4:4:47777778686868695959595959595:4:47777778686868695959595959595:4777777868686869595959595959577777786868686959595959595777777868686869595959595777777868686869595959577777786868686869595777777868686868695777777868686868677777786868686777777868686777777868677777786777777777777";
@@ -100,8 +114,8 @@ namespace extrasEss {
 			coords[1] = _intOrigin;
 	}
 
-	bool hook(float* Ax, float* Ay, const ExtrasConfig &extrasConfig){
-		if (extrasConfig.essEnable == EXTRAS_ESS_DISABLED) {
+	bool remap(float* Ax, float* Ay, const IntOrFloat config[]){
+		if (config[ESS_SETTING_ENABLE].intValue != ESS_ENABLED) {
 			return false; //do nothing, keep hyst enabled
 		}
 		uint8_t remappedESS[2] = {
@@ -114,30 +128,27 @@ namespace extrasEss {
 		return true; //disable hyst
 	}
 
-	void toggleEss(ExtrasConfig &extrasConfig, Buttons &btn) {
-		if (extrasConfig.essEnable) {
-			Serial.println("Extra: Disabling ESS");
-			extrasConfig.essEnable = EXTRAS_ESS_DISABLED;
+	void configure(IntOrFloat config[], Buttons &btn) {
+		if (config[ESS_SETTING_ENABLE].intValue == ESS_ENABLED) {
+			config[ESS_SETTING_ENABLE].intValue = ESS_DISABLED;
 		} else {
-			Serial.println("Extra: Enabling ESS");
-			extrasConfig.essEnable = EXTRAS_ESS_ENABLED;
+			config[ESS_SETTING_ENABLE].intValue = ESS_ENABLED;
 		}
 
-		setExtrasSettingInt(EepromExtras::_eepromEssEnable, extrasConfig.essEnable);
+		setExtrasSettingInt(extrasEssConfigSlot, ESS_SETTING_ENABLE, config[ESS_SETTING_ENABLE].intValue);
 
-		if (extrasConfig.essEnable == EXTRAS_ESS_ENABLED) {
-			btn.Ay = (uint8_t) (127.5 + 50);
-			btn.Ax = (uint8_t) (127.5 + 50);
-			btn.Cy = (uint8_t) (127.5 + 50);
-			btn.Cx = (uint8_t) (127.5 + 50);
+		if (config[ESS_SETTING_ENABLE].intValue == ESS_ENABLED) {
+			btn.Ay = (uint8_t) (_floatOrigin + 50);
+			btn.Ax = (uint8_t) (_floatOrigin + 50);
+			btn.Cy = (uint8_t) (_floatOrigin + 50);
+			btn.Cx = (uint8_t) (_floatOrigin + 50);
 		} else {
-			btn.Ay = (uint8_t) (127.5 - 50);
-			btn.Ax = (uint8_t) (127.5 - 50);
-			btn.Cy = (uint8_t) (127.5 - 50);
-			btn.Cx = (uint8_t) (127.5 - 50);
+			btn.Ay = (uint8_t) (_floatOrigin - 50);
+			btn.Ax = (uint8_t) (_floatOrigin - 50);
+			btn.Cy = (uint8_t) (_floatOrigin - 50);
+			btn.Cx = (uint8_t) (_floatOrigin - 50);
 		}
 	}
-
 }
 
-#endif //EXTRAS_ESS_H 
+#endif //EXTRAS_ESS_H

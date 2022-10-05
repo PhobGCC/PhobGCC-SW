@@ -39,6 +39,24 @@ enum NotchStatus {
 	CARDINAL
 };
 
+enum ExtrasSlot{
+	EXTRAS_UP,
+	EXTRAS_DOWN,
+	EXTRAS_LEFT,
+	EXTRAS_RIGHT,
+	EXTRAS_SIZE,
+	EXTRAS_UNSET
+};
+
+union IntOrFloat{
+    int intValue;
+    float floatValue;
+};
+
+struct ExtrasConfig{
+	IntOrFloat config[4];
+};
+
 struct Pins{
 	int pinLa;
 	int pinRa;
@@ -146,6 +164,7 @@ struct ControlConfig{
 	const int snapbackDefault;
 	const float smoothingMin;
 	const float smoothingMax;
+	ExtrasConfig extras[EXTRAS_SIZE];
 };
 
 struct FilterGains {

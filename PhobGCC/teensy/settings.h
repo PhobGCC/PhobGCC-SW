@@ -33,12 +33,11 @@ namespace Eeprom {
 	const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
-	/* 40 words of memory for extras, 160 bytes of the 1080 available.
-	 * This should be enough for a long enough time for a static allocation
-	 * until we move on from the teensy.
-	 */
-	const int _extrasAllocation = 40*_bytesPerFloat;
-	const int _eepromExtras = _eepromAutoInit+_extrasAllocation;
+	//The 4 extras have 4 words each to work with each
+	const int _eepromExtrasUp = _eepromAutoInit+_bytesPerFloat*4;
+	const int _eepromExtrasDown = _eepromExtrasUp+_bytesPerFloat*4;
+	const int _eepromExtrasLeft = _eepromExtrasDown+_bytesPerFloat*4;
+	const int _eepromExtrasRight = _eepromExtrasLeft+_bytesPerFloat*4;
 };
 
 JumpConfig getJumpSetting() {
@@ -277,24 +276,96 @@ void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) 
 }
 
 //Extras
-int getExtrasSettingInt(const int offset) {
-	int output;
-	EEPROM.get(Eeprom::_eepromExtras+offset, output);
+int getExtrasSettingInt(const ExtrasSlot slot, const int offset) {
+	if (offset < 0 || offset >= 4) {
+		return 0;
+	}
+	int output = 0;
+	switch(slot) {
+		case EXTRAS_UP:
+			EEPROM.get(Eeprom::_eepromExtrasUp+offset, output);
+			break;
+		case EXTRAS_DOWN:
+			EEPROM.get(Eeprom::_eepromExtrasDown+offset, output);
+			break;
+		case EXTRAS_LEFT:
+			EEPROM.get(Eeprom::_eepromExtrasLeft+offset, output);
+			break;
+		case EXTRAS_RIGHT:
+			EEPROM.get(Eeprom::_eepromExtrasRight+offset, output);
+			break;
+		default:
+			break;
+	}
 	return output;
 }
 
-void setExtrasSettingInt(const int offset, const int value) {
-	EEPROM.put(Eeprom::_eepromExtras+offset, value);
+void setExtrasSettingInt(const ExtrasSlot slot, const int offset, const int value) {
+	if (offset < 0 || offset >= 4) {
+		return;
+	}
+	switch(slot) {
+		case EXTRAS_UP:
+			EEPROM.put(Eeprom::_eepromExtrasUp+offset, value);
+			break;
+		case EXTRAS_DOWN:
+			EEPROM.put(Eeprom::_eepromExtrasDown+offset, value);
+			break;
+		case EXTRAS_LEFT:
+			EEPROM.put(Eeprom::_eepromExtrasLeft+offset, value);
+			break;
+		case EXTRAS_RIGHT:
+			EEPROM.put(Eeprom::_eepromExtrasRight+offset, value);
+			break;
+		default:
+			break;
+	}
 }
 
-float getExtrasSettingFloat(const int offset) {
-	float output;
-	EEPROM.get(Eeprom::_eepromExtras+offset, output);
+float getExtrasSettingFloat(const ExtrasSlot slot, const int offset) {
+	if (offset < 0 || offset >= 4) {
+		return 0;
+	}
+	float output = 0;
+	switch(slot) {
+		case EXTRAS_UP:
+			EEPROM.get(Eeprom::_eepromExtrasUp+offset, output);
+			break;
+		case EXTRAS_DOWN:
+			EEPROM.get(Eeprom::_eepromExtrasDown+offset, output);
+			break;
+		case EXTRAS_LEFT:
+			EEPROM.get(Eeprom::_eepromExtrasLeft+offset, output);
+			break;
+		case EXTRAS_RIGHT:
+			EEPROM.get(Eeprom::_eepromExtrasRight+offset, output);
+			break;
+		default:
+			break;
+	}
 	return output;
 }
 
-void setExtrasSettingFloat(const int offset, const float value) {
-	EEPROM.put(Eeprom::_eepromExtras+offset, value);
+void setExtrasSettingFloat(const ExtrasSlot slot, const int offset, const float value) {
+	if (offset < 0 || offset >= 4) {
+		return;
+	}
+	switch(slot) {
+		case EXTRAS_UP:
+			EEPROM.put(Eeprom::_eepromExtrasUp+offset, value);
+			break;
+		case EXTRAS_DOWN:
+			EEPROM.put(Eeprom::_eepromExtrasDown+offset, value);
+			break;
+		case EXTRAS_LEFT:
+			EEPROM.put(Eeprom::_eepromExtrasLeft+offset, value);
+			break;
+		case EXTRAS_RIGHT:
+			EEPROM.put(Eeprom::_eepromExtrasRight+offset, value);
+			break;
+		default:
+			break;
+	}
 }
 
 #endif //SETTINGS_H

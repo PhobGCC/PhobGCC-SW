@@ -589,7 +589,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 };
 
 
-int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
+int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
 	int numberOfNaN = 0;
 
 	//get the jump setting
@@ -827,12 +827,18 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println("C stick linearized");
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 
-	numberOfNaN += extrasReadEEPROM(extrasConfig);
+	//read in extras settings
+	for(int extra=0; extra<EXTRAS_SIZE; extra++){
+		ExtrasSlot slot = (ExtrasSlot)extra;
+		for(int offset=0; offset<4; offset++){
+			controls.extras[slot].config[offset].intValue = getExtrasSettingInt(slot, offset);
+		}
+	}
 
 	return numberOfNaN;
 }
 
-void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
+void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULTJUMP;
@@ -881,7 +887,12 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
 
-	extrasResetDefaults(reset, extrasConfig);
+	for(int extra=0; extra<EXTRAS_SIZE; extra++){
+		ExtrasSlot slot = (ExtrasSlot)extra;
+		for(int offset=0; offset<4; offset++){
+			setExtrasSettingInt(slot, offset, 0);
+		}
+	}
 
 	if(reset == HARD){
 		float notchAngles[_noOfNotches];
@@ -956,7 +967,7 @@ void setPinModes(){
 	pinMode(_pinCy,INPUT_DISABLE);
 }
 
-void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams, ExtrasConfig &extrasConfig){
+void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, btn, hardware, controls);
 
@@ -1022,10 +1033,10 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 			btn.Cy = (uint8_t) _floatOrigin + versionOnes;
 			clearButtons(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
-			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams, _extrasConfig);//don't reset sticks
+			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
-			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams, _extrasConfig);//do reset sticks
+			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
@@ -1118,8 +1129,37 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
 			readJumpConfig(DEFAULTJUMP, controls);
 			freezeSticks(2000, btn, hardware);
-		} else {
-			if (extrasCheckConfigurationButtons(btn, hardware, extrasConfig)) {
+		//Extras: Both control sticks as Up, Down, Left, or Right, and with A and D-pad Down 
+		} else if (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48)
+		           && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+		           && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+		           && btn.A && btn.Dd) {
+			if (extrasConfigureFunctions[EXTRAS_UP]) {
+				extrasConfigureFunctions[EXTRAS_UP](controls.extras[EXTRAS_UP].config, btn);
+				clearButtons(2000, btn, hardware);
+			}
+		} else if (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48)
+		           && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+		           && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+		           && btn.A && btn.Dd) {
+			if (extrasConfigureFunctions[EXTRAS_DOWN]) {
+				extrasConfigureFunctions[EXTRAS_DOWN](controls.extras[EXTRAS_DOWN].config, btn);
+				clearButtons(2000, btn, hardware);
+			}
+		} else if (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48)
+		           && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+		           && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+		           && btn.A && btn.Dd) {
+			if (extrasConfigureFunctions[EXTRAS_LEFT]) {
+				extrasConfigureFunctions[EXTRAS_LEFT](controls.extras[EXTRAS_LEFT].config, btn);
+				clearButtons(2000, btn, hardware);
+			}
+		} else if (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48)
+		           && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+		           && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+		           && btn.A && btn.Dd) {
+			if (extrasConfigureFunctions[EXTRAS_RIGHT]) {
+				extrasConfigureFunctions[EXTRAS_RIGHT](controls.extras[EXTRAS_RIGHT].config, btn);
 				clearButtons(2000, btn, hardware);
 			}
 		}
@@ -1291,7 +1331,7 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, const ExtrasConfig &extrasConfig, float &dT){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 	//read the L and R sliders
@@ -1531,9 +1571,11 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 	remappedCx = min(125, max(-125, remappedCx+controls.cXOffset));
 	remappedCy = min(125, max(-125, remappedCy+controls.cYOffset));
 
-	//Run user-added filters or plug-ins (if enabled)
-	bool skipAHyst = extrasPostNotchRemappingA(&remappedAx, &remappedAy, extrasConfig);
-	bool skipCHyst = extrasPostNotchRemappingC(&remappedCx, &remappedCy, extrasConfig);
+	bool skipAHyst = false;
+#ifdef EXTRAS_ESS
+	//ESS adapter functionality for Ocarina of Time on WiiVC if enabled
+	skipAHyst = ess::remap(&remappedAx, &remappedAy, controls.extras[ess::extrasEssConfigSlot].config);
+#endif
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
@@ -1553,17 +1595,12 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareBut
 		}
 	}
 	if(readC){
-		if (!skipCHyst) {
-			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
-			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
-			}
-			float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
-			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-				btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
-			}
-		} else {
+		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
 			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+		}
+		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
+		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
 			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
 		}
 	}
