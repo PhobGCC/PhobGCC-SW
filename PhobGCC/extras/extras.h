@@ -15,32 +15,43 @@
 #include "ess.h"
 #endif
 
-typedef void(*ExtrasConfigFn)(IntOrFloat config[], Buttons&);//Used for making configuration changes
-static ExtrasConfigFn extrasConfigureFunctions[EXTRAS_SIZE] = {NULL};
+typedef bool(*ExtrasToggleFn)(IntOrFloat config[]);//Used for toggling extras
+typedef void(*ExtrasConfigFn)(IntOrFloat config[], Cardinals dpad);//Used for configuring extras with the Dpad
 
-void extraConfigAssignPrint(ExtrasSlot slot, ExtrasConfigFn configFn){
-	if(configFn) {
-		Serial.println("Extra: Warning! Configuration slot was already in use, previous feature will be inaccessible.");
-	}
+struct ExtrasFunctions{
+	ExtrasToggleFn toggleFn;
+	ExtrasConfigFn configFn;
+};
+
+static ExtrasFunctions extrasFunctions[EXTRAS_SIZE] = {NULL};
+
+void extrasConfigAssign(ExtrasSlot slot, ExtrasToggleFn toggleFn, ExtrasConfigFn configFn){
 	switch(slot){
 		case EXTRAS_UP:
-			Serial.println("Extra: Configuration assigned to Up.");
+			Serial.println("Extra: Setting configuration to Up...");
 			break;
 		case EXTRAS_DOWN:
-			Serial.println("Extra: Configuration assigned to Down.");
+			Serial.println("Extra: Setting configuration to Down...");
 			break;
 		case EXTRAS_LEFT:
-			Serial.println("Extra: Configuration assigned to Left.");
+			Serial.println("Extra: Setting configuration to Left...");
 			break;
 		case EXTRAS_RIGHT:
-			Serial.println("Extra: Configuration assigned to Right.");
+			Serial.println("Extra: Setting configuration to Right...");
 			break;
 		case EXTRAS_UNSET:
 			Serial.println("Extra: Configuration slot not set, feature will be inaccessible.");
-			break;
+			return;
 		default:
-			break;
+			Serial.println("Extra: Invalid configuration slot requested, feature will be inaccessible.");
+			return;
 	}
+	ExtrasFunctions fns = extrasFunctions[slot];
+	if(fns.toggleFn || fns.configFn) {
+		Serial.println("Extra: Warning! Configuration slot was already in use, previous feature will be inaccessible.");
+	}
+	fns.toggleFn = toggleFn;
+	fns.configFn = configFn;
 }
 
 void extrasInit() {
@@ -58,10 +69,7 @@ void extrasInit() {
 	ess::extrasEssConfigSlot = EXTRAS_UNSET;
 	//-----------------------------------------
 	Serial.println("Extra: Enabling ESS functionality...");
-	extraConfigAssignPrint(ess::extrasEssConfigSlot, extrasConfigureFunctions[ess::extrasEssConfigSlot]);
-	if (ess::extrasEssConfigSlot != EXTRAS_UNSET) {
-		extrasConfigureFunctions[ess::extrasEssConfigSlot] = ess::configure;
-	}
+	extrasConfigAssign(ess::extrasEssConfigSlot, ess::toggle, NULL);
 #endif
 
 }

@@ -129,6 +129,13 @@ struct HardwareButtons{
 	uint8_t Y;
 };
 
+struct Cardinals{
+	uint8_t l : 1;
+	uint8_t r : 1;
+	uint8_t u : 1;
+	uint8_t d : 1;
+};
+
 struct ControlConfig{
 	int pinXSwappable;
 	int pinYSwappable;

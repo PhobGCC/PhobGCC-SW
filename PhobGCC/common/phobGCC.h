@@ -145,6 +145,36 @@ void freezeSticks(const int time, Buttons &btn, HardwareButtons &hardware) {
 	}
 }
 
+void freezeSticksToggleIndicator(const int time, Buttons &btn, HardwareButtons &hardware, bool toggle) {
+	btn.Cx = (uint8_t) (_floatOrigin + (toggle ? 50 : -50));
+	btn.Cy = (uint8_t) (_floatOrigin + (toggle ? 50 : -50));
+	btn.Ax = (uint8_t) (_floatOrigin + (toggle ? 50 : -50));
+	btn.Ay = (uint8_t) (_floatOrigin + (toggle ? 50 : -50));
+	btn.La = (uint8_t) (255 + 60.0);
+	btn.Ra = (uint8_t) (255 + 60.0);
+
+	btn.A = (uint8_t) 0;
+	btn.B = (uint8_t) 0;
+	btn.X = (uint8_t) 0;
+	btn.Y = (uint8_t) 0;
+	btn.L = (uint8_t) 0;
+	btn.R = (uint8_t) 0;
+	btn.Z = (uint8_t) 0;
+	btn.S = (uint8_t) 0;
+
+	hardware.L = (uint8_t) 0;
+	hardware.R = (uint8_t) 0;
+	hardware.X = (uint8_t) 0;
+	hardware.Y = (uint8_t) 0;
+	hardware.Z = (uint8_t) 0;
+
+	int startTime = millis();
+	int delta = 0;
+	while(delta < time){
+		delta = millis() - startTime;
+	}
+}
+
 //This clears all the buttons but doesn't overwrite the sticks or shoulder buttons.
 void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 	btn.A = (uint8_t) 0;
@@ -206,12 +236,7 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	}
 
 	//move sticks up-right for on, down-left for off
-	btn.Ax = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
-	btn.Ay = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
-	btn.Cx = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
-	btn.Cy = (uint8_t) (controls.autoInit*100 - 50 + _floatOrigin);
-
-	clearButtons(2000, btn, hardware);
+	freezeSticksToggleIndicator(2000, btn, hardware, (controls.autoInit == 1));
 
 	setAutoInitSetting(controls.autoInit);
 }
@@ -492,6 +517,82 @@ void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 	}
 	setJumpSetting(controls.jumpConfig);
 	setJump(controls);
+}
+
+void toggleExtra(ExtrasSlot slot, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
+	ExtrasToggleFn toggleFn = extrasFunctions[slot].toggleFn;
+	if (toggleFn) {
+		bool toggle = toggleFn(controls.extras[slot].config);
+		freezeSticksToggleIndicator(2000, btn, hardware, toggle);
+	}
+}
+
+void configExtra(ExtrasSlot slot, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls){
+	ExtrasConfigFn configFn = extrasFunctions[slot].configFn;
+	if (configFn) {
+		Cardinals dpad;
+		dpad.l = btn.Dl;
+		dpad.r = btn.Dr;
+		dpad.u = btn.Du;
+		dpad.d = btn.Dd;
+		configFn(controls.extras[slot].config, dpad);
+	}
+}
+
+bool checkAdjustExtra(ExtrasSlot slot, Buttons &btn, bool checkConfig){
+	//Extras Toggles: Both control sticks as Up, Down, Left, or Right, and with A + B
+	if (!checkConfig){
+		switch(slot){
+			case EXTRAS_UP:
+				return (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48)
+				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+				        && btn.A);
+			case EXTRAS_DOWN:
+				return (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48)
+				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+				        && btn.A);
+			case EXTRAS_LEFT:
+				return (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48)
+				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+				        && btn.A);
+			case EXTRAS_RIGHT:
+				return (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48)
+				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+				        && btn.A);
+			default:
+				return false;
+		}
+	} else {
+		switch(slot){
+			case EXTRAS_UP:
+				return (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48)
+				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+				        && btn.A && (btn.Du||btn.Dd||btn.Dl||btn.Dr));
+			case EXTRAS_DOWN:
+				return (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48)
+				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
+				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
+				        && btn.A && (btn.Du||btn.Dd||btn.Dl||btn.Dr));
+			case EXTRAS_LEFT:
+				return (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48)
+				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+				        && btn.A && (btn.Du||btn.Dd||btn.Dl||btn.Dr));
+			case EXTRAS_RIGHT:
+				return (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48)
+				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
+				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
+				        && btn.A && (btn.Du||btn.Dd||btn.Dl||btn.Dr));
+			default:
+				return false;
+		}
+	}
+	return false;
 }
 
 void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
@@ -1129,39 +1230,22 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
 			readJumpConfig(DEFAULTJUMP, controls);
 			freezeSticks(2000, btn, hardware);
-		//Extras: Both control sticks as Up, Down, Left, or Right, and with A and D-pad Down 
-		} else if (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48)
-		           && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
-		           && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
-		           && btn.A && btn.Dd) {
-			if (extrasConfigureFunctions[EXTRAS_UP]) {
-				extrasConfigureFunctions[EXTRAS_UP](controls.extras[EXTRAS_UP].config, btn);
-				clearButtons(2000, btn, hardware);
-			}
-		} else if (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48)
-		           && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
-		           && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
-		           && btn.A && btn.Dd) {
-			if (extrasConfigureFunctions[EXTRAS_DOWN]) {
-				extrasConfigureFunctions[EXTRAS_DOWN](controls.extras[EXTRAS_DOWN].config, btn);
-				clearButtons(2000, btn, hardware);
-			}
-		} else if (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48)
-		           && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
-		           && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
-		           && btn.A && btn.Dd) {
-			if (extrasConfigureFunctions[EXTRAS_LEFT]) {
-				extrasConfigureFunctions[EXTRAS_LEFT](controls.extras[EXTRAS_LEFT].config, btn);
-				clearButtons(2000, btn, hardware);
-			}
-		} else if (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48)
-		           && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
-		           && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
-		           && btn.A && btn.Dd) {
-			if (extrasConfigureFunctions[EXTRAS_RIGHT]) {
-				extrasConfigureFunctions[EXTRAS_RIGHT](controls.extras[EXTRAS_RIGHT].config, btn);
-				clearButtons(2000, btn, hardware);
-			}
+		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
+			toggleExtra(EXTRAS_UP, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, false)) {
+			toggleExtra(EXTRAS_DOWN, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, false)) {
+			toggleExtra(EXTRAS_LEFT, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, false)) {
+			toggleExtra(EXTRAS_RIGHT, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_UP, btn, true)) { // Configure Extras
+			configExtra(EXTRAS_UP, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, true)) {
+			configExtra(EXTRAS_DOWN, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, true)) {
+			configExtra(EXTRAS_LEFT, btn, hardware, controls);
+		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, true)) {
+			configExtra(EXTRAS_RIGHT, btn, hardware, controls);
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;

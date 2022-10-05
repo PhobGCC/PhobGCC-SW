@@ -128,26 +128,15 @@ namespace ess {
 		return true; //disable hyst
 	}
 
-	void configure(IntOrFloat config[], Buttons &btn) {
-		if (config[ESS_SETTING_ENABLE].intValue == ESS_ENABLED) {
-			config[ESS_SETTING_ENABLE].intValue = ESS_DISABLED;
+	bool toggle(IntOrFloat config[]) {
+		int& enabled = config[ESS_SETTING_ENABLE].intValue;
+		if (enabled != ESS_DISABLED){
+			enabled = ESS_DISABLED;
 		} else {
-			config[ESS_SETTING_ENABLE].intValue = ESS_ENABLED;
+			enabled = ESS_ENABLED;
 		}
-
-		setExtrasSettingInt(extrasEssConfigSlot, ESS_SETTING_ENABLE, config[ESS_SETTING_ENABLE].intValue);
-
-		if (config[ESS_SETTING_ENABLE].intValue == ESS_ENABLED) {
-			btn.Ay = (uint8_t) (_floatOrigin + 50);
-			btn.Ax = (uint8_t) (_floatOrigin + 50);
-			btn.Cy = (uint8_t) (_floatOrigin + 50);
-			btn.Cx = (uint8_t) (_floatOrigin + 50);
-		} else {
-			btn.Ay = (uint8_t) (_floatOrigin - 50);
-			btn.Ax = (uint8_t) (_floatOrigin - 50);
-			btn.Cy = (uint8_t) (_floatOrigin - 50);
-			btn.Cx = (uint8_t) (_floatOrigin - 50);
-		}
+		setExtrasSettingInt(extrasEssConfigSlot, ESS_SETTING_ENABLE, enabled);
+		return (enabled == ESS_ENABLED);
 	}
 }
 
