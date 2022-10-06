@@ -547,22 +547,22 @@ bool checkAdjustExtra(ExtrasSlot slot, Buttons &btn, bool checkConfig){
 				return (btn.Ay > (_intOrigin+48) && btn.Cy > (_intOrigin+48)
 				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
 				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
-				        && btn.A);
+				        && btn.A && btn.B);
 			case EXTRAS_DOWN:
 				return (btn.Ay < (_intOrigin-48) && btn.Cy < (_intOrigin-48)
 				        && btn.Ax < (_intOrigin+30) && btn.Ax > (_intOrigin-30)
 				        && btn.Cx < (_intOrigin+30) && btn.Cx > (_intOrigin-30)
-				        && btn.A);
+				        && btn.A && btn.B);
 			case EXTRAS_LEFT:
 				return (btn.Ax < (_intOrigin-48) && btn.Cx < (_intOrigin-48)
 				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
 				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
-				        && btn.A);
+				        && btn.A && btn.B);
 			case EXTRAS_RIGHT:
 				return (btn.Ax > (_intOrigin+48) && btn.Cx > (_intOrigin+48)
 				        && btn.Ay < (_intOrigin+30) && btn.Ay > (_intOrigin-30)
 				        && btn.Cy < (_intOrigin+30) && btn.Cy > (_intOrigin-30)
-				        && btn.A);
+				        && btn.A && btn.B);
 			default:
 				return false;
 		}

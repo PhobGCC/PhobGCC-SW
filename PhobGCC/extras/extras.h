@@ -46,7 +46,7 @@ void extrasConfigAssign(ExtrasSlot slot, ExtrasToggleFn toggleFn, ExtrasConfigFn
 			Serial.println("Extra: Invalid configuration slot requested, feature will be inaccessible.");
 			return;
 	}
-	ExtrasFunctions fns = extrasFunctions[slot];
+	ExtrasFunctions &fns = extrasFunctions[slot];
 	if(fns.toggleFn || fns.configFn) {
 		Serial.println("Extra: Warning! Configuration slot was already in use, previous feature will be inaccessible.");
 	}
