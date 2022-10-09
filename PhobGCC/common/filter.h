@@ -163,13 +163,15 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 
 //The input setting should range from 0 to 15.
 //The output should be 0 for 0.
-//A good setting should be 1/200ish
-//The max setting of 15 should yield 1/32
 float calcWaveshapeMult(const int setting){
-	if(setting == 0){
+	if(setting <= 0){
 		return 0;
+	} else if (setting <= 5) {
+		return 1.0/(440 - 40*setting);
+	} else if (setting <= 15) {
+		return 1.0/(340 - 20*setting);
 	} else {
-		return 411.232 - 21.8459*setting;
+		return 0;
 	}
 }
 
