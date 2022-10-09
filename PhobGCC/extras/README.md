@@ -267,7 +267,7 @@ void extrasInit() {
 // your new Extra
 #ifdef EXTRAS_EXAMPLE
 	//-----------------------------------------
-	ess::extrasEssConfigSlot = EXTRAS_UNSET;
+	example::configSlot = EXTRAS_UNSET;
 	//-----------------------------------------
 	Serial.println("Extra: Enabling Example functionality...");
 	extrasConfigAssign(example::configSlot, example::toggle, example::config);
