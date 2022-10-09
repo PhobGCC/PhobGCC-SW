@@ -169,7 +169,7 @@ float calcWaveshapeMult(const int setting){
 	if(setting == 0){
 		return 0;
 	} else {
-		return pow(2.0,((0.25*(setting-15))-5));
+		return 411.232 - 21.8459*setting;
 	}
 }
 
