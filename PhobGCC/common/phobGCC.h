@@ -55,7 +55,13 @@ ControlConfig _controls{
 	.snapbackMax = 10,
 	.snapbackDefault = 4,
 	.smoothingMin = 0,
-	.smoothingMax = 0.9
+	.smoothingMax = 0.9,
+	.axWaveshaping = 0,
+	.ayWaveshaping = 0,
+	.cxWaveshaping = 0,
+	.cyWaveshaping = 0,
+	.waveshapingMin = 0,
+	.waveshapingMax = 15
 };
 
 FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequency
@@ -256,6 +262,49 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 	setYSnapbackSetting(controls.ySnapback);
 }
 
+void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls){
+	Serial.println("adjusting waveshaping");
+	if(whichStick == ASTICK){
+		if(axis == XAXIS){
+			if(increase == INCREASE){
+				controls.axWaveshaping = min(controls.axWaveshaping+1, controls.waveshapingMax);
+			} else {
+				controls.axWaveshaping = max(controls.axWaveshaping-1, controls.waveshapingMin);
+			}
+		} else {//y axis
+			if(increase == INCREASE){
+				controls.ayWaveshaping = min(controls.ayWaveshaping+1, controls.waveshapingMax);
+			} else {
+				controls.ayWaveshaping = max(controls.ayWaveshaping-1, controls.waveshapingMin);
+			}
+		}
+		setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
+		setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
+		btn.Cx = (uint8_t) (controls.axWaveshaping + _floatOrigin);
+		btn.Cy = (uint8_t) (controls.ayWaveshaping + _floatOrigin);
+	} else {//c-stick
+		if(axis == XAXIS){
+			if(increase == INCREASE){
+				controls.cxWaveshaping = min(controls.cxWaveshaping+1, controls.waveshapingMax);
+			} else {
+				controls.cxWaveshaping = max(controls.cxWaveshaping-1, controls.waveshapingMin);
+			}
+		} else {
+			if(increase == INCREASE){
+				controls.cyWaveshaping = min(controls.cyWaveshaping+1, controls.waveshapingMax);
+			} else {
+				controls.cyWaveshaping = max(controls.cyWaveshaping-1, controls.waveshapingMin);
+			}
+		}
+		setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
+		setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
+		btn.Cx = (uint8_t) (controls.cxWaveshaping + _floatOrigin);
+		btn.Cy = (uint8_t) (controls.cyWaveshaping + _floatOrigin);
+	}
+
+	clearButtons(750, btn, hardware);
+}
+
 void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
 	Serial.println("Adjusting Smoothing");
 	if (axis == XAXIS && increase == INCREASE) {
@@ -309,6 +358,10 @@ void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &co
 	//Smoothing on C-stick
 	btn.Cx = (uint8_t) (_floatOrigin + (gains.xSmoothing * 10));
 	btn.Cy = (uint8_t) (_floatOrigin + (gains.ySmoothing * 10));
+
+	//Waveshaping on triggers
+	btn.La = (uint8_t) controls.axWaveshaping;
+	btn.Ra = (uint8_t) controls.ayWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
@@ -408,6 +461,10 @@ void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls
 	//Smoothing on C-stick
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
+
+	//Waveshaping on triggers
+	btn.La = (uint8_t) controls.cxWaveshaping;
+	btn.Ra = (uint8_t) controls.cyWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
@@ -789,6 +846,59 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		gains.cYSmoothing = controls.smoothingMin;
 	}
 
+	//get the a-stick x-axis waveshaping value
+	controls.axWaveshaping = getWaveshapingSetting(ASTICK, XAXIS);
+	Serial.print("the axWaveshaping value from eeprom is:");
+	Serial.println(controls.axWaveshaping);
+	if(controls.axWaveshaping < controls.waveshapingMin) {
+		controls.axWaveshaping = controls.waveshapingMin;
+		numberOfNaN++;
+	} else if (controls.axWaveshaping > controls.waveshapingMax) {
+		controls.axWaveshaping = controls.waveshapingMax;
+		numberOfNaN++;
+	}
+
+	//get the a-stick y-axis waveshaping value
+	controls.ayWaveshaping = getWaveshapingSetting(ASTICK, YAXIS);
+	Serial.print("the ayWaveshaping value from eeprom is:");
+	Serial.println(controls.ayWaveshaping);
+	if(controls.ayWaveshaping < controls.waveshapingMin) {
+		controls.ayWaveshaping = controls.waveshapingMin;
+		numberOfNaN++;
+	} else if (controls.ayWaveshaping > controls.waveshapingMax) {
+		controls.ayWaveshaping = controls.waveshapingMax;
+		numberOfNaN++;
+	}
+
+	//get the c-stick x-axis waveshaping value
+	controls.cxWaveshaping = getWaveshapingSetting(CSTICK, XAXIS);
+	Serial.print("the cxWaveshaping value from eeprom is:");
+	Serial.println(controls.cxWaveshaping);
+	if(controls.cxWaveshaping < controls.waveshapingMin) {
+		controls.cxWaveshaping = controls.waveshapingMin;
+		numberOfNaN++;
+	} else if (controls.cxWaveshaping > controls.waveshapingMax) {
+		controls.cxWaveshaping = controls.waveshapingMax;
+		numberOfNaN++;
+	}
+
+	//get the c-stick y-axis waveshaping value
+	controls.cyWaveshaping = getWaveshapingSetting(CSTICK, YAXIS);
+	Serial.print("the cyWaveshaping value from eeprom is:");
+	Serial.println(controls.cyWaveshaping);
+	if(controls.cyWaveshaping < controls.waveshapingMin) {
+		controls.cyWaveshaping = controls.waveshapingMin;
+		numberOfNaN++;
+	} else if (controls.cyWaveshaping > controls.waveshapingMax) {
+		controls.cyWaveshaping = controls.waveshapingMax;
+		numberOfNaN++;
+	}
+
+	if(controls.axWaveshaping != 0){
+		Serial.print("the axWaveshaping coefficient is: ");
+		Serial.println(1/calcWaveshapeMult(controls.axWaveshaping));
+	}
+
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
@@ -892,6 +1002,15 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	setCySmoothingSetting(gains.cYSmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
+
+	controls.axWaveshaping = controls.waveshapingMin;
+	controls.ayWaveshaping = controls.waveshapingMin;
+	controls.cxWaveshaping = controls.waveshapingMin;
+	controls.cyWaveshaping = controls.waveshapingMin;
+	setWaveshapingSetting(controls.waveshapingMin, ASTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingMin, ASTICK, YAXIS);
+	setWaveshapingSetting(controls.waveshapingMin, CSTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingMin, CSTICK, YAXIS);
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;
@@ -1261,13 +1380,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.A && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Snapback Filtering
 			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(ASTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Dd) { //Decrease Analog X-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(ASTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Du) { //Increase Analog Y-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(ASTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(ASTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Du) { //Increase X-axis Delay
 			adjustSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Dd) { //Decrease X-axis Delay
@@ -1287,13 +1406,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.A && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(CSTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(CSTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(CSTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Waveshaping
-			//placeholder
+			adjustWaveshaping(CSTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X Offset
 			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X Offset
@@ -1553,8 +1672,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 
 	float shapedAx = xPosFilt;
 	float shapedAy = yPosFilt;
-	//Run a secondary filter to extend time at the rim
-	//runWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, normGains);
+	//Run waveshaping, a secondary filter to extend time at the rim
+	runWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains, ASTICK);
 
 	//Run a simple low-pass filter
 	static float oldPosAx = 0;
@@ -1563,6 +1682,9 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
 	oldPosAx = posAx;
 	oldPosAy = posAy;
+
+	//Run waveshaping on the c-stick
+	runWaveShaping(posCx, posCy, posCx, posCy, controls, normGains, CSTICK);
 
 	//Run a simple low-pass filter on the C-stick
 	static float cXPos = 0;

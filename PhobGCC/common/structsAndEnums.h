@@ -139,6 +139,12 @@ struct ControlConfig{
 	const int snapbackDefault;
 	const float smoothingMin;
 	const float smoothingMax;
+	int axWaveshaping;
+	int ayWaveshaping;
+	int cxWaveshaping;
+	int cyWaveshaping;
+	const int waveshapingMin;
+	const int waveshapingMax;
 };
 
 struct FilterGains {
