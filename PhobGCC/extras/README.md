@@ -242,7 +242,15 @@ existing `#ifdef`'d blocks and modify it as needed.
 
 You should not add anything extra to these lines, only modify
 the text and change the function references to point to the 
-ones in your Extra.
+ones in your Extra. 
+
+`extrasConfigAssign` takes in 3 parameters: 
+
+* `slot` is the directional configuration slot that the users sets.
+* `toggleFn` is the function pointer to your Extra's toggle function.
+* `configFn` is the function pointer to your Extra's config function.
+
+Either or both function pointers can be safely set to `NULL` if not used.
 
 ```c++
 void extrasInit() {
