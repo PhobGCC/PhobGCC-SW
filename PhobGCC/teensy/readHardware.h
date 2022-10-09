@@ -7,23 +7,19 @@
 #include <VREF.h>
 #include "../common/structsAndEnums.h"
 
-void readButtons(const Pins &pin, Buttons &btn, HardwareButtons &hardware, const ControlConfig &controls) {
-	btn.A = !digitalRead(pin.pinA);
-	btn.B = !digitalRead(pin.pinB);
-	btn.X = !digitalRead(controls.pinXSwappable);
-	btn.Y = !digitalRead(controls.pinYSwappable);
-	btn.Z = !digitalRead(controls.pinZSwappable);
-	btn.S = !digitalRead(pin.pinS);
-	btn.Du = !digitalRead(pin.pinDu);
-	btn.Dd = !digitalRead(pin.pinDd);
-	btn.Dl = !digitalRead(pin.pinDl);
-	btn.Dr = !digitalRead(pin.pinDr);
-
+void readButtons(const Pins &pin, Buttons &hardware) {
+	hardware.A = !digitalRead(pin.pinA);
+	hardware.B = !digitalRead(pin.pinB);
+	hardware.X = !digitalRead(pin.pinX);
+	hardware.Y = !digitalRead(pin.pinY);
 	hardware.L = !digitalRead(pin.pinL);
 	hardware.R = !digitalRead(pin.pinR);
 	hardware.Z = !digitalRead(pin.pinZ);
-	hardware.X = !digitalRead(pin.pinX);
-	hardware.Y = !digitalRead(pin.pinY);
+	hardware.S = !digitalRead(pin.pinS);
+	hardware.Du = !digitalRead(pin.pinDu);
+	hardware.Dd = !digitalRead(pin.pinDd);
+	hardware.Dl = !digitalRead(pin.pinDl);
+	hardware.Dr = !digitalRead(pin.pinDr);
 }
 
 void readADCScale(float &_ADCScale, float &_ADCScaleFactor) {

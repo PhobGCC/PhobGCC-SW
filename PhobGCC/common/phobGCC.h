@@ -10,7 +10,7 @@
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 
 #include "structsAndEnums.h"
 #include "filter.h"
@@ -25,12 +25,9 @@
 //#define ENABLE_LED
 
 ControlConfig _controls{
-	.pinXSwappable = _pinX,
-	.pinYSwappable = _pinY,
-	.pinZSwappable = _pinZ,
 	.jumpConfig = DEFAULTJUMP,
 	.jumpConfigMin = DEFAULTJUMP,
-	.jumpConfigMax = SWAP_YZ,
+	.jumpConfigMax = SWAP_YR,
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
@@ -101,7 +98,6 @@ Pins _pinList {
 	.pinS  = _pinS
 };
 
-
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
 		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
@@ -114,7 +110,7 @@ float velDampFromSnapback(const int snapback){
 	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 }
 
-void freezeSticks(const int time, Buttons &btn, HardwareButtons &hardware) {
+void freezeSticks(const int time, Buttons &btn, Buttons &hardware) {
 	btn.Cx = (uint8_t) (255);
 	btn.Cy = (uint8_t) (255);
 	btn.Ax = (uint8_t) (255);
@@ -131,11 +127,14 @@ void freezeSticks(const int time, Buttons &btn, HardwareButtons &hardware) {
 	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
-	hardware.L = (uint8_t) 0;
-	hardware.R = (uint8_t) 0;
+	hardware.A = (uint8_t) 0;
+	hardware.B = (uint8_t) 0;
 	hardware.X = (uint8_t) 0;
 	hardware.Y = (uint8_t) 0;
+	hardware.L = (uint8_t) 0;
+	hardware.R = (uint8_t) 0;
 	hardware.Z = (uint8_t) 0;
+	hardware.S = (uint8_t) 0;
 
 	int startTime = millis();
 	int delta = 0;
@@ -145,7 +144,7 @@ void freezeSticks(const int time, Buttons &btn, HardwareButtons &hardware) {
 }
 
 //This clears all the buttons but doesn't overwrite the sticks or shoulder buttons.
-void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
+void clearButtons(const int time, Buttons &btn, Buttons &hardware) {
 	btn.A = (uint8_t) 0;
 	btn.B = (uint8_t) 0;
 	btn.X = (uint8_t) 0;
@@ -155,11 +154,14 @@ void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 	btn.Z = (uint8_t) 0;
 	btn.S = (uint8_t) 0;
 
-	hardware.L = (uint8_t) 0;
-	hardware.R = (uint8_t) 0;
+	hardware.A = (uint8_t) 0;
+	hardware.B = (uint8_t) 0;
 	hardware.X = (uint8_t) 0;
 	hardware.Y = (uint8_t) 0;
+	hardware.L = (uint8_t) 0;
+	hardware.R = (uint8_t) 0;
 	hardware.Z = (uint8_t) 0;
+	hardware.S = (uint8_t) 0;
 
 	int startTime = millis();
 	int delta = 0;
@@ -168,7 +170,7 @@ void clearButtons(const int time, Buttons &btn, HardwareButtons &hardware) {
 	}
 }
 
-void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void showRumble(const int time, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	btn.Cx = (uint8_t) _intOrigin;
 	btn.Cy = (uint8_t) (controls.rumble + _floatOrigin);
 	clearButtons(time, btn, hardware);
@@ -176,7 +178,7 @@ void showRumble(const int time, Buttons &btn, HardwareButtons &hardware, Control
 	setRumbleSetting(controls.rumble);
 }
 
-void changeRumble(const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void changeRumble(const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	Serial.println("changing rumble");
 	if(increase == INCREASE) {
 		controls.rumble += 1;
@@ -197,7 +199,7 @@ void changeRumble(const Increase increase, Buttons &btn, HardwareButtons &hardwa
 //Make it so you don't need to press B.
 //This is only good if the sticks are calibrated, so
 // the setting auto-resets whenever you hard reset or recalibrate.
-void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void changeAutoInit(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(controls.autoInit == 0) {
 		controls.autoInit = 1;
 	} else {
@@ -215,7 +217,7 @@ void changeAutoInit(Buttons &btn, HardwareButtons &hardware, ControlConfig &cont
 	setAutoInitSetting(controls.autoInit);
 }
 
-void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
+void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
 	Serial.println("adjusting snapback filtering");
 	if(axis == XAXIS && increase == INCREASE){
 		controls.xSnapback = min(controls.xSnapback+1, controls.snapbackMax);
@@ -254,7 +256,7 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 	setYSnapbackSetting(controls.ySnapback);
 }
 
-void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
+void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
 	Serial.println("Adjusting Smoothing");
 	if (axis == XAXIS && increase == INCREASE) {
 		gains.xSmoothing = gains.xSmoothing + 0.1;
@@ -299,7 +301,7 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 	clearButtons(2000, btn, hardware);
 }
 
-void showAstickSettings(Buttons &btn, HardwareButtons &hardware, const ControlConfig &controls, FilterGains &gains) {
+void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &controls, FilterGains &gains) {
 	//Snapback on A-stick
 	btn.Ax = (uint8_t) (controls.xSnapback + _floatOrigin);
 	btn.Ay = (uint8_t) (controls.ySnapback + _floatOrigin);
@@ -311,7 +313,7 @@ void showAstickSettings(Buttons &btn, HardwareButtons &hardware, const ControlCo
 	clearButtons(2000, btn, hardware);
 }
 
-void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
+void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
 	Serial.println("Adjusting C-Stick Smoothing");
 	if (axis == XAXIS && increase == INCREASE) {
 		gains.cXSmoothing = gains.cXSmoothing + 0.1;
@@ -356,7 +358,7 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 	clearButtons(2000, btn, hardware);
 }
 
-void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	Serial.println("Adjusting C-stick Offset");
 	if(axis == XAXIS && increase == INCREASE) {
 		controls.cXOffset++;
@@ -398,7 +400,7 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 	clearButtons(2000, btn, hardware);
 }
 
-void showCstickSettings(Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains) {
+void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains) {
 	//Snapback/smoothing on A-stick
 	btn.Ax = (uint8_t) (_floatOrigin + (gains.cXSmoothing * 10));
 	btn.Ay = (uint8_t) (_floatOrigin + (gains.cYSmoothing * 10));
@@ -410,7 +412,7 @@ void showCstickSettings(Buttons &btn, HardwareButtons &hardware, ControlConfig &
 	clearButtons(2000, btn, hardware);
 }
 
-void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER && increase == INCREASE) {
 		controls.lTriggerOffset++;
 		if(controls.lTriggerOffset > controls.triggerMax) {
@@ -452,26 +454,40 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	clearButtons(250, btn, hardware);
 }
 
-void setJump(ControlConfig &controls){
+//apply digital button swaps for L, R, or Z jumping
+void applyJump(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
 	switch(controls.jumpConfig){
-			case SWAP_XZ:
-				controls.pinZSwappable = _pinX;
-				controls.pinXSwappable = _pinZ;
-				controls.pinYSwappable = _pinY;
-				break;
-			case SWAP_YZ:
-				controls.pinZSwappable = _pinY;
-				controls.pinXSwappable = _pinX;
-				controls.pinYSwappable = _pinZ;
-				break;
-			default:
-				controls.pinZSwappable = _pinZ;
-				controls.pinXSwappable = _pinX;
-				controls.pinYSwappable = _pinY;
+		case SWAP_XZ:
+			btn.X = hardware.Z;
+			btn.Z = hardware.X;
+			break;
+		case SWAP_YZ:
+			btn.Y = hardware.Z;
+			btn.Z = hardware.Y;
+			break;
+		case SWAP_XL:
+			btn.X = hardware.L;
+			btn.L = hardware.X;
+			break;
+		case SWAP_YL:
+			btn.Y = hardware.L;
+			btn.L = hardware.Y;
+			break;
+		case SWAP_XR:
+			btn.X = hardware.R;
+			btn.R = hardware.X;
+			break;
+		case SWAP_YR:
+			btn.Y = hardware.R;
+			btn.R = hardware.Y;
+			break;
+		default:
+			break;
+			//nothing
 	}
 }
 
-void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
+void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 	Serial.print("setting jump to: ");
 	if (controls.jumpConfig == jumpConfig) {
 		controls.jumpConfig = DEFAULTJUMP;
@@ -485,15 +501,26 @@ void readJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 			case SWAP_YZ:
 				Serial.println("Y<->Z");
 				break;
+			case SWAP_XL:
+				Serial.println("X<->L");
+				break;
+			case SWAP_YL:
+				Serial.println("Y<->L");
+				break;
+			case SWAP_XR:
+				Serial.println("X<->R");
+				break;
+			case SWAP_YR:
+				Serial.println("Y<->R");
+				break;
 			default:
 				Serial.println("normal");
 		}
 	}
 	setJumpSetting(controls.jumpConfig);
-	setJump(controls);
 }
 
-void nextTriggerState(WhichTrigger trigger, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls) {
+void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER) {
 		if(controls.lConfig >= controls.triggerConfigMax) {
 			controls.lConfig = 0;
@@ -601,7 +628,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.jumpConfig = DEFAULTJUMP;
 		numberOfNaN++;
 	}
-	setJump(controls);
 
 	//get the L setting
 	controls.lConfig = getLSetting();
@@ -833,7 +859,6 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	Serial.println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULTJUMP;
-	setJump(controls);
 	setJumpSetting(controls.jumpConfig);
 
 	controls.lConfig = controls.triggerDefault;
@@ -951,12 +976,172 @@ void setPinModes(){
 	pinMode(_pinCy,INPUT_DISABLE);
 }
 
-void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
-	//Gather the button data from the hardware
-	readButtons(pin, btn, hardware, controls);
+void copyButtons(const Buttons &src, Buttons &dest) {
+	dest.A = src.A;
+	dest.B = src.B;
+	dest.X = src.X;
+	dest.Y = src.Y;
+	dest.S = src.S;
+	dest.L = src.L;
+	dest.R = src.R;
+	dest.Z = src.Z;
+	dest.Dr = src.Dr;
+	dest.Du = src.Du;
+	dest.Dl = src.Dl;
+	dest.Dd = src.Dd;
+	dest.La = src.La;
+	dest.Ra = src.Ra;
+}
 
-	//We apply the triggers in readSticks so we can minimize race conditions
-	// between trigger analog/digital so we don't get ADT vulnerability in mode 6
+void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+	//Gather the button data from the hardware
+	readButtons(pin, hardware);
+
+	//Copy hardware buttons into a temp
+	Buttons tempBtn;
+	copyButtons(hardware, tempBtn);
+
+	//Swap buttons here for jump remapping
+	applyJump(controls, hardware, tempBtn);
+
+	//read the L and R sliders here instead of readSticks so we don't get race conditions for mode 6
+
+	//set up lockout for mode 5; it's not permissible to have analog trigger
+	// inputs available while mode 5 is active
+	//when a trigger is in lockout due to the other being mode 5,
+	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
+	//(the above modes are 1-indexed, user-facing values)
+	const bool lockoutL = controls.rConfig == 4;
+	const bool lockoutR = controls.lConfig == 4;
+
+	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
+	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
+	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
+
+	//Here we make sure LRAS actually operate.
+	if(hardware.L && hardware.R && hardware.A && hardware.S) {
+		tempBtn.L = (uint8_t) (1);
+		tempBtn.R = (uint8_t) (1);
+		tempBtn.A = (uint8_t) (1);
+		tempBtn.S = (uint8_t) (1);
+	} else {
+		switch(controls.lConfig) {
+			case 0: //Default Trigger state
+				if(lockoutL){
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				} else {
+					tempBtn.La = readLa(pin) * shutoffLa;
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				tempBtn.La = (uint8_t) controls.lTrigInitial;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutL){
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				} else {
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = readLa(pin) * shutoffLa;
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutL){
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				} else {
+					tempBtn.La = readLa(pin) * shutoffLa;
+					if (tempBtn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
+						tempBtn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				tempBtn.L = (uint8_t) 0;
+				if(tempBtn.L) {
+					tempBtn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(tempBtn.L) {
+					tempBtn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
+				} else {
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				}
+				break;
+			default:
+				if(lockoutL){
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = (uint8_t) controls.lTrigInitial;
+				} else {
+					tempBtn.La = readLa(pin) * shutoffLa;
+				}
+		}
+
+		switch(controls.rConfig) {
+			case 0: //Default Trigger state
+				if(lockoutR){
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				} else {
+					tempBtn.Ra = readRa(pin) * shutoffRa;
+				}
+				break;
+			case 1: //Digital Only Trigger state
+				tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				break;
+			case 2: //Analog Only Trigger state
+				if(lockoutR){
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				} else {
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = readRa(pin) * shutoffRa;
+				}
+				break;
+			case 3: //Trigger Plug Emulation state
+				if(lockoutR){
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				} else {
+					tempBtn.Ra = readRa(pin) * shutoffRa;
+					if (tempBtn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
+						tempBtn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
+					}
+				}
+				break;
+			case 4: //Digital => Analog Value state
+				tempBtn.R = (uint8_t) 0;
+				if(tempBtn.R) {
+					tempBtn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				}
+				break;
+			case 5: //Digital => Analog Value + Digital state
+				if(tempBtn.R) {
+					tempBtn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
+				} else {
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				}
+				break;
+			default:
+				if(lockoutR){
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = (uint8_t) controls.rTrigInitial;
+				} else {
+					tempBtn.Ra = readRa(pin) * shutoffRa;
+				}
+		}
+	}
+
+	//Apply any further button remapping to tempBtn here
+
+	//Copy temp buttons (including analog triggers) back to btn
+	copyButtons(tempBtn, btn);
 
 	/* Current Commands List
 	* Safe Mode:  AXY+Start
@@ -1003,12 +1188,12 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 
 	static bool advanceCal = false;
 
-	//check the dpad buttons to change the controller settings
+	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
-		if(btn.A && hardware.X && hardware.Y && btn.S) { //Safe Mode Toggle
+		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
-		} else if (btn.A && hardware.Z && btn.Du) { //display version number
+		} else if (hardware.A && hardware.Z && hardware.Du) { //display version number
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
 			btn.Ax = (uint8_t) _floatOrigin;
@@ -1016,107 +1201,107 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 			btn.Cx = (uint8_t) _floatOrigin + versionHundreds;
 			btn.Cy = (uint8_t) _floatOrigin + versionOnes;
 			clearButtons(2000, btn, hardware);
-		} else if (btn.A && btn.B && hardware.Z && btn.S) { //Soft Reset
+		} else if (hardware.A && hardware.B && hardware.Z && hardware.S) { //Soft Reset
 			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
-		} else if (btn.A && btn.B && hardware.Z && btn.Dd) { //Hard Reset
+		} else if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset
 			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
 			freezeSticks(2000, btn, hardware);
-		} else if (btn.A && btn.B && hardware.L && hardware.R && btn.S) { //Toggle Auto-Initialize
+		} else if (hardware.A && hardware.B && hardware.L && hardware.R && hardware.S) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
-		} else if (hardware.X && hardware.Y && btn.Du) { //Increase Rumble
+		} else if (hardware.X && hardware.Y && hardware.Du) { //Increase Rumble
 #ifdef RUMBLE
 			changeRumble(INCREASE, btn, hardware, controls);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
-		} else if (hardware.X && hardware.Y && btn.Dd) { //Decrease Rumble
+		} else if (hardware.X && hardware.Y && hardware.Dd) { //Decrease Rumble
 #ifdef RUMBLE
 			changeRumble(DECREASE, btn, hardware, controls);
 #else // RUMBLE
 			//nothing
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
-		} else if (hardware.X && hardware.Y && btn.B && !btn.A) { //Show current rumble setting
+		} else if (hardware.X && hardware.Y && hardware.B && !hardware.A) { //Show current rumble setting
 #ifdef RUMBLE
 			showRumble(2000, btn, hardware, controls);
 #else // RUMBLE
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
-		} else if (btn.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
+		} else if (hardware.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
 			Serial.println("Calibrating the A stick");
 			whichStick = ASTICK;
 			currentCalStep ++;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
-		} else if (btn.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
+		} else if (hardware.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
 			Serial.println("Calibrating the C stick");
 			whichStick = CSTICK;
 			currentCalStep ++;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
-		} else if(hardware.L && hardware.X && btn.Du) { //Increase Analog X-Axis Snapback Filtering
+		} else if(hardware.L && hardware.X && hardware.Du) { //Increase Analog X-Axis Snapback Filtering
 			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.X && btn.Dd) { //Decrease Analog X-Axis Snapback Filtering
+		} else if(hardware.L && hardware.X && hardware.Dd) { //Decrease Analog X-Axis Snapback Filtering
 			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.Y && btn.Du) { //Increase Analog Y-Axis Snapback Filtering
+		} else if(hardware.L && hardware.Y && hardware.Du) { //Increase Analog Y-Axis Snapback Filtering
 			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.Y && btn.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+		} else if(hardware.L && hardware.Y && hardware.Dd) { //Decrease Analog Y-Axis Snapback Filtering
 			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && btn.A && btn.Du) { //Increase X-axis Delay
+		} else if(hardware.L && hardware.A && hardware.Du) { //Increase X-axis Delay
 			adjustSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && btn.A && btn.Dd) { //Decrease X-axis Delay
+		} else if(hardware.L && hardware.A && hardware.Dd) { //Decrease X-axis Delay
 			adjustSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && btn.B && btn.Du) { //Increase Y-axis Delay
+		} else if(hardware.L && hardware.B && hardware.Du) { //Increase Y-axis Delay
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && btn.B && btn.Dd) { //Decrease Y-axis Delay
+		} else if(hardware.L && hardware.B && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && btn.S && btn.Dd) { //Show Current Analog Settings
+		} else if(hardware.L && hardware.S && hardware.Dd) { //Show Current Analog Settings
 			showAstickSettings(btn, hardware, controls, gains);
-		} else if(hardware.R && hardware.X && btn.Du) { //Increase C-stick X-Axis Snapback Filtering
+		} else if(hardware.R && hardware.X && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && hardware.X && btn.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+		} else if(hardware.R && hardware.X && hardware.Dd) { //Decrease C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && hardware.Y && btn.Du) { //Increase C-stick Y-Axis Snapback Filtering
+		} else if(hardware.R && hardware.Y && hardware.Du) { //Increase C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && hardware.Y && btn.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+		} else if(hardware.R && hardware.Y && hardware.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
 			adjustCstickSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && btn.A && btn.Du) { //Increase C-stick X Offset
+		} else if(hardware.R && hardware.A && hardware.Du) { //Increase C-stick X Offset
 			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && btn.A && btn.Dd) { //Decrease C-stick X Offset
+		} else if(hardware.R && hardware.A && hardware.Dd) { //Decrease C-stick X Offset
 			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && btn.B && btn.Du) { //Increase C-stick Y Offset
+		} else if(hardware.R && hardware.B && hardware.Du) { //Increase C-stick Y Offset
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && btn.B && btn.Dd) { //Decrease C-stick Y Offset
+		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && btn.S && btn.Dd) { //Show Current C-stick SEttings
+		} else if(hardware.R && hardware.S && hardware.Dd) { //Show Current C-stick SEttings
 			showCstickSettings(btn, hardware, controls, gains);
-		} else if(hardware.L && hardware.Z && btn.S) { //Toggle Analog L
+		} else if(hardware.L && hardware.Z && hardware.S) { //Toggle Analog L
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
-		} else if(hardware.R && hardware.Z && btn.S) { //Toggle Analog R
+		} else if(hardware.R && hardware.Z && hardware.S) { //Toggle Analog R
 			nextTriggerState(RTRIGGER, btn, hardware, controls);
-		} else if(hardware.L && hardware.Z && btn.Du) { //Increase L-Trigger Offset
+		} else if(hardware.L && hardware.Z && hardware.Du) { //Increase L-Trigger Offset
 			adjustTriggerOffset(LTRIGGER, INCREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.Z && btn.Dd) { //Decrease L-trigger Offset
+		} else if(hardware.L && hardware.Z && hardware.Dd) { //Decrease L-trigger Offset
 			adjustTriggerOffset(LTRIGGER, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Z && btn.Du) { //Increase R-trigger Offset
+		} else if(hardware.R && hardware.Z && hardware.Du) { //Increase R-trigger Offset
 			adjustTriggerOffset(RTRIGGER, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Z && btn.Dd) { //Decrease R-trigger Offset
+		} else if(hardware.R && hardware.Z && hardware.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
-		} else if(hardware.X && hardware.Z && btn.S) { //Swap X and Z
-			readJumpConfig(SWAP_XZ, controls);
+		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
+			setJumpConfig(SWAP_XZ, controls);
 			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.Z && btn.S) { //Swap Y and Z
-			readJumpConfig(SWAP_YZ, controls);
+		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
+			setJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
-		} else if(btn.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
-			readJumpConfig(DEFAULTJUMP, controls);
+		} else if(hardware.A && hardware.X && hardware.Y && hardware.Z) { // Reset X/Y/Z Config
+			setJumpConfig(DEFAULTJUMP, controls);
 			freezeSticks(2000, btn, hardware);
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
-		if(btn.A && hardware.X && hardware.Y && btn.S) { //Safe Mode Toggle
+		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
 			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
 		} else {
 			safeModeAccumulator = 0.99*safeModeAccumulator;
@@ -1133,7 +1318,7 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
-	if(btn.S && (currentCalStep >= 0 && currentCalStep < 32)){
+	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
 		currentCalStep = _noOfCalibrationPoints;
 		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 		if(whichStick == CSTICK){
@@ -1282,147 +1467,9 @@ void processButtons(Pins &pin, Buttons &btn, HardwareButtons &hardware, ControlC
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const HardwareButtons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
-	//read the L and R sliders
-
-	//set up lockout for mode 5; it's not permissible to have analog trigger
-	// inputs available while mode 5 is active
-	//when a trigger is in lockout due to the other being mode 5,
-	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
-	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4;
-	const bool lockoutR = controls.lConfig == 4;
-
-	if(hardware.L && hardware.R && btn.A && btn.S) {
-		btn.L = (uint8_t) (1);
-		btn.R = (uint8_t) (1);
-		btn.A = (uint8_t) (1);
-		btn.S = (uint8_t) (1);
-	} else {
-		switch(controls.lConfig) {
-			case 0: //Default Trigger state
-				if(lockoutL){
-					btn.L  = (uint8_t) 0;
-					btn.La = (uint8_t) 0;
-				} else {
-					btn.L  = hardware.L;
-					btn.La = readLa(pin);
-				}
-				break;
-			case 1: //Digital Only Trigger state
-				btn.L  = hardware.L;
-				btn.La = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutL){
-					btn.L  = (uint8_t) 0;
-					btn.La = (uint8_t) 0;
-				} else {
-					btn.L  = (uint8_t) 0;
-					btn.La = readLa(pin);
-				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutL){
-					btn.L  = (uint8_t) 0;
-					btn.La = (uint8_t) 0;
-				} else {
-					btn.L  = hardware.L;
-					btn.La = readLa(pin);
-					if (btn.La > (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial)) {
-						btn.La = (((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial);
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				btn.L = (uint8_t) 0;
-				if(hardware.L) {
-					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
-				} else {
-					btn.La = (uint8_t) 0;
-				}
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				btn.L = hardware.L;
-				if(hardware.L) {
-					btn.La = min(((uint8_t) (controls.lTriggerOffset)) + controls.lTrigInitial, 255);
-				} else {
-					btn.La = (uint8_t) 0;
-				}
-				break;
-			default:
-				if(lockoutL){
-					btn.L  = (uint8_t) 0;
-					btn.La = (uint8_t) 0;
-				} else {
-					btn.L  = hardware.L;
-					btn.La = readLa(pin);
-				}
-		}
-
-		switch(controls.rConfig) {
-			case 0: //Default Trigger state
-				if(lockoutR){
-					btn.R  = (uint8_t) 0;
-					btn.Ra = (uint8_t) 0;
-				} else {
-					btn.R  = hardware.R;
-					btn.Ra = readRa(pin);
-				}
-				break;
-			case 1: //Digital Only Trigger state
-				btn.R  = hardware.R;
-				btn.Ra = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutR){
-					btn.R  = (uint8_t) 0;
-					btn.Ra = (uint8_t) 0;
-				} else {
-					btn.R  = (uint8_t) 0;
-					btn.Ra = readRa(pin);
-				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutR){
-					btn.R  = (uint8_t) 0;
-					btn.Ra = (uint8_t) 0;
-				} else {
-					btn.R  = hardware.R;
-					btn.Ra = readRa(pin);
-					if (btn.Ra > (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial)) {
-						btn.Ra = (((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial);
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				btn.R = (uint8_t) 0;
-				if(hardware.R) {
-					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
-				} else {
-					btn.Ra = (uint8_t) 0;
-				}
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				btn.R = hardware.R;
-				if(hardware.R) {
-					btn.Ra = min(((uint8_t) (controls.rTriggerOffset)) + controls.rTrigInitial, 255);
-				} else {
-					btn.Ra = (uint8_t) 0;
-				}
-				break;
-			default:
-				if(lockoutR){
-					btn.R  = (uint8_t) 0;
-					btn.Ra = (uint8_t) 0;
-				} else {
-					btn.R  = hardware.R;
-					btn.Ra = readRa(pin);
-				}
-		}
-	}
 
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
