@@ -1310,8 +1310,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Swap X with R:  RX+Start
 	* Swap Y with R:  Ry+Start
 	*
-	* Toggle Analog Slider L:  AB+L
-	* Toggle Analog Slider R:  AB+R
+	* Toggle L Trigger Mode:  AB+L
+	* Toggle R Trigger Mode:  AB+R
 	* Increase/Decrease L-trigger Offset:  LB+Du/Dd
 	* Increase/Decrease R-Trigger Offset:  RB+Du/Dd
 	*/
