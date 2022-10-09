@@ -68,8 +68,9 @@ live configuration of the PhobGCC.
 ### Cardinals
 
 `Cardinals` is a simple struct consisting of 4 variables, one for each direction. This is
-passed in during the configuration of your Extra so you can handle what happens with each
-direction accordingly.
+passed in during the configuration of your Extra where each direction correlates to which
+dpad button was pressed during the configuration button combo so you can handle what happens
+with each direction accordingly.
 
 ```c++
 struct Cardinals{
