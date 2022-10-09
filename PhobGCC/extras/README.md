@@ -2,7 +2,7 @@
 
 This document (hopefully) intends to be a helpful guide for developers who wish to add additional features
 to the PhobGCC called Extras that, while might be out of scope for normal operation, are officially supported 
-and can be enabled manually by users if they comment out a `#define` directive and assign the Extra to one of
+and can be enabled manually by users if they uncomment out a `#define` directive and assign the Extra to one of
 4 directional configurations.
 
 # Overview
