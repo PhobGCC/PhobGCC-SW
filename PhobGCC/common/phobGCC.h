@@ -1180,12 +1180,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				}
 				break;
 			case 4: //Digital => Analog Value state
-				tempBtn.L = (uint8_t) 0;
 				if(tempBtn.L) {
 					tempBtn.La = min((uint8_t) controls.lTriggerOffset, 255);
 				} else {
 					tempBtn.La = (uint8_t) 0;
 				}
+				tempBtn.L = (uint8_t) 0;
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(tempBtn.L) {
@@ -1236,12 +1236,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				}
 				break;
 			case 4: //Digital => Analog Value state
-				tempBtn.R = (uint8_t) 0;
 				if(tempBtn.R) {
 					tempBtn.Ra = min((uint8_t) controls.rTriggerOffset, 255);
 				} else {
 					tempBtn.Ra = (uint8_t) 0;
 				}
+				tempBtn.R = (uint8_t) 0;
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(tempBtn.R) {
