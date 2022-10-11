@@ -4,7 +4,11 @@
 enum JumpConfig {
 	DEFAULTJUMP,
 	SWAP_XZ,
-	SWAP_YZ
+	SWAP_YZ,
+	SWAP_XL,
+	SWAP_YL,
+	SWAP_XR,
+	SWAP_YR
 };
 
 enum WhichTrigger {
@@ -137,9 +141,6 @@ struct Cardinals{
 };
 
 struct ControlConfig{
-	int pinXSwappable;
-	int pinYSwappable;
-	int pinZSwappable;
 	JumpConfig jumpConfig;
 	const int jumpConfigMin;
 	const int jumpConfigMax;
@@ -171,6 +172,12 @@ struct ControlConfig{
 	const int snapbackDefault;
 	const float smoothingMin;
 	const float smoothingMax;
+	int axWaveshaping;
+	int ayWaveshaping;
+	int cxWaveshaping;
+	int cyWaveshaping;
+	const int waveshapingMin;
+	const int waveshapingMax;
 	ExtrasConfig extras[EXTRAS_SIZE];
 };
 
@@ -211,7 +218,7 @@ struct FilterGains {
 
 Buttons _btn;
 
-HardwareButtons _hardware;
+Buttons _hardware;
 
 int _rumblePower = 0;//just so it isn't uninitialized at startup
 

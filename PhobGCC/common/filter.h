@@ -161,13 +161,27 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	}
 };
 
+//The input setting should range from 0 to 15.
+//The output should be 0 for 0.
+float calcWaveshapeMult(const int setting){
+	if(setting <= 0){
+		return 0;
+	} else if (setting <= 5) {
+		return 1.0/(440 - 40*setting);
+	} else if (setting <= 15) {
+		return 1.0/(340 - 20*setting);
+	} else {
+		return 0;
+	}
+}
+
 //This simulates an idealized sort of pode:
 // if the stick is moving fast, it responds poorly, while
 // if the stick is moving slowly, it follows closely.
 //It's not suitable to be the sole filter, but when put after
 // the smart snapback filter, it should be able to hold the
 // output at the rim longer when released.
-void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const FilterGains &normGains){
+void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains, const WhichStick whichStick){
 	static float oldXPos = 0;
 	static float oldYPos = 0;
 	static float oldXVel = 0;
@@ -190,12 +204,22 @@ void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut
 	//max functional setting probably 80
 	//extreme pode is like 32-80
 	//32 should be the limit
-	const float xDivisor = 32;
-	const float yDivisor = 32;
 
-	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh/xDivisor);
+	float xSetting;
+	float ySetting;
+	if(whichStick == ASTICK){
+		xSetting = controls.axWaveshaping;
+		ySetting = controls.ayWaveshaping;
+	} else {
+		xSetting = controls.cxWaveshaping;
+		ySetting = controls.cyWaveshaping;
+	}
+	const float xFactor = calcWaveshapeMult(xSetting);
+	const float yFactor = calcWaveshapeMult(ySetting);
+
+	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh/yDivisor);
+	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
