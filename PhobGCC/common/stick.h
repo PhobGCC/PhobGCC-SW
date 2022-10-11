@@ -378,7 +378,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 //The notch adjustment is limited in order to control
 //1. displacement of points (max 12 units out of +/- 100, for now)
 //2. stretching of coordinates (max +/- 30%)
-void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[], Buttons &btn, HardwareButtons &hardware){
+void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[], Buttons &btn, Buttons &hardware){
 	//set up variables based on current button state
 	bool CW = hardware.X;
 	bool CCW = hardware.Y;

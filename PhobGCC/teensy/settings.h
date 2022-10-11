@@ -33,6 +33,10 @@ namespace Eeprom {
 	const int _eepromCySmoothing = _eepromCxSmoothing+_bytesPerFloat;
 	const int _eepromRumble = _eepromCySmoothing+_bytesPerFloat;
 	const int _eepromAutoInit = _eepromRumble+_bytesPerFloat;
+	const int _eepromAxWaveshaping = _eepromAutoInit+_bytesPerFloat;
+	const int _eepromAyWaveshaping = _eepromAxWaveshaping+_bytesPerFloat;
+	const int _eepromCxWaveshaping = _eepromAyWaveshaping+_bytesPerFloat;
+	const int _eepromCyWaveshaping = _eepromCxWaveshaping+_bytesPerFloat;
 };
 
 JumpConfig getJumpSetting() {
@@ -184,6 +188,40 @@ int getAutoInitSetting() {
 void setAutoInitSetting(const int autoInit) {
 	EEPROM.put(Eeprom::_eepromAutoInit, autoInit);
 };
+
+int getWaveshapingSetting(const WhichStick whichStick, const WhichAxis whichAxis) {
+	int output;
+	if(whichStick == ASTICK) {
+		if(whichAxis == XAXIS) {
+			EEPROM.get(Eeprom::_eepromAxWaveshaping, output);
+		} else {
+			EEPROM.get(Eeprom::_eepromAyWaveshaping, output);
+		}
+	} else {
+		if(whichAxis == XAXIS) {
+			EEPROM.get(Eeprom::_eepromCxWaveshaping, output);
+		} else {
+			EEPROM.get(Eeprom::_eepromCyWaveshaping, output);
+		}
+	}
+	return output;
+}
+
+void setWaveshapingSetting(const int waveshaping, const WhichStick whichStick, const WhichAxis whichAxis) {
+	if(whichStick == ASTICK) {
+		if(whichAxis == XAXIS) {
+			EEPROM.put(Eeprom::_eepromAxWaveshaping, waveshaping);
+		} else {
+			EEPROM.put(Eeprom::_eepromAyWaveshaping, waveshaping);
+		}
+	} else {
+		if(whichAxis == XAXIS) {
+			EEPROM.put(Eeprom::_eepromCxWaveshaping, waveshaping);
+		} else {
+			EEPROM.put(Eeprom::_eepromCyWaveshaping, waveshaping);
+		}
+	}
+}
 
 //pulls 32 points from eeprom
 void getFloatPoints(const int eepromAddress, float array[32]) {
