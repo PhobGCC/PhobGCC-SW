@@ -28,7 +28,7 @@ void setup() {
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 	Serial.print("Number of NaN in EEPROM: ");
 	Serial.println(numberOfNaN);
-	if(numberOfNaN > 10){//by default it seems 12 end up uninitialized on Teensy 4
+	if(numberOfNaN > 10){//by default it seems 16 end up uninitialized on Teensy 4
 		resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);//do reset sticks
 		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 	}
