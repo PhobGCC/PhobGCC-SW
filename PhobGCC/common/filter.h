@@ -166,7 +166,7 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 float calcWaveshapeMult(const int setting){
 	if (setting > 0 && setting <= 5) {
 		return 1.0/(440 - 40*setting);
-	} else if (setting <= 15) {
+	} else if (setting > 5 && setting <= 15) {
 		return 1.0/(340 - 20*setting);
 	} else {
 		return 0;
