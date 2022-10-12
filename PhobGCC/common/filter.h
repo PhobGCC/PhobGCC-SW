@@ -164,9 +164,7 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 //The input setting should range from 0 to 15.
 //The output should be 0 for 0.
 float calcWaveshapeMult(const int setting){
-	if(setting <= 0){
-		return 0;
-	} else if (setting <= 5) {
+	if (setting > 0 && setting <= 5) {
 		return 1.0/(440 - 40*setting);
 	} else if (setting <= 15) {
 		return 1.0/(340 - 20*setting);
@@ -181,14 +179,14 @@ float calcWaveshapeMult(const int setting){
 //It's not suitable to be the sole filter, but when put after
 // the smart snapback filter, it should be able to hold the
 // output at the rim longer when released.
-void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains, const WhichStick whichStick){
-	static float oldXPos = 0;
-	static float oldYPos = 0;
-	static float oldXVel = 0;
-	static float oldYVel = 0;
+void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains){
+	volatile static float oldXPos = 0;
+	volatile static float oldYPos = 0;
+	volatile static float oldXVel = 0;
+	volatile static float oldYVel = 0;
 
-	static float oldXOut = 0;
-	static float oldYOut = 0;
+	volatile static float oldXOut = 0;
+	volatile static float oldYOut = 0;
 
 	const float xVel = xPos - oldXPos;
 	const float yVel = yPos - oldYPos;
@@ -205,17 +203,52 @@ void runWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	float xSetting;
-	float ySetting;
-	if(whichStick == ASTICK){
-		xSetting = controls.axWaveshaping;
-		ySetting = controls.ayWaveshaping;
-	} else {
-		xSetting = controls.cxWaveshaping;
-		ySetting = controls.cyWaveshaping;
-	}
-	const float xFactor = calcWaveshapeMult(xSetting);
-	const float yFactor = calcWaveshapeMult(ySetting);
+	const float xFactor = calcWaveshapeMult(controls.axWaveshaping);
+	const float yFactor = calcWaveshapeMult(controls.ayWaveshaping);
+
+	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const float newXPosWeight = 1 - oldXPosWeight;
+	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float newYPosWeight = 1 - oldYPosWeight;
+
+	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
+	yOut = oldYOut*oldYPosWeight + yPos*newYPosWeight;
+
+	oldXPos = xPos;
+	oldYPos = yPos;
+	oldXVel = xVel;
+	oldYVel = yVel;
+
+	oldXOut = xOut;
+	oldYOut = yOut;
+}
+//We need to duplicate this and call each one only once so that we don't reuse the history and screw things up.
+void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains){
+	volatile static float oldXPos = 0;
+	volatile static float oldYPos = 0;
+	volatile static float oldXVel = 0;
+	volatile static float oldYVel = 0;
+
+	volatile static float oldXOut = 0;
+	volatile static float oldYOut = 0;
+
+	const float xVel = xPos - oldXPos;
+	const float yVel = yPos - oldYPos;
+	const float xVelSmooth = 0.5*(xVel + oldXVel);
+	const float yVelSmooth = 0.5*(yVel + oldYVel);
+
+	//The lower this value, the stronger the effect.
+	//Per Rienne's experimentation:
+	//Minimum setting should be 500; this does nearly nothing
+	//Sweetspot for higher stick speeds is 200-240
+	//Sweetspot for lower stick speeds is 160-200
+	//Frame timing goes weird around 160
+	//max functional setting probably 80
+	//extreme pode is like 32-80
+	//32 should be the limit
+
+	const float xFactor = calcWaveshapeMult(controls.cxWaveshaping);
+	const float yFactor = calcWaveshapeMult(controls.cyWaveshaping);
 
 	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;

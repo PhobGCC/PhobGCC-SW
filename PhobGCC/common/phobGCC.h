@@ -1810,7 +1810,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float shapedAx = xPosFilt;
 	float shapedAy = yPosFilt;
 	//Run waveshaping, a secondary filter to extend time at the rim
-	runWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains, ASTICK);
+	aRunWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains);
 
 	//Run a simple low-pass filter
 	static float oldPosAx = 0;
@@ -1821,7 +1821,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	oldPosAy = posAy;
 
 	//Run waveshaping on the c-stick
-	runWaveShaping(posCx, posCy, posCx, posCy, controls, normGains, CSTICK);
+	cRunWaveShaping(posCx, posCy, posCx, posCy, controls, normGains);
 
 	//Run a simple low-pass filter on the C-stick
 	static float cXPos = 0;
