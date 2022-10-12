@@ -43,6 +43,24 @@ enum NotchStatus {
 	CARDINAL
 };
 
+enum ExtrasSlot{
+	EXTRAS_UP,
+	EXTRAS_DOWN,
+	EXTRAS_LEFT,
+	EXTRAS_RIGHT,
+	EXTRAS_SIZE,
+	EXTRAS_UNSET
+};
+
+union IntOrFloat{
+	int intValue;
+	float floatValue;
+};
+
+struct ExtrasConfig{
+	IntOrFloat config[4];
+};
+
 struct Pins{
 	int pinLa;
 	int pinRa;
@@ -107,6 +125,21 @@ union Buttons{
 	};
 };
 
+struct HardwareButtons{
+	uint8_t L;
+	uint8_t R;
+	uint8_t Z;
+	uint8_t X;
+	uint8_t Y;
+};
+
+struct Cardinals{
+	uint8_t l : 1;
+	uint8_t r : 1;
+	uint8_t u : 1;
+	uint8_t d : 1;
+};
+
 struct ControlConfig{
 	JumpConfig jumpConfig;
 	const int jumpConfigMin;
@@ -145,6 +178,7 @@ struct ControlConfig{
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
+	ExtrasConfig extras[EXTRAS_SIZE];
 };
 
 struct FilterGains {

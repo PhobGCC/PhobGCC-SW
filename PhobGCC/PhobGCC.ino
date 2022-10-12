@@ -48,6 +48,9 @@ void setup() {
 	//set the origin response before the sticks have been touched
 	//it will never be changed again after this
 
+	//start up user-enabled extras
+	extrasInit();
+
 	commsSetup(_btn);
 }
 
