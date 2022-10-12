@@ -1431,6 +1431,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Toggle R Trigger Mode:  AB+R
 	* Increase/Decrease L-trigger Offset:  LB+Du/Dd
 	* Increase/Decrease R-Trigger Offset:  RB+Du/Dd
+	*
+	* Extras:
+	* Toggle by holding both sticks in the chosen direction, then pressing A+B
+	* Adjust by holding both sticks in the chosen direction, then pressing A+Dpad directions
 	*/
 
 	static bool advanceCal = false;
