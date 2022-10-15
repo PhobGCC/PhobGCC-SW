@@ -1403,6 +1403,16 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				}
 		}
 	}
+	//Implement a small trigger deadzone of 3 units so that Dolphin initializes properly.
+	//If we don't, then we can't trust that the waveshaping values display accurately
+	// or that Mode 4 will stop at the right value on Dolphin.
+	//Or on Smash Ult, maybe? No clue.
+	if(tempBtn.La <= 3){
+		tempBtn.La = (uint8_t) 0;
+	}
+	if(tempBtn.Ra <= 3){
+		tempBtn.Ra = (uint8_t) 0;
+	}
 
 	//Apply any further button remapping to tempBtn here
 
