@@ -1,7 +1,8 @@
 #ifndef PHOBGCC_H
 #define PHOBGCC_H
 
-//Must be included at the end of the board header file, but before comms.h
+//Uncomment to get a glowing LED on Teensy 4.
+//#define ENABLE_LED
 
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
 //#include "../teensy/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
@@ -17,13 +18,11 @@
 #include "stick.h"
 #include "../extras/extras.h"
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 //This is just an integer.
-#define SW_VERSION 26
-
-//#define ENABLE_LED
+#define SW_VERSION 27
 
 ControlConfig _controls{
 	.jumpConfig = DEFAULTJUMP,
