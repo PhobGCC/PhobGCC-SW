@@ -1,7 +1,8 @@
 #ifndef PHOBGCC_H
 #define PHOBGCC_H
 
-//Must be included at the end of the board header file, but before comms.h
+//Uncomment to get a glowing LED on Teensy 4.
+//#define ENABLE_LED
 
 //Uncomment the appropriate #include line for your hardware by deleting the two slashes at the beginning of the line.
 //#include "../teensy/Phob1_0Teensy3_2.h"          // For PhobGCC board 1.0 with Teensy 3.2
@@ -22,8 +23,6 @@
 
 //This is just an integer.
 #define SW_VERSION 27
-
-//#define ENABLE_LED
 
 ControlConfig _controls{
 	.jumpConfig = DEFAULTJUMP,
@@ -1070,7 +1069,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//get the calibration points collected during the last A stick calibration
 	getPointsSetting(tempCalPointsX, CSTICK, XAXIS);
 	getPointsSetting(tempCalPointsY, CSTICK, YAXIS);
-	getNotchAnglesSetting(notchAngles, ASTICK);
+	getNotchAnglesSetting(notchAngles, CSTICK);
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
