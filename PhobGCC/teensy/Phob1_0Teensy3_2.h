@@ -77,9 +77,6 @@ void ADCSetup(ADC * adc,
     Serial.println(ADCScaleFactor);
 }
 
-//Settings class, in this case the eeprom emulation for the teensy
-eeprom _settings();
-
 //must include at the end
 #include "readHardware.h"
 #include "comms.h"
