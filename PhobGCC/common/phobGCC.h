@@ -1060,7 +1060,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//get the calibration points collected during the last A stick calibration
 	getPointsSetting(tempCalPointsX, CSTICK, XAXIS);
 	getPointsSetting(tempCalPointsY, CSTICK, YAXIS);
-	getNotchAnglesSetting(notchAngles, ASTICK);
+	getNotchAnglesSetting(notchAngles, CSTICK);
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	Serial.println("calibration points cleaned");
 	linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
