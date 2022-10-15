@@ -519,21 +519,18 @@ void collectCalPoints(const WhichStick whichStick, const int currentStepIn, floa
 	float X;
 	float Y;
 
+
 	for(int j = 0; j < MEDIANLEN; j++){
 		X = 0;
 		Y = 0;
 		for(int i = 0; i < 128; i++){
 			if(whichStick == ASTICK){
-#ifdef USEADCSCALE
-				_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
-#endif
-				//otherwise _ADCScale is 1
 				X += adc->adc0->analogRead(pin.pinAx)/4096.0*_ADCScale;
 				Y += adc->adc0->analogRead(pin.pinAy)/4096.0*_ADCScale;
 			}
 			else{
-				X += adc->adc0->analogRead(pin.pinCx)/4096.0;
-				Y += adc->adc0->analogRead(pin.pinCy)/4096.0;
+				X += adc->adc0->analogRead(pin.pinCx)/4096.0*_ADCScale;
+				Y += adc->adc0->analogRead(pin.pinCy)/4096.0*_ADCScale;
 			}
 		}
 		X = X/128.0;
