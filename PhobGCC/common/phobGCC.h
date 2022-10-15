@@ -1381,8 +1381,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
 					float triggerScaler = (0.0506 * controls.rTriggerOffset) - 1.4775;
-					tempBtn.Ra = ((uint8_t) (((float) readLa(pin, controls.rTrigInitial)) * triggerScaler)) * shutoffLa;
-				}	
+					tempBtn.Ra = ((uint8_t) (((float) readRa(pin, controls.rTrigInitial)) * triggerScaler)) * shutoffRa;
+				}
 			default:
 				if(lockoutR){
 					tempBtn.R  = (uint8_t) 0;
