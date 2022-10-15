@@ -1311,13 +1311,18 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.La = (uint8_t) 0;
 				}
 				break;
-			case 6:
+			case 6: //Scales Analog Trigger Values
 				if(lockoutL){
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
 					float triggerScaler = (0.0506 * controls.lTriggerOffset) - 1.4775;
-					tempBtn.La = ((uint8_t) (((float) readLa(pin, controls.lTrigInitial)) * triggerScaler)) * shutoffLa;
+					float triggerVal = (((float) readLa(pin, controls.lTrigInitial)) * triggerScaler) * shutoffLa;
+					if(triggerVal > 255.0) {
+						tempBtn.La = (uint8_t) 255;
+					} else {
+						tempBtn.La = (uint8_t) triggerVal;
+					}
 				}
 			default:
 				if(lockoutL){
@@ -1375,13 +1380,18 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.Ra = (uint8_t) 0;
 				}
 				break;
-			case 6:
+			case 6: //Scales Analog Trigger Values
 				if(lockoutR){
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
 					float triggerScaler = (0.0506 * controls.rTriggerOffset) - 1.4775;
-					tempBtn.Ra = ((uint8_t) (((float) readRa(pin, controls.rTrigInitial)) * triggerScaler)) * shutoffRa;
+					float triggerVal = (((float) readRa(pin, controls.rTrigInitial)) * triggerScaler) * shutoffRa;
+					if(triggerVal > 255.0) {
+						tempBtn.Ra = (uint8_t) 255;
+					} else {
+						tempBtn.Ra = (uint8_t) triggerVal;
+					}
 				}
 			default:
 				if(lockoutR){
