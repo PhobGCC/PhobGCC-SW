@@ -32,7 +32,7 @@ ControlConfig _controls{
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 5,
+	.triggerConfigMax = 6,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
@@ -1311,6 +1311,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.La = (uint8_t) 0;
 				}
 				break;
+			case 6:
+				if(lockoutL){
+					tempBtn.L  = (uint8_t) 0;
+					tempBtn.La = (uint8_t) 0;
+				} else {
+					float triggerScaler = (0.0506 * controls.lTriggerOffset) - 1.4775;
+					tempBtn.La = ((uint8_t) (((float) readLa(pin, controls.lTrigInitial)) * triggerScaler)) * shutoffLa;
+				}
 			default:
 				if(lockoutL){
 					tempBtn.L  = (uint8_t) 0;
@@ -1367,6 +1375,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.Ra = (uint8_t) 0;
 				}
 				break;
+			case 6:
+				if(lockoutR){
+					tempBtn.R  = (uint8_t) 0;
+					tempBtn.Ra = (uint8_t) 0;
+				} else {
+					float triggerScaler = (0.0506 * controls.rTriggerOffset) - 1.4775;
+					tempBtn.Ra = ((uint8_t) (((float) readLa(pin, controls.rTrigInitial)) * triggerScaler)) * shutoffLa;
+				}	
 			default:
 				if(lockoutR){
 					tempBtn.R  = (uint8_t) 0;
@@ -1884,7 +1900,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 			}
 		} else {
 			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);			
+			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 		}
 	}
 	if(readC){
