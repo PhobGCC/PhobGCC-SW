@@ -33,7 +33,8 @@ enum WhichStick {
 
 enum HardReset {
 	HARD,
-	SOFT
+	SOFT,
+	FACTORY
 };
 
 enum NotchStatus {
@@ -170,14 +171,24 @@ struct ControlConfig{
 	const int snapbackMin;
 	const int snapbackMax;
 	const int snapbackDefault;
+	const int snapbackFactoryAX;
+	const int snapbackFactoryAY;
 	const float smoothingMin;
 	const float smoothingMax;
+	const float snapbackFactoryCX;
+	const float snapbackFactoryCY;
+	const float smoothingFactoryAX;
+	const float smoothingFactoryAY;
 	int axWaveshaping;
 	int ayWaveshaping;
 	int cxWaveshaping;
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
+	const float waveshapingFactoryAX;
+	const float waveshapingFactoryAY;
+	const float waveshapingFactoryCX;
+	const float waveshapingFactoryCY;
 	ExtrasConfig extras[EXTRAS_SIZE];
 };
 

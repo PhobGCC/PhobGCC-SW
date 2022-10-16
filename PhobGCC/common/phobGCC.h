@@ -54,14 +54,24 @@ ControlConfig _controls{
 	.snapbackMin = 0,
 	.snapbackMax = 10,
 	.snapbackDefault = 4,
-	.smoothingMin = 0,
+	.snapbackFactoryAX = 4,
+	.snapbackFactoryAY = 4,
+	.smoothingMin = 0.0,
 	.smoothingMax = 0.9,
+	.snapbackFactoryCX = 0.0,
+	.snapbackFactoryCY = 0.0,
+	.smoothingFactoryAX = 0.0,
+	.smoothingFactoryAY = 0.0,
 	.axWaveshaping = 0,
 	.ayWaveshaping = 0,
 	.cxWaveshaping = 0,
 	.cyWaveshaping = 0,
 	.waveshapingMin = 0,
-	.waveshapingMax = 15
+	.waveshapingMax = 15,
+	.waveshapingFactoryAX = 0,
+	.waveshapingFactoryAY = 0,
+	.waveshapingFactoryCX = 0,
+	.waveshapingFactoryCY = 0
 };
 
 FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequency
@@ -1093,29 +1103,47 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	setCXOffsetSetting(controls.cXOffset);
 	setCYOffsetSetting(controls.cYOffset);
 
-	controls.xSnapback = controls.snapbackDefault;
+	if(reset == FACTORY){
+		controls.xSnapback = controls.snapbackFactoryAX;
+		controls.ySnapback = controls.snapbackFactoryAY;
+	} else {
+		controls.xSnapback = controls.snapbackDefault;
+		controls.ySnapback = controls.snapbackDefault;
+	}
 	setXSnapbackSetting(controls.xSnapback);
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
-	controls.ySnapback = controls.snapbackDefault;
 	setYSnapbackSetting(controls.ySnapback);
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
-	gains.xSmoothing = controls.smoothingMin;
+	if(reset == FACTORY){
+		gains.xSmoothing = controls.smoothingFactoryAX;
+		gains.ySmoothing = controls.smoothingFactoryAY;
+		gains.cXSmoothing = controls.snapbackFactoryCX;
+		gains.cYSmoothing = controls.snapbackFactoryCY;
+	} else {
+		gains.xSmoothing = controls.smoothingMin;
+		gains.ySmoothing = controls.smoothingMin;
+		gains.cXSmoothing = controls.smoothingMin;
+		gains.cYSmoothing = controls.smoothingMin;
+	}
 	setXSmoothingSetting(gains.xSmoothing);
-	gains.ySmoothing = controls.smoothingMin;
 	setYSmoothingSetting(gains.ySmoothing);
-
-	gains.cXSmoothing = controls.smoothingMin;
 	setCxSmoothingSetting(gains.cXSmoothing);
-	gains.cYSmoothing = controls.smoothingMin;
 	setCySmoothingSetting(gains.cYSmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
-	controls.axWaveshaping = controls.waveshapingMin;
-	controls.ayWaveshaping = controls.waveshapingMin;
-	controls.cxWaveshaping = controls.waveshapingMin;
-	controls.cyWaveshaping = controls.waveshapingMin;
+	if(reset == FACTORY){
+		controls.axWaveshaping = controls.waveshapingFactoryAX;
+		controls.ayWaveshaping = controls.waveshapingFactoryAY;
+		controls.cxWaveshaping = controls.waveshapingFactoryCX;
+		controls.cyWaveshaping = controls.waveshapingFactoryCY;
+	} else {
+		controls.axWaveshaping = controls.waveshapingMin;
+		controls.ayWaveshaping = controls.waveshapingMin;
+		controls.cxWaveshaping = controls.waveshapingMin;
+		controls.cyWaveshaping = controls.waveshapingMin;
+	}
 	setWaveshapingSetting(controls.waveshapingMin, ASTICK, XAXIS);
 	setWaveshapingSetting(controls.waveshapingMin, ASTICK, YAXIS);
 	setWaveshapingSetting(controls.waveshapingMin, CSTICK, XAXIS);
@@ -1141,7 +1169,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		}
 	}
 
-	if(reset == HARD){
+	if(reset == HARD || reset == FACTORY){
 		float notchAngles[_noOfNotches];
 		for(int i = 0; i < _noOfNotches; i++){
 			notchAngles[i] = _notchAngleDefaults[i];
@@ -1470,6 +1498,18 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
+		static float hardResetAccumulator = 0.0;
+		if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset pressed
+			hardResetAccumulator = 0.99*hardResetAccumulator + 0.01;
+		} else {
+			hardResetAccumulator = 0.99*hardResetAccumulator;
+		}
+		if(hardResetAccumulator > 0.99) {
+			hardResetAccumulator = 0;
+			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
+			freezeSticks(2000, btn, hardware);
+		}
+
 		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
@@ -1485,8 +1525,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset
-			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
-			freezeSticks(2000, btn, hardware);
+			//actually do nothing, this is just to prevent othing things from happening
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
