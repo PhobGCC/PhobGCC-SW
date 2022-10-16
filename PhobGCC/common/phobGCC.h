@@ -731,8 +731,8 @@ void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startU
 	startUpLa = 0;
 	startUpRa = 0;
 	for(int i = 0; i <64; i++){
-		startUpLa = max(startUpLa,readLa(pin, 0));
-		startUpRa = max(startUpRa,readRa(pin, 0));
+		startUpLa = max(startUpLa,readLa(pin, 0, 1));
+		startUpRa = max(startUpRa,readRa(pin, 0, 1));
 	}
 	//set the trigger values to this measured startup value
 	btn.La = 0;
@@ -1256,6 +1256,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
 	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
 
+	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
+	float triggerScaleL = (0.0506 * controls.lTriggerOffset) - 1.4775;
+	float triggerScaleR = (0.0112 * controls.rTriggerOffset) + 0.4494;
+
 	//Here we make sure LRAS actually operate.
 	if(hardware.L && hardware.R && hardware.A && hardware.S) {
 		tempBtn.L = (uint8_t) (1);
@@ -1269,7 +1273,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial) * shutoffLa;
+					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 				break;
 			case 1: //Digital Only Trigger state
@@ -1281,7 +1285,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.La = (uint8_t) 0;
 				} else {
 					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = readLa(pin, controls.lTrigInitial) * shutoffLa;
+					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 				break;
 			case 3: //Trigger Plug Emulation state
@@ -1289,7 +1293,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial) * shutoffLa;
+					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 					if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
 						tempBtn.La = (uint8_t) controls.lTriggerOffset;
 					}
@@ -1315,13 +1319,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					float triggerScaler = (0.0506 * controls.lTriggerOffset) - 1.4775;
-					float triggerVal = (((float) readLa(pin, controls.lTrigInitial)) * triggerScaler) * shutoffLa;
-					if(triggerVal > 255.0) {
-						tempBtn.La = (uint8_t) 255;
-					} else {
-						tempBtn.La = (uint8_t) triggerVal;
-					}
+					tempBtn.La = readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 				}
 				break;
 			default:
@@ -1329,7 +1327,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial) * shutoffLa;
+					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 		}
 
@@ -1339,7 +1337,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial) * shutoffRa;
+					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 				break;
 			case 1: //Digital Only Trigger state
@@ -1351,7 +1349,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
 					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial) * shutoffRa;
+					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 				break;
 			case 3: //Trigger Plug Emulation state
@@ -1359,7 +1357,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial) * shutoffRa;
+					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 					if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
 						tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
 					}
@@ -1385,13 +1383,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					float triggerScaler = (0.0112 * controls.rTriggerOffset) + 0.4494;
-					float triggerVal = (((float) readRa(pin, controls.rTrigInitial)) * triggerScaler) * shutoffRa;
-					if(triggerVal > 255.0) {
-						tempBtn.Ra = (uint8_t) 255;
-					} else {
-						tempBtn.Ra = (uint8_t) triggerVal;
-					}
+					tempBtn.Ra = readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 				}
 				break;
 			default:
@@ -1399,7 +1391,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial) * shutoffRa;
+					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 		}
 	}
@@ -1407,10 +1399,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//If we don't, then we can't trust that the waveshaping values display accurately
 	// or that Mode 4 will stop at the right value on Dolphin.
 	//Or on Smash Ult, maybe? No clue.
-	if(tempBtn.La <= 3){
+	if(tempBtn.La <= 3 * triggerScaleL){
 		tempBtn.La = (uint8_t) 0;
 	}
-	if(tempBtn.Ra <= 3){
+	if(tempBtn.Ra <= 3 * triggerScaleR){
 		tempBtn.Ra = (uint8_t) 0;
 	}
 
