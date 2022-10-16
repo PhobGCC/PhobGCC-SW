@@ -1257,7 +1257,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
-	float triggerScaleL = (0.0506 * controls.lTriggerOffset) - 1.4775;
+	float triggerScaleL = (0.0112 * controls.rTriggerOffset) + 0.4494;
 	float triggerScaleR = (0.0112 * controls.rTriggerOffset) + 0.4494;
 
 	//Here we make sure LRAS actually operate.
