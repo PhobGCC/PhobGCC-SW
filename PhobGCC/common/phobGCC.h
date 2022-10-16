@@ -1319,6 +1319,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					float triggerScaler = (0.0506 * controls.lTriggerOffset) - 1.4775;
                     tempBtn.La = min((uint8_t) (((float) readLa(pin, controls.lTrigInitial)) * triggerScaler), 255);
 				}
+				break;
 			default:
 				if(lockoutL){
 					tempBtn.L  = (uint8_t) 0;
@@ -1383,6 +1384,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					float triggerScaler = (0.0506 * controls.rTriggerOffset) - 1.4775;
                     tempBtn.Ra = min((uint8_t) (((float) readRa(pin, controls.rTrigInitial)) * triggerScaler), 255);
 				}
+				break;
 			default:
 				if(lockoutR){
 					tempBtn.R  = (uint8_t) 0;
