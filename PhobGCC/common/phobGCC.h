@@ -1478,6 +1478,18 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
+		static float hardResetAccumulator = 0.0;
+		if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset pressed
+			hardResetAccumulator = 0.99*hardResetAccumulator + 0.01;
+		} else {
+			hardResetAccumulator = 0.99*hardResetAccumulator;
+		}
+		if(hardResetAccumulator > 0.99) {
+			hardResetAccumulator = 0;
+			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
+			freezeSticks(2000, btn, hardware);
+		}
+
 		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
@@ -1493,8 +1505,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset
-			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
-			freezeSticks(2000, btn, hardware);
+			//actually do nothing, this is just to prevent othing things from happening
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
 			changeAutoInit(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
