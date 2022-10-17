@@ -18,8 +18,8 @@
 #include "stick.h"
 #include "../extras/extras.h"
 
-//#define BUILD_RELEASE
-#define BUILD_DEV
+#define BUILD_RELEASE
+//#define BUILD_DEV
 
 //This is just an integer.
 #define SW_VERSION 27
