@@ -1510,7 +1510,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 		}
 
-		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
+		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
 		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y) { //display version number (ignore commands for c stick snapback)
@@ -1661,7 +1661,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
-		if(hardware.A && hardware.X && hardware.Y && hardware.S) { //Safe Mode Toggle
+		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
 		} else {
 			safeModeAccumulator = 0.99*safeModeAccumulator;
