@@ -18,11 +18,11 @@
 #include "stick.h"
 #include "../extras/extras.h"
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 //This is just an integer.
-#define SW_VERSION 27
+#define SW_VERSION 28
 
 ControlConfig _controls{
 	.jumpConfig = DEFAULTJUMP,
@@ -1475,7 +1475,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Waveshaping:  LXZ+Du/Dd
 	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
-	* Show C-Stick Settings:  RStart+Dd
+	* Show C-Stick Settings:  R+Start
 	*
 	* Swap X with Z:  XZ+Start
 	* Swap Y with Z:  YZ+Start
