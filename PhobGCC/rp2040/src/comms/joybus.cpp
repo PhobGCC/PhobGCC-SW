@@ -1,4 +1,4 @@
-#include "joybus.hpp"
+#include "comms/joybus.hpp"
 
 #include "hardware/gpio.h"
 
@@ -59,8 +59,8 @@ void enterMode(int dataPin, std::function<GCReport()> func) {
     gpio_set_dir(dataPin, GPIO_IN);
     gpio_pull_up(dataPin);
 
-    gpio_init(rumblePin);
-    gpio_set_dir(rumblePin, GPIO_OUT);
+    //gpio_init(rumblePin);
+    //gpio_set_dir(rumblePin, GPIO_OUT);
 
     sleep_us(100); // Stabilize voltages
 
@@ -114,7 +114,7 @@ void enterMode(int dataPin, std::function<GCReport()> func) {
         else if (buffer[0] == 0x40) { // Could check values past the first byte for reliability
             buffer[0] = pio_sm_get_blocking(pio, 0);
             buffer[0] = pio_sm_get_blocking(pio, 0);
-            gpio_put(rumblePin, buffer[0] & 1);
+            //gpio_put(rumblePin, buffer[0] & 1);
 
             //TODO The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
             // It must be very fast (few us max) to be done between poll and response and still be compatible with adapters
@@ -140,3 +140,4 @@ void enterMode(int dataPin, std::function<GCReport()> func) {
         }
     }
 }
+
