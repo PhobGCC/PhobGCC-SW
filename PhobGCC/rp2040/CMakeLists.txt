@@ -6,7 +6,11 @@ project(phobgcc_rp2040 CXX C)
 
 pico_sdk_init()
 
-include_directories(include)
+include_directories(
+	include
+	../common
+	../extras
+	)
 
 add_executable(phobgcc_rp2040
 	src/main.cpp
@@ -20,6 +24,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 	COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/joybus.pio ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 	)
 
-target_link_libraries(phobgcc_rp2040 pico_stdlib hardware_pio)
+target_link_libraries(phobgcc_rp2040 pico_stdlib hardware_pio hardware_flash hardware_sync)
 
 pico_add_extra_outputs(phobgcc_rp2040)
