@@ -1,6 +1,9 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <cmath>
+
+#include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
@@ -75,11 +78,11 @@ void setPinModes() {
 	gpio_init(_pinS);
 	gpio_set_dir(_pinS, GPIO_IN);
 	gpio_init(_pinLED);
-	gpio_set_dir(_pin, GPIO_OUT);
+	gpio_set_dir(_pinLED, GPIO_OUT);
 	gpio_init(_pinRumble);
 	gpio_set_dir(_pinRumble, GPIO_OUT);
 	gpio_init(_pinBrake);
-	gpio_set_dir(_pin, GPIO_OUT);
+	gpio_set_dir(_pinBrake, GPIO_OUT);
 
 	/* the comms library sets this it seems
 	gpio_init(_pinTx);
@@ -107,12 +110,12 @@ void setPinModes() {
 uint8_t readLa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinLadc);
 	float temp = adc_read() / 16.0;
-	return (uint8_t) min(255, max(0, temp - initial) * scale);
+	return (uint8_t) fmin(255, fmax(0, temp - initial) * scale);
 }
 uint8_t readRa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinRadc);
 	float temp = adc_read() / 16.0;
-	return (uint8_t) min(255, max(0, temp - initial) * scale);
+	return (uint8_t) fmin(255, fmax(0, temp - initial) * scale);
 }
 
 //For MCP3002 ADC
@@ -123,7 +126,7 @@ int readAx(const Pins &) {
 	//                                     |||channel 0
 	//                                     ||||most significant bit first
 	//                                     |||||(don't care, even though it gets repeated)
-	const uint8_t const configBits[] = {0xb01101000};
+	const uint8_t configBits[] = {0b01101000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
 	//left stick
@@ -139,6 +142,8 @@ int readAx(const Pins &) {
 	asm volatile("nop \n nop \n nop");
 	gpio_put(_pinAcs, 1);
 	asm volatile("nop \n nop \n nop");
+
+	return tempValue;
 }
 int readAy(const Pins &) {
 	//                                     leading zero to align read bytes
@@ -147,7 +152,7 @@ int readAy(const Pins &) {
 	//                                     |||channel 1
 	//                                     ||||most significant bit first
 	//                                     |||||(don't care, even though it gets repeated)
-	const uint8_t const configBits[] = {0xb01111000};
+	const uint8_t configBits[] = {0b01111000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
 	//left stick
@@ -163,6 +168,8 @@ int readAy(const Pins &) {
 	asm volatile("nop \n nop \n nop");
 	gpio_put(_pinAcs, 1);
 	asm volatile("nop \n nop \n nop");
+
+	return tempValue;
 }
 int readCx(const Pins &) {
 	//                                     leading zero to align read bytes
@@ -171,7 +178,7 @@ int readCx(const Pins &) {
 	//                                     |||channel 0
 	//                                     ||||most significant bit first
 	//                                     |||||(don't care, even though it gets repeated)
-	const uint8_t const configBits[] = {0xb01101000};
+	const uint8_t configBits[] = {0b01101000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
 	//right stick
@@ -187,15 +194,17 @@ int readCx(const Pins &) {
 	asm volatile("nop \n nop \n nop");
 	gpio_put(_pinCcs, 1);
 	asm volatile("nop \n nop \n nop");
+
+	return tempValue;
 }
-int readAx(const Pins &) {
+int readCy(const Pins &) {
 	//                                     leading zero to align read bytes
 	//                                     |start bit
 	//                                     ||absolute, two channels
 	//                                     |||channel 1
 	//                                     ||||most significant bit first
 	//                                     |||||(don't care, even though it gets repeated)
-	const uint8_t const configBits[] = {0xb01111000};
+	const uint8_t configBits[] = {0b01111000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
 	//right stick
@@ -212,6 +221,8 @@ int readAx(const Pins &) {
 	asm volatile("nop \n nop \n nop");
 	gpio_put(_pinCcs, 1);
 	asm volatile("nop \n nop \n nop");
+
+	return tempValue;
 }
 
 #endif //BOARD_H
