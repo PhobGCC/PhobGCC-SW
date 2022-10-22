@@ -7,6 +7,43 @@
 #include <VREF.h>
 #include "../common/structsAndEnums.h"
 
+void setPinModes(){
+	pinMode(_pinL,INPUT_PULLUP);
+	pinMode(_pinR,INPUT_PULLUP);
+	pinMode(_pinDr,INPUT_PULLUP);
+	pinMode(_pinDu,INPUT_PULLUP);
+	pinMode(_pinDl,INPUT_PULLUP);
+	pinMode(_pinDd,INPUT_PULLUP);
+	pinMode(_pinX,INPUT_PULLUP);
+	pinMode(_pinY,INPUT_PULLUP);
+
+	pinMode(_pinA,INPUT_PULLUP);
+	pinMode(_pinB,INPUT_PULLUP);
+	pinMode(_pinZ,INPUT_PULLUP);
+	pinMode(_pinS,INPUT_PULLUP);
+#ifdef TEENSY4_0
+#ifdef HALFDUPLEX
+	pinMode(_pinRX,INPUT_PULLUP);
+#else // HALFDUPLEX
+	pinMode(9,    INPUT_PULLUP); //the normal RX pin doesn't work on teensy 4 with full duplex
+#endif // HALFDUPLEX
+	pinMode(_pinLED,   OUTPUT);
+#endif // TEENSY4_0
+
+#ifdef RUMBLE
+	pinMode(_pinRumble, OUTPUT);
+	pinMode(_pinBrake, OUTPUT);
+#endif
+
+	//Teensy 4 has some weird jump in the analog with default pin mode
+	pinMode(_pinLa,INPUT_DISABLE);
+	pinMode(_pinRa,INPUT_DISABLE);
+	pinMode(_pinAx,INPUT_DISABLE);
+	pinMode(_pinAy,INPUT_DISABLE);
+	pinMode(_pinCx,INPUT_DISABLE);
+	pinMode(_pinCy,INPUT_DISABLE);
+}
+
 void readButtons(const Pins &pin, Buttons &hardware) {
 	hardware.A = !digitalRead(pin.pinA);
 	hardware.B = !digitalRead(pin.pinB);
