@@ -1,8 +1,6 @@
 //This software uses bits of code from GoodDoge's Dogebawx project, which was the initial starting point: https://github.com/DogeSSBM/DogeBawx
 
 #include <math.h>
-#include <ADC.h>
-#include <VREF.h>
 
 #include "common/phobGCC.h"
 

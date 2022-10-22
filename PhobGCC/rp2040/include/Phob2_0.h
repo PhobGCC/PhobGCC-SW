@@ -52,6 +52,12 @@ const int _pinLadc = 1; //ADC number
 const int _pinSpare0 = 28;
 const int _pinSpare1 = 29;
 
+const int _pinAx = -1;
+const int _pinAy = -1;
+const int _pinCx = -1;
+const int _pinCy = -1;
+const int _pinRX = -1;
+
 void setPinModes() {
 	gpio_init(_pinA);
 	gpio_set_dir(_pinA, GPIO_IN);

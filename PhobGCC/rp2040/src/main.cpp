@@ -2,7 +2,7 @@
 #include "hardware/timer.h"
 #include "hardware/pwm.h"
 
-#include "Phob2_0.h"
+#include "phobGCC.h"
 
 int main() {
 	set_sys_clock_khz(1000*_us, true);

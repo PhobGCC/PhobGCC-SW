@@ -1,11 +1,7 @@
 #ifndef STICKCAL_H
 #define STICKCAL_H
 
-
-
-#include <curveFitting.h>
-#include <eigen.h>
-#include <Eigen/LU>
+#include "curveFitting.h"
 #include "structsAndEnums.h"
 #include "filter.h"
 
@@ -85,25 +81,6 @@ StickParams _cStickParams;
 
 float linearize(const float point, const float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
-};
-
-void print_mtxf(const Eigen::MatrixXf& X){
-	int i, j, nrow, ncol;
-	nrow = X.rows();
-	ncol = X.cols();
-	Serial.print("nrow: "); Serial.println(nrow);
-	Serial.print("ncol: "); Serial.println(ncol);
-	Serial.println();
-	for (i=0; i<nrow; i++)
-	{
-		for (j=0; j<ncol; j++)
-		{
-			Serial.print(X(i,j), 6);   // print 6 decimal places
-			Serial.print(", ");
-		}
-		Serial.println();
-	}
-	Serial.println();
 };
 
 /*
@@ -645,65 +622,141 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	}
 };
 
-void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
-	for(int i = 1; i <= regions; i++){
-	Serial.print("calibrating region: ");
-	Serial.println(i);
+//Self-explanatory.
+void inverse(const float in[3][3], float (&out)[3][3])
+{
+	float det = in[0][0] * (in[1][1]*in[2][2] - in[2][1]*in[1][2]) -
+	            in[0][1] * (in[1][0]*in[2][2] - in[1][2]*in[2][0]) +
+	            in[0][2] * (in[1][0]*in[2][1] - in[1][1]*in[2][0]);
+	float invdet = 1 / det;
 
-	Eigen::MatrixXf pointsIn(3,3);
+	out[0][0] = (in[1][1]*in[2][2] - in[2][1]*in[1][2]) * invdet;
+	out[0][1] = (in[0][2]*in[2][1] - in[0][1]*in[2][2]) * invdet;
+	out[0][2] = (in[0][1]*in[1][2] - in[0][2]*in[1][1]) * invdet;
+	out[1][0] = (in[1][2]*in[2][0] - in[1][0]*in[2][2]) * invdet;
+	out[1][1] = (in[0][0]*in[2][2] - in[0][2]*in[2][0]) * invdet;
+	out[1][2] = (in[1][0]*in[0][2] - in[0][0]*in[1][2]) * invdet;
+	out[2][0] = (in[1][0]*in[2][1] - in[2][0]*in[1][1]) * invdet;
+	out[2][1] = (in[2][0]*in[0][1] - in[0][0]*in[2][1]) * invdet;
+	out[2][2] = (in[0][0]*in[1][1] - in[1][0]*in[0][1]) * invdet;
+}
 
-	Eigen::MatrixXf pointsOut(3,3);
-
-	if(i == (regions)){
-	Serial.println("final region");
-	pointsIn  << xIn[0],xIn[i],xIn[1],
-				 yIn[0],yIn[i],yIn[1],
-				 1,1,1;
-	pointsOut << xOut[0],xOut[i],xOut[1],
-				 yOut[0],yOut[i],yOut[1],
-				 1,1,1;
-	}
-	else{
-		pointsIn  << xIn[0],xIn[i],xIn[i+1],
-					 yIn[0],yIn[i],yIn[i+1],
-					 1,1,1;
-		pointsOut << xOut[0],xOut[i],xOut[i+1],
-					 yOut[0],yOut[i],yOut[i+1],
-					 1,1,1;
-	}
-
-	Serial.println("In points:");
-	print_mtxf(pointsIn);
-	Serial.println("Out points:");
-	print_mtxf(pointsOut);
-
-	Eigen::MatrixXf A(3,3);
-
-	A = pointsOut*pointsIn.inverse();
-	//A = pointsOut.colPivHouseholderQr().solve(pointsIn);
-
-
-	Serial.println("The transform matrix is:");
-	print_mtxf(A);
-
-	Serial.println("The affine transform coefficients for this region are:");
-
-	for(int j = 0; j <2;j++){
-		for(int k = 0; k<3;k++){
-			stickParams.affineCoeffs[i-1][j*3+k] = A(j,k);
-			Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
-			Serial.print(",");
+//Self-explanatory.
+void matrixMatrixMult(const float left[3][3], const float right[3][3], float (&output)[3][3])
+{
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			output[i][j] = 0;
+			for (int k = 0; k < 3; k++)
+			{
+				output[i][j] += left[i][k] * right[k][j];
+			}
 		}
 	}
+}
 
+void print_mtx(const float matrix[3][3]){
+	int i, j, nrow, ncol;
+	nrow = 3;
+	ncol = 3;
 	Serial.println();
-	Serial.println("The angle defining this  regions is:");
-	stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
-	//unwrap the angles so that the first has the smallest value
-	if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
-		stickParams.boundaryAngles[i-1] += M_PI*2;
+	for (i=0; i<nrow; i++)
+	{
+		for (j=0; j<ncol; j++)
+		{
+			Serial.print(matrix[i][j], 6);   // print 6 decimal places
+			Serial.print(", ");
+		}
+		Serial.println();
 	}
-	Serial.println(stickParams.boundaryAngles[i-1]);
+	Serial.println();
+};
+
+
+void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
+	for(int i = 1; i <= regions; i++){
+		Serial.print("calibrating region: ");
+		Serial.println(i);
+
+		float pointsIn[3][3];
+		float pointsOut[3][3];
+
+		if(i == (regions)){
+			Serial.println("final region");
+			pointsIn[0][0] = xIn[0];
+			pointsIn[0][1] = xIn[i];
+			pointsIn[0][2] = xIn[1];
+			pointsIn[1][0] = yIn[0];
+			pointsIn[1][1] = yIn[i];
+			pointsIn[1][2] = yIn[1];
+			pointsIn[2][0] = 1;
+			pointsIn[2][1] = 1;
+			pointsIn[2][2] = 1;
+			pointsOut[0][0] = xOut[0];
+			pointsOut[0][1] = xOut[i];
+			pointsOut[0][2] = xOut[1];
+			pointsOut[1][0] = yOut[0];
+			pointsOut[1][1] = yOut[i];
+			pointsOut[1][2] = yOut[1];
+			pointsOut[2][0] = 1;
+			pointsOut[2][1] = 1;
+			pointsOut[2][2] = 1;
+		}
+		else{
+			pointsIn[0][0] = xIn[0];
+			pointsIn[0][1] = xIn[i];
+			pointsIn[0][2] = xIn[i+1];
+			pointsIn[1][0] = yIn[0];
+			pointsIn[1][1] = yIn[i];
+			pointsIn[1][2] = yIn[i+1];
+			pointsIn[2][0] = 1;
+			pointsIn[2][1] = 1;
+			pointsIn[2][2] = 1;
+			pointsOut[0][0] = xOut[0];
+			pointsOut[0][1] = xOut[i];
+			pointsOut[0][2] = xOut[i+1];
+			pointsOut[1][0] = yOut[0];
+			pointsOut[1][1] = yOut[i];
+			pointsOut[1][2] = yOut[i+1];
+			pointsOut[2][0] = 1;
+			pointsOut[2][1] = 1;
+			pointsOut[2][2] = 1;
+		}
+
+		Serial.println("In points:");
+		print_mtx(pointsIn);
+		Serial.println("Out points:");
+		print_mtx(pointsOut);
+
+		float temp[3][3];
+		inverse(pointsIn, temp);
+
+		float A[3][3];
+		matrixMatrixMult(pointsOut, temp, A);
+
+		Serial.println("The transform matrix is:");
+		print_mtx(A);
+
+		Serial.println("The affine transform coefficients for this region are:");
+
+		for(int j = 0; j <2;j++){
+			for(int k = 0; k<3;k++){
+				stickParams.affineCoeffs[i-1][j*3+k] = A[j][k];
+				Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
+				Serial.print(",");
+			}
+		}
+
+		Serial.println();
+		Serial.println("The angle defining this  regions is:");
+		stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
+		//unwrap the angles so that the first has the smallest value
+		if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
+			stickParams.boundaryAngles[i-1] += M_PI*2;
+		}
+		Serial.println(stickParams.boundaryAngles[i-1]);
 	}
 };
 
