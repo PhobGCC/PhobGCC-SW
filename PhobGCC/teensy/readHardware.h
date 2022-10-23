@@ -7,6 +7,8 @@
 #include <VREF.h>
 #include "../common/structsAndEnums.h"
 
+ADC *adc = new ADC();
+
 void setPinModes(){
 	pinMode(_pinL,INPUT_PULLUP);
 	pinMode(_pinR,INPUT_PULLUP);

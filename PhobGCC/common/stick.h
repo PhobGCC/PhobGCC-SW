@@ -5,8 +5,6 @@
 #include "structsAndEnums.h"
 #include "filter.h"
 
-ADC *adc = new ADC();
-
 //ADC reference values for Phob 1.0; may need to be moved into hardware-specific section
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
@@ -486,42 +484,13 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 	}
 };
 
-void collectCalPoints(const WhichStick whichStick, const int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin){
+void insertCalPoints(const WhichStick whichStick, const int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin, float X, float Y){
 	Serial.print("Collecting cal point for step: ");
 	Serial.println(currentStepIn);
     const int currentStep = _calOrder[currentStepIn];
 
 	Serial.print("Cal point number: ");
 	Serial.println(currentStep);
-	float X;
-	float Y;
-
-
-	for(int j = 0; j < MEDIANLEN; j++){
-		X = 0;
-		Y = 0;
-		for(int i = 0; i < 128; i++){
-			if(whichStick == ASTICK){
-				X += adc->adc0->analogRead(pin.pinAx)/4096.0*_ADCScale;
-				Y += adc->adc0->analogRead(pin.pinAy)/4096.0*_ADCScale;
-			}
-			else{
-				X += adc->adc0->analogRead(pin.pinCx)/4096.0*_ADCScale;
-				Y += adc->adc0->analogRead(pin.pinCy)/4096.0*_ADCScale;
-			}
-		}
-		X = X/128.0;
-		Y = Y/128.0;
-
-#ifdef USEMEDIAN
-		static float xPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering;
-		static float yPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering
-		static unsigned int xMedianIndex = 0;
-		static unsigned int yMedianIndex = 0;
-		runMedian(X, xPosList, xMedianIndex);
-		runMedian(Y, yPosList, yMedianIndex);
-#endif
-	}
 
 	calPointsX[currentStep] = X;
 	calPointsY[currentStep] = Y;

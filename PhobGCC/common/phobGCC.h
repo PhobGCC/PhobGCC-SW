@@ -1739,7 +1739,15 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		advanceCalPressed = true;
 		if (whichStick == CSTICK){
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
+				float X = 0;
+				float Y = 0;
+				for(int i=0; i<128; i++) {
+					X += readCx(_pinList)/4096.0*_ADCScale;
+					Y += readCy(_pinList)/4096.0*_ADCScale;
+				}
+				X /= 128.0;
+				Y /= 128.0;
+				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
@@ -1784,7 +1792,15 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			Serial.println("Current step:");
 			Serial.println(currentCalStep);
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				collectCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList);
+				float X = 0;
+				float Y = 0;
+				for(int i=0; i<128; i++) {
+					X += readAx(_pinList)/4096.0*_ADCScale;
+					Y += readAy(_pinList)/4096.0*_ADCScale;
+				}
+				X /= 128.0;
+				Y /= 128.0;
+				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
 			}
 			currentCalStep ++;
 			if(currentCalStep >= 2 && currentCalStep != _noOfCalibrationPoints) {//don't undo at the beginning of collection or notch adjust
