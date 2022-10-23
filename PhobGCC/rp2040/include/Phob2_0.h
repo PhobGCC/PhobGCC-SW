@@ -114,6 +114,10 @@ void setPinModes() {
 	adc_gpio_init(_pinRa);
 }
 
+void readADCScale(float &, float &) {
+	//do nothing
+}
+
 int readLa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinLadc);
 	float temp = adc_read() / 16.0;
