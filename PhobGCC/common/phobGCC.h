@@ -472,7 +472,7 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset > controls.cMax) {
 			controls.cXOffset = controls.cMax;
 		}
-		setCXOffsetSetting(controls.cXOffset);
+		setCxOffsetSetting(controls.cXOffset);
 		Serial.print("X offset increased to:");
 		Serial.println(controls.cXOffset);
 	} else if(axis == XAXIS && increase == DECREASE) {
@@ -480,7 +480,7 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cXOffset < controls.cMin) {
 			controls.cXOffset = controls.cMin;
 		}
-		setCXOffsetSetting(controls.cXOffset);
+		setCxOffsetSetting(controls.cXOffset);
 		Serial.print("X offset decreased to:");
 		Serial.println(controls.cXOffset);
 	} else if(axis == YAXIS && increase == INCREASE) {
@@ -488,7 +488,7 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset > controls.cMax) {
 			controls.cYOffset = controls.cMax;
 		}
-		setCYOffsetSetting(controls.cYOffset);
+		setCyOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset increased to:");
 		Serial.println(controls.cYOffset);
 	} else if(axis == YAXIS && increase == DECREASE) {
@@ -496,7 +496,7 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		if(controls.cYOffset < controls.cMin) {
 			controls.cYOffset = controls.cMin;
 		}
-		setCYOffsetSetting(controls.cYOffset);
+		setCyOffsetSetting(controls.cYOffset);
 		Serial.print("Y offset decreased to:");
 		Serial.println(controls.cYOffset);
 	}
@@ -1131,8 +1131,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.cXOffset = 0;
 	controls.cYOffset = 0;
-	setCXOffsetSetting(controls.cXOffset);
-	setCYOffsetSetting(controls.cYOffset);
+	setCxOffsetSetting(controls.cXOffset);
+	setCyOffsetSetting(controls.cYOffset);
 
 	if(reset == FACTORY){
 		controls.xSnapback = controls.snapbackFactoryAX;

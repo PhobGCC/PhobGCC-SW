@@ -65,11 +65,11 @@ void setLOffsetSetting(const int);
 int  getROffsetSetting();
 void setROffsetSetting(const int);
 
-int  getCXOffsetSetting();
-void setCXOffsetSetting(const int);
+int  getCxOffsetSetting();
+void setCxOffsetSetting(const int);
 
-int  getCYOffsetSetting();
-void setCYOffsetSetting(const int);
+int  getCyOffsetSetting();
+void setCyOffsetSetting(const int);
 
 int  getXSnapbackSetting();
 void setXSnapbackSetting(const int);
@@ -83,11 +83,11 @@ void  setXSmoothingSetting(const float);
 float getYSmoothingSetting();
 void  setYSmoothingSetting(const float);
 
-float getCXSmoothingSetting();
-void  setCXSmoothingSetting(const float);
+float getCxSmoothingSetting();
+void  setCxSmoothingSetting(const float);
 
-float getCYSmoothingSetting();
-void  setCYSmoothingSetting(const float);
+float getCySmoothingSetting();
+void  setCySmoothingSetting(const float);
 
 int  getRumbleSetting();
 void setRumbleSetting(const int);

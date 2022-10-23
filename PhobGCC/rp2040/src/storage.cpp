@@ -97,20 +97,20 @@ void setROffsetSetting(const int rOffset) {
 	_storage.settings.rOffset = rOffset;
 }
 
-int getCXOffsetSetting() {
+int getCxOffsetSetting() {
 	getStoragePage();
 	return _storage.settings.cxOffset;
 }
-void setCXOffsetSetting(const int cxOffset) {
+void setCOffsetSetting(const int cxOffset) {
 	getStoragePage();
 	_storage.settings.cxOffset = cxOffset;
 }
 
-int getCYOffsetSetting() {
+int getCyOffsetSetting() {
 	getStoragePage();
 	return _storage.settings.cyOffset;
 }
-void setCYOffsetSetting(const int cyOffset) {
+void setCyOffsetSetting(const int cyOffset) {
 	getStoragePage();
 	_storage.settings.cyOffset = cyOffset;
 }
@@ -151,20 +151,20 @@ void setYSmoothingSetting(const float ySmoothing) {
 	_storage.settings.ySmoothing = ySmoothing;
 }
 
-float getCXSmoothingSetting() {
+float getCxSmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.cxSmoothing;
 }
-void setCXSmoothingSetting(const float cxSmoothing) {
+void setCxSmoothingSetting(const float cxSmoothing) {
 	getStoragePage();
 	_storage.settings.cxSmoothing = cxSmoothing;
 }
 
-float getCYSmoothingSetting() {
+float getCySmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.cySmoothing;
 }
-void setCYSmoothingSetting(const float cySmoothing) {
+void setCySmoothingSetting(const float cySmoothing) {
 	getStoragePage();
 	_storage.settings.cySmoothing = cySmoothing;
 }
