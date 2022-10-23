@@ -93,23 +93,23 @@ void setROffsetSetting(const int R) {
 	EEPROM.put(Eeprom::_eepromROffset, R);
 };
 
-int getCXOffsetSetting() {
+int getCxOffsetSetting() {
 	int output;
 	EEPROM.get(Eeprom::_eepromcXOffset, output);
 	return output;
 };
 
-void setCXOffsetSetting(const int X) {
+void setCxOffsetSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromcXOffset, X);
 };
 
-int getCYOffsetSetting() {
+int getCyOffsetSetting() {
 	int output;
 	EEPROM.get(Eeprom::_eepromcYOffset, output);
 	return output;
 };
 
-void setCYOffsetSetting(const int Y) {
+void setCyOffsetSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromcYOffset, Y);
 };
 

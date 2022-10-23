@@ -875,7 +875,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 
 	//get the C-stick X offset
-	controls.cXOffset = getCXOffsetSetting();
+	controls.cXOffset = getCxOffsetSetting();
 	if(controls.cXOffset > controls.cMax) {
 		controls.cXOffset = 0;
 		numberOfNaN++;
@@ -885,7 +885,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the C-stick Y offset
-	controls.cYOffset = getCYOffsetSetting();
+	controls.cYOffset = getCyOffsetSetting();
 	if(controls.cYOffset > controls.cMax) {
 		controls.cYOffset = 0;
 		numberOfNaN++;
