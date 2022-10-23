@@ -3,7 +3,7 @@
 
 enum class PageIndexes : int {
     MASTER = 0,
-    RUNTIME_REMAPPING = 1
+    STORAGE = 1
 };
 
 #endif

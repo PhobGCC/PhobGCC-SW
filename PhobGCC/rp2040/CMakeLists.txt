@@ -14,6 +14,7 @@ include_directories(
 
 add_executable(phobgcc_rp2040
 	src/main.cpp
+	src/storage.cpp
 	src/comms/joybus.cpp
 	)
 

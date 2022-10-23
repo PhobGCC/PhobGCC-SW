@@ -12,7 +12,7 @@
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "filter.h"
@@ -223,6 +223,9 @@ void showRumble(const int time, Buttons &btn, Buttons &hardware, ControlConfig &
 	clearButtons(time, btn, hardware);
 
 	setRumbleSetting(controls.rumble);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void changeRumble(const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
@@ -257,6 +260,9 @@ void changeAutoInit(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	freezeSticksToggleIndicator(2000, btn, hardware, (controls.autoInit == 1));
 
 	setAutoInitSetting(controls.autoInit);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
@@ -296,6 +302,9 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 
 	setXSnapbackSetting(controls.xSnapback);
 	setYSnapbackSetting(controls.ySnapback);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -337,6 +346,9 @@ void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const 
 		btn.Cx = (uint8_t) (controls.cxWaveshaping + _floatOrigin);
 		btn.Cy = (uint8_t) (controls.cyWaveshaping + _floatOrigin);
 	}
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	clearButtons(750, btn, hardware);
 }
@@ -376,6 +388,9 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		Serial.print("Y Smoothing decreased to:");
 		Serial.println(gains.ySmoothing);
 	}
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -437,6 +452,9 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		Serial.print("C-Stick Y Smoothing decreased to:");
 		Serial.println(gains.cYSmoothing);
 	}
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -482,6 +500,9 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		Serial.print("Y offset decreased to:");
 		Serial.println(controls.cYOffset);
 	}
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
@@ -530,6 +551,9 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 
 	setLOffsetSetting(controls.lTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	btn.La = (uint8_t) controls.lTriggerOffset;
 	btn.Ra = (uint8_t) controls.rTriggerOffset;
@@ -614,6 +638,9 @@ void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 		}
 	}
 	setJumpSetting(controls.jumpConfig);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -708,6 +735,9 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, Con
 	}
 	setLSetting(controls.lConfig);
 	setRSetting(controls.rConfig);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 
 	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
 	//(user-facing mode 5)
@@ -1204,6 +1234,9 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		Serial.println("C stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 	}
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void copyButtons(const Buttons &src, Buttons &dest) {
@@ -1730,6 +1763,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				setNotchAnglesSetting(notchAngles, whichStick);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
+#ifdef BATCHSETTINGS
+				commitSettings();
+#endif //BATCHSETTINGS
 				Serial.println("calibration points stored in EEPROM");
 				float cleanedPointsX[_noOfNotches+1];
 				float cleanedPointsY[_noOfNotches+1];
@@ -1772,6 +1808,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				setNotchAnglesSetting(notchAngles, whichStick);
 				controls.autoInit = 0;
 				setAutoInitSetting(controls.autoInit);
+#ifdef BATCHSETTINGS
+				commitSettings();
+#endif //BATCHSETTINGS
 				Serial.println("calibration points stored in EEPROM");
 				float cleanedPointsX[_noOfNotches+1];
 				float cleanedPointsY[_noOfNotches+1];

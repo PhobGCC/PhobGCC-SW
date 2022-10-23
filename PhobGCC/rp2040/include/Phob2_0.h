@@ -9,6 +9,7 @@
 #include "hardware/spi.h"
 
 #include "structsAndEnums.h"
+#include "storage/pages/storage.h"
 
 const int _us = 125;
 
@@ -126,12 +127,12 @@ uint8_t readRa(const Pins &, const int initial, const float scale) {
 
 //For MCP3002 ADC
 int readAx(const Pins &) {
-	//                                     leading zero to align read bytes
-	//                                     |start bit
-	//                                     ||absolute, two channels
-	//                                     |||channel 0
-	//                                     ||||most significant bit first
-	//                                     |||||(don't care, even though it gets repeated)
+	//                              leading zero to align read bytes
+	//                              |start bit
+	//                              ||absolute, two channels
+	//                              |||channel 0
+	//                              ||||most significant bit first
+	//                              |||||(don't care, even though it gets repeated)
 	const uint8_t configBits[] = {0b01101000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
@@ -152,12 +153,12 @@ int readAx(const Pins &) {
 	return tempValue;
 }
 int readAy(const Pins &) {
-	//                                     leading zero to align read bytes
-	//                                     |start bit
-	//                                     ||absolute, two channels
-	//                                     |||channel 1
-	//                                     ||||most significant bit first
-	//                                     |||||(don't care, even though it gets repeated)
+	//                              leading zero to align read bytes
+	//                              |start bit
+	//                              ||absolute, two channels
+	//                              |||channel 1
+	//                              ||||most significant bit first
+	//                              |||||(don't care, even though it gets repeated)
 	const uint8_t configBits[] = {0b01111000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
@@ -178,12 +179,12 @@ int readAy(const Pins &) {
 	return tempValue;
 }
 int readCx(const Pins &) {
-	//                                     leading zero to align read bytes
-	//                                     |start bit
-	//                                     ||absolute, two channels
-	//                                     |||channel 0
-	//                                     ||||most significant bit first
-	//                                     |||||(don't care, even though it gets repeated)
+	//                              leading zero to align read bytes
+	//                              |start bit
+	//                              ||absolute, two channels
+	//                              |||channel 0
+	//                              ||||most significant bit first
+	//                              |||||(don't care, even though it gets repeated)
 	const uint8_t configBits[] = {0b01101000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
@@ -204,12 +205,12 @@ int readCx(const Pins &) {
 	return tempValue;
 }
 int readCy(const Pins &) {
-	//                                     leading zero to align read bytes
-	//                                     |start bit
-	//                                     ||absolute, two channels
-	//                                     |||channel 1
-	//                                     ||||most significant bit first
-	//                                     |||||(don't care, even though it gets repeated)
+	//                              leading zero to align read bytes
+	//                              |start bit
+	//                              ||absolute, two channels
+	//                              |||channel 1
+	//                              ||||most significant bit first
+	//                              |||||(don't care, even though it gets repeated)
 	const uint8_t configBits[] = {0b01111000};
 	uint8_t buf[2];
 	asm volatile("nop \n nop \n nop");
