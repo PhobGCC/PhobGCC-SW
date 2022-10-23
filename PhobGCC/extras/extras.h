@@ -28,27 +28,41 @@ static ExtrasFunctions extrasFunctions[EXTRAS_SIZE] = {NULL};
 void extrasConfigAssign(ExtrasSlot slot, ExtrasToggleFn toggleFn, ExtrasConfigFn configFn){
 	switch(slot){
 		case EXTRAS_UP:
+#ifdef ARDUINO
 			Serial.println("Extra: Setting configuration to Up...");
+#endif //ARDUINO
 			break;
 		case EXTRAS_DOWN:
+#ifdef ARDUINO
 			Serial.println("Extra: Setting configuration to Down...");
+#endif //ARDUINO
 			break;
 		case EXTRAS_LEFT:
+#ifdef ARDUINO
 			Serial.println("Extra: Setting configuration to Left...");
+#endif //ARDUINO
 			break;
 		case EXTRAS_RIGHT:
+#ifdef ARDUINO
 			Serial.println("Extra: Setting configuration to Right...");
+#endif //ARDUINO
 			break;
 		case EXTRAS_UNSET:
+#ifdef ARDUINO
 			Serial.println("Extra: Configuration slot not set, feature will be inaccessible.");
+#endif //ARDUINO
 			return;
 		default:
+#ifdef ARDUINO
 			Serial.println("Extra: Invalid configuration slot requested, feature will be inaccessible.");
+#endif //ARDUINO
 			return;
 	}
 	ExtrasFunctions &fns = extrasFunctions[slot];
 	if(fns.toggleFn || fns.configFn) {
+#ifdef ARDUINO
 		Serial.println("Extra: Warning! Configuration slot was already in use, previous feature will be inaccessible.");
+#endif //ARDUINO
 	}
 	fns.toggleFn = toggleFn;
 	fns.configFn = configFn;
@@ -68,7 +82,9 @@ void extrasInit() {
 	//-----------------------------------------
 	ess::extrasEssConfigSlot = EXTRAS_UNSET;
 	//-----------------------------------------
+#ifdef ARDUINO
 	Serial.println("Extra: Enabling ESS functionality...");
+#endif //ARDUINO
 	extrasConfigAssign(ess::extrasEssConfigSlot, ess::toggle, NULL);
 #endif
 

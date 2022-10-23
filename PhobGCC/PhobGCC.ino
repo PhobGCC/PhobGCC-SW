@@ -1,5 +1,7 @@
 //This software uses bits of code from GoodDoge's Dogebawx project, which was the initial starting point: https://github.com/DogeSSBM/DogeBawx
 
+#define ARDUINO
+
 #include <math.h>
 
 #include "common/phobGCC.h"

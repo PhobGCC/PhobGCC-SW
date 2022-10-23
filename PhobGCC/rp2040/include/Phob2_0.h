@@ -114,6 +114,9 @@ void setPinModes() {
 	adc_gpio_init(_pinRa);
 }
 
+void readButtons(const Pins &, Buttons &hardware) {
+}
+
 void readADCScale(float &, float &) {
 	//do nothing
 }
