@@ -1,6 +1,11 @@
 #ifndef PHOBGCC_H
 #define PHOBGCC_H
 
+#include <algorithm>
+#include <cmath>
+using std::min;
+using std::max;
+
 //Uncomment to get a glowing LED on Teensy 4.
 //#define ENABLE_LED
 
@@ -1298,7 +1303,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 				break;
 			case 1: //Digital Only Trigger state
@@ -1310,7 +1315,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.La = (uint8_t) 0;
 				} else {
 					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 				break;
 			case 3: //Trigger Plug Emulation state
@@ -1318,7 +1323,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 					if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
 						tempBtn.La = (uint8_t) controls.lTriggerOffset;
 					}
@@ -1326,7 +1331,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				break;
 			case 4: //Digital => Analog Value state
 				if(tempBtn.L) {
-					tempBtn.La = min((uint8_t) controls.lTriggerOffset, 255);
+					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
 				} else {
 					tempBtn.La = (uint8_t) 0;
 				}
@@ -1334,7 +1339,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(tempBtn.L) {
-					tempBtn.La = min((uint8_t) controls.lTriggerOffset, 255);
+					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
 				} else {
 					tempBtn.La = (uint8_t) 0;
 				}
@@ -1344,7 +1349,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
+					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 				}
 				break;
 			default:
@@ -1352,7 +1357,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.L  = (uint8_t) 0;
 					tempBtn.La = (uint8_t) 0;
 				} else {
-					tempBtn.La = readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 				}
 		}
 
@@ -1362,7 +1367,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 				break;
 			case 1: //Digital Only Trigger state
@@ -1374,7 +1379,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
 					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 				break;
 			case 3: //Trigger Plug Emulation state
@@ -1382,7 +1387,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 					if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
 						tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
 					}
@@ -1390,7 +1395,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				break;
 			case 4: //Digital => Analog Value state
 				if(tempBtn.R) {
-					tempBtn.Ra = min((uint8_t) controls.rTriggerOffset, 255);
+					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
 				} else {
 					tempBtn.Ra = (uint8_t) 0;
 				}
@@ -1398,7 +1403,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				break;
 			case 5: //Digital => Analog Value + Digital state
 				if(tempBtn.R) {
-					tempBtn.Ra = min((uint8_t) controls.rTriggerOffset, 255);
+					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
 				} else {
 					tempBtn.Ra = (uint8_t) 0;
 				}
@@ -1408,7 +1413,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
+					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 				}
 				break;
 			default:
@@ -1416,7 +1421,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 					tempBtn.R  = (uint8_t) 0;
 					tempBtn.Ra = (uint8_t) 0;
 				} else {
-					tempBtn.Ra = readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 				}
 		}
 	}
@@ -1946,10 +1951,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams);
 
 	//Clamp values from -125 to +125
-	remappedAx = min(125, max(-125, remappedAx));
-	remappedAy = min(125, max(-125, remappedAy));
-	remappedCx = min(125, max(-125, remappedCx+controls.cXOffset));
-	remappedCy = min(125, max(-125, remappedCy+controls.cYOffset));
+	remappedAx = fmin(125, fmax(-125, remappedAx));
+	remappedAy = fmin(125, fmax(-125, remappedAy));
+	remappedCx = fmin(125, fmax(-125, remappedCx+controls.cXOffset));
+	remappedCy = fmin(125, fmax(-125, remappedCy+controls.cYOffset));
 
 	bool skipAHyst = false;
 #ifdef EXTRAS_ESS

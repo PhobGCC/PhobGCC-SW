@@ -114,15 +114,15 @@ void setPinModes() {
 	adc_gpio_init(_pinRa);
 }
 
-uint8_t readLa(const Pins &, const int initial, const float scale) {
+int readLa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinLadc);
 	float temp = adc_read() / 16.0;
-	return (uint8_t) fmin(255, fmax(0, temp - initial) * scale);
+	return fmin(255, fmax(0, temp - initial) * scale);
 }
-uint8_t readRa(const Pins &, const int initial, const float scale) {
+int readRa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinRadc);
 	float temp = adc_read() / 16.0;
-	return (uint8_t) fmin(255, fmax(0, temp - initial) * scale);
+	return fmin(255, fmax(0, temp - initial) * scale);
 }
 
 //For MCP3002 ADC

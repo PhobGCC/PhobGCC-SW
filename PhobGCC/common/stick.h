@@ -1,6 +1,8 @@
 #ifndef STICKCAL_H
 #define STICKCAL_H
 
+#include <cmath>
+
 #include "curveFitting.h"
 #include "structsAndEnums.h"
 #include "filter.h"
@@ -440,29 +442,29 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
 	const float deadzonePlus  = 0.3000/0.9500;//radians; we want to make sure the adjustment can make it here
 	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
-		upperStretchLimit = prevAngle + max(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
+		upperStretchLimit = prevAngle + fmax(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
 	}
 	//If the next one is a cardinal AND the angle is in the deadzone, we make the lowerstretchlimit smaller.
 	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
-		lowerStretchLimit = nextAngle - max(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
+		lowerStretchLimit = nextAngle - fmax(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
 	}
 
-	float lowerDistortLimit  = max(lowerCompressLimit, lowerStretchLimit);
-	float upperDistortLimit  = min(upperCompressLimit, upperStretchLimit);
+	float lowerDistortLimit  = fmax(lowerCompressLimit, lowerStretchLimit);
+	float upperDistortLimit  = fmin(upperCompressLimit, upperStretchLimit);
 	if(upperDistortLimit < lowerDistortLimit){
 		upperDistortLimit += 2*M_PI;
 	}
 
 	//Combine the limits
-	float lowerLimit = lowerDistortLimit;//max(lowerStretchLimit, lowerPosLimit);
-	float upperLimit = upperDistortLimit;//min(upperStretchLimit, upperPosLimit);
+	float lowerLimit = lowerDistortLimit;//fmax(lowerStretchLimit, lowerPosLimit);
+	float upperLimit = upperDistortLimit;//fmin(upperStretchLimit, upperPosLimit);
 	if(upperLimit < lowerLimit){
 		upperLimit += 2*M_PI;
 	}
 
 	//Apply the limits
-	notchAngles[notchIndex] = max(notchAngles[notchIndex], lowerLimit);
-	notchAngles[notchIndex] = min(notchAngles[notchIndex], upperLimit);
+	notchAngles[notchIndex] = fmax(notchAngles[notchIndex], lowerLimit);
+	notchAngles[notchIndex] = fmin(notchAngles[notchIndex], upperLimit);
 };
 
 //displayNotch is used in lieu of adjustNotch when doing basic calibration

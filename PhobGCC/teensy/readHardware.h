@@ -69,11 +69,11 @@ void readADCScale(float &_ADCScale, float &_ADCScaleFactor) {
 }
 
 //these are 12 bit but we right shift to get 8 bit
-uint8_t readLa(const Pins &pin, const int initial, const float scale) {
+int readLa(const Pins &pin, const int initial, const float scale) {
 	float temp = (adc->adc0->analogRead(pin.pinLa)) / 16.0;
 	return (uint8_t) min(255, max(0, temp - initial) * scale);
 }
-uint8_t readRa(const Pins &pin, const int initial, const float scale) {
+int readRa(const Pins &pin, const int initial, const float scale) {
 	float temp = (adc->adc0->analogRead(pin.pinRa)) / 16.0;
 	return (uint8_t) min(255, max(0, temp - initial) * scale);
 }

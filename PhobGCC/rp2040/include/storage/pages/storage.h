@@ -41,7 +41,7 @@ struct Storage {
 		IntOrFloat dExtras[4];
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
-	} settings
+	} settings;
 };
 
 }
@@ -101,8 +101,8 @@ void setWaveshapingSetting(const int, const WhichStick, const WhichAxis);
 void getPointsSetting(float [32], const WhichStick, const WhichAxis);
 void setPointsSetting(const float [32], const WhichStick, const WhichAxis);
 
-void getNotchAnglesSetting(float [16], const whichStick);
-void setNotchAnglesSetting(const float [16], const whichStick);
+void getNotchAnglesSetting(float [16], const WhichStick);
+void setNotchAnglesSetting(const float [16], const WhichStick);
 
 int   getExtrasSettingInt(const ExtrasSlot, const int);
 void  setExtrasSettingInt(const ExtrasSlot, const int, const int);
