@@ -2,11 +2,13 @@
 #define BOARD_H
 
 #include <cmath>
+#include <stdint.h>
 
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
+#include "hardware/timer.h"
 
 #include "structsAndEnums.h"
 #include "storage/pages/storage.h"
@@ -237,6 +239,14 @@ int readCy(const Pins &) {
 	asm volatile("nop \n nop \n nop");
 
 	return tempValue;
+}
+
+uint64_t micros() {
+	return time_us_64();
+}
+
+uint64_t millis() {
+	return time_us_64()/1000;
 }
 
 #endif //BOARD_H

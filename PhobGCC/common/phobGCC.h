@@ -20,6 +20,7 @@ using std::max;
 #include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
+#include "variables.h"
 #include "filter.h"
 #include "stick.h"
 #include "../extras/extras.h"

@@ -2,7 +2,6 @@
 #define STORAGE_H
 
 #include "storage/page_indexes.hpp"
-#include "stick.h"
 #include "structsAndEnums.h"
 
 namespace Persistence {

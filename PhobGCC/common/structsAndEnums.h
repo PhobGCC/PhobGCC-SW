@@ -1,6 +1,8 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
+#include <stdint.h>
+
 enum JumpConfig {
 	DEFAULTJUMP,
 	SWAP_XZ,
@@ -226,11 +228,5 @@ struct FilterGains {
 	float cXSmoothing;
 	float cYSmoothing;
 };
-
-Buttons _btn;
-
-Buttons _hardware;
-
-int _rumblePower = 0;//just so it isn't uninitialized at startup
 
 #endif //ENUMS_H

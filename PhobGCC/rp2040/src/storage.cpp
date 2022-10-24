@@ -223,7 +223,7 @@ void setWaveshapingSetting(const int waveshaping, const WhichStick whichStick, c
 
 void getPointsSetting(float points[32], const WhichStick whichStick, const WhichAxis whichAxis) {
 	getStoragePage();
-	for(int i=0; i<32, i++) {
+	for(int i=0; i<32; i++) {
 		if(whichStick == ASTICK) {
 			if(whichAxis == XAXIS) {
 				points[i] = _storage.settings.axPoints[i];
@@ -242,7 +242,7 @@ void getPointsSetting(float points[32], const WhichStick whichStick, const Which
 
 void setPointsSetting(const float points[32], const WhichStick whichStick, const WhichAxis whichAxis) {
 	getStoragePage();
-	for(int i=0; i<32, i++) {
+	for(int i=0; i<32; i++) {
 		if(whichStick == ASTICK) {
 			if(whichAxis == XAXIS) {
 				_storage.settings.axPoints[i] = points[i];
@@ -259,9 +259,9 @@ void setPointsSetting(const float points[32], const WhichStick whichStick, const
 	}
 }
 
-void getNotchAnglesSetting(float angles[32], const WhichStick whichStick) {
+void getNotchAnglesSetting(float angles[16], const WhichStick whichStick) {
 	getStoragePage();
-	for(int i=0; i<32, i++) {
+	for(int i=0; i<16; i++) {
 		if(whichStick == ASTICK) {
 			angles[i] = _storage.settings.aAngles[i];
 		} else {
@@ -270,9 +270,9 @@ void getNotchAnglesSetting(float angles[32], const WhichStick whichStick) {
 	}
 }
 
-void setNotchAnglesSetting(const float angles[32], const WhichStick whichStick) {
+void setNotchAnglesSetting(const float angles[16], const WhichStick whichStick) {
 	getStoragePage();
-	for(int i=0; i<32, i++) {
+	for(int i=0; i<16; i++) {
 		if(whichStick == ASTICK) {
 			_storage.settings.aAngles[i] = angles[i];
 		} else {
