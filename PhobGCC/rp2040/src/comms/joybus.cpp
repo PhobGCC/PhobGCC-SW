@@ -54,7 +54,7 @@ void convertToPio(const uint8_t* command, const int len, uint32_t* result, int& 
     result[len / 2] += 3 << (2 * (8 * (len % 2)));
 }
 
-void enterMode(int dataPin, std::function<GCReport()> func) {
+void enterMode(const int dataPin, std::function<GCReport()> func) {
     gpio_init(dataPin);
     gpio_set_dir(dataPin, GPIO_IN);
     gpio_pull_up(dataPin);
@@ -98,7 +98,7 @@ void enterMode(int dataPin, std::function<GCReport()> func) {
         }
         else if (buffer[0] == 0x41) { // Origin (NOT 0x81)
             gpio_put(25, 1);
-            uint8_t originResponse[10] = { 0x00, 0x80, 128, 128, 128, 128, 0, 0, 0, 0 };
+            uint8_t originResponse[10] = { 0x00, 0x80, 127, 127, 127, 127, 0, 0, 0, 0 };
             // TODO The origin response sends centered values in this code excerpt. Consider whether that makes sense for your project (digital controllers -> yes)
             uint32_t result[6];
             int resultLen;

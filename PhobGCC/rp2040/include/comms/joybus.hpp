@@ -12,6 +12,6 @@
  * @param dataPin GPIO number of the console data line pin
  * @param func Function to be called to obtain the GCReport to be sent to the console
  */
-void enterMode(int dataPin, std::function<GCReport()> func);
+void enterMode(const int dataPin, std::function<GCReport()> func);
 
 #endif

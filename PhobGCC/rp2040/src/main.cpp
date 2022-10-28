@@ -3,8 +3,38 @@
 #include "hardware/pwm.h"
 
 #include "phobGCC.h"
+#include "comms/joybus.hpp"
+
+//This gets called by the comms library
+GCReport buttonsToGCReport() {
+	GCReport report = {
+		.a       = _btn.A,
+		.b       = _btn.B,
+		.x       = _btn.X,
+		.y       = _btn.Y,
+		.start   = _btn.S,
+		.pad0    = 0,
+		.dLeft   = _btn.Dl,
+		.dRight  = _btn.Dr,
+		.dDown   = _btn.Dd,
+		.dUp     = _btn.Du,
+		.z       = _btn.Z,
+		.r       = _btn.L,
+		.l       = _btn.R,
+		.pad1    = 1,
+		.xStick  = _btn.Ax,
+		.yStick  = _btn.Ay,
+		.cxStick = _btn.Cx,
+		.cyStick = _btn.Cy,
+		.analogL = _btn.La,
+		.analogR = _btn.Ra
+	};
+	return report;
+}
 
 int main() {
+	//set the clock speed to 125 kHz
+	//the comms library needs this clockspeed
 	set_sys_clock_khz(1000*_us, true);
 
 	setPinModes();
@@ -32,6 +62,33 @@ int main() {
 		.pinS  = 0
 	};
 
+	_btn.A      =0;
+	_btn.B      =0;
+	_btn.X      =0;
+	_btn.Y      =0;
+	_btn.S      =0;
+	_btn.orig   =0;
+	_btn.errL   =0;
+	_btn.errS   =0;
+	_btn.Dl     =0;
+	_btn.Dr     =0;
+	_btn.Dd     =0;
+	_btn.Du     =0;
+	_btn.Z      =0;
+	_btn.R      =0;
+	_btn.L      =0;
+	_btn.high   =1;
+	_btn.Ax     =127;
+	_btn.Ay     =127;
+	_btn.Cx     =127;
+	_btn.Cy     =127;
+	_btn.La     =0;
+	_btn.Ra     =0;
+	_btn.magic1 =0;
+	_btn.magic2 =0;
+
+	// ADC TEST
+	/*
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
 
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
@@ -63,4 +120,8 @@ int main() {
 		sleep_ms(1000);
 		pwm_set_gpio_level(_pinLED, Cy);
 	}
+	*/
+
+	//Run comms
+	enterMode(_pinTX, buttonsToGCReport);
 }

@@ -17,10 +17,10 @@ struct __attribute__((packed)) GCReport {
 const GCReport defaultGcReport = {
     .a=0, .b=0, .x=0, .y=0, .start=0, .pad0=0,
     .dLeft=0, .dRight=0, .dDown=0, .dUp=0, .z=0, .r=0, .l=0, .pad1=1,
-    .xStick=128,
-    .yStick=128,
-    .cxStick=128,
-    .cyStick=128,
+    .xStick=127,
+    .yStick=127,
+    .cxStick=127,
+    .cyStick=127,
     .analogL=0,
     .analogR=0
 };
