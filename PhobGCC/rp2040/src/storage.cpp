@@ -1,8 +1,8 @@
 #include "storage/pages/storage.h"
 #include "storage/functions.hpp"
 
-static Persistence::Pages::Storage _storage;
-static bool fresh = false;
+static volatile Persistence::Pages::Storage _storage;
+static volatile bool fresh = false;
 
 //Helper function for initializing the storage struct
 void getStoragePage() {
@@ -38,10 +38,10 @@ void getStoragePage() {
 			_storage.settings.cAngles[i] = temp.settings.cAngles[i];
 		}
 		for(int i=0; i < 4; i++) {
-			_storage.settings.uExtras[i] = temp.settings.uExtras[i];
-			_storage.settings.dExtras[i] = temp.settings.dExtras[i];
-			_storage.settings.lExtras[i] = temp.settings.lExtras[i];
-			_storage.settings.rExtras[i] = temp.settings.rExtras[i];
+			_storage.settings.uExtras[i].intValue = temp.settings.uExtras[i].intValue;
+			_storage.settings.dExtras[i].intValue = temp.settings.dExtras[i].intValue;
+			_storage.settings.lExtras[i].intValue = temp.settings.lExtras[i].intValue;
+			_storage.settings.rExtras[i].intValue = temp.settings.rExtras[i].intValue;
 		}
 		fresh = true;
 	}
@@ -84,8 +84,11 @@ int getLOffsetSetting() {
 	return _storage.settings.lOffset;
 }
 void setLOffsetSetting(const int lOffset) {
-	getStoragePage();
-	_storage.settings.lOffset = lOffset;
+	//getStoragePage();
+	//_storage.settings.lOffset = lOffset;
+	Persistence::Pages::Storage temp = Persistence::clone<Persistence::Pages::Storage>();
+	temp.settings.lOffset = lOffset;
+	Persistence::commit(temp);
 }
 
 int getROffsetSetting() {
@@ -101,7 +104,7 @@ int getCxOffsetSetting() {
 	getStoragePage();
 	return _storage.settings.cxOffset;
 }
-void setCOffsetSetting(const int cxOffset) {
+void setCxOffsetSetting(const int cxOffset) {
 	getStoragePage();
 	_storage.settings.cxOffset = cxOffset;
 }

@@ -7,9 +7,6 @@
 #include "pico/sync.h"
 #include <string.h>
 
-//note that settings will only get written when commitSettings is run
-#define BATCHSETTINGS
-
 namespace Persistence {
 
 #define FLASH_OFFSET (1536 * 1024)

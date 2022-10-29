@@ -25,7 +25,17 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 	COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/joybus.pio ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 	)
 
-target_link_libraries(phobgcc_rp2040 pico_stdlib hardware_adc hardware_flash hardware_pio hardware_pwm hardware_spi hardware_sync hardware_timer)
+target_link_libraries(phobgcc_rp2040
+	PRIVATE
+	pico_stdlib
+	pico_multicore
+	hardware_adc
+	hardware_flash
+	hardware_pio
+	hardware_pwm
+	hardware_spi
+	hardware_sync
+	hardware_timer)
 
 pico_add_extra_outputs(phobgcc_rp2040)
 pico_enable_stdio_usb(phobgcc_rp2040 1)
