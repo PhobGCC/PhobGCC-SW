@@ -36,6 +36,11 @@ GCReport buttonsToGCReport() {
 void second_core() {
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 
+	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
+		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+	}
+
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
 
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
@@ -44,10 +49,6 @@ void second_core() {
 	pwm_set_chan_level(slice_num, PWM_CHAN_B, 128);
 	pwm_set_enabled(slice_num, true);
 
-	int lOffsetBefore = getLOffsetSetting();
-
-	setLOffsetSetting(5);
-	int lOffset = getLOffsetSetting();
 
 	while(true) {
 		sleep_ms(4000);
@@ -60,15 +61,7 @@ void second_core() {
 		pwm_set_gpio_level(_pinLED, 255);
 
 		sleep_ms(4000);
-		for(int i=0; i<lOffset; i++) {
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(500);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(500);
-		}
-		pwm_set_gpio_level(_pinLED, 0);
-		sleep_ms(4000);
-		for(int i=0; i<lOffsetBefore; i++) {
+		for(int i=0; i<numberOfNaN; i++) {
 			pwm_set_gpio_level(_pinLED, 0);
 			sleep_ms(500);
 			pwm_set_gpio_level(_pinLED, 255);
@@ -97,10 +90,6 @@ void second_core() {
 		pwm_set_gpio_level(_pinLED, 0);
 	}
 
-	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
-		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
-		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
-	}
 
 }
 
@@ -108,6 +97,10 @@ int main() {
 	//set the clock speed to 125 kHz
 	//the comms library needs this clockspeed
 	set_sys_clock_khz(1000*_us, true);
+
+	//set up the main core so it can be paused by the other core
+	//this is necessary for flash writing
+	multicore_lockout_victim_init();
 
 	setPinModes();
 

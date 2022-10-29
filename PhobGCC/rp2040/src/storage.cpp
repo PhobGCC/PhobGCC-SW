@@ -84,11 +84,8 @@ int getLOffsetSetting() {
 	return _storage.settings.lOffset;
 }
 void setLOffsetSetting(const int lOffset) {
-	//getStoragePage();
-	//_storage.settings.lOffset = lOffset;
-	Persistence::Pages::Storage temp = Persistence::clone<Persistence::Pages::Storage>();
-	temp.settings.lOffset = lOffset;
-	Persistence::commit(temp);
+	getStoragePage();
+	_storage.settings.lOffset = lOffset;
 }
 
 int getROffsetSetting() {
