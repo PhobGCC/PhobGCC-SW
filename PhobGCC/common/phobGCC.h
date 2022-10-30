@@ -2014,7 +2014,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 		adcDelta = afterMicros-beforeMicros;
 		beforeMicros = afterMicros;
 	}
-	while((afterMicros-lastMicros) < (1000 - adcDelta));
+	while(int64_t(afterMicros-lastMicros) < (1000 - adcDelta));
 
 	//Then we spinlock to get the 1 kHz more exactly.
 	while((afterMicros-lastMicros) < 1000) {
