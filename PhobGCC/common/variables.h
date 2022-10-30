@@ -9,4 +9,6 @@ Buttons _hardware;
 
 int _rumblePower = 0;
 
+float _dT;
+
 #endif //VARIABLES_H

@@ -6,8 +6,6 @@
 
 extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
-float _dT;
-
 void setup() {
     serialSetup();
 	Serial.print("Software version 0.");

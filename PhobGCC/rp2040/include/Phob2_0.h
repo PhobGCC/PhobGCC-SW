@@ -52,8 +52,9 @@ const int _pinRadc = 0; //ADC number
 const int _pinLa = 27; //GPIO number
 const int _pinLadc = 1; //ADC number
 //and two more
-const int _pinSpare0 = 28;
-const int _pinSpare1 = 29;
+const int _pinSpare0 = 0;
+const int _pinSpare1 = 28;
+const int _pinSpare2 = 29;
 
 const int _pinAx = -1;
 const int _pinAy = -1;
@@ -92,6 +93,8 @@ void setPinModes() {
 	gpio_set_dir(_pinRumble, GPIO_OUT);
 	gpio_init(_pinBrake);
 	gpio_set_dir(_pinBrake, GPIO_OUT);
+	gpio_init(_pinSpare0);
+	gpio_set_dir(_pinSpare0, GPIO_OUT);
 
 	/* the comms library sets this it seems
 	gpio_init(_pinTx);

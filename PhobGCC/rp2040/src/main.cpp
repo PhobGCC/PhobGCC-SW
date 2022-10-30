@@ -49,48 +49,82 @@ void second_core() {
 	pwm_set_chan_level(slice_num, PWM_CHAN_B, 128);
 	pwm_set_enabled(slice_num, true);
 
+	extrasInit();
 
-	while(true) {
-		sleep_ms(4000);
-		pwm_set_gpio_level(_pinLED, 63);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 127);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 191);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 255);
+	gpio_put(_pinSpare0, 0);
 
-		sleep_ms(4000);
-		for(int i=0; i<numberOfNaN; i++) {
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(500);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(500);
+	while(true) { //main event loop
+		static bool running = false;
+
+		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
+
+		//check if we should be reporting values yet
+		if((_btn.B || _controls.autoInit) && !running){
+			running=true;
 		}
-		pwm_set_gpio_level(_pinLED, 0);
-		sleep_ms(4000);
-		if(numberOfNaN == 0) {
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 0);
-			sleep_ms(100);
-			pwm_set_gpio_level(_pinLED, 255);
-			sleep_ms(100);
+
+		static int currentCalStep = -1;//-1 means not calibrating
+
+		//Set up persistent storage for calibration
+		static float tempCalPointsX[_noOfCalibrationPoints];
+		static float tempCalPointsY[_noOfCalibrationPoints];
+		static WhichStick whichStick = ASTICK;
+		static NotchStatus notchStatus[_noOfNotches];
+		static float notchAngles[_noOfNotches];
+		static float measuredNotchAngles[_noOfNotches];
+
+		//read the controllers buttons
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+
+		//check to see if we are calibrating
+		if(currentCalStep >= 0){
+			if(whichStick == ASTICK){
+				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+					adjustNotch(currentCalStep, _dT, true, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+					if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
+						//clean full cal points again, feeding updated angles in
+						float cleanedPointsX[_noOfNotches+1];
+						float cleanedPointsY[_noOfNotches+1];
+						float notchPointsX[_noOfNotches+1];
+						float notchPointsY[_noOfNotches+1];
+						cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+						//linearize again
+						linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, _aStickParams);
+						//notchCalibrate again to update the affine transform
+						notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _aStickParams);
+					}
+				}else{//just show desired stick position
+					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
+				}
+				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+			}
+			else{//WHICHSTICK == CSTICK
+				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+					adjustNotch(currentCalStep, _dT, false, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+					if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
+						//clean full cal points again, feeding updated angles in
+						float cleanedPointsX[_noOfNotches+1];
+						float cleanedPointsY[_noOfNotches+1];
+						float notchPointsX[_noOfNotches+1];
+						float notchPointsY[_noOfNotches+1];
+						cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+						//linearize again
+						linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, _cStickParams);
+						//notchCalibrate again to update the affine transform
+						notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _cStickParams);
+					}
+				}else{//just show desired stick position
+					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
+				}
+				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+			}
 		}
-		pwm_set_gpio_level(_pinLED, 0);
+		else if(running){
+			//if not calibrating read the sticks normally
+			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT);
+		}
 	}
-
-
 }
 
 int main() {
@@ -107,8 +141,8 @@ int main() {
 	Pins pinList {
 		.pinLa = 0,
 		.pinRa = 0,
-		.pinL  = 0,
-		.pinR  = 0,
+		.pinL  = _pinL,
+		.pinR  = _pinR,
 		.pinAx = 0,
 		.pinAy = 0,
 		.pinCx = 0,

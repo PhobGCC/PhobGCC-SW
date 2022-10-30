@@ -1998,15 +1998,30 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 
 	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
 	//This is for denoising and making sure the loop runs at 1000 Hz
-	static unsigned int lastMicros = micros();
+	static uint64_t lastMicros = micros();
+	static int adcDelta = 0;
+	uint64_t beforeMicros = micros();
+	uint64_t afterMicros;
+
+	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
 	do{
 		adcCount++;
 		aXSum += readAx(pin);
 		aYSum += readAy(pin);
 		cXSum += readCx(pin);
 		cYSum += readCy(pin);
+		afterMicros = micros();
+		adcDelta = afterMicros-beforeMicros;
+		beforeMicros = afterMicros;
 	}
-	while((micros()-lastMicros) < 1000);
+	while((afterMicros-lastMicros) < (1000 - adcDelta));
+
+	//Then we spinlock to get the 1 kHz more exactly.
+	while((afterMicros-lastMicros) < 1000) {
+		afterMicros = micros();
+	}
+	dT = (afterMicros - lastMicros)/1000.0;
+	lastMicros += 1000;
 
 
 	//Serial.println(adcCount);
@@ -2015,8 +2030,6 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
 	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
 
-	dT = (micros() - lastMicros)/1000.0;
-	lastMicros = micros();
 	//create the measurement value to be used in the kalman filter
 	float xZ;
 	float yZ;
