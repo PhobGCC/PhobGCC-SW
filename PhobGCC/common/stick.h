@@ -154,7 +154,7 @@ void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus 
 	notchRemap
 	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
-void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams){
+void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep){
 	//determine the angle between the x unit vector and the current position vector
 	float angle = atan2f(yIn,xIn);
 
@@ -179,16 +179,18 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn + stickParams.affineCoeffs[region][2];
 	*yOut = stickParams.affineCoeffs[region][3]*xIn + stickParams.affineCoeffs[region][4]*yIn + stickParams.affineCoeffs[region][5];
 
-	if((abs(*xOut)<15) && (abs(*yOut)>80)){
-		*xOut = 0;
-	}
-	if((abs(*yOut)<15) && (abs(*xOut)>80)){
-		*yOut = 0;
-	}
+	if(currentCalStep == -1) {
+		if((abs(*xOut)<15) && (abs(*yOut)>80)){
+			*xOut = 0;
+		}
+		if((abs(*yOut)<15) && (abs(*xOut)>80)){
+			*yOut = 0;
+		}
 
-	if((abs(*xOut)<3) && (abs(*yOut)<3)) {
-		*xOut = 0;
-		*yOut = 0;
+		if((abs(*xOut)<3) && (abs(*yOut)<3)) {
+			*xOut = 0;
+			*yOut = 0;
+		}
 	}
 };
 
@@ -203,7 +205,7 @@ void transformCalPoints(const float xInput[], const float yInput[], float xOutpu
 		float yValue = linearize(yInput[i], stickParams.fitCoeffsY);
 		float outX;
 		float outY;
-		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams);
+		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
 	}
