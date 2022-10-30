@@ -179,10 +179,10 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn + stickParams.affineCoeffs[region][2];
 	*yOut = stickParams.affineCoeffs[region][3]*xIn + stickParams.affineCoeffs[region][4]*yIn + stickParams.affineCoeffs[region][5];
 
-	if((abs(*xOut)<5) && (abs(*yOut)>95)){
+	if((abs(*xOut)<15) && (abs(*yOut)>80)){
 		*xOut = 0;
 	}
-	if((abs(*yOut)<5) && (abs(*xOut)>95)){
+	if((abs(*yOut)<15) && (abs(*xOut)>80)){
 		*yOut = 0;
 	}
 
