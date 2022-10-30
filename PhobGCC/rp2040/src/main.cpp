@@ -138,11 +138,11 @@ int main() {
 
 	setPinModes();
 
-	Pins pinList {
+	Pins pinList {//not actually necessary for any of the rp2040 read functions
 		.pinLa = 0,
 		.pinRa = 0,
-		.pinL  = _pinL,
-		.pinR  = _pinR,
+		.pinL  = 0,
+		.pinR  = 0,
 		.pinAx = 0,
 		.pinAy = 0,
 		.pinCx = 0,

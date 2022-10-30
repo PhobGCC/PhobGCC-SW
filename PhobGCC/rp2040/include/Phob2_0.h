@@ -120,6 +120,18 @@ void setPinModes() {
 }
 
 void readButtons(const Pins &, Buttons &hardware) {
+	hardware.A = gpio_get(_pinA);
+	hardware.B = gpio_get(_pinB);
+	hardware.X = gpio_get(_pinX);
+	hardware.Y = gpio_get(_pinY);
+	hardware.L = gpio_get(_pinL);
+	hardware.R = gpio_get(_pinR);
+	hardware.Z = gpio_get(_pinZ);
+	hardware.S = gpio_get(_pinS);
+	hardware.Dr = gpio_get(_pinDr);
+	hardware.Du = gpio_get(_pinDu);
+	hardware.Dl = gpio_get(_pinDl);
+	hardware.Dd = gpio_get(_pinDd);
 }
 
 void readADCScale(float &, float &) {
