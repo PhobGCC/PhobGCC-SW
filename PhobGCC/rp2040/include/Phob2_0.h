@@ -27,10 +27,10 @@ const int _pinDd = 6;
 const int _pinL =  7;
 const int _pinR =  8;
 const int _pinX =  9;
-const int _pinY =  10;
-const int _pinZ =  11;
-const int _pinS =  12;
-const int _pinRumble = 13;
+const int _pinY =  21;
+const int _pinZ =  22;
+const int _pinS =  23;
+const int _pinRumble = 24;
 const int _pinBrake = 14;
 const int _pinTX  = 15;
 //GPIO SPI for ADCs
@@ -40,10 +40,10 @@ const int _pinSPIclk = 18;
 const int _pinSPItx = 19;
 const int _pinCcs = 20;
 //a little resistor ladder DAC
-const int _pinDac0 = 21;
-const int _pinDac1 = 22;
-const int _pinDac2 = 23;
-const int _pinDac3 = 24;
+const int _pinDac0 = 10;
+const int _pinDac1 = 11;
+const int _pinDac2 = 12;
+const int _pinDac3 = 13;
 //this is only for the pico itself, not necessarily the phob
 const int _pinLED = 25;
 //two of the built-in ADCs:
@@ -93,8 +93,6 @@ void setPinModes() {
 	gpio_set_dir(_pinRumble, GPIO_OUT);
 	gpio_init(_pinBrake);
 	gpio_set_dir(_pinBrake, GPIO_OUT);
-	gpio_init(_pinSpare0);
-	gpio_set_dir(_pinSpare0, GPIO_OUT);
 
 	/* the comms library sets this it seems
 	gpio_init(_pinTx);
@@ -114,9 +112,24 @@ void setPinModes() {
 	gpio_set_dir(_pinCcs, GPIO_OUT);
 	gpio_put(_pinCcs, 1);//active low
 
+	//initialize ADC for triggers
 	adc_init();
 	adc_gpio_init(_pinLa);
 	adc_gpio_init(_pinRa);
+
+	//initialize DAC outputs
+	gpio_init(_pinDac0);
+	gpio_init(_pinDac1);
+	gpio_init(_pinDac2);
+	gpio_init(_pinDac3);
+	gpio_set_dir(_pinDac0, GPIO_OUT);
+	gpio_set_dir(_pinDac1, GPIO_OUT);
+	gpio_set_dir(_pinDac2, GPIO_OUT);
+	gpio_set_dir(_pinDac3, GPIO_OUT);
+
+	//initialize spare outputs
+	gpio_init(_pinSpare0);
+	gpio_set_dir(_pinSpare0, GPIO_OUT);
 }
 
 void readButtons(const Pins &, Buttons &hardware) {

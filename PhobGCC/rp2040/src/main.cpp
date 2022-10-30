@@ -188,41 +188,17 @@ int main() {
 
 	multicore_launch_core1(second_core);
 
-	// ADC TEST
-	/*
-	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
-
-	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
-
-	pwm_set_wrap(slice_num, 255);
-	pwm_set_chan_level(slice_num, PWM_CHAN_B, 128);
-	pwm_set_enabled(slice_num, true);
-
-	while(true) {
-		sleep_ms(4000);
-		pwm_set_gpio_level(_pinLED, 63);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 127);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 191);
-		sleep_ms(250);
-		pwm_set_gpio_level(_pinLED, 255);
-
-		int Ax = readAx(pinList) / 17;
-		int Ay = readAy(pinList) / 17;
-		int Cx = readCx(pinList) / 17;
-		int Cy = readCy(pinList) / 17;
-		sleep_ms(4000);
-		pwm_set_gpio_level(_pinLED, Ax);
-		sleep_ms(1000);
-		pwm_set_gpio_level(_pinLED, Ay);
-		sleep_ms(1000);
-		pwm_set_gpio_level(_pinLED, Cx);
-		sleep_ms(1000);
-		pwm_set_gpio_level(_pinLED, Cy);
-	}
-	*/
-
 	//Run comms
-	enterMode(_pinTX, buttonsToGCReport);
+	//enterMode(_pinTX, buttonsToGCReport);
+
+	//Start the dac
+	uint8_t counter = 0;
+	while(true) {
+		gpio_put(_pinDac0, counter & 1);
+		gpio_put(_pinDac1, counter & 2);
+		gpio_put(_pinDac2, counter & 4);
+		gpio_put(_pinDac3, counter & 8);
+		counter = (counter+1) % 16;
+		sleep_ms(10);
+	}
 }
