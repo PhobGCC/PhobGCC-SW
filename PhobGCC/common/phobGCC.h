@@ -2020,7 +2020,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	while((afterMicros-lastMicros) < 1000) {
 		afterMicros = micros();
 	}
-	dT = (afterMicros - lastMicros)/1000.0;
+	dT = 1;
 	lastMicros += 1000;
 
 
