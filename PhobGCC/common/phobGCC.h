@@ -1986,7 +1986,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 
@@ -2020,7 +2020,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	while((afterMicros-lastMicros) < 1000) {
 		afterMicros = micros();
 	}
-	dT = (afterMicros - lastMicros)/1000.0;
+	dT = 1;
 	lastMicros += 1000;
 
 
@@ -2095,8 +2095,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float remappedAy;
 	float remappedCx;
 	float remappedCy;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams);
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
 
 	//Clamp values from -125 to +125
 	remappedAx = fmin(125, fmax(-125, remappedAx));
