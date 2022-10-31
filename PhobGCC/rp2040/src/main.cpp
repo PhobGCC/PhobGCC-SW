@@ -5,6 +5,8 @@
 
 #include "phobGCC.h"
 #include "comms/joybus.hpp"
+#include "cvideo.h"
+#include "cvideo_variables.h"
 
 //This gets called by the comms library
 GCReport buttonsToGCReport() {
@@ -130,7 +132,7 @@ void second_core() {
 int main() {
 	//set the clock speed to 125 kHz
 	//the comms library needs this clockspeed
-	set_sys_clock_khz(1000*_us, true);
+	//set_sys_clock_khz(1000*_us, true);
 
 	//set up the main core so it can be paused by the other core
 	//this is necessary for flash writing
@@ -191,6 +193,7 @@ int main() {
 	//Run comms
 	//enterMode(_pinTX, buttonsToGCReport);
 
+    /*
 	//Start the dac
 	uint8_t counter = 0;
 	while(true) {
@@ -201,4 +204,14 @@ int main() {
 		counter = (counter+1) % 16;
 		sleep_ms(10);
 	}
+    */
+
+    //start video out
+    /*
+    unsigned char bitmap[width*height];
+    for(int i=0; i < width*height; i++) {
+        bitmap[i] = WHITE2;
+    }
+    */
+    videoOut(_pinDac0);
 }
