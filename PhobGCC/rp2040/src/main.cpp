@@ -53,12 +53,12 @@ void second_core() {
 
 	extrasInit();
 
-	gpio_put(_pinSpare0, 0);
+	//gpio_put(_pinSpare0, 0);
 
 	while(true) { //main event loop
 		static bool running = false;
 
-		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
 		pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
@@ -213,5 +213,5 @@ int main() {
         bitmap[i] = WHITE2;
     }
     */
-    videoOut(_pinDac0);
+    videoOut(_pinDac0, _btn);
 }

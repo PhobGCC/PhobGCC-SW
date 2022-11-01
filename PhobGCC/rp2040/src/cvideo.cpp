@@ -108,7 +108,7 @@ int bmIndex = 0;
 int bmCount = 0;
 
 // bitmap buffer
-unsigned char _bitmap[width*height];
+unsigned char _bitmap[width*height/2];
 
 unsigned char * vsync_ll;                             // buffer for a vsync line with a long/long pulse
 unsigned char * vsync_ss;                             // Buffer for an equalizing line with a short/short pulse
@@ -159,9 +159,9 @@ void core2() {
 }
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint pin_base) {
+int videoOut(const uint pin_base, Buttons &btn) {
 
-	memset(_bitmap, WHITE2, width*height);
+	memset(_bitmap, WHITE2, width*height/2);
 
 	vsync_ll = (unsigned char *)malloc(HORIZ_bytes);
 	memset(vsync_ll, SYNC, HORIZ_bytes);				// vertical sync/serrations
@@ -208,8 +208,21 @@ int videoOut(const uint pin_base) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	while (true) {                                          // And then just loop doing nothing
-		tight_loop_contents();
+	while (true) {                                          // And then just loop doing nothing (in the original
+		//tight_loop_contents();
+		//Here we actually want to try painting as fast as we can.
+		gpio_put(0, 0);
+		for(int col = 0; col < width/2; col++) {
+			for( int row = 0; row < height; row++) {
+				_bitmap[row*width/2+col] = BLACK2;
+			}
+		}
+		gpio_put(0, 1);
+		for(int col = 0; col < width/2; col++) {
+			for( int row = 0; row < height; row++) {
+				_bitmap[row*width/2+col] = WHITE2;
+			}
+		}
 	}
 }
 
@@ -219,12 +232,12 @@ int videoOut(const uint pin_base) {
 
 void cvideo_dma_handler(void) {
 
-    if ( ++vline <= VERT_scanlines ) {
-    } else {
-        vline = 0;
-	    bline = 0;
-	    field = ++field & 0x01;
-    }
+	if ( ++vline <= VERT_scanlines ) {
+	} else {
+		vline = 0;
+		bline = 0;
+		field = ++field & 0x01;
+	}
 
     while (true) {
 		if ( vline <= VERT_vblank ) {
