@@ -5,13 +5,6 @@
 
 //ONLY INCLUDE THIS IN CPP FILES, NOT HEADER FILES
 
-#ifndef width
-#define width 512           // Bitmap width in pixels
-#endif
-#ifndef height
-#define height 384          // Bitmap height in pixels
-#endif
-
 /*-------------------------------------------------------------------*/
 /*------------------Gray Scale---------------------------------------*/
 /*-------------------------------------------------------------------*/

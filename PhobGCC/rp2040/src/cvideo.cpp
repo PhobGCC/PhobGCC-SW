@@ -50,6 +50,8 @@ void cvideo_dma_handler(void);
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
+#include "images/cuteGhost.h"
+
 /*-------------------------------------------------------------------*/
 /*------------------Video Standard-----------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -78,7 +80,7 @@ const int   HORIZ_FP_bytes = VIDEO_h_FP_usec / HORIZ_usec_dot / 2;
 const int   HORIZ_SYNC_bytes = VIDEO_h_SYNC_usec / HORIZ_usec_dot / 2;
 const int   HORIZ_BP_bytes = VIDEO_h_BP_usec / HORIZ_usec_dot / 2;
 const int   HORIZ_EP_bytes = VIDEO_h_EP_usec / HORIZ_usec_dot / 2;	// equalizing pulse during vertical sync
-const int   HORIZ_pixel_start = ((HORIZ_visible_dots - width) / 2) / 2 + HORIZ_SYNC_bytes + HORIZ_BP_bytes;
+const int   HORIZ_pixel_start = ((HORIZ_visible_dots - VWIDTH) / 2) / 2 + HORIZ_SYNC_bytes + HORIZ_BP_bytes;
 
 /*-------------------------------------------------------------------*/
 /*------------------Vertical Derived---------------------------------*/
@@ -86,8 +88,8 @@ const int   HORIZ_pixel_start = ((HORIZ_visible_dots - width) / 2) / 2 + HORIZ_S
 
 const int   VERT_scanlines = VIDEO_frame_lines / 2;				// one field
 const int   VERT_vblank    = (VIDEO_frame_lines - VIDEO_frame_lines_visible) / 2;	// vertical blanking, one field
-const int   VERT_border    = (VERT_scanlines - VERT_vblank - height/2) / 2;
-const int   VERT_bitmap    = height/2;
+const int   VERT_border    = (VERT_scanlines - VERT_vblank - VHEIGHT/2) / 2;
+const int   VERT_bitmap    = VHEIGHT/2;
 
 /*-------------------------------------------------------------------*/
 /*------------------PIO----------------------------------------------*/
@@ -108,7 +110,7 @@ int bmIndex = 0;
 int bmCount = 0;
 
 // bitmap buffer
-unsigned char _bitmap[width*height/2];
+unsigned char _bitmap[VWIDTH*VHEIGHT/2];
 
 unsigned char * vsync_ll;                             // buffer for a vsync line with a long/long pulse
 unsigned char * vsync_ss;                             // Buffer for an equalizing line with a short/short pulse
@@ -141,7 +143,7 @@ void core2() {
 			bmIndex = 0;
 		}
 
-		memcpy(_bitmap, dataStart + (width * height * bmIndex), width*height);
+		memcpy(_bitmap, dataStart + (VWIDTH * VHEIGHT * bmIndex), VWIDTH*VHEIGHT);
 
 		// settling time
 		busy_wait_us(HORIZ_usec*VERT_scanlines);
@@ -159,9 +161,9 @@ void core2() {
 }
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint pin_base, Buttons &btn) {
+int videoOut(const uint8_t pin_base, Buttons &btn) {
 
-	memset(_bitmap, WHITE2, width*height/2);
+	memset(_bitmap, WHITE2, VWIDTH*VHEIGHT/2);
 
 	vsync_ll = (unsigned char *)malloc(HORIZ_bytes);
 	memset(vsync_ll, SYNC, HORIZ_bytes);				// vertical sync/serrations
@@ -211,18 +213,21 @@ int videoOut(const uint pin_base, Buttons &btn) {
 	while (true) {                                          // And then just loop doing nothing (in the original
 		//tight_loop_contents();
 		//Here we actually want to try painting as fast as we can.
+		/*
 		gpio_put(0, 0);
-		for(int col = 0; col < width/2; col++) {
-			for( int row = 0; row < height; row++) {
-				_bitmap[row*width/2+col] = BLACK2;
+		for(int col = 0; col < VWIDTH/2; col++) {
+			for( int row = 0; row <VHEIGHT; row++) {
+				_bitmap[row*VWIDTH/2+col] = BLACK2;
 			}
 		}
 		gpio_put(0, 1);
-		for(int col = 0; col < width/2; col++) {
-			for( int row = 0; row < height; row++) {
-				_bitmap[row*width/2+col] = WHITE2;
+		for(int col = 0; col < VWIDTH/2; col++) {
+			for( int row = 0; row < VHEIGHT; row++) {
+				_bitmap[row*VWIDTH/2+col] = WHITE2;
 			}
 		}
+		*/
+		drawImage(Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150, _bitmap);
 	}
 }
 
@@ -294,7 +299,7 @@ void cvideo_dma_handler(void) {
 			} else {
 				dma_channel_set_read_addr(dma_channel, border, true);
 				if ( vline == VERT_vblank + VERT_border ) {
-					memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*width/2, width/2);
+					memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*VWIDTH/2, VWIDTH/2);
 				}
 			}
 			break;
@@ -304,7 +309,7 @@ void cvideo_dma_handler(void) {
 				dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			} else {
 				dma_channel_set_read_addr(dma_channel, pixel_buffer[bline++ & 1], true);    // Set the DMA to read from one of the pixel_buffers
-				memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*width/2, width/2);       // And memcpy the next scanline
+				memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*VWIDTH/2, VWIDTH/2);       // And memcpy the next scanline
 			}
 			break;
 		}
