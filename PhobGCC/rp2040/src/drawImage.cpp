@@ -22,7 +22,11 @@ uint16_t getImageHeight(const unsigned char image[]){
 	return (image[2]<<8) | image[3];
 }
 
-void drawImage(const unsigned char image[], const unsigned char index[8], const uint16_t x, const uint16_t y, unsigned char bitmap[]) {
+void drawImage(unsigned char bitmap[],
+               const unsigned char image[],
+               const unsigned char index[8],
+               const uint16_t x,
+               const uint16_t y) {
 	uint32_t imgWidth = getImageWidth(image);
 	uint32_t imgHeight = getImageHeight(image);
 	uint32_t pixelCount = imgWidth * imgHeight;

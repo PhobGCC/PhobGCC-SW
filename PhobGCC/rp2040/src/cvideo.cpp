@@ -227,7 +227,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 			}
 		}
 		*/
-		drawImage(Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150, _bitmap);
+		drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
 	}
 }
 
