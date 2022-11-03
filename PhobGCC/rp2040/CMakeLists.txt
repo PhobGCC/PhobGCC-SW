@@ -18,6 +18,7 @@ add_executable(phobgcc_rp2040
 	src/joybus.cpp
 	src/cvideo.cpp
 	src/drawImage.cpp
+	src/drawGraphics.cpp
 	)
 
 pico_generate_pio_header(phobgcc_rp2040 ${CMAKE_CURRENT_LIST_DIR}/pio/joybus.pio)

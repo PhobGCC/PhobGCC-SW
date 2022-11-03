@@ -1,3 +1,4 @@
+#include <cmath>
 #include "cvideo.h"
 
 //Misc graphics drawing routines go here.
@@ -11,8 +12,8 @@ void drawLineLow(unsigned char bitmap[],
                  const uint16_t y1,
 				 const uint8_t color) {
 	const int dx = x1 - x0;
-	const int dy = y1 - y0;
-	const int yi = 1;
+	int dy = y1 - y0;
+	int yi = 1;
 	if(dy < 0) {
 		yi = -1;
 		dy = -dy;
@@ -42,9 +43,9 @@ void drawLineHigh(unsigned char bitmap[],
                   const uint16_t x1,
                   const uint16_t y1,
 				  const uint8_t color) {
-	const int dx = x1 - x0;
+	int dx = x1 - x0;
 	const int dy = y1 - y0;
-	const int xi = 1;
+	int xi = 1;
 	if(dx < 0) {
 		xi = -1;
 		dx = -dx;
