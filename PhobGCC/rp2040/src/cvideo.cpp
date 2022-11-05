@@ -110,7 +110,7 @@ int bmIndex = 0;
 int bmCount = 0;
 
 // bitmap buffer
-unsigned char _bitmap[VWIDTH*VHEIGHT/2];
+unsigned char _bitmap[BUFFERLEN];
 
 unsigned char * vsync_ll;                             // buffer for a vsync line with a long/long pulse
 unsigned char * vsync_ss;                             // Buffer for an equalizing line with a short/short pulse
@@ -122,48 +122,9 @@ unsigned char * pixel_buffer[2];                      // Double-buffer for the p
 volatile bool changeBitmap  = false;
 
 /*-------------------------------------------------------------------*/
-void core2() {
-	unsigned char * dataCount = (unsigned char *)0x10050000;
-	unsigned char * dataStart = (unsigned char *)0x10050001;
-	//int bmMax = *dataCount / 4;		// using the low-res bitmaps for testing
-	int bmMax = *dataCount;
-	bmIndex = 0;
-
-	while (true) {
-#ifdef TESTPATTERN
-#else
-		while (vline >= VERT_vblank ) {
-			busy_wait_us(HORIZ_usec);
-		}
-
-		changeBitmap = true; // DMA interrupt now starts sending BLACK instead of _bitmap
-
-		bmIndex++;
-		if ( bmIndex >= bmMax ) {
-			bmIndex = 0;
-		}
-
-		memcpy(_bitmap, dataStart + (VWIDTH * VHEIGHT * bmIndex), VWIDTH*VHEIGHT);
-
-		// settling time
-		busy_wait_us(HORIZ_usec*VERT_scanlines);
-
-		while (vline >= VERT_vblank ) {
-			busy_wait_us(HORIZ_usec);
-		}
-
-		changeBitmap = false;	// ...switch back to displaying _bitmap
-
-		//sleep_ms(1000);		// sleep_ms() causes a visible glitch
-		busy_wait_us(1000000);
-#endif
-    }
-}
-
-/*-------------------------------------------------------------------*/
 int videoOut(const uint8_t pin_base, Buttons &btn) {
 
-	memset(_bitmap, WHITE2, VWIDTH*VHEIGHT/2);
+	memset(_bitmap, WHITE2, BUFFERLEN);
 
 	vsync_ll = (unsigned char *)malloc(HORIZ_bytes);
 	memset(vsync_ll, SYNC, HORIZ_bytes);				// vertical sync/serrations
@@ -210,7 +171,9 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	while (true) {                                          // And then just loop doing nothing (in the original
+	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	bool oldB = btn.B;
+	while (true) {
 		//tight_loop_contents();
 		//Here we actually want to try painting as fast as we can.
 		/*
@@ -227,7 +190,25 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 			}
 		}
 		*/
-		drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+		//gpio_put(0, 0);
+		//gpio_put(0, 1);
+
+		if(btn.B && !oldB) {
+			memset(_bitmap, WHITE2, BUFFERLEN);
+			drawLine(_bitmap, 0, 0, 50, 50, 5);
+			drawLine(_bitmap, 25, 0, 50, 50, 5);
+			drawLine(_bitmap, 0, 25, 50, 50, 5);
+			drawLine(_bitmap, 75, 0, 50, 50, 5);
+			drawLine(_bitmap, 100, 25, 50, 50, 5);
+			drawLine(_bitmap, 82, 67, 50, 50, 5);
+		}
+		if (!btn.B && oldB) {
+			memset(_bitmap, WHITE2, BUFFERLEN);
+			drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+		}
+		oldB = btn.B;
+
+		busy_wait_us(10000);
 	}
 }
 
@@ -299,7 +280,7 @@ void cvideo_dma_handler(void) {
 			} else {
 				dma_channel_set_read_addr(dma_channel, border, true);
 				if ( vline == VERT_vblank + VERT_border ) {
-					memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*VWIDTH/2, VWIDTH/2);
+					memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap + (bline*2+field)*VWIDTH/2, VWIDTH/2);
 				}
 			}
 			break;
@@ -309,7 +290,7 @@ void cvideo_dma_handler(void) {
 				dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			} else {
 				dma_channel_set_read_addr(dma_channel, pixel_buffer[bline++ & 1], true);    // Set the DMA to read from one of the pixel_buffers
-				memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap+(bline*2+field)*VWIDTH/2, VWIDTH/2);       // And memcpy the next scanline
+				memcpy(pixel_buffer[bline & 1] + HORIZ_pixel_start, _bitmap + (bline*2+field)*VWIDTH/2, VWIDTH/2);       // And memcpy the next scanline
 			}
 			break;
 		}

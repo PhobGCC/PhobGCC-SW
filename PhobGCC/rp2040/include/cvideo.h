@@ -9,6 +9,9 @@
 #ifndef VHEIGHT
 #define VHEIGHT 384
 #endif
+#ifndef BUFFERLEN
+#define BUFFERLEN 98304//512*384/2
+#endif
 
 int videoOut(const uint8_t pin_base, Buttons &btn);
 

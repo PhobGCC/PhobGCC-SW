@@ -64,28 +64,40 @@ const int _pinRX = -1;
 
 void setPinModes() {
 	gpio_init(_pinA);
+	gpio_pull_up(_pinA);
 	gpio_set_dir(_pinA, GPIO_IN);
 	gpio_init(_pinB);
+	gpio_pull_up(_pinB);
 	gpio_set_dir(_pinB, GPIO_IN);
 	gpio_init(_pinDr);
+	gpio_pull_up(_pinDr);
 	gpio_set_dir(_pinDr, GPIO_IN);
 	gpio_init(_pinDu);
+	gpio_pull_up(_pinDu);
 	gpio_set_dir(_pinDu, GPIO_IN);
 	gpio_init(_pinDl);
+	gpio_pull_up(_pinDl);
 	gpio_set_dir(_pinDl, GPIO_IN);
 	gpio_init(_pinDd);
+	gpio_pull_up(_pinDd);
 	gpio_set_dir(_pinDd, GPIO_IN);
 	gpio_init(_pinL);
+	gpio_pull_up(_pinL);
 	gpio_set_dir(_pinL, GPIO_IN);
 	gpio_init(_pinR);
+	gpio_pull_up(_pinR);
 	gpio_set_dir(_pinR, GPIO_IN);
 	gpio_init(_pinX);
+	gpio_pull_up(_pinX);
 	gpio_set_dir(_pinX, GPIO_IN);
 	gpio_init(_pinY);
+	gpio_pull_up(_pinY);
 	gpio_set_dir(_pinY, GPIO_IN);
 	gpio_init(_pinZ);
+	gpio_pull_up(_pinZ);
 	gpio_set_dir(_pinZ, GPIO_IN);
 	gpio_init(_pinS);
+	gpio_pull_up(_pinS);
 	gpio_set_dir(_pinS, GPIO_IN);
 	gpio_init(_pinLED);
 	gpio_set_dir(_pinLED, GPIO_OUT);
@@ -133,18 +145,18 @@ void setPinModes() {
 }
 
 void readButtons(const Pins &, Buttons &hardware) {
-	hardware.A = gpio_get(_pinA);
-	hardware.B = gpio_get(_pinB);
-	hardware.X = gpio_get(_pinX);
-	hardware.Y = gpio_get(_pinY);
-	hardware.L = gpio_get(_pinL);
-	hardware.R = gpio_get(_pinR);
-	hardware.Z = gpio_get(_pinZ);
-	hardware.S = gpio_get(_pinS);
-	hardware.Dr = gpio_get(_pinDr);
-	hardware.Du = gpio_get(_pinDu);
-	hardware.Dl = gpio_get(_pinDl);
-	hardware.Dd = gpio_get(_pinDd);
+	hardware.A  = !gpio_get(_pinA);
+	hardware.B  = !gpio_get(_pinB);
+	hardware.X  = !gpio_get(_pinX);
+	hardware.Y  = !gpio_get(_pinY);
+	hardware.L  = !gpio_get(_pinL);
+	hardware.R  = !gpio_get(_pinR);
+	hardware.Z  = !gpio_get(_pinZ);
+	hardware.S  = !gpio_get(_pinS);
+	hardware.Dr = !gpio_get(_pinDr);
+	hardware.Du = !gpio_get(_pinDu);
+	hardware.Dl = !gpio_get(_pinDl);
+	hardware.Dd = !gpio_get(_pinDd);
 }
 
 void readADCScale(float &, float &) {

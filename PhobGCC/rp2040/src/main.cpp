@@ -56,15 +56,17 @@ void second_core() {
 	//gpio_put(_pinSpare0, 0);
 
 	while(true) { //main event loop
-		static bool running = false;
+		static bool running = true;
 
 		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
-		pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
+		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
 		if((_btn.B || _controls.autoInit) && !running){
 			running=true;
 		}
+
+		pwm_set_gpio_level(_pinLED, 255*_btn.B);
 
 		static int currentCalStep = -1;//-1 means not calibrating
 
@@ -124,7 +126,7 @@ void second_core() {
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+			//readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
 		}
 	}
 }
