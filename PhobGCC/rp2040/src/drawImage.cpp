@@ -47,10 +47,10 @@ void drawImage(unsigned char bitmap[],
 		uint32_t rowOffset = row*VWIDTH/2;
 		for(uint16_t col = x; col < xEnd; col++) {
 			if(color >= 5) {
-				if(col % 2) { //odd; shift left by 4
-					bitmap[rowOffset + col/2] = (bitmap[rowOffset + col/2]&0x0F) | (color << 4);
-				} else { //even
+				if(col % 2) { //odd
 					bitmap[rowOffset + col/2] = (bitmap[rowOffset + col/2]&0xF0) | (color);
+				} else { //even: shift left by 4
+					bitmap[rowOffset + col/2] = (bitmap[rowOffset + col/2]&0x0F) | (color << 4);
 				}
 			}
 			runIndex++;

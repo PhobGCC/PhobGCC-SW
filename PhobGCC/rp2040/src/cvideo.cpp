@@ -171,9 +171,9 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
 	drawString(_bitmap, 105, 10, 15, "Hello World! +2 blah");
-	drawString(_bitmap, 10, 50, 15, " !\"#$%&'()*+,-./0123456789");
+	//drawString(_bitmap, 10, 50, 15, " !\"#$%&'()*+,-./0123456789");
 	bool oldB = btn.B;
 
 	uint16_t rowline = vline;

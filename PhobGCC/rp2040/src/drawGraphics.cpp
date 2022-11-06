@@ -25,10 +25,10 @@ void drawLineLow(unsigned char bitmap[],
 
 	for(int x = x0; x <= x1; x++) {
 		uint32_t rowOffset = y*VWIDTH/2;
-		if(x % 2) { //odd; shift left by 4
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
-		} else { //even
+		if(x % 2) { //odd
 			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0xF0) | (color);
+		} else { //even: shift left by 4
+			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
 		}
 		if(D > 0) {
 			y = y + yi;
@@ -57,10 +57,10 @@ void drawLineHigh(unsigned char bitmap[],
 
 	for(int y = y0; y <= y1; y++) {
 		uint32_t rowOffset = y*VWIDTH/2;
-		if(x % 2) { //odd; shift left by 4
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
-		} else { //even
+		if(x % 2) { //odd
 			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0xF0) | (color);
+		} else { //even: shift left by 4
+			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
 		}
 		if(D > 0) {
 			x = x + xi;
@@ -114,10 +114,10 @@ void drawChar(unsigned char bitmap[],
 			//if((ascii::font[(character-0x20)*15+(row/2)] << (col/2)) & 0b10000000) {
 			//if((ascii::font[row/2] << (col/2)) & 0b10000000) {
 				uint16_t colOffset = col+x;
-				if(colOffset % 2) { //odd: shift left by 4
-					bitmap[rowOffset + colOffset/2] = (bitmap[rowOffset + colOffset/2]&0x0F) | (color << 4);
-				} else {
+				if(colOffset % 2) { //odd
 					bitmap[rowOffset + colOffset/2] = (bitmap[rowOffset + colOffset/2]&0xF0) | (color);
+				} else { //even: shift left by 4
+					bitmap[rowOffset + colOffset/2] = (bitmap[rowOffset + colOffset/2]&0x0F) | (color << 4);
 				}
 			}
 		}
