@@ -124,7 +124,7 @@ volatile bool changeBitmap  = false;
 /*-------------------------------------------------------------------*/
 int videoOut(const uint8_t pin_base, Buttons &btn) {
 
-	memset(_bitmap, WHITE2, BUFFERLEN);
+	memset(_bitmap, BLACK2, BUFFERLEN);
 
 	vsync_ll = (unsigned char *)malloc(HORIZ_bytes);
 	memset(vsync_ll, SYNC, HORIZ_bytes);				// vertical sync/serrations
@@ -171,30 +171,19 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	drawString(_bitmap, 105, 10, 15, "Hello World! +2 blah");
+	drawString(_bitmap, 10, 50, 15, " !\"#$%&'()*+,-./0123456789");
 	bool oldB = btn.B;
-	while (true) {
-		//tight_loop_contents();
-		//Here we actually want to try painting as fast as we can.
-		/*
-		gpio_put(0, 0);
-		for(int col = 0; col < VWIDTH/2; col++) {
-			for( int row = 0; row <VHEIGHT; row++) {
-				_bitmap[row*VWIDTH/2+col] = BLACK2;
-			}
-		}
-		gpio_put(0, 1);
-		for(int col = 0; col < VWIDTH/2; col++) {
-			for( int row = 0; row < VHEIGHT; row++) {
-				_bitmap[row*VWIDTH/2+col] = WHITE2;
-			}
-		}
-		*/
-		//gpio_put(0, 0);
-		//gpio_put(0, 1);
 
+	uint16_t rowline = vline;
+	uint64_t lastMicros = time_us_64();
+	while (true) {
+
+		/*
 		if(btn.B && !oldB) {
 			memset(_bitmap, WHITE2, BUFFERLEN);
+			drawString(_bitmap, 105, 10, 5, "Hello World!");
 			drawLine(_bitmap, 0, 0, 50, 50, 5);
 			drawLine(_bitmap, 25, 0, 50, 50, 5);
 			drawLine(_bitmap, 0, 25, 50, 50, 5);
@@ -204,11 +193,25 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 		}
 		if (!btn.B && oldB) {
 			memset(_bitmap, WHITE2, BUFFERLEN);
+			drawString(_bitmap, 105, 350, 5, "Hello World!");
 			drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
 		}
 		oldB = btn.B;
+		*/
+		
+		/*
+		rowline = vline;
+		drawLine(_bitmap, 500, 0, 500, rowline/2, 5);
+		drawLine(_bitmap, 501, 0, 501, rowline/2, 5);
+		*/
 
-		busy_wait_us(10000);
+
+		/*
+		while((time_us_64()-lastMicros) < (16666)) {
+			tight_loop_contents();
+		}
+		lastMicros += 16666;
+		*/
 	}
 }
 
@@ -231,7 +234,7 @@ void cvideo_dma_handler(void) {
 				case 0:
 					// for some reason interlace fails unless there's a 30usec delay here:
 					busy_wait_us(HORIZ_usec/2);
-					if ( field ) {
+					if ( !field ) {
 						// odd field - blank, full line
 						dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			        } else {
@@ -255,7 +258,7 @@ void cvideo_dma_handler(void) {
 					dma_channel_set_read_addr(dma_channel, vsync_ss, true);
 					break;
 				case 9:
-					if ( field ) {
+					if ( !field ) {
 						// odd field - equalizing pulse, full line
 						dma_channel_set_read_addr(dma_channel, vsync_ss, true);
 					} else {

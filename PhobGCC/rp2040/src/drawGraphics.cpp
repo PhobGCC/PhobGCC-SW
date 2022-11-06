@@ -1,5 +1,6 @@
 #include <cmath>
 #include "cvideo.h"
+#include "images/font.h"
 
 //Misc graphics drawing routines go here.
 
@@ -75,6 +76,9 @@ void drawLine(unsigned char bitmap[],
               const uint16_t x1,
               const uint16_t y1,
 			  const uint8_t color) {
+	if(x0 >= VWIDTH || x1 >= VWIDTH || y0 >= VHEIGHT || y1 >= VHEIGHT) {
+		return;
+	}
 	if(abs(y1-y0) < abs(x1-x0)) {
 		if(x0 > x1) {
 			drawLineLow(bitmap, x1, y1, x0, y0, color);
@@ -90,3 +94,46 @@ void drawLine(unsigned char bitmap[],
 	}
 }
 
+//Draws 8x15 character in the specified location according to the ascii codepoints
+void drawChar(unsigned char bitmap[],
+              const uint16_t x,
+			  const uint16_t y,
+			  const uint8_t color,
+			  const char character) {
+	if(character < 0x20 || character > 0x7e) { //lower than space, larger than tilde
+		return;
+	}
+	if(x + 8-1 >= VWIDTH || y + 15-1 >= VHEIGHT) { //out of bounds
+	//if(x + 16-1 >= VWIDTH || y + 30-1 >= VHEIGHT) { //out of bounds
+		return;
+	}
+	for(int row = 0; row < 15; row++) {
+		uint16_t rowOffset = (row+y)*VWIDTH/2;
+		for(int col = 0; col < 8; col++) {
+			if((ascii::font[(character-0x20)*15+row] << col) & 0b10000000) {
+			//if((ascii::font[(character-0x20)*15+(row/2)] << (col/2)) & 0b10000000) {
+			//if((ascii::font[row/2] << (col/2)) & 0b10000000) {
+				uint16_t colOffset = col+x;
+				if(colOffset % 2) { //odd: shift left by 4
+					bitmap[rowOffset + colOffset/2] = (bitmap[rowOffset + colOffset/2]&0x0F) | (color << 4);
+				} else {
+					bitmap[rowOffset + colOffset/2] = (bitmap[rowOffset + colOffset/2]&0xF0) | (color);
+				}
+			}
+		}
+	}
+}
+
+void drawString(unsigned char bitmap[],
+                const uint16_t x0,
+			    const uint16_t y0,
+			    const uint8_t color,
+			    const char string[]) {
+	uint16_t i = 0;
+	const char nullChar[] = "";
+	while(string[i] != nullChar[0]) {
+		int x = x0 + 10*i;
+		drawChar(bitmap, x, y0, color, string[i]);
+		i++;
+	}
+}
