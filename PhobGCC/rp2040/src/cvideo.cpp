@@ -147,7 +147,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 
 	// This bit pre-builds the border scanline and pixel buffers
 	border = (unsigned char *)malloc(HORIZ_bytes);
-	memset(border, BLACK2, HORIZ_bytes);			// Fill the border with the border colour
+	memset(border, GRAY2, HORIZ_bytes);			// Fill the border with the border colour
 	memset(border, SYNC, HORIZ_SYNC_bytes);		        // Add the hsync pulse
 	memset(border + HORIZ_SYNC_bytes,             BLANK2, HORIZ_BP_bytes);
 	memset(border + HORIZ_bytes - HORIZ_FP_bytes, BLANK2, HORIZ_FP_bytes);		// front porch
@@ -171,9 +171,21 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
 	drawString(_bitmap, 105, 10, 15, "Hello World! +2 blah");
-	//drawString(_bitmap, 10, 50, 15, " !\"#$%&'()*+,-./0123456789");
+	drawString2x(_bitmap, 0, 50, 15, " !\"#$%&'()*+,-./0123456789");
+	drawString2x(_bitmap, 9, 90, 15, " !\"#$%&'()*+,-./0123456789");
+
+	uint16_t center = 128;
+	//drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
+	//drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
+	//drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
+	//drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, WHITE);
+	//drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, WHITE);
+	//drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
+	//drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
+	//drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
+
 	bool oldB = btn.B;
 
 	uint16_t rowline = vline;

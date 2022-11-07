@@ -137,3 +137,57 @@ void drawString(unsigned char bitmap[],
 		i++;
 	}
 }
+
+//Draws 8x15 character in the specified location according to the ascii codepoints
+void drawChar2x(unsigned char bitmap[],
+                const uint16_t x,
+			    const uint16_t y,
+			    const uint8_t color,
+			    const char character) {
+	if(character < 0x20 || character > 0x7e) { //lower than space, larger than tilde
+		return;
+	}
+	if(x + 16-1 >= VWIDTH || y + 30-1 >= VHEIGHT) { //out of bounds
+		return;
+	}
+	for(int row = 0; row < 15; row++) {
+		uint16_t rowOffset1 = (row*2  +y)*VWIDTH/2;
+		uint16_t rowOffset2 = (row*2+1+y)*VWIDTH/2;
+		for(int col = 0; col < 8; col++) {
+			if((ascii::font[(character-0x20)*15+row] << col) & 0b10000000) {
+			//if((ascii::font[(character-0x20)*15+(row/2)] << (col/2)) & 0b10000000) {
+			//if((ascii::font[row/2] << (col/2)) & 0b10000000) {
+				uint16_t colOffset = col*2+x;
+				if(colOffset % 2) {
+					//odd
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+					//even: shift left by 4
+					bitmap[rowOffset1 + colOffset/2 + 1] = (bitmap[rowOffset1 + colOffset/2 + 1]&0x0F) | (color << 4);
+					bitmap[rowOffset1 + colOffset/2 + 1] = (bitmap[rowOffset1 + colOffset/2 + 1]&0x0F) | (color << 4);
+				} else {
+					//even: shift left by 4
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0x0F) | (color << 4);
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0x0F) | (color << 4);
+					//odd
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+				}
+			}
+		}
+	}
+}
+
+void drawString2x(unsigned char bitmap[],
+                  const uint16_t x0,
+			      const uint16_t y0,
+			      const uint8_t color,
+			      const char string[]) {
+	uint16_t i = 0;
+	const char nullChar[] = "";
+	while(string[i] != nullChar[0]) {
+		int x = x0 + 20*i;
+		drawChar2x(bitmap, x, y0, color, string[i]);
+		i++;
+	}
+}

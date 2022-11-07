@@ -36,4 +36,10 @@ void drawString(unsigned char bitmap[],
 				const uint8_t color,
 				const char string[]);
 
+void drawString2x(unsigned char bitmap[],
+                  const uint16_t x,
+				  const uint16_t y,
+				  const uint8_t color,
+				  const char string[]);
+
 #endif //CVIDEO_H
