@@ -108,7 +108,7 @@ void drawChar(unsigned char bitmap[],
 		return;
 	}
 	for(int row = 0; row < 15; row++) {
-		uint16_t rowOffset = (row+y)*VWIDTH/2;
+		uint32_t rowOffset = (row+y)*VWIDTH/2;
 		for(int col = 0; col < 8; col++) {
 			if((ascii::font[(character-0x20)*15+row] << col) & 0b10000000) {
 			//if((ascii::font[(character-0x20)*15+(row/2)] << (col/2)) & 0b10000000) {
@@ -151,8 +151,8 @@ void drawChar2x(unsigned char bitmap[],
 		return;
 	}
 	for(int row = 0; row < 15; row++) {
-		uint16_t rowOffset1 = (row*2  +y)*VWIDTH/2;
-		uint16_t rowOffset2 = (row*2+1+y)*VWIDTH/2;
+		uint32_t rowOffset1 = (row*2  +y)*VWIDTH/2;
+		uint32_t rowOffset2 = (row*2+1+y)*VWIDTH/2;
 		for(int col = 0; col < 8; col++) {
 			if((ascii::font[(character-0x20)*15+row] << col) & 0b10000000) {
 			//if((ascii::font[(character-0x20)*15+(row/2)] << (col/2)) & 0b10000000) {
