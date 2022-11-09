@@ -1998,6 +1998,9 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 
 	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
 	//This is for denoising and making sure the loop runs at 1000 Hz
+	//TODO: THESE CANNOT BE uint64_t because they don't actually get represented as 64 bit
+	//TODO: make this work with modulo so it wraps properly
+	//Otherwise, the controller freezes after an hour
 	static uint64_t lastMicros = micros();
 	static uint64_t adcDelta = 0;
 	uint64_t beforeMicros = micros();

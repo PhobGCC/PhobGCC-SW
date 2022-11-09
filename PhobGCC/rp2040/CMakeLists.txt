@@ -38,6 +38,7 @@ target_link_libraries(phobgcc_rp2040
 	PRIVATE
 	pico_stdlib
 	pico_multicore
+	pico_platform
 	hardware_adc
 	hardware_dma
 	hardware_flash

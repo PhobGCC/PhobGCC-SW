@@ -26,9 +26,9 @@ void drawLineLow(unsigned char bitmap[],
 	for(int x = x0; x <= x1; x++) {
 		uint32_t rowOffset = y*VWIDTH/2;
 		if(x % 2) { //odd
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0xF0) | (color);
+			bitmap[rowOffset + x/2] = 0xFF;//(bitmap[rowOffset + x/2]&0xF0) | (color);
 		} else { //even: shift left by 4
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
+			bitmap[rowOffset + x/2] = 0xFF;//(bitmap[rowOffset + x/2]&0x0F) | (color << 4);
 		}
 		if(D > 0) {
 			y = y + yi;
@@ -58,9 +58,9 @@ void drawLineHigh(unsigned char bitmap[],
 	for(int y = y0; y <= y1; y++) {
 		uint32_t rowOffset = y*VWIDTH/2;
 		if(x % 2) { //odd
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0xF0) | (color);
+			bitmap[rowOffset + x/2] = 0xFF;//(bitmap[rowOffset + x/2]&0xF0) | (color);
 		} else { //even: shift left by 4
-			bitmap[rowOffset + x/2] = (bitmap[rowOffset + x/2]&0x0F) | (color << 4);
+			bitmap[rowOffset + x/2] = 0xFF;//(bitmap[rowOffset + x/2]&0x0F) | (color << 4);
 		}
 		if(D > 0) {
 			x = x + xi;
@@ -161,17 +161,17 @@ void drawChar2x(unsigned char bitmap[],
 				if(colOffset % 2) {
 					//odd
 					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
-					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+					bitmap[rowOffset2 + colOffset/2] = (bitmap[rowOffset2 + colOffset/2]&0xF0) | (color);
 					//even: shift left by 4
 					bitmap[rowOffset1 + colOffset/2 + 1] = (bitmap[rowOffset1 + colOffset/2 + 1]&0x0F) | (color << 4);
-					bitmap[rowOffset1 + colOffset/2 + 1] = (bitmap[rowOffset1 + colOffset/2 + 1]&0x0F) | (color << 4);
+					bitmap[rowOffset2 + colOffset/2 + 1] = (bitmap[rowOffset2 + colOffset/2 + 1]&0x0F) | (color << 4);
 				} else {
 					//even: shift left by 4
 					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0x0F) | (color << 4);
-					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0x0F) | (color << 4);
+					bitmap[rowOffset2 + colOffset/2] = (bitmap[rowOffset2 + colOffset/2]&0x0F) | (color << 4);
 					//odd
 					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
-					bitmap[rowOffset1 + colOffset/2] = (bitmap[rowOffset1 + colOffset/2]&0xF0) | (color);
+					bitmap[rowOffset2 + colOffset/2] = (bitmap[rowOffset2 + colOffset/2]&0xF0) | (color);
 				}
 			}
 		}
