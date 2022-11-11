@@ -120,7 +120,9 @@ unsigned char * vsync_ssb;                            // Buffer and a half for e
 unsigned char * border;                               // Buffer for a vsync line for the top and bottom borders
 unsigned char * pixel_buffer[2];                      // Double-buffer for the pixel data scanlines
 
-volatile bool changeBitmap  = false;
+volatile bool changeBitmap = false;
+volatile bool startSync = false;
+volatile int frameCount = 0;
 
 /*-------------------------------------------------------------------*/
 int videoOut(const uint8_t pin_base, Buttons &btn) {
@@ -210,6 +212,12 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 		vline = 0;
 		bline = 0;
 		field = ++field & 0x01;
+		frameCount++;
+	}
+
+	if(frameCount == 60) {
+		frameCount = 0;
+		startSync = true;
 	}
 
     while (true) {
