@@ -175,7 +175,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
 	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
-	drawString(_bitmap, 105,  10, 10, "Hello World! +2 blah");
+	drawString(_bitmap, 105,  10, 13, "Hello World! +2 blah");
 	drawString2x(_bitmap, 0,  50, 10, " !\"#$%&'()*+,-./0123456789");
 	drawString2x(_bitmap, 1, 100, 10, " !\"#$%&'()*+,-./0123456789");
 	drawString2x(_bitmap, 2, 150, 10, " !\"#$%&'()*+,-./0123456789");
@@ -184,7 +184,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	drawString2x(_bitmap, 5, 300, 10, " !\"#$%&'()*+,-./0123456789");
 	drawString2x(_bitmap, 6, 350, 10, " !\"#$%&'()*+,-./0123456789");
 
-	uint16_t center = 128;
+	uint8_t center = 128;
 	drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
 	drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
 	drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
@@ -194,10 +194,25 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 	drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
 	drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
 
-	_bitmap[0] = WHITE2;
-
 	while (true) {
-		tight_loop_contents();
+		//tight_loop_contents();
+		while(!startSync) {
+			tight_loop_contents();
+		}
+		startSync = false;
+
+		memset(_bitmap, BLACK2, BUFFERLEN);
+
+		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
+		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
+		drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
+		drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, WHITE);
+		drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, WHITE);
+		drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
+		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
+		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
+		drawString2x(_bitmap, center-8, center-16, 15, "HI");
+		center++;
 	}
 }
 
@@ -215,7 +230,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 		frameCount++;
 	}
 
-	if(frameCount == 60) {
+	if(frameCount == 1) {
 		frameCount = 0;
 		startSync = true;
 	}
