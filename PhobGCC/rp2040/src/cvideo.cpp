@@ -34,6 +34,7 @@
 #define TESTPATTERN
 
 #include <stdlib.h>
+#include <charconv>
 //#include <stdio.h>
 #include "memory.h"
 
@@ -125,7 +126,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn) {
+int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -199,6 +200,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 		while(!_startSync) {
 			tight_loop_contents();
 		}
+		extSync = true;
 		_startSync = false;
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
@@ -216,8 +218,21 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 		drawLine(_bitmap, btn.Ax, btn.Ay, btn.Ax, btn.Ay, WHITE);
 
 		if(btn.B) {
-			drawString2x(_bitmap, 280, 10, 15, "B pressed");
+			drawString2x(_bitmap, 280, 0, 15, "B pressed");
 		}
+
+		char ax[6] = {0, 0, 0, 0, 0, 0};
+		char ay[6] = {0, 0, 0, 0, 0, 0};
+		char cx[6] = {0, 0, 0, 0, 0, 0};
+		char cy[6] = {0, 0, 0, 0, 0, 0};
+		std::to_chars(ax, ax + 5, btn.Ax-127);
+		std::to_chars(ay, ay + 5, btn.Ay-127);
+		std::to_chars(cx, cx + 5, btn.Cx-127);
+		std::to_chars(cy, cy + 5, btn.Cy-127);
+		drawString2x(_bitmap, 280,  40, 15, ax);
+		drawString2x(_bitmap, 280,  80, 15, ay);
+		drawString2x(_bitmap, 280, 120, 15, cx);
+		drawString2x(_bitmap, 280, 160, 15, cy);
 	}
 }
 

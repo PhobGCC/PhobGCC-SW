@@ -8,8 +8,8 @@
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
-bool _video = false;
-//volatile bool _sync = false;
+bool _video = true;
+volatile bool _sync = false;
 
 //This gets called by the comms library
 GCReport buttonsToGCReport() {
@@ -59,6 +59,15 @@ void second_core() {
 	//gpio_put(_pinSpare0, 0);
 
 	while(true) { //main event loop
+
+		//limit speed if video is running
+		if(_video) {
+			while(!_sync) {
+				tight_loop_contents();
+			}
+			_sync = false;
+		}
+
 		static bool running = false;
 
 		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
@@ -219,5 +228,5 @@ int main() {
         bitmap[i] = WHITE2;
     }
     */
-    videoOut(_pinDac0, _btn);
+    videoOut(_pinDac0, _btn, _sync);
 }
