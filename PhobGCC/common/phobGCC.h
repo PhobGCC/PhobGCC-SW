@@ -1986,27 +1986,32 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep, const bool skipFilter){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 
+
+	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
+	//This is 2^32 microseconds
+	static unsigned long lastMicros = micros();
+	static unsigned long adcDelta = 0;
+	//We increment lastMicros by 1000 each timestep so that we can always try to catch up
+	// to the right timestep instead of always being late
+	//If the timestep goes past 2^32, then we subtract 2^32.
+	//However, this may make it smaller than the most recently measured time.
+	//So, we let the loop keep going if
+
+#ifndef CLEANADC
+	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
+	//This is for denoising and making sure the loop runs at 1000 Hz
+	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
 	unsigned int adcCount = 0;
 	unsigned int aXSum = 0;
 	unsigned int aYSum = 0;
 	unsigned int cXSum = 0;
 	unsigned int cYSum = 0;
-
-	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
-	//This is for denoising and making sure the loop runs at 1000 Hz
-	//TODO: THESE CANNOT BE uint64_t because they don't actually get represented as 64 bit
-	//TODO: make this work with modulo so it wraps properly
-	//Otherwise, the controller freezes after an hour
-	static uint64_t lastMicros = micros();
-	static uint64_t adcDelta = 0;
-	uint64_t beforeMicros = micros();
-	uint64_t afterMicros;
-
-	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
+	unsigned long beforeMicros = micros();
+	unsigned long afterMicros;
 	do{
 		adcCount++;
 		aXSum += readAx(pin);
@@ -2014,24 +2019,55 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 		cXSum += readCx(pin);
 		cYSum += readCy(pin);
 		afterMicros = micros();
-		adcDelta = afterMicros-beforeMicros;
+		adcDelta = min(10000, max(0, afterMicros-beforeMicros));
 		beforeMicros = afterMicros;
 	}
-	while(uint64_t(afterMicros-lastMicros) < (1000 - adcDelta));
+	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 1000000));
 
 	//Then we spinlock to get the 1 kHz more exactly.
-	while((afterMicros-lastMicros) < 1000) {
+	while((afterMicros-lastMicros < 1000) || (afterMicros-lastMicros > 1000000)) {
 		afterMicros = micros();
 	}
-	dT = 1;
-	lastMicros += 1000;
-
 
 	//Serial.println(adcCount);
 	float aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	float aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
 	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
 	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
+#else //CLEANADC: read only once
+	float aStickX = readAx(pin)/4096.0*_ADCScale;
+	float aStickY = readAy(pin)/4096.0*_ADCScale;
+	float cStickX = readCx(pin)/4096.0*_ADCScale;
+	float cStickY = readCy(pin)/4096.0*_ADCScale;
+	//float aStickX = 0.5;
+	//float aStickY = 0.5;
+	//float cStickX = 0.5;
+	//float cStickY = 0.5;
+
+	if(!skipFilter) {
+		unsigned long thisMicros = micros();
+		if(thisMicros >= 2^32) {
+			thisMicros -= 2^32;
+		}
+		while((thisMicros-lastMicros < 1000) || (thisMicros-lastMicros > 1000000)) {
+			thisMicros = micros();
+			if(thisMicros >= 2^32) {
+				thisMicros -= 2^32;
+			}
+		}
+	}
+#endif //CLEANADC
+	if(!skipFilter) {
+		dT = 1;
+		lastMicros += 1000;
+	} else {
+		//we make dT variable so that we know how long it actually took to cycle
+		dT = max((uint64_t) 0, (micros()-lastMicros)/1000);
+		lastMicros = micros();
+	}
+	if(lastMicros >= 2^32) {
+		lastMicros -= 2^32;
+	}
 
 	//create the measurement value to be used in the kalman filter
 	float xZ;
@@ -2044,45 +2080,60 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float posCx = linearize(cStickX, cStickParams.fitCoeffsX);
 	float posCy = linearize(cStickY, cStickParams.fitCoeffsY);
 
+	float posAx = xZ;
+	float posAy = yZ;
 
 	//Run the kalman filter to eliminate snapback
 	static float xPosFilt = 0;//output of kalman filter
 	static float yPosFilt = 0;//output of kalman filter
-	runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
+	if(!skipFilter) {
+		runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
+	}
 
 	float shapedAx = xPosFilt;
 	float shapedAy = yPosFilt;
 	//Run waveshaping, a secondary filter to extend time at the rim
-	aRunWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains);
+	if(!skipFilter) {
+		aRunWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains);
+	}
 
 	//Run a simple low-pass filter
 	static float oldPosAx = 0;
 	static float oldPosAy = 0;
-	float posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
-	float posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
+	if(!skipFilter) {
+		posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
+		posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
+	}
 	oldPosAx = posAx;
 	oldPosAy = posAy;
 
 	//Run waveshaping on the c-stick
-	cRunWaveShaping(posCx, posCy, posCx, posCy, controls, normGains);
+	if(!skipFilter) {
+		cRunWaveShaping(posCx, posCy, posCx, posCy, controls, normGains);
+	}
 
 	//Run a simple low-pass filter on the C-stick
 	static float cXPos = 0;
 	static float cYPos = 0;
-	float oldCX = cXPos;
-	float oldCY = cYPos;
-	cXPos = posCx;
-	cYPos = posCy;
-	float xWeight1 = normGains.cXSmoothing;
-	float xWeight2 = 1-xWeight1;
-	float yWeight1 = normGains.cYSmoothing;
-	float yWeight2 = 1-yWeight1;
+	if(!skipFilter) {
+		float oldCX = cXPos;
+		float oldCY = cYPos;
+		cXPos = posCx;
+		cYPos = posCy;
+		float xWeight1 = normGains.cXSmoothing;
+		float xWeight2 = 1-xWeight1;
+		float yWeight1 = normGains.cYSmoothing;
+		float yWeight2 = 1-yWeight1;
 
-	cXPos = xWeight1*cXPos + xWeight2*oldCX;
-	cYPos = yWeight1*cYPos + yWeight2*oldCY;
+		cXPos = xWeight1*cXPos + xWeight2*oldCX;
+		cYPos = yWeight1*cYPos + yWeight2*oldCY;
 
-	posCx = cXPos;
-	posCy = cYPos;
+		posCx = cXPos;
+		posCy = cYPos;
+	} else {
+		cXPos = posCx;
+		cYPos = posCy;
+	}
 
 	//Run a median filter to reduce noise
 #ifdef USEMEDIAN

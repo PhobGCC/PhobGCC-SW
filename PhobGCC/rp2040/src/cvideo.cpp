@@ -120,12 +120,12 @@ unsigned char * vsync_ssb;                            // Buffer and a half for e
 unsigned char * border;                               // Buffer for a vsync line for the top and bottom borders
 unsigned char * pixel_buffer[2];                      // Double-buffer for the pixel data scanlines
 
-volatile bool changeBitmap = false;
-volatile bool startSync = false;
-volatile int frameCount = 0;
+volatile bool _changeBitmap = false;
+volatile bool _startSync = false;
+volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn) {
+int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -196,10 +196,11 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 
 	while (true) {
 		//tight_loop_contents();
-		while(!startSync) {
+		while(!_startSync) {
 			tight_loop_contents();
 		}
-		startSync = false;
+		extSync = true;
+		_startSync = false;
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -211,8 +212,13 @@ int videoOut(const uint8_t pin_base, Buttons &btn) {
 		drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
 		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
 		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
-		drawString2x(_bitmap, center-8, center-16, 15, "HI");
-		center++;
+
+		drawLine(_bitmap, btn.Cx, btn.Cy, btn.Cx, btn.Cy, 11);
+		drawLine(_bitmap, btn.Ax, btn.Ay, btn.Ax, btn.Ay, WHITE);
+
+		if(btn.B) {
+			drawString2x(_bitmap, 280, 10, 15, "B pressed");
+		}
 	}
 }
 
@@ -227,12 +233,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 		vline = 0;
 		bline = 0;
 		field = ++field & 0x01;
-		frameCount++;
-	}
-
-	if(frameCount == 1) {
-		frameCount = 0;
-		startSync = true;
+		_frameCount++;
 	}
 
     while (true) {
@@ -285,7 +286,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 			break;
 		}
 		if ( vline <= VERT_vblank + VERT_border ) {
-			if (changeBitmap) {
+			if (_changeBitmap) {
 				dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			} else {
 				dma_channel_set_read_addr(dma_channel, border, true);
@@ -296,7 +297,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 			break;
 		}
 		if ( vline <= VERT_vblank + VERT_border + VERT_bitmap  ) {
-			if (changeBitmap) {
+			if (_changeBitmap) {
 				dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			} else {
 				dma_channel_set_read_addr(dma_channel, pixel_buffer[bline++ & 1], true);    // Set the DMA to read from one of the pixel_buffers
@@ -305,12 +306,18 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 			break;
 		}
 		// otherwise, just output border until end of scanlines
-		if (changeBitmap) {
+		if (_changeBitmap) {
 			dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 		} else {
 			dma_channel_set_read_addr(dma_channel, border, true);
 		}
 		break;
+	}
+
+	//sync to after the DMA
+	if(_frameCount == 1) {
+		_frameCount = 0;
+		_startSync = true;
 	}
 
 	// Finally, clear the interrupt request ready for the next horizontal sync interrupt

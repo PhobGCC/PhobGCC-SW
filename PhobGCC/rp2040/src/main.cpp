@@ -8,6 +8,9 @@
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
+bool _video = false;
+volatile bool _sync = false;
+
 //This gets called by the comms library
 GCReport buttonsToGCReport() {
 	GCReport report = {
@@ -48,7 +51,7 @@ void second_core() {
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
 
 	pwm_set_wrap(slice_num, 255);
-	pwm_set_chan_level(slice_num, PWM_CHAN_B, 128);
+	pwm_set_chan_level(slice_num, PWM_CHAN_B, 25);
 	pwm_set_enabled(slice_num, true);
 
 	extrasInit();
@@ -56,17 +59,23 @@ void second_core() {
 	//gpio_put(_pinSpare0, 0);
 
 	while(true) { //main event loop
-		static bool running = true;
+		if(_video) {
+			while(!_sync) {
+				tight_loop_contents();
+			}
+			_sync = false;
+		}
+		static bool running = false;
 
-		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
-		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
+		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
 		if((_btn.B || _controls.autoInit) && !running){
 			running=true;
 		}
 
-		pwm_set_gpio_level(_pinLED, 255*_btn.B);
+		//pwm_set_gpio_level(_pinLED, 255*_btn.B);
 
 		static int currentCalStep = -1;//-1 means not calibrating
 
@@ -77,9 +86,6 @@ void second_core() {
 		static NotchStatus notchStatus[_noOfNotches];
 		static float notchAngles[_noOfNotches];
 		static float measuredNotchAngles[_noOfNotches];
-
-		//read the controllers buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 		//check to see if we are calibrating
 		if(currentCalStep >= 0){
@@ -101,7 +107,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -121,13 +127,17 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			//readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
 		}
+
+		//read the controller's buttons
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+
 	}
 }
 
@@ -215,5 +225,5 @@ int main() {
         bitmap[i] = WHITE2;
     }
     */
-    videoOut(_pinDac0, _btn);
+    videoOut(_pinDac0, _btn, _sync);
 }

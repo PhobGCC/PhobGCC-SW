@@ -13,6 +13,10 @@
 #include "structsAndEnums.h"
 #include "storage/pages/storage.h"
 
+#ifndef CLEANADC
+#define CLEANADC
+#endif //CLEANADC
+
 const int _us = 125;
 
 //defining which pin is what
