@@ -13,7 +13,7 @@
 #define BUFFERLEN 98304//512*384/2
 #endif
 
-int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &startSync);
+int videoOut(const uint8_t pin_base, Buttons &btn);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);

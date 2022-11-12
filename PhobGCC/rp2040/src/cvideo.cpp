@@ -125,7 +125,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
+int videoOut(const uint8_t pin_base, Buttons &btn) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -199,7 +199,6 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 		while(!_startSync) {
 			tight_loop_contents();
 		}
-		extSync = true;
 		_startSync = false;
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
