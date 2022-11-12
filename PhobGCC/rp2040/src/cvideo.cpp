@@ -217,6 +217,9 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 		drawLine(_bitmap, btn.Cx, btn.Cy, btn.Cx, btn.Cy, 11);
 		drawLine(_bitmap, btn.Ax, btn.Ay, btn.Ax, btn.Ay, WHITE);
 
+		if(btn.A) {
+			drawString2x(_bitmap, 280, 0, 15, "A pressed");
+		}
 		if(btn.B) {
 			drawString2x(_bitmap, 280, 0, 15, "B pressed");
 		}

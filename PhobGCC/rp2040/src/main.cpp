@@ -8,7 +8,6 @@
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
-bool _video = true;
 volatile bool _sync = false;
 
 //This gets called by the comms library
@@ -57,11 +56,19 @@ void second_core() {
 	extrasInit();
 
 	//gpio_put(_pinSpare0, 0);
+	bool vsyncSensors = true;
 
 	while(true) { //main event loop
 
+		//check if A is pressed to make it go at full speed
+		if(_btn.A) {
+			vsyncSensors = false;
+		} else {
+			vsyncSensors = true;
+		}
+
 		//limit speed if video is running
-		if(_video) {
+		if(vsyncSensors) {
 			while(!_sync) {
 				tight_loop_contents();
 			}
@@ -110,7 +117,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
+				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -130,12 +137,12 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
+				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _video);
+			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 		}
 
 		//read the controller's buttons
