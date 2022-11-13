@@ -24,10 +24,10 @@ const int _us = 125;
 //TODO: these are all temporary
 const int _pinA =  1;
 const int _pinB =  2;
-const int _pinDr = //3;
-const int _pinDu = //4;
-const int _pinDl = //5;
-const int _pinDd = //6;
+const int _pinDr = 9;
+const int _pinDu = 21;
+const int _pinDl = 22;
+const int _pinDd = 23;
 const int _pinL =  3;
 const int _pinR =  4;
 const int _pinX =  5;
