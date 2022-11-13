@@ -53,6 +53,7 @@ void cvideo_dma_handler(void);
 #include "cvideo_variables.h"
 
 #include "images/cuteGhost.h"
+#include "images/quadrants.h"
 
 /*-------------------------------------------------------------------*/
 /*------------------Video Standard-----------------------------------*/
@@ -175,7 +176,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
 	drawString(_bitmap, 105,  10, 13, "Hello World! +2 blah");
 	drawString2x(_bitmap, 0,  50, 10, " !\"#$%&'()*+,-./0123456789");
 	drawString2x(_bitmap, 1, 100, 10, " !\"#$%&'()*+,-./0123456789");
@@ -205,6 +206,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
 
+		drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
 		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
 		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
 		drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
@@ -214,8 +216,11 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
 		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
 
-		drawLine(_bitmap, btn.Cx, btn.Cy, btn.Cx, btn.Cy, 11);
-		drawLine(_bitmap, btn.Ax, btn.Ay, btn.Ax, btn.Ay, WHITE);
+		//drawLine(_bitmap, btn.Cx+1, btn.Cy+1, btn.Cx+1, btn.Cy+1, 11);
+		//drawLine(_bitmap, btn.Ax+1, btn.Ay+1, btn.Ax+1, btn.Ay+1, WHITE);
+		int xList[6] = {0,   5,  23,  45,  60,  74};
+		int yList[6] = {0,  -6, -30, -55, -65, -74};
+		graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
 
 		if(btn.A) {
 			drawString2x(_bitmap, 280, 0, 15, "A pressed");
@@ -236,6 +241,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 		drawString2x(_bitmap, 280,  80, 15, ay);
 		drawString2x(_bitmap, 280, 120, 15, cx);
 		drawString2x(_bitmap, 280, 160, 15, cy);
+
 	}
 }
 
@@ -332,7 +338,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 	}
 
 	//sync to after the DMA
-	if(_frameCount == 1) {
+	if(_frameCount == 6) {
 		_frameCount = 0;
 		_startSync = true;
 	}

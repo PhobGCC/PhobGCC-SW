@@ -13,6 +13,11 @@
 #define BUFFERLEN 98304//512*384/2
 #endif
 
+enum LineOrPoint {
+	LINEGRAPH,
+	POINTGRAPH
+};
+
 int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync);
 
 uint16_t getImageWidth(const unsigned char image[]);
@@ -32,14 +37,23 @@ void drawLine(unsigned char bitmap[],
 
 void drawString(unsigned char bitmap[],
                 const uint16_t x,
-				const uint16_t y,
-				const uint8_t color,
-				const char string[]);
+                const uint16_t y,
+                const uint8_t color,
+                const char string[]);
 
 void drawString2x(unsigned char bitmap[],
                   const uint16_t x,
-				  const uint16_t y,
-				  const uint8_t color,
-				  const char string[]);
+                  const uint16_t y,
+                  const uint8_t color,
+                  const char string[]);
+
+void graphStickmap(unsigned char bitmap[],
+                   const uint16_t x0,
+                   const uint16_t y0,
+                   const int x[],
+                   const int y[],
+                   const uint16_t length,
+                   const uint8_t color,
+                   const LineOrPoint graphType);
 
 #endif //CVIDEO_H
