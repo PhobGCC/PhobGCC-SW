@@ -206,21 +206,21 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
 
-		drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
-		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
-		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
-		drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
-		drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, WHITE);
-		drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, WHITE);
-		drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
-		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
-		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
+		//drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
+		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, 7);
+		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, 7);
+		drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, 7);
+		drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, 7);
+		drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, 7);
+		drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, 7);
+		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, 7);
+		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, 7);
 
-		//drawLine(_bitmap, btn.Cx+1, btn.Cy+1, btn.Cx+1, btn.Cy+1, 11);
-		//drawLine(_bitmap, btn.Ax+1, btn.Ay+1, btn.Ax+1, btn.Ay+1, WHITE);
-		int xList[6] = {0,   5,  23,  45,  60,  74};
-		int yList[6] = {0,  -6, -30, -55, -65, -74};
-		graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
+		drawLine(_bitmap, btn.Cx+1, 256-btn.Cy, btn.Cx+1, 256-btn.Cy, 11);
+		drawLine(_bitmap, btn.Ax+1, 256-btn.Ay, btn.Ax+1, 256-btn.Ay, WHITE);
+		//int xList[6] = {0,   5,  23,  45,  60,  74};
+		//int yList[6] = {0,  -6, -30, -55, -65, -74};
+		//graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
 
 		if(btn.A) {
 			drawString2x(_bitmap, 280, 0, 15, "A pressed");
@@ -338,7 +338,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 	}
 
 	//sync to after the DMA
-	if(_frameCount == 6) {
+	if(_frameCount == 1) {
 		_frameCount = 0;
 		_startSync = true;
 	}

@@ -28,4 +28,4 @@ enum MenuItem {
 	MENU_GAMES,
 	MENU_SNEK,
 	MENU_PING
-}
+};
