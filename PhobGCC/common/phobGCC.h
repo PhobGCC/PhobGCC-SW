@@ -1928,12 +1928,17 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				readADCScale(_ADCScale, _ADCScaleFactor);
 				float X = 0;
 				float Y = 0;
+#ifndef CLEANADC
 				for(int i=0; i<128; i++) {
 					X += readAx(_pinList)/4096.0*_ADCScale;
 					Y += readAy(_pinList)/4096.0*_ADCScale;
 				}
 				X /= 128.0;
 				Y /= 128.0;
+#else //CLEANADC
+				X = readAx(_pinList)/4096.0;
+				Y = readAy(_pinList)/4096.0;
+#endif //CLEANADC
 				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
 			}
 			currentCalStep ++;
@@ -2037,10 +2042,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
 	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
 #else //CLEANADC: read only once
-	float aStickX = readAx(pin)/4096.0*_ADCScale;
-	float aStickY = readAy(pin)/4096.0*_ADCScale;
-	float cStickX = readCx(pin)/4096.0*_ADCScale;
-	float cStickY = readCy(pin)/4096.0*_ADCScale;
+	float aStickX = readAx(pin)/4096.0;
+	float aStickY = readAy(pin)/4096.0;
+	float cStickX = readCx(pin)/4096.0;
+	float cStickY = readCy(pin)/4096.0;
 	//float aStickX = 0.5;
 	//float aStickY = 0.5;
 	//float cStickX = 0.5;
@@ -2068,7 +2073,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		lastMicros = micros();
 	}
 	if(micros() > lastMicros+1000) {
-		lastMicros = micros;
+		lastMicros = micros();
 	}
 	if(lastMicros >= (2^32)) {
 		lastMicros -= (2^32);

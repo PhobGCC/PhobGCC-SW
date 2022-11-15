@@ -11,7 +11,7 @@
 volatile bool _sync = false;
 
 //This gets called by the comms library
-GCReport buttonsToGCReport() {
+GCReport __time_critical_func(buttonsToGCReport)() {
 	GCReport report = {
 		.a       = _btn.A,
 		.b       = _btn.B,

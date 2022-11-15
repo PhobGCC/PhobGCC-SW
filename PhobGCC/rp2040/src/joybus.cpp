@@ -30,7 +30,7 @@
    I advise checking the RP2040 documentation and this video https://www.youtube.com/watch?v=yYnQYF_Xa8g&ab_channel=stacksmashing to understand
 */
 
-void convertToPio(const uint8_t* command, const int len, uint32_t* result, int& resultLen) {
+void __time_critical_func(convertToPio)(const uint8_t* command, const int len, uint32_t* result, int& resultLen) {
     // PIO Shifts to the right by default
     // In: pushes batches of 8 shifted left, i.e we get [0x40, 0x03, rumble (the end bit is never pushed)]
     // Out: We push commands for a right shift with an enable pin, ie 5 (101) would be 0b11'10'11
@@ -54,7 +54,7 @@ void convertToPio(const uint8_t* command, const int len, uint32_t* result, int& 
     result[len / 2] += 3 << (2 * (8 * (len % 2)));
 }
 
-void enterMode(const int dataPin, std::function<GCReport()> func) {
+void __time_critical_func(enterMode)(const int dataPin, std::function<GCReport()> func) {
     gpio_init(dataPin);
     gpio_set_dir(dataPin, GPIO_IN);
     gpio_pull_up(dataPin);
