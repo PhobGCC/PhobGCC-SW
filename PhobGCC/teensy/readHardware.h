@@ -61,9 +61,9 @@ void readButtons(const Pins &pin, Buttons &hardware) {
 	hardware.Dr = !digitalRead(pin.pinDr);
 }
 
-void readADCScale(float &_ADCScale, float &_ADCScaleFactor) {
+void readADCScale(float &ADCScale, float ADCScaleFactor) {
 #ifdef USEADCSCALE
-	_ADCScale = _ADCScale*0.999 + _ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
+	ADCScale = ADCScale*0.999 + ADCScaleFactor/adc->adc1->analogRead(ADC_INTERNAL_SOURCE::VREF_OUT);
 #endif
 	// otherwise _ADCScale is 1
 }

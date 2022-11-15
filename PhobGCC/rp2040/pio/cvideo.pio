@@ -1,0 +1,48 @@
+;-------------------------------------------
+; Pico-Composite8	Composite video, PIO code
+;
+; 2021-06-04		obstruse@earthlink.net
+;--------------------------------------------
+
+; Based on:
+;--------------------------------------------
+; Title:	        Pico-mposite PIO code
+; Author:	        Dean Belfield
+; Created:	        26/01/2021
+; Last Updated:	    15/02/2021
+;--------------------------------------------
+; Modified to 4 bits to be like https://github.com/obstruse/life
+
+.program cvideo
+
+.wrap_target            ; This loop needs to last 1000000/hfreq/hdots microseconds. 
+                        ; clkdiv = sysclk/hfreq/hdots/pioClockCount.  see cvideo.c
+    out PINS, 4         ; Get 8 bits from DMA via Output Shift Register (OSR) to PINS. One PIO clock.
+.wrap                   ; Loop back to wrap_target
+
+% c-sdk {
+//
+// Initialise the PIO
+// Parameters:
+// - pio: The PIO to attach this to
+// - sm: The state machine number
+// - offset: The instruction memory offset the program is loaded at
+// - pin_base: The number of the first GPIO pin to use in the PIO
+// - pin_count: The number of consecutive GPIO pins to write to
+// - div: The system clock divisor for PIO clock rate
+//
+// 
+void cvideo_initialise_pio(PIO pio, uint sm, uint offset, uint pin_base, uint pin_count, double div) {
+    for(uint i=pin_base; i<pin_base+pin_count; i++) {
+        pio_gpio_init(pio, i);
+    }
+    pio_sm_set_consecutive_pindirs(pio, sm, pin_base, pin_count, true);
+    pio_sm_config c = cvideo_program_get_default_config(offset);
+    sm_config_set_set_pins(&c, pin_base, pin_count);
+    sm_config_set_out_pins(&c, pin_base, pin_count);
+    sm_config_set_out_shift(&c, false, true, 8); //shift left(false), pull threshold
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    pio_sm_init(pio, sm, offset, &c);
+    pio->sm[sm].clkdiv = (uint32_t) (div * (1 << 16)); // INT portion: 0xffff0000, FRAC portion: 0x0000ff00
+}
+%}

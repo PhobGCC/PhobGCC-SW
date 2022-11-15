@@ -5,6 +5,10 @@
 
 #include "phobGCC.h"
 #include "comms/joybus.hpp"
+#include "cvideo.h"
+#include "cvideo_variables.h"
+
+volatile bool _sync = false;
 
 //This gets called by the comms library
 GCReport buttonsToGCReport() {
@@ -46,14 +50,33 @@ void second_core() {
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
 
 	pwm_set_wrap(slice_num, 255);
-	pwm_set_chan_level(slice_num, PWM_CHAN_B, 128);
+	pwm_set_chan_level(slice_num, PWM_CHAN_B, 25);
 	pwm_set_enabled(slice_num, true);
 
 	extrasInit();
 
-	gpio_put(_pinSpare0, 0);
+	//gpio_put(_pinSpare0, 0);
+	bool vsyncSensors = false;
 
 	while(true) { //main event loop
+
+		//check if A is pressed to make it go at full speed
+		/*
+		if(_btn.A) {
+			vsyncSensors = false;
+		} else {
+			vsyncSensors = true;
+		}
+		*/
+
+		//limit speed if video is running
+		if(vsyncSensors) {
+			while(!_sync) {
+				tight_loop_contents();
+			}
+			_sync = false;
+		}
+
 		static bool running = false;
 
 		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
@@ -64,6 +87,8 @@ void second_core() {
 			running=true;
 		}
 
+		//pwm_set_gpio_level(_pinLED, 255*_btn.B);
+
 		static int currentCalStep = -1;//-1 means not calibrating
 
 		//Set up persistent storage for calibration
@@ -73,9 +98,6 @@ void second_core() {
 		static NotchStatus notchStatus[_noOfNotches];
 		static float notchAngles[_noOfNotches];
 		static float measuredNotchAngles[_noOfNotches];
-
-		//read the controllers buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 		//check to see if we are calibrating
 		if(currentCalStep >= 0){
@@ -97,7 +119,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -117,20 +139,24 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 		}
+
+		//read the controller's buttons
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+
 	}
 }
 
 int main() {
 	//set the clock speed to 125 kHz
 	//the comms library needs this clockspeed
-	set_sys_clock_khz(1000*_us, true);
+	//set_sys_clock_khz(1000*_us, true);
 
 	//set up the main core so it can be paused by the other core
 	//this is necessary for flash writing
@@ -186,11 +212,21 @@ int main() {
 	_btn.magic1 =0;
 	_btn.magic2 =0;
 
+	_raw.axRaw = 0;
+	_raw.ayRaw = 0;
+	_raw.cxRaw = 0;
+	_raw.cyRaw = 0;
+	_raw.axUnfiltered = 0;
+	_raw.ayUnfiltered = 0;
+	_raw.cxUnfiltered = 0;
+	_raw.cyUnfiltered = 0;
+
 	multicore_launch_core1(second_core);
 
 	//Run comms
-	//enterMode(_pinTX, buttonsToGCReport);
+	enterMode(_pinTX, buttonsToGCReport);
 
+    /*
 	//Start the dac
 	uint8_t counter = 0;
 	while(true) {
@@ -201,4 +237,14 @@ int main() {
 		counter = (counter+1) % 16;
 		sleep_ms(10);
 	}
+    */
+
+    //start video out
+    /*
+    unsigned char bitmap[width*height];
+    for(int i=0; i < width*height; i++) {
+        bitmap[i] = WHITE2;
+    }
+    */
+    //videoOut(_pinDac0, _btn, _raw, _sync);
 }

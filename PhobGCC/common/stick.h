@@ -318,9 +318,8 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 		float deltaY = cleanedPointsY[i+1] - cleanedPointsY[0];
 		float mag = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-		if(mag < 0.02){//if the cleaned point was at the center
+		if(mag < 0.02 && (i%2) != 0){//if the cleaned point was at the center and would be a firefox notch
 			//average the previous and next points (cardinal & diagonal) for some sanity
-			//note: this will likely bork if this happens to a cardinal or diagonal
 			int prevIndex = ((i-1+_noOfNotches) % _noOfNotches) + 1;
 			int nextIndex = ((i+1) % _noOfNotches) + 1;
 

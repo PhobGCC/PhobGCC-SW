@@ -7,6 +7,8 @@ Buttons _btn;
 
 Buttons _hardware;
 
+RawStick _raw;
+
 int _rumblePower = 0;
 
 float _dT;
