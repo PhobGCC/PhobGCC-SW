@@ -127,7 +127,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
+int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -222,21 +222,45 @@ int videoOut(const uint8_t pin_base, Buttons &btn, volatile bool &extSync) {
 		//int yList[6] = {0,  -6, -30, -55, -65, -74};
 		//graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
 
+		/*
 		if(btn.A) {
-			drawString2x(_bitmap, 280, 0, 15, "A pressed");
+			drawString2x(_bitmap, 280 + 0, 0, 15, "A");
 		}
 		if(btn.B) {
-			drawString2x(_bitmap, 280, 0, 15, "B pressed");
+			drawString2x(_bitmap, 280 + 20, 0, 15, "B");
 		}
+		if(btn.L) {
+			drawString2x(_bitmap, 280 + 40, 0, 15, "L");
+		}
+		if(btn.R) {
+			drawString2x(_bitmap, 280 + 60, 0, 15, "R");
+		}
+		if(btn.X) {
+			drawString2x(_bitmap, 280 + 80, 0, 15, "X");
+		}
+		if(btn.Y) {
+			drawString2x(_bitmap, 280 + 100, 0, 15, "Y");
+		}
+		if(btn.Z) {
+			drawString2x(_bitmap, 280 + 120, 0, 15, "Z");
+		}
+		if(btn.S) {
+			drawString2x(_bitmap, 280 + 140, 0, 15, "S");
+		}
+		*/
 
 		char ax[6] = {0, 0, 0, 0, 0, 0};
 		char ay[6] = {0, 0, 0, 0, 0, 0};
 		char cx[6] = {0, 0, 0, 0, 0, 0};
 		char cy[6] = {0, 0, 0, 0, 0, 0};
-		std::to_chars(ax, ax + 5, btn.Ax-127);
-		std::to_chars(ay, ay + 5, btn.Ay-127);
-		std::to_chars(cx, cx + 5, btn.Cx-127);
-		std::to_chars(cy, cy + 5, btn.Cy-127);
+		//std::to_chars(ax, ax + 5, btn.Ax-127);
+		//std::to_chars(ay, ay + 5, btn.Ay-127);
+		//std::to_chars(cx, cx + 5, btn.Cx-127);
+		//std::to_chars(cy, cy + 5, btn.Cy-127);
+		std::to_chars(ax, ax + 5, raw.axRaw);
+		std::to_chars(ay, ay + 5, raw.ayRaw);
+		std::to_chars(cx, cx + 5, raw.cxRaw);
+		std::to_chars(cy, cy + 5, raw.cyRaw);
 		drawString2x(_bitmap, 280,  40, 15, ax);
 		drawString2x(_bitmap, 280,  80, 15, ay);
 		drawString2x(_bitmap, 280, 120, 15, cx);

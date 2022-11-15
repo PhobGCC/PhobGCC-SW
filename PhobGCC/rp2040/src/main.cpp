@@ -56,16 +56,18 @@ void second_core() {
 	extrasInit();
 
 	//gpio_put(_pinSpare0, 0);
-	bool vsyncSensors = true;
+	bool vsyncSensors = false;
 
 	while(true) { //main event loop
 
 		//check if A is pressed to make it go at full speed
+		/*
 		if(_btn.A) {
 			vsyncSensors = false;
 		} else {
 			vsyncSensors = true;
 		}
+		*/
 
 		//limit speed if video is running
 		if(vsyncSensors) {
@@ -117,7 +119,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -137,12 +139,12 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 		}
 
 		//read the controller's buttons
@@ -210,10 +212,19 @@ int main() {
 	_btn.magic1 =0;
 	_btn.magic2 =0;
 
+	_raw.axRaw = 0;
+	_raw.ayRaw = 0;
+	_raw.cxRaw = 0;
+	_raw.cyRaw = 0;
+	_raw.axUnfiltered = 0;
+	_raw.ayUnfiltered = 0;
+	_raw.cxUnfiltered = 0;
+	_raw.cyUnfiltered = 0;
+
 	multicore_launch_core1(second_core);
 
 	//Run comms
-	//enterMode(_pinTX, buttonsToGCReport);
+	enterMode(_pinTX, buttonsToGCReport);
 
     /*
 	//Start the dac
@@ -235,5 +246,5 @@ int main() {
         bitmap[i] = WHITE2;
     }
     */
-    videoOut(_pinDac0, _btn, _sync);
+    //videoOut(_pinDac0, _btn, _raw, _sync);
 }

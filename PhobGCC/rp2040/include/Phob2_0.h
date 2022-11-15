@@ -163,7 +163,7 @@ void readButtons(const Pins &, Buttons &hardware) {
 	hardware.Dd = !gpio_get(_pinDd);
 }
 
-void readADCScale(float &, float &) {
+void readADCScale(float &, float ) {
 	//do nothing
 }
 

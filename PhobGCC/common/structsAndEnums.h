@@ -136,6 +136,17 @@ struct HardwareButtons{
 	uint8_t Y;
 };
 
+struct RawStick{
+	uint16_t axRaw;
+	uint16_t ayRaw;
+	uint16_t cxRaw;
+	uint16_t cyRaw;
+	int axUnfiltered;
+	int ayUnfiltered;
+	int cxUnfiltered;
+	int cyUnfiltered;
+};
+
 struct Cardinals{
 	uint8_t l : 1;
 	uint8_t r : 1;

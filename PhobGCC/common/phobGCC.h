@@ -1861,6 +1861,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		advanceCalPressed = true;
 		if (whichStick == CSTICK){
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
+				readADCScale(_ADCScale, _ADCScaleFactor);
 				float X = 0;
 				float Y = 0;
 				for(int i=0; i<128; i++) {
@@ -1924,6 +1925,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			Serial.println(currentCalStep);
 #endif //ARDUINO
 			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
+				readADCScale(_ADCScale, _ADCScaleFactor);
 				float X = 0;
 				float Y = 0;
 				for(int i=0; i<128; i++) {
@@ -1986,7 +1988,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep, const bool skipFilter){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep, const bool skipFilter){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 
@@ -2010,8 +2012,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	unsigned int aYSum = 0;
 	unsigned int cXSum = 0;
 	unsigned int cYSum = 0;
-	unsigned long beforeMicros = micros();
-	unsigned long afterMicros;
+	long beforeMicros = micros();
+	long afterMicros;
 	do{
 		adcCount++;
 		aXSum += readAx(pin);
@@ -2022,10 +2024,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 		adcDelta = min(10000, max(0, afterMicros-beforeMicros));
 		beforeMicros = afterMicros;
 	}
-	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 1000000));
+	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 100000000));
 
 	//Then we spinlock to get the 1 kHz more exactly.
-	while((afterMicros-lastMicros < 1000) || (afterMicros-lastMicros > 1000000)) {
+	while((afterMicros-lastMicros < 1000) || (afterMicros-lastMicros > 100000000)) {
 		afterMicros = micros();
 	}
 
@@ -2046,13 +2048,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 
 	if(!skipFilter) {
 		unsigned long thisMicros = micros();
-		if(thisMicros >= 2^32) {
-			thisMicros -= 2^32;
+		if(thisMicros >= (2^32)) {
+			thisMicros -= (2^32);
 		}
-		while((thisMicros-lastMicros < 1000) || (thisMicros-lastMicros > 1000000)) {
+		while((thisMicros-lastMicros < 1000) || (thisMicros-lastMicros > 100000000)) {
 			thisMicros = micros();
-			if(thisMicros >= 2^32) {
-				thisMicros -= 2^32;
+			if(thisMicros >= (2^32)) {
+				thisMicros -= (2^32);
 			}
 		}
 	}
@@ -2065,9 +2067,16 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 		dT = max((uint64_t) 0, (micros()-lastMicros)/1000);
 		lastMicros = micros();
 	}
-	if(lastMicros >= 2^32) {
-		lastMicros -= 2^32;
+	if(micros() > lastMicros+1000) {
+		lastMicros = micros;
 	}
+	if(lastMicros >= (2^32)) {
+		lastMicros -= (2^32);
+	}
+	_raw.axRaw = aStickX*4096;
+	_raw.ayRaw = aStickY*4096;
+	_raw.cxRaw = cStickX*4096;
+	_raw.cyRaw = cStickY*4096;
 
 	//create the measurement value to be used in the kalman filter
 	float xZ;
@@ -2149,6 +2158,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, const Buttons &ha
 	float remappedAy;
 	float remappedCx;
 	float remappedCy;
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
 	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
 	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
 
