@@ -221,30 +221,14 @@ int main() {
 	_raw.cxUnfiltered = 0;
 	_raw.cyUnfiltered = 0;
 
+	readButtons(_pinList, _hardware);
 	multicore_launch_core1(second_core);
 
 	//Run comms
-	enterMode(_pinTX, buttonsToGCReport);
-
-    /*
-	//Start the dac
-	uint8_t counter = 0;
-	while(true) {
-		gpio_put(_pinDac0, counter & 1);
-		gpio_put(_pinDac1, counter & 2);
-		gpio_put(_pinDac2, counter & 4);
-		gpio_put(_pinDac3, counter & 8);
-		counter = (counter+1) % 16;
-		sleep_ms(10);
+	if(_hardware.A && _hardware.B && _hardware.Z) {
+		videoOut(_pinDac0, _btn, _raw, _sync);
+	} else {
+		enterMode(_pinTX, buttonsToGCReport);
 	}
-    */
 
-    //start video out
-    /*
-    unsigned char bitmap[width*height];
-    for(int i=0; i < width*height; i++) {
-        bitmap[i] = WHITE2;
-    }
-    */
-    //videoOut(_pinDac0, _btn, _raw, _sync);
 }

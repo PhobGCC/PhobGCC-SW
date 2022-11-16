@@ -2100,54 +2100,41 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//Run the kalman filter to eliminate snapback
 	static float xPosFilt = 0;//output of kalman filter
 	static float yPosFilt = 0;//output of kalman filter
-	if(!skipFilter) {
-		runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
-	}
+	runKalman(xPosFilt, yPosFilt, xZ, yZ, controls, normGains);
 
 	float shapedAx = xPosFilt;
 	float shapedAy = yPosFilt;
 	//Run waveshaping, a secondary filter to extend time at the rim
-	if(!skipFilter) {
-		aRunWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains);
-	}
+	aRunWaveShaping(shapedAx, shapedAy, shapedAx, shapedAy, controls, normGains);
 
 	//Run a simple low-pass filter
 	static float oldPosAx = 0;
 	static float oldPosAy = 0;
-	if(!skipFilter) {
-		posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
-		posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
-	}
+	posAx = normGains.xSmoothing*shapedAx + (1-normGains.xSmoothing)*oldPosAx;
+	posAy = normGains.ySmoothing*shapedAy + (1-normGains.ySmoothing)*oldPosAy;
 	oldPosAx = posAx;
 	oldPosAy = posAy;
 
 	//Run waveshaping on the c-stick
-	if(!skipFilter) {
-		cRunWaveShaping(posCx, posCy, posCx, posCy, controls, normGains);
-	}
+	cRunWaveShaping(posCx, posCy, posCx, posCy, controls, normGains);
 
 	//Run a simple low-pass filter on the C-stick
 	static float cXPos = 0;
 	static float cYPos = 0;
-	if(!skipFilter) {
-		float oldCX = cXPos;
-		float oldCY = cYPos;
-		cXPos = posCx;
-		cYPos = posCy;
-		float xWeight1 = normGains.cXSmoothing;
-		float xWeight2 = 1-xWeight1;
-		float yWeight1 = normGains.cYSmoothing;
-		float yWeight2 = 1-yWeight1;
+	float oldCX = cXPos;
+	float oldCY = cYPos;
+	cXPos = posCx;
+	cYPos = posCy;
+	float xWeight1 = normGains.cXSmoothing;
+	float xWeight2 = 1-xWeight1;
+	float yWeight1 = normGains.cYSmoothing;
+	float yWeight2 = 1-yWeight1;
 
-		cXPos = xWeight1*cXPos + xWeight2*oldCX;
-		cYPos = yWeight1*cYPos + yWeight2*oldCY;
+	cXPos = xWeight1*cXPos + xWeight2*oldCX;
+	cYPos = yWeight1*cYPos + yWeight2*oldCY;
 
-		posCx = cXPos;
-		posCy = cYPos;
-	} else {
-		cXPos = posCx;
-		cYPos = posCy;
-	}
+	posCx = cXPos;
+	posCy = cYPos;
 
 	//Run a median filter to reduce noise
 #ifdef USEMEDIAN

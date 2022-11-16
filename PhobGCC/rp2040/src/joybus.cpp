@@ -112,8 +112,6 @@ void __time_critical_func(enterMode)(const int dataPin, std::function<GCReport()
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
         }
         else if (buffer[0] == 0x40) { // Could check values past the first byte for reliability
-            buffer[0] = pio_sm_get_blocking(pio, 0);
-            buffer[0] = pio_sm_get_blocking(pio, 0);
             //gpio_put(rumblePin, buffer[0] & 1);
 
             //TODO The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
@@ -121,9 +119,17 @@ void __time_critical_func(enterMode)(const int dataPin, std::function<GCReport()
             // Consider whether that makes sense for your project. If your state building is long, use a different control flow i.e precompute somehow and have func read it
             GCReport gcReport = func();
 
+			//get the second byte; we do this interleaved with work that must be done
+            buffer[0] = pio_sm_get_blocking(pio, 0);
+
             uint32_t result[5];
             int resultLen;
             convertToPio((uint8_t*)(&gcReport), 8, result, resultLen);
+
+			//get the third byte; we do this interleaved with work that must be done
+            buffer[0] = pio_sm_get_blocking(pio, 0);
+
+			sleep_us(4);//add delay so we don't overwrite the stop bit
 
             pio_sm_set_enabled(pio, 0, false);
             pio_sm_init(pio, 0, offset+joybus_offset_outmode, &config);
