@@ -18,7 +18,7 @@ enum LineOrPoint {
 	POINTGRAPH
 };
 
-int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, int a[], int b[]);
+int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);

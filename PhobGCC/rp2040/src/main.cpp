@@ -8,7 +8,6 @@
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
-volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
 
 //This gets called by the comms library
@@ -39,6 +38,13 @@ GCReport __time_critical_func(buttonsToGCReport)() {
 }
 
 void second_core() {
+	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+
+	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
+		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+	}
+
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
 
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
@@ -50,20 +56,21 @@ void second_core() {
 	extrasInit();
 
 	//gpio_put(_pinSpare0, 0);
+	bool vsyncSensors = false;
 
 	while(true) { //main event loop
 
 		//check if A is pressed to make it go at full speed
 		/*
 		if(_btn.A) {
-			_vsyncSensors = false;
+			vsyncSensors = false;
 		} else {
-			_vsyncSensors = true;
+			vsyncSensors = true;
 		}
 		*/
 
 		//limit speed if video is running
-		if(_vsyncSensors) {
+		if(vsyncSensors) {
 			while(!_sync) {
 				tight_loop_contents();
 			}
@@ -112,7 +119,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -132,12 +139,12 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, vsyncSensors);
 		}
 
 		//read the controller's buttons
@@ -154,38 +161,6 @@ int main() {
 	//set up the main core so it can be paused by the other core
 	//this is necessary for flash writing
 	multicore_lockout_victim_init();
-
-	//Read settings
-	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
-
-	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
-		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
-		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
-	}
-
-	//output the stick cal points
-	float tempCalPointsX[_noOfCalibrationPoints];
-	float tempCalPointsY[_noOfCalibrationPoints];
-	float notchAngles[_noOfNotches];
-	getPointsSetting(tempCalPointsX, ASTICK, XAXIS);
-	getPointsSetting(tempCalPointsY, ASTICK, YAXIS);
-	getNotchAnglesSetting(notchAngles, ASTICK);
-
-	float cleanedPointsX[_noOfNotches+1];
-	float cleanedPointsY[_noOfNotches+1];
-	float notchPointsX[_noOfNotches+1];
-	float notchPointsY[_noOfNotches+1];
-	NotchStatus notchStatus[_noOfNotches];
-
-	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-
-	int cleanX[_noOfNotches+1];
-	int cleanY[_noOfNotches+1];
-
-	for(int i = 0; i < 17; i++) {
-		cleanX[i] = (int) round(cleanedPointsX[i]*1000);
-		cleanY[i] = (int) round(cleanedPointsY[i]*1000);
-	}
 
 	setPinModes();
 
@@ -249,10 +224,9 @@ int main() {
 	readButtons(_pinList, _hardware);
 	multicore_launch_core1(second_core);
 
-	//Run comms unless Z is held while plugging in
-	if(_hardware.Z) {
-		_vsyncSensors = true;
-		videoOut(_pinDac0, _btn, _raw, _sync, cleanX, cleanY);
+	//Run comms
+	if(_hardware.A && _hardware.B && _hardware.Z) {
+		videoOut(_pinDac0, _btn, _raw, _sync);
 	} else {
 		enterMode(_pinTX, buttonsToGCReport);
 	}
