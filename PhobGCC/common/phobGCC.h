@@ -1928,17 +1928,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 				readADCScale(_ADCScale, _ADCScaleFactor);
 				float X = 0;
 				float Y = 0;
-#ifndef CLEANADC
 				for(int i=0; i<128; i++) {
 					X += readAx(_pinList)/4096.0*_ADCScale;
 					Y += readAy(_pinList)/4096.0*_ADCScale;
 				}
 				X /= 128.0;
 				Y /= 128.0;
-#else //CLEANADC
-				X = readAx(_pinList)/4096.0;
-				Y = readAy(_pinList)/4096.0;
-#endif //CLEANADC
 				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
 			}
 			currentCalStep ++;
@@ -1993,7 +1988,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep, const bool skipFilter){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep, const bool runSynced){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 
@@ -2051,7 +2046,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//float cStickX = 0.5;
 	//float cStickY = 0.5;
 
-	if(!skipFilter) {
+	if(!runSynced) {
 		unsigned long thisMicros = micros();
 		if(thisMicros >= (2^32)) {
 			thisMicros -= (2^32);
@@ -2064,7 +2059,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		}
 	}
 #endif //CLEANADC
-	if(!skipFilter) {
+	if(!runSynced) {
 		dT = 1;
 		lastMicros += 1000;
 	} else {
@@ -2078,10 +2073,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	if(lastMicros >= (2^32)) {
 		lastMicros -= (2^32);
 	}
-	_raw.axRaw = aStickX*4096;
-	_raw.ayRaw = aStickY*4096;
-	_raw.cxRaw = cStickX*4096;
-	_raw.cyRaw = cStickY*4096;
+	_raw.axRaw = aStickX;
+	_raw.ayRaw = aStickY;
+	_raw.cxRaw = cStickX;
+	_raw.cyRaw = cStickY;
 
 	//create the measurement value to be used in the kalman filter
 	float xZ;
@@ -2096,6 +2091,11 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 
 	float posAx = xZ;
 	float posAy = yZ;
+
+	_raw.axLinearized = posAx;
+	_raw.ayLinearized = posAy;
+	_raw.cxLinearized = posCx;
+	_raw.cyLinearized = posCy;
 
 	//Run the kalman filter to eliminate snapback
 	static float xPosFilt = 0;//output of kalman filter
@@ -2150,16 +2150,24 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float remappedAy;
 	float remappedCx;
 	float remappedCy;
+	float remappedAxUnfiltered;
+	float remappedAyUnfiltered;
+	float remappedCxUnfiltered;
+	float remappedCyUnfiltered;
 	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
 	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
+	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1);//no snapping
+	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1);//no snapping
 
 	//Clamp values from -125 to +125
 	remappedAx = fmin(125, fmax(-125, remappedAx));
 	remappedAy = fmin(125, fmax(-125, remappedAy));
 	remappedCx = fmin(125, fmax(-125, remappedCx+controls.cXOffset));
 	remappedCy = fmin(125, fmax(-125, remappedCy+controls.cYOffset));
+	_raw.axUnfiltered = fmin(125, fmax(-125, remappedAxUnfiltered));
+	_raw.ayUnfiltered = fmin(125, fmax(-125, remappedAyUnfiltered));
+	_raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered+controls.cXOffset));
+	_raw.cyUnfiltered = fmin(125, fmax(-125, remappedCyUnfiltered+controls.cYOffset));
 
 	bool skipAHyst = false;
 #ifdef EXTRAS_ESS

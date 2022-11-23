@@ -137,14 +137,18 @@ struct HardwareButtons{
 };
 
 struct RawStick{
-	uint16_t axRaw;
-	uint16_t ayRaw;
-	uint16_t cxRaw;
-	uint16_t cyRaw;
-	int axUnfiltered;
-	int ayUnfiltered;
-	int cxUnfiltered;
-	int cyUnfiltered;
+	float axRaw;
+	float ayRaw;
+	float cxRaw;
+	float cyRaw;
+	float axLinearized;
+	float ayLinearized;
+	float cxLinearized;
+	float cyLinearized;
+	float axUnfiltered;
+	float ayUnfiltered;
+	float cxUnfiltered;
+	float cyUnfiltered;
 };
 
 struct Cardinals{

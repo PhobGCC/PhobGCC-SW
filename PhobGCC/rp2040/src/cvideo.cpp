@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <charconv>
 //#include <stdio.h>
+#include <string>
 #include "memory.h"
 
 #include "pico/stdlib.h"
@@ -127,7 +128,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync) {
+int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, float fitX[], float fitY[]) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -177,6 +178,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
 	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
+	/*
 	drawString(_bitmap, 105,  10, 13, "Hello World! +2 blah");
 	drawString2x(_bitmap, 0,  50, 10, " !\"#$%&'()*+,-./0123456789");
 	drawString2x(_bitmap, 1, 100, 10, " !\"#$%&'()*+,-./0123456789");
@@ -195,6 +197,18 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 	drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
 	drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
 	drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
+	*/
+
+	/*
+	for(int i = 0; i < 4; i++) {
+		std::string axString = std::to_string(fitX[i]);
+		std::string ayString = std::to_string(fitY[i]);
+		const char* ax = axString.c_str();
+		const char* ay = ayString.c_str();
+		drawString(_bitmap,   0, i*20, 15, ax);
+		drawString(_bitmap, 200, i*20, 15, ay);
+	}
+	*/
 
 	while (true) {
 		//tight_loop_contents();
@@ -206,6 +220,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 
 		memset(_bitmap, BLACK2, BUFFERLEN);
 
+		/*
 		//drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
 		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, 7);
 		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, 7);
@@ -222,7 +237,6 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		//int yList[6] = {0,  -6, -30, -55, -65, -74};
 		//graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
 
-		/*
 		if(btn.A) {
 			drawString2x(_bitmap, 280 + 0, 0, 15, "A");
 		}
@@ -249,22 +263,32 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		}
 		*/
 
-		char ax[6] = {0, 0, 0, 0, 0, 0};
-		char ay[6] = {0, 0, 0, 0, 0, 0};
-		char cx[6] = {0, 0, 0, 0, 0, 0};
-		char cy[6] = {0, 0, 0, 0, 0, 0};
+		//char ax[6] = {0, 0, 0, 0, 0, 0};
+		//char ay[6] = {0, 0, 0, 0, 0, 0};
+		//char cx[6] = {0, 0, 0, 0, 0, 0};
+		//char cy[6] = {0, 0, 0, 0, 0, 0};
 		//std::to_chars(ax, ax + 5, btn.Ax-127);
 		//std::to_chars(ay, ay + 5, btn.Ay-127);
 		//std::to_chars(cx, cx + 5, btn.Cx-127);
 		//std::to_chars(cy, cy + 5, btn.Cy-127);
-		std::to_chars(ax, ax + 5, raw.axRaw);
-		std::to_chars(ay, ay + 5, raw.ayRaw);
-		std::to_chars(cx, cx + 5, raw.cxRaw);
-		std::to_chars(cy, cy + 5, raw.cyRaw);
-		drawString2x(_bitmap, 280,  40, 15, ax);
-		drawString2x(_bitmap, 280,  80, 15, ay);
-		drawString2x(_bitmap, 280, 120, 15, cx);
-		drawString2x(_bitmap, 280, 160, 15, cy);
+		std::string axRawString = std::to_string(raw.axRaw);
+		std::string ayRawString = std::to_string(raw.axRaw);
+		const char* ax = axRawString.c_str();
+		const char* ay = ayRawString.c_str();
+		drawString(_bitmap, 0,  40, 15, ax);
+		drawString(_bitmap, 0,  80, 15, ay);
+		std::string axLinString = std::to_string(raw.axLinearized);
+		std::string ayLinString = std::to_string(raw.axLinearized);
+		const char* axLin = axLinString.c_str();
+		const char* ayLin = ayLinString.c_str();
+		drawString(_bitmap, 140,  40, 15, axLin);
+		drawString(_bitmap, 140,  80, 15, ayLin);
+		std::string axUnfString = std::to_string(raw.axUnfiltered);
+		std::string ayUnfString = std::to_string(raw.axUnfiltered);
+		const char* axUnf = axUnfString.c_str();
+		const char* ayUnf = ayUnfString.c_str();
+		drawString(_bitmap, 280,  40, 15, axUnf);
+		drawString(_bitmap, 280,  80, 15, ayUnf);
 
 	}
 }
