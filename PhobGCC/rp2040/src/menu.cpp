@@ -73,7 +73,7 @@ const uint8_t MenuIndex[29][8] = {
 //The names consists of an array of null terminated c strings. Pad with spaces.
 //This is the heading of the menus and also the submenu entries.
 
-const char MenuNames[29][??????] = {
+const char MenuNames[29][28] = {
 	"PhobVision                 ",
 	"Main Menu                  ",
 	"Stick Calibration          ",
