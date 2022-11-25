@@ -27,7 +27,7 @@ const int _pinB =  2;
 const int _pinDr = 9;
 const int _pinDu = 21;
 const int _pinDl = 22;
-const int _pinDd = 23;
+const int _pinDd = 28;
 const int _pinL =  3;
 const int _pinR =  4;
 const int _pinX =  5;
@@ -57,7 +57,7 @@ const int _pinLa = 27; //GPIO number
 const int _pinLadc = 1; //ADC number
 //and two more
 const int _pinSpare0 = 0;
-const int _pinSpare1 = 28;
+const int _pinSpare1 = 23;
 const int _pinSpare2 = 29;
 
 const int _pinAx = -1;
