@@ -608,14 +608,16 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	}
 
 	Serial.println("The linearized points are:");
+#endif //ARDUINO
 	for(int i = 0; i <= _noOfNotches; i++){
 		outX[i] = linearize(inX[i], stickParams.fitCoeffsX);
 		outY[i] = linearize(inY[i], stickParams.fitCoeffsY);
+#ifdef ARDUINO
 		Serial.print(outX[i],8);
 		Serial.print(",");
 		Serial.println(outY[i],8);
-	}
 #endif //ARDUINO
+	}
 };
 
 //Self-explanatory.
