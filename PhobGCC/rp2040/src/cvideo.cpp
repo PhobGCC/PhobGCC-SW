@@ -129,7 +129,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, float fitX[], float fitY[]) {
+int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, float affine0[], float affine1[]) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -200,16 +200,6 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 	drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
 	*/
 
-	/*
-	for(int i = 0; i < 4; i++) {
-		std::string axString = std::to_string(fitX[i]);
-		std::string ayString = std::to_string(fitY[i]);
-		const char* ax = axString.c_str();
-		const char* ay = ayString.c_str();
-		drawString(_bitmap,   0, i*20, 15, ax);
-		drawString(_bitmap, 200, i*20, 15, ay);
-	}
-	*/
 
 	while (true) {
 		//tight_loop_contents();
@@ -272,15 +262,28 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		//std::to_chars(ay, ay + 5, btn.Ay-127);
 		//std::to_chars(cx, cx + 5, btn.Cx-127);
 		//std::to_chars(cy, cy + 5, btn.Cy-127);
-		drawFloat(_bitmap, 0, 40, 15, 0, raw.axRaw);
-		drawFloat(_bitmap, 0, 80, 15, 0, raw.ayRaw);
-		drawFloat(_bitmap, 140, 40, 15, 2, raw.axLinearized);
-		drawFloat(_bitmap, 140, 80, 15, 2, raw.ayLinearized);
-		drawInt(_bitmap, 280, 40, 15, 2, int(raw.axUnfiltered));
-		drawInt(_bitmap, 280, 80, 15, 2, int(raw.ayUnfiltered));
+		drawFloat(_bitmap, 0, 20, 15, 0, raw.axRaw);
+		drawFloat(_bitmap, 0, 40, 15, 0, raw.ayRaw);
+		drawFloat(_bitmap, 140, 20, 15, 2, raw.axLinearized);
+		drawFloat(_bitmap, 140, 40, 15, 2, raw.ayLinearized);
+		drawInt(_bitmap, 280, 20, 15, 2, int(raw.axUnfiltered));
+		drawInt(_bitmap, 280, 40, 15, 2, int(raw.ayUnfiltered));
 
-		drawFloat(_bitmap, 0, 120, 15, 2, raw.axLinearized*180/M_PI);
+		drawFloat(_bitmap, 0, 60, 15, 2, raw.axLinearized*180/M_PI);
 
+		drawFloat(_bitmap, 0, 100, 15, 8, affine0[0]);
+		drawFloat(_bitmap, 0, 120, 15, 8, affine0[1]);
+		drawFloat(_bitmap, 0, 140, 15, 8, affine0[2]);
+		drawFloat(_bitmap, 0, 160, 15, 8, affine0[3]);
+		drawFloat(_bitmap, 0, 180, 15, 8, affine0[4]);
+		drawFloat(_bitmap, 0, 200, 15, 8, affine0[5]);
+
+		drawFloat(_bitmap, 250, 100, 15, 8, affine1[0]);
+		drawFloat(_bitmap, 250, 120, 15, 8, affine1[1]);
+		drawFloat(_bitmap, 250, 140, 15, 8, affine1[2]);
+		drawFloat(_bitmap, 250, 160, 15, 8, affine1[3]);
+		drawFloat(_bitmap, 250, 180, 15, 8, affine1[4]);
+		drawFloat(_bitmap, 250, 200, 15, 8, affine1[5]);
 	}
 }
 
