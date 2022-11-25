@@ -56,4 +56,29 @@ void graphStickmap(unsigned char bitmap[],
                    const uint8_t color,
                    const LineOrPoint graphType);
 
+void drawFloat(unsigned char bitmap[],
+               const uint16_t x0,
+               const uint16_t y0,
+               const uint8_t color,
+               const uint8_t largestPower,
+               const float number);
+void drawFloat2x(unsigned char bitmap[],
+                 const uint16_t x0,
+                 const uint16_t y0,
+                 const uint8_t color,
+                 const uint8_t largestPower,
+                 const float number);
+void drawInt(unsigned char bitmap[],
+             const uint16_t x0,
+             const uint16_t y0,
+             const uint8_t color,
+             const uint8_t largestPower,
+             const int number);
+void drawInt2x(unsigned char bitmap[],
+               const uint16_t x0,
+               const uint16_t y0,
+               const uint8_t color,
+               const uint8_t largestPower,
+               const int number);
+
 #endif //CVIDEO_H

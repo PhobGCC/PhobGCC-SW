@@ -1,4 +1,7 @@
+#include <charconv>
 #include <cmath>
+#include <cstring>
+#include <string>
 #include "cvideo.h"
 #include "images/font.h"
 
@@ -190,4 +193,89 @@ void drawString2x(unsigned char bitmap[],
 		drawChar2x(bitmap, x, y0, color, string[i]);
 		i++;
 	}
+}
+
+void drawFloat(unsigned char bitmap[],
+               const uint16_t x0,
+               const uint16_t y0,
+               const uint8_t color,
+               const uint8_t largestPower,
+               const float number) {
+	int offset = (number >= 0) ? 1 : 0;
+	int decimal = 1;
+	for(int i = 0; i < largestPower; i++) {
+		decimal *= 10;
+		if(abs(number) < decimal) {
+			offset += 1;
+		}
+	}
+	offset *= 10;
+
+	std::string numberString = std::to_string(number);
+	const char* numberChar = numberString.c_str();
+
+	drawString(bitmap, x0 + offset, y0, color, numberChar);
+}
+void drawFloat2x(unsigned char bitmap[],
+                 const uint16_t x0,
+                 const uint16_t y0,
+                 const uint8_t color,
+                 const uint8_t largestPower,
+                 const float number) {
+	int offset = (number >= 0) ? 1 : 0;
+	int decimal = 1;
+	for(int i = 0; i < largestPower; i++) {
+		decimal *= 10;
+		if(abs(number) < decimal) {
+			offset += 1;
+		}
+	}
+	offset *= 20;
+
+	std::string numberString = std::to_string(number);
+	const char* numberChar = numberString.c_str();
+
+	drawString(bitmap, x0 + offset, y0, color, numberChar);
+}
+void drawInt(unsigned char bitmap[],
+             const uint16_t x0,
+             const uint16_t y0,
+             const uint8_t color,
+             const uint8_t largestPower,
+             const int number) {
+	int offset = (number >= 0) ? 1 : 0;
+	int decimal = 1;
+	for(int i = 0; i < largestPower; i++) {
+		decimal *= 10;
+		if(abs(number) < decimal) {
+			offset += 1;
+		}
+	}
+	offset *= 10;
+
+	std::string numberString = std::to_string(number);
+	const char* numberChar = numberString.c_str();
+
+	drawString(bitmap, x0 + offset, y0, color, numberChar);
+}
+void drawInt2x(unsigned char bitmap[],
+               const uint16_t x0,
+               const uint16_t y0,
+               const uint8_t color,
+               const uint8_t largestPower,
+               const int number) {
+	int offset = (number >= 0) ? 1 : 0;
+	int decimal = 1;
+	for(int i = 0; i < largestPower; i++) {
+		decimal *= 10;
+		if(abs(number) < decimal) {
+			offset += 1;
+		}
+	}
+	offset *= 20;
+
+	std::string numberString = std::to_string(number);
+	const char* numberChar = numberString.c_str();
+
+	drawString(bitmap, x0 + offset, y0, color, numberChar);
 }

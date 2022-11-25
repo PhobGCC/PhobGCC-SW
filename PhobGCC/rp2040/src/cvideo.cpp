@@ -272,29 +272,14 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		//std::to_chars(ay, ay + 5, btn.Ay-127);
 		//std::to_chars(cx, cx + 5, btn.Cx-127);
 		//std::to_chars(cy, cy + 5, btn.Cy-127);
-		std::string axRawString = std::to_string(raw.axRaw);
-		std::string ayRawString = std::to_string(raw.ayRaw);
-		const char* ax = axRawString.c_str();
-		const char* ay = ayRawString.c_str();
-		drawString(_bitmap, 0,  40, 15, ax);
-		drawString(_bitmap, 0,  80, 15, ay);
-		std::string axLinString = std::to_string(raw.axLinearized);
-		std::string ayLinString = std::to_string(raw.ayLinearized);
-		const char* axLin = axLinString.c_str();
-		const char* ayLin = ayLinString.c_str();
-		drawString(_bitmap, 140,  40, 15, axLin);
-		drawString(_bitmap, 140,  80, 15, ayLin);
-		std::string axUnfString = std::to_string(raw.axUnfiltered);
-		std::string ayUnfString = std::to_string(raw.ayUnfiltered);
-		const char* axUnf = axUnfString.c_str();
-		const char* ayUnf = ayUnfString.c_str();
-		drawString(_bitmap, 280,  40, 15, axUnf);
-		drawString(_bitmap, 280,  80, 15, ayUnf);
+		drawFloat(_bitmap, 0, 40, 15, 0, raw.axRaw);
+		drawFloat(_bitmap, 0, 80, 15, 0, raw.ayRaw);
+		drawFloat(_bitmap, 140, 40, 15, 2, raw.axLinearized);
+		drawFloat(_bitmap, 140, 80, 15, 2, raw.ayLinearized);
+		drawInt(_bitmap, 280, 40, 15, 2, int(raw.axUnfiltered));
+		drawInt(_bitmap, 280, 80, 15, 2, int(raw.ayUnfiltered));
 
-		float angle = atan2f(raw.ayLinearized, raw.axLinearized)*180/M_PI;
-		std::string angleString = std::to_string(angle);
-		const char* angleChar = angleString.c_str();
-		drawString(_bitmap, 0, 120, 15, angleChar);
+		drawFloat(_bitmap, 0, 120, 15, 2, raw.axLinearized*180/M_PI);
 
 	}
 }
