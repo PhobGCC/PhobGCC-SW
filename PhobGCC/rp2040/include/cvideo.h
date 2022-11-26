@@ -18,7 +18,7 @@ enum LineOrPoint {
 	POINTGRAPH
 };
 
-int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, float a[], float b[]);
+int videoOut(const uint8_t pin_base, Buttons &btn, Buttons &hardware, RawStick &raw, volatile bool &extSync, float a[], float b[]);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);
@@ -80,5 +80,15 @@ void drawInt2x(unsigned char bitmap[],
                const uint8_t color,
                const uint8_t largestPower,
                const int number);
+
+void drawMenu(unsigned char bitmap[],
+              const unsigned int menu,
+              const int itemIndex);
+
+void navigateMenu(unsigned char bitmap[],
+                  Buttons &hardware,
+                  unsigned int &menu,
+                  int &itemIndex,
+                  bool &redraw);
 
 #endif //CVIDEO_H

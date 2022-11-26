@@ -115,51 +115,45 @@ void drawMenu(unsigned char bitmap[], const unsigned int menu, const int itemInd
 	//Basic menus
 	if(MenuIndex[menu][1] == 0) {
 		drawImage(bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, 0);//224x300
-		drawString2x(bitmap, VWIDTH/2-105, 320, 15, "Welcome to PhobVision");
-		drawString2x(bitmap, VWIDTH/2- 70, 340, 15, "Please press A");
+		drawString(bitmap, VWIDTH/2-105, 320, 15, "Welcome to PhobVision");
+		drawString(bitmap, VWIDTH/2- 70, 340, 15, "Please press A");
 	} else if (MenuIndex[menu][1] <= 6) {
-		drawString2x(bitmap, 20, 20, 15, MenuNames[menu]);
+		drawString(bitmap, 20, 20, 15, MenuNames[menu]);
 		for(int i = 0; i < MenuIndex[menu][1]; i++) {
-			drawString2x(bitmap, 60, 40 + 30*i, 15, MenuNames[MenuIndex[menu][i+2]]);
+			drawString(bitmap, 50, 80 + 30*i, 15, MenuNames[MenuIndex[menu][i+2]]);
 		}
-		drawString2x(bitmap, 20, 40 + 30*itemIndex, 15, ">");
+		drawString(bitmap, 20, 80 + 30*itemIndex, 15, ">");
+	} else {
+		//placeholder
+		drawString(bitmap, 20, 20, 15, MenuNames[menu]);
 	}
 
 	//big switch case to draw bottom level pages and non-text graphics
 	// on other menus like in the trigger menu
 }
 
-//Draw two-pixel high line on the bottom of the screen in poroportion to back button accumulator
-//Make it draw right to left, filling the whole screen when the accumulator is 0.8
-void drawBackStatus(unsigned char bitmap[], const float accumulator) {
-	float acc = fmin(1, fmax(0, 1-(accumulator*1.25)));
-
-	uint16_t threshold = VWIDTH*acc;
-	drawLine(bitmap, threshold, VHEIGHT-1,    VWIDTH, VHEIGHT-1, 15);
-	drawLine(bitmap, threshold, VHEIGHT,      VWIDTH, VHEIGHT,   15);
-	drawLine(bitmap,         0, VHEIGHT-1, threshold, VHEIGHT-1, 15);
-	drawLine(bitmap,         0, VHEIGHT,   threshold, VHEIGHT,   15);
-}
-
 void navigateMenu(unsigned char bitmap[], Buttons &hardware, unsigned int &menu, int &itemIndex, bool &redraw) {
+	static int aLockout = 0;
 	if(MenuIndex[menu][1] == 0) {
 		if(hardware.A) {
+			aLockout = 10;
 			menu = MenuIndex[menu][2];
 			itemIndex = 0;
 			redraw = true;
 			return;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
-		static float backAccumulator = 0.0;
-		if(hardware.S) {//start is the back button
-			backAccumulator = 0.95*backAccumulator + 0.05;
-			drawBackStatus(bitmap, backAccumulator);
+		static int backAccumulator = 0;
+		if(hardware.B) {//back
+			backAccumulator++;
 		} else {
-			backAccumulator = 0.95*backAccumulator;
-			drawBackStatus(bitmap, 0);//erase the line when not pressing B
+			if(backAccumulator > 0) {
+				backAccumulator--;
+			}
 		}
-		if(backAccumulator > 0.8) {
+		if(backAccumulator >= 30) {
 			backAccumulator = 0;
+			aLockout = 0;
 			menu = MenuIndex[menu][0];
 			itemIndex = 0;
 			redraw = true;
@@ -168,20 +162,40 @@ void navigateMenu(unsigned char bitmap[], Buttons &hardware, unsigned int &menu,
 
 		if(MenuIndex[menu][1] <= 6) {
 			//if it's a submenu, handle a, dup, and ddown
+			static int duLockout = 0;
+			static int ddLockout = 0;
 			if(hardware.A) {
-				menu = MenuIndex[menu][itemIndex = 2];
-				itemIndex = 0;
-				redraw = true;
-				return;
+				if(aLockout == 0) {
+					aLockout = 10;
+					menu = MenuIndex[menu][itemIndex + 2];
+					itemIndex = 0;
+					redraw = true;
+					return;
+				}
+			} else {
+				//only decrement the lockout if A is released
+				//it'll be unlocked after 1/6 of a second unpressed
+				aLockout = fmax(0, aLockout-1);
 			}
+			duLockout = fmax(0, duLockout-1);
 			if(hardware.Du) {
-				itemIndex = fmax(0, itemIndex-1);
-				redraw = true;
-				return;
+				if(duLockout == 0) {
+					duLockout = 15;//a quarter of a second
+					ddLockout = 0;
+					itemIndex = fmax(0, itemIndex-1);
+					redraw = true;
+					return;
+				}
 			}
+			ddLockout = fmax(0, ddLockout-1);
 			if(hardware.Dd) {
-				itemIndex = fmin(MenuIndex[menu][1], itemIndex+1);
-				redraw = true;
+				if(ddLockout == 0) {
+					ddLockout = 15;//a quarter of a second
+					duLockout = 0;
+					itemIndex = fmin(MenuIndex[menu][1], itemIndex+1);
+					redraw = true;
+					return;
+				}
 			}
 		} else {
 			//Big switch case for controls for all the bottom level items

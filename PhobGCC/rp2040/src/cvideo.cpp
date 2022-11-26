@@ -129,7 +129,7 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool &extSync, float affine0[], float affine1[]) {
+int videoOut(const uint8_t pin_base, Buttons &btn, Buttons &hardware, RawStick &raw, volatile bool &extSync, float affine0[], float affine1[]) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -200,6 +200,9 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 	drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
 	*/
 
+	unsigned int menuIndex = 0;;
+	int itemIndex = 0;;
+	bool redraw = true;//start off true
 
 	while (true) {
 		//tight_loop_contents();
@@ -209,7 +212,12 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		extSync = true;
 		_startSync = false;
 
-		memset(_bitmap, BLACK2, BUFFERLEN);
+		navigateMenu(_bitmap, hardware, menuIndex, itemIndex, redraw);
+		if(redraw) {
+			redraw = false;
+			memset(_bitmap, BLACK2, BUFFERLEN);
+			drawMenu(_bitmap, menuIndex, itemIndex);
+		}
 
 		/*
 		//drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
@@ -227,32 +235,6 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		//int xList[6] = {0,   5,  23,  45,  60,  74};
 		//int yList[6] = {0,  -6, -30, -55, -65, -74};
 		//graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
-
-		if(btn.A) {
-			drawString2x(_bitmap, 280 + 0, 0, 15, "A");
-		}
-		if(btn.B) {
-			drawString2x(_bitmap, 280 + 20, 0, 15, "B");
-		}
-		if(btn.L) {
-			drawString2x(_bitmap, 280 + 40, 0, 15, "L");
-		}
-		if(btn.R) {
-			drawString2x(_bitmap, 280 + 60, 0, 15, "R");
-		}
-		if(btn.X) {
-			drawString2x(_bitmap, 280 + 80, 0, 15, "X");
-		}
-		if(btn.Y) {
-			drawString2x(_bitmap, 280 + 100, 0, 15, "Y");
-		}
-		if(btn.Z) {
-			drawString2x(_bitmap, 280 + 120, 0, 15, "Z");
-		}
-		if(btn.S) {
-			drawString2x(_bitmap, 280 + 140, 0, 15, "S");
-		}
-		*/
 
 		//char ax[6] = {0, 0, 0, 0, 0, 0};
 		//char ay[6] = {0, 0, 0, 0, 0, 0};
@@ -284,6 +266,7 @@ int videoOut(const uint8_t pin_base, Buttons &btn, RawStick &raw, volatile bool 
 		drawFloat(_bitmap, 250, 160, 15, 8, affine1[3]);
 		drawFloat(_bitmap, 250, 180, 15, 8, affine1[4]);
 		drawFloat(_bitmap, 250, 200, 15, 8, affine1[5]);
+		*/
 	}
 }
 
@@ -298,7 +281,7 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 		vline = 0;
 		bline = 0;
 		field = ++field & 0x01;
-		_frameCount++;
+		//_frameCount++;
 	}
 
     while (true) {
@@ -371,6 +354,10 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 			break;
 		}
 		// otherwise, just output border until end of scanlines
+		//also, increment frame count
+		if (vline == VERT_vblank + VERT_border + VERT_bitmap + 1) {
+			_frameCount++;
+		}
 		if (_changeBitmap) {
 			dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 		} else {

@@ -117,7 +117,8 @@ void setPinModes() {
 	*/
 
 	//initialize SPI at 1 MHz
-	spi_init(spi0, 1000*1000);
+	//initialize SPI at 3 MHz just to test
+	spi_init(spi0, 3000*1000);
 	gpio_set_function(_pinSPIclk, GPIO_FUNC_SPI);
 	gpio_set_function(_pinSPItx, GPIO_FUNC_SPI);
 	gpio_set_function(_pinSPIrx, GPIO_FUNC_SPI);
@@ -178,111 +179,58 @@ int readRa(const Pins &, const int initial, const float scale) {
 	return fmin(255, fmax(0, temp - initial) * scale);
 }
 
+//for external MCP3002 adc
+int __time_critical_func(readExtAdc)(const WhichStick whichStick, const WhichAxis whichAxis) {
+	//                              leading zero to align read bytes
+	//                              |start bit
+	//                              ||absolute, two channels
+	//                              |||channel 0
+	//                              ||||most significant bit first
+	//                              |||||(don't care, even though it gets repeated)
+	uint8_t configBits[] = {0b01101000};
+	if(whichAxis == YAXIS) {
+		configBits[0] = 0b01111000;//channel 1
+	}
+	uint8_t buf[2];
+	//asm volatile("nop \n nop \n nop");//these were in the example; are they needed?
+	if(whichStick == ASTICK) {
+		//left stick
+		gpio_put(_pinAcs, 0);
+	} else {
+		//c-stick
+		gpio_put(_pinCcs, 0);
+	}
+	//asm volatile("nop \n nop \n nop");
+
+	spi_read_blocking(spi0, *configBits, buf, 2);
+	//only the last two bits of the first byte are used
+	uint16_t tempValue = (((buf[0] & 0b00000011) << 8) | buf[1]);
+	//we want it to read out as if it's 12-bit, instead of 10-bit like it is
+	tempValue = tempValue << 2;
+
+	//asm volatile("nop \n nop \n nop");
+	if(whichStick == ASTICK) {
+		gpio_put(_pinAcs, 1);
+	} else {
+		gpio_put(_pinCcs, 1);
+	}
+	//asm volatile("nop \n nop \n nop");
+
+	return tempValue;
+}
+
 //For MCP3002 ADC
 int readAx(const Pins &) {
-	//                              leading zero to align read bytes
-	//                              |start bit
-	//                              ||absolute, two channels
-	//                              |||channel 0
-	//                              ||||most significant bit first
-	//                              |||||(don't care, even though it gets repeated)
-	const uint8_t configBits[] = {0b01101000};
-	uint8_t buf[2];
-	asm volatile("nop \n nop \n nop");
-	//left stick
-	gpio_put(_pinAcs, 0);
-	asm volatile("nop \n nop \n nop");
-
-	spi_read_blocking(spi0, *configBits, buf, 2);
-	//only the last two bits of the first byte are used
-	uint16_t tempValue = (((buf[0] & 0b00000011) << 8) | buf[1]);
-	//we want it to read out as if it's 12-bit, instead of 10-bit like it is
-	tempValue = tempValue << 2;
-
-	asm volatile("nop \n nop \n nop");
-	gpio_put(_pinAcs, 1);
-	asm volatile("nop \n nop \n nop");
-
-	return tempValue;
+	return readExtAdc(ASTICK, XAXIS);
 }
 int readAy(const Pins &) {
-	//                              leading zero to align read bytes
-	//                              |start bit
-	//                              ||absolute, two channels
-	//                              |||channel 1
-	//                              ||||most significant bit first
-	//                              |||||(don't care, even though it gets repeated)
-	const uint8_t configBits[] = {0b01111000};
-	uint8_t buf[2];
-	asm volatile("nop \n nop \n nop");
-	//left stick
-	gpio_put(_pinAcs, 0);
-	asm volatile("nop \n nop \n nop");
-
-	spi_read_blocking(spi0, *configBits, buf, 2);
-	//only the last two bits of the first byte are used
-	uint16_t tempValue = (((buf[0] & 0b00000011) << 8) | buf[1]);
-	//we want it to read out as if it's 12-bit, instead of 10-bit like it is
-	tempValue = tempValue << 2;
-
-	asm volatile("nop \n nop \n nop");
-	gpio_put(_pinAcs, 1);
-	asm volatile("nop \n nop \n nop");
-
-	return tempValue;
+	return readExtAdc(ASTICK, YAXIS);
 }
 int readCx(const Pins &) {
-	//                              leading zero to align read bytes
-	//                              |start bit
-	//                              ||absolute, two channels
-	//                              |||channel 0
-	//                              ||||most significant bit first
-	//                              |||||(don't care, even though it gets repeated)
-	const uint8_t configBits[] = {0b01101000};
-	uint8_t buf[2];
-	asm volatile("nop \n nop \n nop");
-	//right stick
-	gpio_put(_pinCcs, 0);
-	asm volatile("nop \n nop \n nop");
-
-	spi_read_blocking(spi0, *configBits, buf, 2);
-	//only the last two bits of the first byte are used
-	uint16_t tempValue = (((buf[0] & 0b00000011) << 8) | buf[1]);
-	//we want it to read out as if it's 12-bit, instead of 10-bit like it is
-	tempValue = tempValue << 2;
-
-	asm volatile("nop \n nop \n nop");
-	gpio_put(_pinCcs, 1);
-	asm volatile("nop \n nop \n nop");
-
-	return tempValue;
+	return readExtAdc(CSTICK, XAXIS);
 }
 int readCy(const Pins &) {
-	//                              leading zero to align read bytes
-	//                              |start bit
-	//                              ||absolute, two channels
-	//                              |||channel 1
-	//                              ||||most significant bit first
-	//                              |||||(don't care, even though it gets repeated)
-	const uint8_t configBits[] = {0b01111000};
-	uint8_t buf[2];
-	asm volatile("nop \n nop \n nop");
-	//right stick
-	gpio_put(_pinCcs, 0);
-	asm volatile("nop \n nop \n nop");
-
-	//                left stick
-	spi_read_blocking(spi0, *configBits, buf, 2);
-	//only the last two bits of the first byte are used
-	uint16_t tempValue = (((buf[0] & 0b00000011) << 8) | buf[1]);
-	//we want it to read out as if it's 12-bit, instead of 10-bit like it is
-	tempValue = tempValue << 2;
-
-	asm volatile("nop \n nop \n nop");
-	gpio_put(_pinCcs, 1);
-	asm volatile("nop \n nop \n nop");
-
-	return tempValue;
+	return readExtAdc(CSTICK, YAXIS);
 }
 
 uint64_t micros() {
