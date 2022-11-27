@@ -179,17 +179,18 @@ int readRa(const Pins &, const int initial, const float scale) {
 	return fmin(255, fmax(0, temp - initial) * scale);
 }
 
-//for external MCP3002 adc
+/*
+//for external MCP3002 adc, 10 bit
 int __time_critical_func(readExtAdc)(const WhichStick whichStick, const WhichAxis whichAxis) {
-	//                              leading zero to align read bytes
-	//                              |start bit
-	//                              ||absolute, two channels
-	//                              |||channel 0
-	//                              ||||most significant bit first
-	//                              |||||(don't care, even though it gets repeated)
+	//                        leading zero to align read bytes
+	//                        |start bit
+	//                        ||absolute, two channels
+	//                        |||channel 0
+	//                        ||||most significant bit first
+	//                        |||||(don't care, even though it gets repeated)
 	uint8_t configBits[] = {0b01101000};
 	if(whichAxis == YAXIS) {
-		configBits[0] = 0b01111000;//channel 1
+		configBits[0] =     0b01111000;//channel 1
 	}
 	uint8_t buf[2];
 	//asm volatile("nop \n nop \n nop");//these were in the example; are they needed?
@@ -218,8 +219,47 @@ int __time_critical_func(readExtAdc)(const WhichStick whichStick, const WhichAxi
 
 	return tempValue;
 }
+*/
+//for external MCP3202 adc, 12 bit
+int __time_critical_func(readExtAdc)(const WhichStick whichStick, const WhichAxis whichAxis) {
+	//                        start bit
+	//                        |absolute, two channels
+	//                        ||channel 0
+	//                        |||most significant bit first
+	//                        ||||(don't care, even though it gets repeated)
+	//                        ||||null bit
+	//                        |||||11
+	//                        ||||||10  byte 1   byte 2 (when read out)
+	//                        |||||||9  87654321 0_______
+	uint8_t configBits[] = {0b11010000};
+	if(whichAxis == YAXIS) {
+		configBits[0] =     0b11110000;//channel 1
+	}
+	uint8_t buf[2];
+	//asm volatile("nop \n nop \n nop");//these were in the example; are they needed?
+	if(whichStick == ASTICK) {
+		//left stick
+		gpio_put(_pinAcs, 0);
+	} else {
+		//c-stick
+		gpio_put(_pinCcs, 0);
+	}
+	//asm volatile("nop \n nop \n nop");
 
-//For MCP3002 ADC
+	spi_read_blocking(spi0, *configBits, buf, 3);
+	uint16_t tempValue = (((buf[0] & 0b00000111) << 9) | buf[1] << 1 | buf[2] >> 7);
+
+	//asm volatile("nop \n nop \n nop");
+	if(whichStick == ASTICK) {
+		gpio_put(_pinAcs, 1);
+	} else {
+		gpio_put(_pinCcs, 1);
+	}
+	//asm volatile("nop \n nop \n nop");
+
+	return tempValue;
+}
+
 int readAx(const Pins &) {
 	return readExtAdc(ASTICK, XAXIS);
 }
