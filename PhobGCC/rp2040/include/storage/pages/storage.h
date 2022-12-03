@@ -20,10 +20,10 @@ struct Storage {
 		int cyOffset;
 		int xSnapback;
 		int ySnapback;
-		float xSmoothing;
-		float ySmoothing;
-		float cxSmoothing;
-		float cySmoothing;
+		int xSmoothing;
+		int ySmoothing;
+		int cxSmoothing;
+		int cySmoothing;
 		int rumble;
 		int autoInit;
 		int axWaveshaping;
@@ -76,17 +76,17 @@ void setXSnapbackSetting(const int);
 int  getYSnapbackSetting();
 void setYSnapbackSetting(const int);
 
-float getXSmoothingSetting();
-void  setXSmoothingSetting(const float);
+int getXSmoothingSetting();
+void  setXSmoothingSetting(const int);
 
-float getYSmoothingSetting();
-void  setYSmoothingSetting(const float);
+int getYSmoothingSetting();
+void  setYSmoothingSetting(const int);
 
-float getCxSmoothingSetting();
-void  setCxSmoothingSetting(const float);
+int getCxSmoothingSetting();
+void  setCxSmoothingSetting(const int);
 
-float getCySmoothingSetting();
-void  setCySmoothingSetting(const float);
+int getCySmoothingSetting();
+void  setCySmoothingSetting(const int);
 
 int  getRumbleSetting();
 void setRumbleSetting(const int);

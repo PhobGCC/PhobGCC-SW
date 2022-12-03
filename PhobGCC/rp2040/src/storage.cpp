@@ -133,38 +133,38 @@ void setYSnapbackSetting(const int ySnapback) {
 	_storage.settings.ySnapback = ySnapback;
 }
 
-float getXSmoothingSetting() {
+int getXSmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.xSmoothing;
 }
-void setXSmoothingSetting(const float xSmoothing) {
+void setXSmoothingSetting(const int xSmoothing) {
 	getStoragePage();
 	_storage.settings.xSmoothing = xSmoothing;
 }
 
-float getYSmoothingSetting() {
+int getYSmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.ySmoothing;
 }
-void setYSmoothingSetting(const float ySmoothing) {
+void setYSmoothingSetting(const int ySmoothing) {
 	getStoragePage();
 	_storage.settings.ySmoothing = ySmoothing;
 }
 
-float getCxSmoothingSetting() {
+int getCxSmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.cxSmoothing;
 }
-void setCxSmoothingSetting(const float cxSmoothing) {
+void setCxSmoothingSetting(const int cxSmoothing) {
 	getStoragePage();
 	_storage.settings.cxSmoothing = cxSmoothing;
 }
 
-float getCySmoothingSetting() {
+int getCySmoothingSetting() {
 	getStoragePage();
 	return _storage.settings.cySmoothing;
 }
-void setCySmoothingSetting(const float cySmoothing) {
+void setCySmoothingSetting(const int cySmoothing) {
 	getStoragePage();
 	_storage.settings.cySmoothing = cySmoothing;
 }

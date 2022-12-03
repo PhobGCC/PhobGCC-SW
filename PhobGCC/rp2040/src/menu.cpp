@@ -111,7 +111,12 @@ const char MenuNames[30][28] = {
 	"Ping                       "
 };
 
-void drawMenu(unsigned char bitmap[], const unsigned int menu, const int itemIndex) {
+void drawMenu(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls) {
 	//Basic menus
 	if(MenuIndex[menu][1] == 0) {
 		drawImage(bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, 0);//224x300
@@ -132,7 +137,12 @@ void drawMenu(unsigned char bitmap[], const unsigned int menu, const int itemInd
 	// on other menus like in the trigger menu
 }
 
-void navigateMenu(unsigned char bitmap[], Buttons &hardware, unsigned int &menu, int &itemIndex, bool &redraw) {
+void navigateMenu(unsigned char bitmap[],
+		unsigned int &menu,
+		int &itemIndex,
+		bool &redraw,
+		Buttons &hardware,
+		ControlConfig &controls) {
 	static int aLockout = 0;
 	if(MenuIndex[menu][1] == 0) {
 		if(hardware.A) {

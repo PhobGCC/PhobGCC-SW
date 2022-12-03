@@ -16,8 +16,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -63,12 +63,16 @@ ControlConfig _controls{
 	.snapbackDefault = 4,
 	.snapbackFactoryAX = 4,
 	.snapbackFactoryAY = 4,
-	.smoothingMin = 0.0,
-	.smoothingMax = 0.9,
-	.snapbackFactoryCX = 0.0,
-	.snapbackFactoryCY = 0.0,
-	.smoothingFactoryAX = 0.0,
-	.smoothingFactoryAY = 0.0,
+	.axSmoothing = 0,
+	.aySmoothing = 0,
+	.cxSmoothing = 0,
+	.cySmoothing = 0,
+	.smoothingMin = 0,
+	.smoothingMax = 9,
+	.snapbackFactoryCX = 0,
+	.snapbackFactoryCY = 0,
+	.smoothingFactoryAX = 0,
+	.smoothingFactoryAY = 0,
 	.axWaveshaping = 0,
 	.ayWaveshaping = 0,
 	.cxWaveshaping = 0,
@@ -378,44 +382,48 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 	Serial.println("Adjusting Smoothing");
 #endif //ARDUINO
 	if (axis == XAXIS && increase == INCREASE) {
-		gains.xSmoothing = gains.xSmoothing + 0.1;
-		if(gains.xSmoothing > controls.smoothingMax) {
-			gains.xSmoothing = controls.smoothingMax;
+		controls.axSmoothing++;
+		if(controls.axSmoothing > controls.smoothingMax) {
+			controls.axSmoothing = controls.smoothingMax;
 		}
-		setXSmoothingSetting(gains.xSmoothing);
+		gains.xSmoothing = controls.axSmoothing/10.0f;
+		setXSmoothingSetting(controls.axSmoothing);
 #ifdef ARDUINO
 		Serial.print("X Smoothing increased to:");
-		Serial.println(gains.xSmoothing);
+		Serial.println(controls.axSmoothing);
 #endif //ARDUINO
 	} else if(axis == XAXIS && increase == DECREASE) {
-		gains.xSmoothing = gains.xSmoothing - 0.1;
-		if(gains.xSmoothing < controls.smoothingMin) {
-			gains.xSmoothing = controls.smoothingMin;
+		controls.axSmoothing--;
+		if(controls.axSmoothing < controls.smoothingMin) {
+			controls.axSmoothing = controls.smoothingMin;
 		}
-		setXSmoothingSetting(gains.xSmoothing);
+		gains.xSmoothing = controls.axSmoothing/10.0f;
+		setXSmoothingSetting(controls.axSmoothing);
 #ifdef ARDUINO
 		Serial.print("X Smoothing decreased to:");
-		Serial.println(gains.xSmoothing);
+		Serial.println(controls.axSmoothing);
 #endif //ARDUINO
 	} else if(axis == YAXIS && increase == INCREASE) {
-		gains.ySmoothing = gains.ySmoothing + 0.1;
-		if (gains.ySmoothing > controls.smoothingMax) {
-			gains.ySmoothing = controls.smoothingMax;
+		controls.aySmoothing++;
+		if (controls.aySmoothing > controls.smoothingMax) {
+			controls.aySmoothing = controls.smoothingMax;
 		}
-		setYSmoothingSetting(gains.ySmoothing);
+		gains.ySmoothing = controls.aySmoothing/10.0f;
+		setYSmoothingSetting(controls.aySmoothing);
 #ifdef ARDUINO
 		Serial.print("Y Smoothing increased to:");
-		Serial.println(gains.ySmoothing);
+		Serial.println(controls.aySmoothing);
 #endif //ARDUINO
 	} else if(axis == YAXIS && increase == DECREASE) {
-		gains.ySmoothing = gains.ySmoothing - 0.1;
-		if (gains.ySmoothing < controls.smoothingMin) {
-			gains.ySmoothing = controls.smoothingMin;
+		controls.aySmoothing--;
+		if (controls.aySmoothing < controls.smoothingMin) {
+			controls.aySmoothing = controls.smoothingMin;
 		}
-		setYSmoothingSetting(gains.ySmoothing);
+		gains.ySmoothing = controls.aySmoothing/10.0f;
+		setYSmoothingSetting(controls.aySmoothing);
 #ifdef ARDUINO
 		Serial.print("Y Smoothing decreased to:");
-		Serial.println(gains.ySmoothing);
+		Serial.println(controls.aySmoothing);
 #endif //ARDUINO
 	}
 #ifdef BATCHSETTINGS
@@ -425,8 +433,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
-	btn.Cx = (uint8_t) (_floatOrigin + (gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (_floatOrigin + (gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + controls.axSmoothing);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.aySmoothing);
 
 	clearButtons(750, btn, hardware);
 }
@@ -437,8 +445,8 @@ void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &co
 	btn.Ay = (uint8_t) (controls.ySnapback + _floatOrigin);
 
 	//Smoothing on C-stick
-	btn.Cx = (uint8_t) (_floatOrigin + (gains.xSmoothing * 10));
-	btn.Cy = (uint8_t) (_floatOrigin + (gains.ySmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + controls.axSmoothing);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.aySmoothing);
 
 	//Waveshaping on triggers
 	btn.La = (uint8_t) controls.axWaveshaping;
@@ -452,44 +460,48 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 	Serial.println("Adjusting C-Stick Smoothing");
 #endif //ARDUINO
 	if (axis == XAXIS && increase == INCREASE) {
-		gains.cXSmoothing = gains.cXSmoothing + 0.1;
-		if(gains.cXSmoothing > controls.smoothingMax) {
-			gains.cXSmoothing = controls.smoothingMax;
+		controls.cxSmoothing++;
+		if(controls.cxSmoothing > controls.smoothingMax) {
+			controls.cxSmoothing = controls.smoothingMax;
 		}
-		setCxSmoothingSetting(gains.cXSmoothing);
+		gains.cXSmoothing = controls.cxSmoothing/10.0f;
+		setCxSmoothingSetting(controls.cxSmoothing);
 #ifdef ARDUINO
 		Serial.print("C-Stick X Smoothing increased to:");
-		Serial.println(gains.cXSmoothing);
+		Serial.println(controls.cxSmoothing);
 #endif //ARDUINO
 	} else if(axis == XAXIS && increase == DECREASE) {
-		gains.cXSmoothing = gains.cXSmoothing - 0.1;
-		if(gains.cXSmoothing < controls.smoothingMin) {
-			gains.cXSmoothing = controls.smoothingMin;
+		controls.cxSmoothing--;
+		if(controls.cxSmoothing < controls.smoothingMin) {
+			controls.cxSmoothing = controls.smoothingMin;
 		}
-		setCxSmoothingSetting(gains.cXSmoothing);
+		gains.cXSmoothing = controls.cxSmoothing/10.0f;
+		setCxSmoothingSetting(controls.cxSmoothing);
 #ifdef ARDUINO
 		Serial.print("C-Stick X Smoothing decreased to:");
-		Serial.println(gains.cXSmoothing);
+		Serial.println(controls.cxSmoothing);
 #endif //ARDUINO
 	} else if(axis == YAXIS && increase == INCREASE) {
-		gains.cYSmoothing = gains.cYSmoothing + 0.1;
-		if (gains.cYSmoothing > controls.smoothingMax) {
-			gains.cYSmoothing = controls.smoothingMax;
+		controls.cySmoothing++;
+		if (controls.cySmoothing > controls.smoothingMax) {
+			controls.cySmoothing = controls.smoothingMax;
 		}
-		setCySmoothingSetting(gains.cYSmoothing);
+		gains.cYSmoothing = controls.cySmoothing/10.0f;
+		setCySmoothingSetting(controls.cySmoothing);
 #ifdef ARDUINO
 		Serial.print("C-Stick Y Smoothing increased to:");
-		Serial.println(gains.cYSmoothing);
+		Serial.println(controls.cySmoothing);
 #endif //ARDUINO
 	} else if(axis == YAXIS && increase == DECREASE) {
-		gains.cYSmoothing = gains.cYSmoothing - 0.1;
-		if (gains.cYSmoothing < controls.smoothingMin) {
-			gains.cYSmoothing = controls.smoothingMin;
+		controls.cySmoothing--;
+		if (controls.cySmoothing < controls.smoothingMin) {
+			controls.cySmoothing = controls.smoothingMin;
 		}
-		setCySmoothingSetting(gains.cYSmoothing);
+		gains.cYSmoothing = controls.cySmoothing/10.0f;
+		setCySmoothingSetting(controls.cySmoothing);
 #ifdef ARDUINO
 		Serial.print("C-Stick Y Smoothing decreased to:");
-		Serial.println(gains.cYSmoothing);
+		Serial.println(controls.cySmoothing);
 #endif //ARDUINO
 	}
 #ifdef BATCHSETTINGS
@@ -499,8 +511,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 
-	btn.Cx = (uint8_t) (_floatOrigin + (gains.cXSmoothing * 10));
-	btn.Cy = (uint8_t) (_floatOrigin + (gains.cYSmoothing * 10));
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cxSmoothing);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cySmoothing);
 
 	clearButtons(750, btn, hardware);
 }
@@ -562,8 +574,8 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 
 void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains) {
 	//Snapback/smoothing on A-stick
-	btn.Ax = (uint8_t) (_floatOrigin + (gains.cXSmoothing * 10));
-	btn.Ay = (uint8_t) (_floatOrigin + (gains.cYSmoothing * 10));
+	btn.Ax = (uint8_t) (_floatOrigin + controls.cxSmoothing);
+	btn.Ay = (uint8_t) (_floatOrigin + controls.cySmoothing);
 
 	//Smoothing on C-stick
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
@@ -989,84 +1001,96 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #endif //ARDUINO
 
 	//get the x-axis smoothing value
-	gains.xSmoothing = getXSmoothingSetting();
+	controls.axSmoothing = getXSmoothingSetting();
 #ifdef ARDUINO
 	Serial.print("the xSmoothing value from eeprom is:");
-	Serial.println(gains.xSmoothing);
+	Serial.println(controls.axSmoothing);
 #endif //ARDUINO
-	if(std::isnan(gains.xSmoothing)){
-		gains.xSmoothing = controls.smoothingMin;
+	if(controls.axSmoothing > controls.smoothingMax) {
+		controls.axSmoothing = controls.smoothingMin;
+		numberOfNaN++;
 #ifdef ARDUINO
 		Serial.print("the xSmoothing value was adjusted to:");
-		Serial.println(gains.xSmoothing);
+		Serial.println(controls.axSmoothing);
 #endif //ARDUINO
+	} else if(controls.axSmoothing < controls.smoothingMin) {
+		controls.axSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+#ifdef ARDUINO
+		Serial.print("the xSmoothing value was adjusted to:");
+		Serial.println(controls.axSmoothing);
+#endif //ARDUINO
 	}
-	if(gains.xSmoothing > controls.smoothingMax) {
-		gains.xSmoothing = controls.smoothingMax;
-	} else if(gains.xSmoothing < controls.smoothingMin) {
-		gains.xSmoothing = controls.smoothingMin;
-	}
+	gains.xSmoothing = controls.axSmoothing / 10.0f;
 
 	//get the y-axis smoothing value
-	gains.ySmoothing = getYSmoothingSetting();
+	controls.aySmoothing = getYSmoothingSetting();
 #ifdef ARDUINO
 	Serial.print("the ySmoothing value from eeprom is:");
-	Serial.println(gains.ySmoothing);
+	Serial.println(controls.aySmoothing);
 #endif //ARDUINO
-	if(std::isnan(gains.ySmoothing)){
-		gains.ySmoothing = controls.smoothingMin;
+	if(controls.aySmoothing > controls.smoothingMax) {
+		controls.aySmoothing = controls.smoothingMin;
+		numberOfNaN++;
 #ifdef ARDUINO
 		Serial.print("the ySmoothing value was adjusted to:");
-		Serial.println(gains.ySmoothing);
+		Serial.println(controls.aySmoothing);
 #endif //ARDUINO
+	} else if(controls.aySmoothing < controls.smoothingMin) {
+		controls.aySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+#ifdef ARDUINO
+		Serial.print("the ySmoothing value was adjusted to:");
+		Serial.println(controls.aySmoothing);
+#endif //ARDUINO
 	}
-	if(gains.ySmoothing > controls.smoothingMax) {
-		gains.ySmoothing = controls.smoothingMax;
-	} else if(gains.ySmoothing < controls.smoothingMin) {
-		gains.ySmoothing = controls.smoothingMin;
-	}
+	gains.ySmoothing = controls.aySmoothing / 10.0f;
 
 	//get the c-stick x-axis smoothing value
-	gains.cXSmoothing = getCxSmoothingSetting();
+	controls.cxSmoothing = getCxSmoothingSetting();
 #ifdef ARDUINO
 	Serial.print("the cXSmoothing value from eeprom is:");
-	Serial.println(gains.cXSmoothing);
+	Serial.println(controls.cxSmoothing);
 #endif //ARDUINO
-	if(std::isnan(gains.cXSmoothing)){
-		gains.cXSmoothing = controls.smoothingMin;
+	if(controls.cxSmoothing > controls.smoothingMax) {
+		controls.cxSmoothing = controls.smoothingMin;
+		numberOfNaN++;
 #ifdef ARDUINO
 		Serial.print("the cXSmoothing value was adjusted to:");
-		Serial.println(gains.cXSmoothing);
+		Serial.println(controls.cxSmoothing);
 #endif //ARDUINO
+	} else if(controls.cxSmoothing < controls.smoothingMin) {
+		controls.cxSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+#ifdef ARDUINO
+		Serial.print("the cXSmoothing value was adjusted to:");
+		Serial.println(controls.cxSmoothing);
+#endif //ARDUINO
 	}
-	if(gains.cXSmoothing > controls.smoothingMax) {
-		gains.cXSmoothing = controls.smoothingMax;
-	} else if(gains.cXSmoothing < controls.smoothingMin) {
-		gains.cXSmoothing = controls.smoothingMin;
-	}
+	gains.cXSmoothing = controls.cxSmoothing / 10.0f;
 
 	//get the c-stick y-axis smoothing value
-	gains.cYSmoothing = getCySmoothingSetting();
+	controls.cySmoothing = getCySmoothingSetting();
 #ifdef ARDUINO
 	Serial.print("the cYSmoothing value from eeprom is:");
-	Serial.println(gains.cYSmoothing);
+	Serial.println(controls.cySmoothing);
 #endif //ARDUINO
-	if(std::isnan(gains.cYSmoothing)){
-		gains.cYSmoothing = controls.smoothingMin;
+	if(controls.cySmoothing > controls.smoothingMax) {
+		controls.cySmoothing = controls.smoothingMin;
+		numberOfNaN++;
 #ifdef ARDUINO
 		Serial.print("the cYSmoothing value was adjusted to:");
-		Serial.println(gains.cYSmoothing);
+		Serial.println(controls.cySmoothing);
 #endif //ARDUINO
+	} else if(controls.cySmoothing < controls.smoothingMin) {
+		controls.cySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+#ifdef ARDUINO
+		Serial.print("the cYSmoothing value was adjusted to:");
+		Serial.println(controls.cySmoothing);
+#endif //ARDUINO
 	}
-	if(gains.cYSmoothing > controls.smoothingMax) {
-		gains.cYSmoothing = controls.smoothingMax;
-	} else if(gains.cYSmoothing < controls.smoothingMin) {
-		gains.cYSmoothing = controls.smoothingMin;
-	}
+	gains.cYSmoothing = controls.cySmoothing/10.0f;
 
 	//get the a-stick x-axis waveshaping value
 	controls.axWaveshaping = getWaveshapingSetting(ASTICK, XAXIS);
@@ -1253,20 +1277,24 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
 	if(reset == FACTORY){
-		gains.xSmoothing = controls.smoothingFactoryAX;
-		gains.ySmoothing = controls.smoothingFactoryAY;
-		gains.cXSmoothing = controls.snapbackFactoryCX;
-		gains.cYSmoothing = controls.snapbackFactoryCY;
+		controls.axSmoothing = controls.smoothingFactoryAX;
+		controls.aySmoothing = controls.smoothingFactoryAY;
+		controls.cxSmoothing = controls.snapbackFactoryCX;
+		controls.cySmoothing = controls.snapbackFactoryCY;
 	} else {
-		gains.xSmoothing = controls.smoothingMin;
-		gains.ySmoothing = controls.smoothingMin;
-		gains.cXSmoothing = controls.smoothingMin;
-		gains.cYSmoothing = controls.smoothingMin;
+		controls.axSmoothing = controls.smoothingMin;
+		controls.aySmoothing = controls.smoothingMin;
+		controls.cxSmoothing = controls.smoothingMin;
+		controls.cySmoothing = controls.smoothingMin;
 	}
-	setXSmoothingSetting(gains.xSmoothing);
-	setYSmoothingSetting(gains.ySmoothing);
-	setCxSmoothingSetting(gains.cXSmoothing);
-	setCySmoothingSetting(gains.cYSmoothing);
+	gains.xSmoothing  = controls.axSmoothing / 10.0f;
+	gains.ySmoothing  = controls.aySmoothing / 10.0f;
+	gains.cXSmoothing = controls.cxSmoothing / 10.0f;
+	gains.cYSmoothing = controls.cySmoothing / 10.0f;
+	setXSmoothingSetting(controls.axSmoothing);
+	setYSmoothingSetting(controls.aySmoothing);
+	setCxSmoothingSetting(controls.cxSmoothing);
+	setCySmoothingSetting(controls.cySmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
 

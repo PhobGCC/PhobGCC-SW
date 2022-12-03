@@ -129,7 +129,12 @@ volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
 /*-------------------------------------------------------------------*/
-int videoOut(const uint8_t pin_base, Buttons &btn, Buttons &hardware, RawStick &raw, volatile bool &extSync, float affine0[], float affine1[]) {
+int videoOut(const uint8_t pin_base,
+		Buttons &btn,
+		Buttons &hardware,
+		RawStick &raw,
+		ControlConfig &config,
+		volatile bool &extSync) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -212,11 +217,11 @@ int videoOut(const uint8_t pin_base, Buttons &btn, Buttons &hardware, RawStick &
 		extSync = true;
 		_startSync = false;
 
-		navigateMenu(_bitmap, hardware, menuIndex, itemIndex, redraw);
+		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, hardware, config);
 		if(redraw) {
 			redraw = false;
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex);
+			drawMenu(_bitmap, menuIndex, itemIndex, btn, raw, config);
 		}
 
 		/*
@@ -252,20 +257,6 @@ int videoOut(const uint8_t pin_base, Buttons &btn, Buttons &hardware, RawStick &
 		drawInt(_bitmap, 280, 40, 15, 2, int(raw.ayUnfiltered));
 
 		drawFloat(_bitmap, 0, 60, 15, 2, raw.axLinearized*180/M_PI);
-
-		drawFloat(_bitmap, 0, 100, 15, 8, affine0[0]);
-		drawFloat(_bitmap, 0, 120, 15, 8, affine0[1]);
-		drawFloat(_bitmap, 0, 140, 15, 8, affine0[2]);
-		drawFloat(_bitmap, 0, 160, 15, 8, affine0[3]);
-		drawFloat(_bitmap, 0, 180, 15, 8, affine0[4]);
-		drawFloat(_bitmap, 0, 200, 15, 8, affine0[5]);
-
-		drawFloat(_bitmap, 250, 100, 15, 8, affine1[0]);
-		drawFloat(_bitmap, 250, 120, 15, 8, affine1[1]);
-		drawFloat(_bitmap, 250, 140, 15, 8, affine1[2]);
-		drawFloat(_bitmap, 250, 160, 15, 8, affine1[3]);
-		drawFloat(_bitmap, 250, 180, 15, 8, affine1[4]);
-		drawFloat(_bitmap, 250, 200, 15, 8, affine1[5]);
 		*/
 	}
 }

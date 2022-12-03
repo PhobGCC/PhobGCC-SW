@@ -133,43 +133,43 @@ void setYSnapbackSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromySnapback, Y);
 };
 
-float getXSmoothingSetting() {
-	float output;
+int getXSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromxSmoothing, output);
 	return output;
 };
 
-void setXSmoothingSetting(const float X) {
+void setXSmoothingSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromxSmoothing, X);
 };
 
-float getYSmoothingSetting() {
-	float output;
+int getYSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromySmoothing, output);
 	return output;
 };
 
-void setYSmoothingSetting(const float Y) {
+void setYSmoothingSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromySmoothing, Y);
 };
 
-float getCxSmoothingSetting() {
-	float output;
+int getCxSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromCxSmoothing, output);
 	return output;
 };
 
-void setCxSmoothingSetting(const float X) {
+void setCxSmoothingSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromCxSmoothing, X);
 };
 
-float getCySmoothingSetting() {
-	float output;
+int getCySmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromCySmoothing, output);
 	return output;
 };
 
-void setCySmoothingSetting(const float Y) {
+void setCySmoothingSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromCySmoothing, Y);
 };
 
