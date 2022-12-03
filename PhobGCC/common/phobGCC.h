@@ -969,10 +969,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(controls.xSnapback);
 #endif //ARDUINO
 	if(controls.xSnapback < controls.snapbackMin) {
-		controls.xSnapback = controls.snapbackMin;
+		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	} else if (controls.xSnapback > controls.snapbackMax) {
-		controls.xSnapback = controls.snapbackMax;
+		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	}
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
@@ -988,10 +988,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	Serial.println(controls.ySnapback);
 #endif //ARDUINO
 	if(controls.ySnapback < controls.snapbackMin) {
-		controls.ySnapback = controls.snapbackMin;
+		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	} else if (controls.ySnapback > controls.snapbackMax) {
-		controls.ySnapback = controls.snapbackMax;
+		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	}
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
@@ -1102,7 +1102,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.axWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	} else if (controls.axWaveshaping > controls.waveshapingMax) {
-		controls.axWaveshaping = controls.waveshapingMax;
+		controls.axWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	}
 
@@ -1130,7 +1130,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.cxWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	} else if (controls.cxWaveshaping > controls.waveshapingMax) {
-		controls.cxWaveshaping = controls.waveshapingMax;
+		controls.cxWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	}
 
@@ -1144,7 +1144,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.cyWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	} else if (controls.cyWaveshaping > controls.waveshapingMax) {
-		controls.cyWaveshaping = controls.waveshapingMax;
+		controls.cyWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
 	}
 
@@ -1169,10 +1169,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		numberOfNaN++;
 	}
 	if(controls.rumble < controls.rumbleMin) {
-		controls.rumble = controls.rumbleMin;
+		controls.rumble = controls.rumbleDefault;
 	}
 	if(controls.rumble > controls.rumbleMax) {
-		controls.rumble = controls.rumbleMax;
+		controls.rumble = controls.rumbleDefault;
 	}
 	_rumblePower = calcRumblePower(controls.rumble);
 #ifdef ARDUINO
