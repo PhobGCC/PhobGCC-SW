@@ -43,6 +43,7 @@ void getStoragePage() {
 			_storage.settings.lExtras[i].intValue = temp.settings.lExtras[i].intValue;
 			_storage.settings.rExtras[i].intValue = temp.settings.rExtras[i].intValue;
 		}
+		_storage.settings.schema = temp.settings.schema;
 		fresh = true;
 	}
 }
@@ -361,5 +362,14 @@ void setExtrasSettingFloat(const ExtrasSlot slot, const int offset, const float 
 		default:
 			break;
 	}
+}
+
+int getSchemaSetting() {
+	getStoragePage();
+	return _storage.settings.schema;
+}
+void setSchemaSetting(const int s) {
+	getStoragePage();
+	_storage.settings.schema = s;
 }
 

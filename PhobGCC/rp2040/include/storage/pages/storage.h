@@ -40,6 +40,7 @@ struct Storage {
 		IntOrFloat dExtras[4];
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
+		int schema;
 	} settings;
 };
 
@@ -107,6 +108,9 @@ int   getExtrasSettingInt(const ExtrasSlot, const int);
 void  setExtrasSettingInt(const ExtrasSlot, const int, const int);
 float getExtrasSettingFloat(const ExtrasSlot, const int);
 void  setExtrasSettingFloat(const ExtrasSlot, const int, const float);
+
+int getSchemaSetting();
+void setSchemaSetting(const int);
 
 #endif //STORAGE_H
 

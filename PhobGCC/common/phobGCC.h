@@ -50,8 +50,8 @@ ControlConfig _controls{
 	.cMin = -127,
 	.rumble = 5,
 	.rumbleMin = 0,
-	.rumbleMax = 7,
-	.rumbleDefault = 5,
+	.rumbleMax = 10,
+	.rumbleDefault = 8,//4 is the max for 3v cell rumble, 8 is normal
 	.safeMode = true,
 	.autoInit = false,
 	.lTrigInitial = 0,
@@ -127,7 +127,7 @@ Pins _pinList {
 
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
-		return pow(2.0, 7+((rumble+1)/8.0)); //should be 256 when rumble is 7
+		return pow(2.0, 7+((rumble-2)/8.0)); //should be 256 when rumble is 10
 	} else {
 		return 0;
 	}
@@ -1243,6 +1243,45 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
+	//Migration
+	const int schema = getSchemaSetting();
+#ifdef ARDUINO
+	Serial.print("Saved settings schema: ");
+	Serial.println(schema);
+#endif //ARDUINO
+	bool migrating = false;
+	switch(schema) {
+		case -1:
+			migrating = true;
+#ifdef ARDUINO
+			Serial.println("Updating settings from unitialized");
+#endif //ARDUINO
+			controls.rumble = controls.rumble + 3;
+			_rumblePower = calcRumblePower(controls.rumble);
+			setRumbleSetting(controls.rumble);
+#ifdef ARDUINO
+			Serial.print("Rumble value changed to: ");
+			Serial.println(controls.rumble);
+			Serial.print("Rumble power now: ");
+			Serial.println(_rumblePower);
+#endif //ARDUINO
+		case 28:
+			//migrating = true;//uncomment when we do have it migrate
+#ifdef ARDUINO
+			Serial.println("Schema is now current");
+#endif //ARDUINO
+			//fallthrough
+		default:
+			if(migrating) {
+#ifdef ARDUINO
+				Serial.println("Updating saved settings schema");
+#endif //ARDUINO
+				setSchemaSetting(SW_VERSION);
+#ifdef BATCHSETTINGS
+				commitSettings();
+#endif //BATCHSETTINGS
+			}
+	}
 	return numberOfNaN;
 }
 
