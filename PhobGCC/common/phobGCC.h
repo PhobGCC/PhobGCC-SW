@@ -48,10 +48,10 @@ ControlConfig _controls{
 	.cYOffset = 0,
 	.cMax = 127,
 	.cMin = -127,
-	.rumble = 5,
+	.rumble = 9,
 	.rumbleMin = 0,
-	.rumbleMax = 10,
-	.rumbleDefault = 8,//4 is the max for 3v cell rumble, 8 is normal
+	.rumbleMax = 11,
+	.rumbleDefault = 9,//5 is the max for 3v cell rumble, 9 is for oem-feeling normal rumble motors
 	.safeMode = true,
 	.autoInit = false,
 	.lTrigInitial = 0,
@@ -127,7 +127,7 @@ Pins _pinList {
 
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
-		return pow(2.0, 7+((rumble-2)/8.0)); //should be 256 when rumble is 10
+		return pow(2.0, 7+((rumble-3)/8.0)); //should be 256 when rumble is 11
 	} else {
 		return 0;
 	}
@@ -1256,7 +1256,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #ifdef ARDUINO
 			Serial.println("Updating settings from unitialized");
 #endif //ARDUINO
-			controls.rumble = controls.rumble + 3;
+			controls.rumble = controls.rumble + 4;
 			_rumblePower = calcRumblePower(controls.rumble);
 			setRumbleSetting(controls.rumble);
 #ifdef ARDUINO
@@ -1265,6 +1265,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			Serial.print("Rumble power now: ");
 			Serial.println(_rumblePower);
 #endif //ARDUINO
+			//I'd like it to change smoothing, but it's way too complicated
 		case 28:
 			//migrating = true;//uncomment when we do have it migrate
 #ifdef ARDUINO
