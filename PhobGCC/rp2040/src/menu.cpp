@@ -11,29 +11,30 @@ enum ScreenNumber {
 	MENU_ANOTCHADJ,		//4		|   3
 	MENU_CSTICKCAL,		//5		|   3
 	MENU_CNOTCHADJ,		//6		|   3
-	MENU_SETTINGS,		//7		|  2
-	MENU_SET_OVER,		//8		|   3		Overview of all settings
-	MENU_FILTER,		//9		|   3
-	MENU_ASNAPBACK,		//10	|    4
-	MENU_AWAVE,			//11	|    4
-	MENU_ASMOOTH,		//12	|    4
-	MENU_CSNAPBACK,		//13	|    4
-	MENU_CWAVE,			//14	|    4
-	MENU_COFFSET,		//15	|    4
-	MENU_REMAP,			//16	|   3
-	MENU_RUMBLE,		//17	|   3
-	MENU_TRIGGER,		//18	|   3		show current trigger settings and warn if illegal in melee
-	MENU_LTRIGGER,		//19	|    4
-	MENU_RTRIGGER,		//20	|    4
-	MENU_RESET,			//21	|   3
-	MENU_SCOPE,			//22	|  2
-	MENU_INPUTVIEW,		//23	|   3		General
-	MENU_XYSCOPE,		//24	|   3		x vs y, plotted over time
-	MENU_TIMESCOPE,		//25	|   3		x/y/l/r vs time
-	MENU_PRESSTIME,		//26	|   3		timing practice for wavedashing, short hopping, etc
-	MENU_GAMES,			//27	|  2
-	MENU_SNEK,			//28	|   3
-	MENU_PING			//29	|   3
+	MENU_STICKDBG,		//7		|   3
+	MENU_SETTINGS,		//8		|  2
+	MENU_SET_OVER,		//9		|   3		Overview of all settings
+	MENU_FILTER,		//10	|   3
+	MENU_ASNAPBACK,		//11	|    4
+	MENU_AWAVE,			//12	|    4
+	MENU_ASMOOTH,		//13	|    4
+	MENU_CSNAPBACK,		//14	|    4
+	MENU_CWAVE,			//15	|    4
+	MENU_COFFSET,		//16	|    4
+	MENU_REMAP,			//17	|   3
+	MENU_RUMBLE,		//18	|   3
+	MENU_TRIGGER,		//19	|   3		show current trigger settings and warn if illegal in melee
+	MENU_LTRIGGER,		//20	|    4
+	MENU_RTRIGGER,		//21	|    4
+	MENU_RESET,			//22	|   3
+	MENU_SCOPE,			//23	|  2
+	MENU_INPUTVIEW,		//24	|   3		General
+	MENU_XYSCOPE,		//25	|   3		x vs y, plotted over time
+	MENU_TIMESCOPE,		//26	|   3		x/y/l/r vs time
+	MENU_PRESSTIME,		//27	|   3		timing practice for wavedashing, short hopping, etc
+	MENU_GAMES,			//28	|  2
+	MENU_SNEK,			//29	|   3
+	MENU_PING			//30	|   3
 };
 
 //The menu index consists of:
@@ -41,7 +42,7 @@ enum ScreenNumber {
 //2. Number of child indices: 255 = leaf node, 0 = one child node but not visible
 //3. List of child indices (up to 6)
 
-const uint8_t MenuIndex[30][8] = {
+const uint8_t MenuIndex[31][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
 	{MENU_SPLASH,	4,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		255,			255},//main menu
@@ -50,6 +51,7 @@ const uint8_t MenuIndex[30][8] = {
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//anotchadj
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cstickcal
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cnotchadj
+	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//stick debug info
 	{MENU_MAIN,		5,		MENU_SET_OVER,	MENU_FILTER,	MENU_REMAP,		MENU_RUMBLE,	MENU_TRIGGER,	255},//settings menu
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//setting overview
 	{MENU_SETTINGS,	6,		MENU_ASNAPBACK,	MENU_AWAVE,		MENU_ASMOOTH,	MENU_CSNAPBACK,	MENU_CWAVE,		MENU_COFFSET},//filters
@@ -78,7 +80,7 @@ const uint8_t MenuIndex[30][8] = {
 //The names consists of an array of null terminated c strings. Pad with spaces.
 //This is the heading of the menus and also the submenu entries.
 
-const char MenuNames[30][28] = {
+const char MenuNames[31][28] = {
 	"PhobVision                 ",
 	"Main Menu                  ",
 	"Stick Calibration          ",
@@ -86,6 +88,7 @@ const char MenuNames[30][28] = {
 	"Left Stick Notch Adjustment",
 	"Calibrate C-Stick          ",
 	"C-Stick Notch Adjustment   ",
+	"Stick Debug Info           ",
 	"Settings                   ",
 	"Settings Overview          ",
 	"Stick Filter Settings      ",
