@@ -1256,7 +1256,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #ifdef ARDUINO
 			Serial.println("Updating settings from unitialized");
 #endif //ARDUINO
-			controls.rumble = controls.rumble + 4;
+			controls.rumble = controls.rumble!=0 ? controls.rumble + 4 : 0;
 			_rumblePower = calcRumblePower(controls.rumble);
 			setRumbleSetting(controls.rumble);
 #ifdef ARDUINO
