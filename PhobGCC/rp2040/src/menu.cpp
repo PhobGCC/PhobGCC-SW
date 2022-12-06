@@ -136,31 +136,76 @@ void drawMenu(unsigned char bitmap[],
 	// on other menus like in the trigger menu
 	switch(menu) {
 		case MENU_SET_OVER:
-			drawString(bitmap, 20, 20, 15, MenuNames[menu]);
-			drawString(bitmap, 30,  50, 15, "AX SB:");
-			drawString(bitmap, 30,  70, 15, "AY SB:");
-			drawString(bitmap, 30,  90, 15, "AX WS:");
-			drawString(bitmap, 30, 110, 15, "AY WS:");
-			drawString(bitmap, 30, 130, 15, "AX SM:");
-			drawString(bitmap, 30, 150, 15, "AY SM:");
-			drawInt(bitmap,    90,  50, 15, 1, controls.xSnapback);
-			drawInt(bitmap,    90,  70, 15, 1, controls.ySnapback);
-			drawInt(bitmap,    90,  90, 15, 1, controls.axWaveshaping);
-			drawInt(bitmap,    90, 110, 15, 1, controls.ayWaveshaping);
-			drawInt(bitmap,    90, 130, 15, 1, controls.axSmoothing);
-			drawInt(bitmap,    90, 150, 15, 1, controls.aySmoothing);
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			drawString(bitmap,  30,  50, 15, "AX SB:");
+			drawString(bitmap,  30,  70, 15, "AY SB:");
+			drawString(bitmap,  30,  90, 15, "AX WS:");
+			drawString(bitmap,  30, 110, 15, "AY WS:");
+			drawString(bitmap,  30, 130, 15, "AX SM:");
+			drawString(bitmap,  30, 150, 15, "AY SM:");
+			drawInt(bitmap,     90,  50, 15, 1, controls.xSnapback);
+			drawInt(bitmap,     90,  70, 15, 1, controls.ySnapback);
+			drawInt(bitmap,     90,  90, 15, 1, controls.axWaveshaping);
+			drawInt(bitmap,     90, 110, 15, 1, controls.ayWaveshaping);
+			drawInt(bitmap,     90, 130, 15, 1, controls.axSmoothing);
+			drawInt(bitmap,     90, 150, 15, 1, controls.aySmoothing);
 			drawString(bitmap, 150,  50, 15, "CX SB:");
 			drawString(bitmap, 150,  70, 15, "CY SB:");
 			drawString(bitmap, 150,  90, 15, "CX WS:");
 			drawString(bitmap, 150, 110, 15, "CY WS:");
 			drawString(bitmap, 150, 130, 15, "CX OF:");
 			drawString(bitmap, 150, 150, 15, "CY OF:");
-			drawInt(bitmap,    210,  50, 15, 1, 10);//controls.cxSmoothing);
-			drawInt(bitmap,    210,  70, 15, 1, -10);//controls.cySmoothing);
+			drawInt(bitmap,    210,  50, 15, 1, controls.cxSmoothing);
+			drawInt(bitmap,    210,  70, 15, 1, controls.cySmoothing);
 			drawInt(bitmap,    210,  90, 15, 1, controls.cxWaveshaping);
 			drawInt(bitmap,    210, 110, 15, 1, controls.cyWaveshaping);
 			drawInt(bitmap,    210, 130, 15, 1, controls.cXOffset);
 			drawInt(bitmap,    210, 150, 15, 1, controls.cYOffset);
+			drawString(bitmap, 280,  50, 15, "L Mode:");
+			drawString(bitmap, 280,  70, 15, "R Mode:");
+			drawString(bitmap, 280,  90, 15, "L Val:");
+			drawString(bitmap, 280, 110, 15, "R Val:");
+			drawString(bitmap, 280, 130, 15, "L WS:");
+			drawString(bitmap, 280, 150, 15, "L WS:");
+			drawInt(bitmap,    350,  50, 15, 1, controls.lConfig+1);
+			drawInt(bitmap,    350,  70, 15, 1, controls.rConfig+1);
+			drawInt(bitmap,    350,  90, 15, 1, controls.lTriggerOffset);
+			drawInt(bitmap,    350, 110, 15, 1, controls.rTriggerOffset);
+			drawInt(bitmap,    350, 130, 15, 1, -1);//controls.rTriggerWaveshaping);
+			drawInt(bitmap,    350, 150, 15, 1, -1);//controls.rTriggerWaveshaping);
+			drawString(bitmap,  30, 170, 15, "Rumble:");
+			drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
+			if(controls.autoInit) {
+				drawString(bitmap, 30, 190, 15, "Autoinit on");
+			} else {
+				drawString(bitmap, 30, 190, 15, "Autoinit off");
+			}
+			switch(controls.jumpConfig) {
+				case DEFAULTJUMP:
+					drawString(bitmap, 30, 210, 15, "Normal jump");
+					break;
+				case SWAP_XZ:
+					drawString(bitmap, 30, 210, 15, "X Z-jump");
+					break;
+				case SWAP_YZ:
+					drawString(bitmap, 30, 210, 15, "Y Z-jump");
+					break;
+				case SWAP_XL:
+					drawString(bitmap, 30, 210, 15, "X L-jump");
+					break;
+				case SWAP_XR:
+					drawString(bitmap, 30, 210, 15, "X R-jump");
+					break;
+				case SWAP_YL:
+					drawString(bitmap, 30, 210, 15, "Y L-jump");
+					break;
+				case SWAP_YR:
+					drawString(bitmap, 30, 210, 15, "Y R-jump");
+					break;
+				default:
+					drawString(bitmap, 30, 210, 15, "Broken jump config");
+					break;
+			}
 			break;
 		default:
 			//placeholder for screens that don't have anything defined
