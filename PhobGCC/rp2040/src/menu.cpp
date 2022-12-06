@@ -52,7 +52,7 @@ const uint8_t MenuIndex[31][8] = {
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cstickcal
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cnotchadj
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//stick debug info
-	{MENU_MAIN,		5,		MENU_SET_OVER,	MENU_FILTER,	MENU_REMAP,		MENU_RUMBLE,	MENU_TRIGGER,	255},//settings menu
+	{MENU_MAIN,		5,		MENU_SET_OVER,	MENU_FILTER,	MENU_REMAP,		MENU_RUMBLE,	MENU_TRIGGER,	MENU_RESET},//settings menu
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//setting overview
 	{MENU_SETTINGS,	6,		MENU_ASNAPBACK,	MENU_AWAVE,		MENU_ASMOOTH,	MENU_CSNAPBACK,	MENU_CWAVE,		MENU_COFFSET},//filters
 	{MENU_FILTER,	255,	255,			255,			255,			255,			255,			255},//a snapback
@@ -103,7 +103,7 @@ const char MenuNames[31][28] = {
 	"Trigger Configuration      ",
 	"Left Trigger Configuration ",
 	"Right Trigger Configuration",
-	"Reset                      ",
+	"Reset Settings             ",
 	"PhobScope                  ",
 	"Input Viewer               ",
 	"Stickmap Plots             ",
