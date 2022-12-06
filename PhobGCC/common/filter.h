@@ -1,6 +1,8 @@
 #ifndef FILTER_H
 #define FILTER_H
 
+#include <cmath>
+
 #include "structsAndEnums.h"
 
 //The median filter can be either length 3, 4, or 5.
@@ -19,26 +21,26 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
 	//We'll hardcode different sort versions according to how long the median is
 	//These are derived from RawTherapee's median.h.
 #if MEDIANLEN == 3
-	val = max(min(valArray[0], valArray[1]), min(valArray[2], max(valArray[0], valArray[1])));
+	val = fmax(fmin(valArray[0], valArray[1]), fmin(valArray[2], fmax(valArray[0], valArray[1])));
 #elif MEDIANLEN == 4
-	float maximin = max(min(valArray[0], valArray[1]), min(valArray[2], valArray[3]));
-	float minimax = min(max(valArray[0], valArray[1]), max(valArray[2], valArray[3]));
+	float maximin = fmax(fmin(valArray[0], valArray[1]), fmin(valArray[2], valArray[3]));
+	float minimax = fmin(fmax(valArray[0], valArray[1]), fmax(valArray[2], valArray[3]));
 	val = (maximin + minimax) / 2.0f;
 #else //MEDIANLEN == 5
 	float tmpArray[MEDIANLEN];
 	float tmp;
-	tmp         = min(valArray[0], valArray[1]);
-	tmpArray[1] = max(valArray[0], valArray[1]);
+	tmp         = fmin(valArray[0], valArray[1]);
+	tmpArray[1] = fmax(valArray[0], valArray[1]);
 	tmpArray[0] = tmp;
-	tmp         = min(valArray[3], valArray[4]);
-	tmpArray[4] = max(valArray[3], valArray[4]);
-	tmpArray[3] = max(tmpArray[0], tmp);
-	tmpArray[1] = min(tmpArray[1], tmpArray[4]);
-	tmp         = min(tmpArray[1], valArray[2]);
-	tmpArray[2] = max(tmpArray[1], valArray[2]);
+	tmp         = fmin(valArray[3], valArray[4]);
+	tmpArray[4] = fmax(valArray[3], valArray[4]);
+	tmpArray[3] = fmax(tmpArray[0], tmp);
+	tmpArray[1] = fmin(tmpArray[1], tmpArray[4]);
+	tmp         = fmin(tmpArray[1], valArray[2]);
+	tmpArray[2] = fmax(tmpArray[1], valArray[2]);
 	tmpArray[1] = tmp;
-	tmp         = min(tmpArray[2], tmpArray[3]);
-	val         = max(tmpArray[1], tmp);
+	tmp         = fmin(tmpArray[2], tmpArray[3]);
+	val         = fmax(tmpArray[1], tmp);
 #endif
 }
 
@@ -103,7 +105,7 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	const float oldYPosDiff = oldYPos - oldYPosFilt;
 
 	//compute stick position exponents for weights
-	const float stickDistance2 = min(normGains.maxStick, xPos*xPos + yPos*yPos)/normGains.maxStick;//0-1
+	const float stickDistance2 = fmin(normGains.maxStick, xPos*xPos + yPos*yPos)/normGains.maxStick;//0-1
 	const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
 	//the current velocity weight for the filtered velocity is the stick r^2
@@ -137,8 +139,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	if(controls.xSnapback != 0){
 		xVelFilt = velWeight1*xVel + (1-normGains.xVelDecay)*velWeight2*oldXVelFilt + normGains.xVelPosFactor*oldXPosDiff;
 
-		const float xPosWeightVelAcc = 1 - min(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
-		const float xPosWeight1 = max(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeightVelAcc = 1 - fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
+		const float xPosWeight1 = fmax(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		xPosFilt = xPosWeight1*xPos +
@@ -150,8 +152,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	if(controls.ySnapback != 0){
 		yVelFilt = velWeight1*yVel + (1-normGains.yVelDecay)*velWeight2*oldYVelFilt + normGains.yVelPosFactor*oldYPosDiff;
 
-		const float yPosWeightVelAcc = 1 - min(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
-		const float yPosWeight1 = max(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
+		const float yPosWeight1 = fmax(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		yPosFilt = yPosWeight1*yPos +
@@ -206,9 +208,9 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float xFactor = calcWaveshapeMult(controls.axWaveshaping);
 	const float yFactor = calcWaveshapeMult(controls.ayWaveshaping);
 
-	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
@@ -250,9 +252,9 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float xFactor = calcWaveshapeMult(controls.cxWaveshaping);
 	const float yFactor = calcWaveshapeMult(controls.cyWaveshaping);
 
-	const float oldXPosWeight = min(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = min(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;

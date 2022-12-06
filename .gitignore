@@ -23,3 +23,5 @@ fp-info-cache
 *.swp
 # vim config file
 *.vimrc
+# cmake build stuff
+*build*/

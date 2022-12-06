@@ -1,15 +1,11 @@
 #ifndef STICKCAL_H
 #define STICKCAL_H
 
+#include <cmath>
 
-
-#include <curveFitting.h>
-#include <eigen.h>
-#include <Eigen/LU>
+#include "curveFitting.h"
 #include "structsAndEnums.h"
 #include "filter.h"
-
-ADC *adc = new ADC();
 
 //ADC reference values for Phob 1.0; may need to be moved into hardware-specific section
 float _ADCScale = 1;
@@ -87,25 +83,6 @@ float linearize(const float point, const float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
 };
 
-void print_mtxf(const Eigen::MatrixXf& X){
-	int i, j, nrow, ncol;
-	nrow = X.rows();
-	ncol = X.cols();
-	Serial.print("nrow: "); Serial.println(nrow);
-	Serial.print("ncol: "); Serial.println(ncol);
-	Serial.println();
-	for (i=0; i<nrow; i++)
-	{
-		for (j=0; j<ncol; j++)
-		{
-			Serial.print(X(i,j), 6);   // print 6 decimal places
-			Serial.print(", ");
-		}
-		Serial.println();
-	}
-	Serial.println();
-};
-
 /*
  * calcStickValues computes the stick x/y coordinates from angle.
  * This requires weird trig because the stick moves spherically.
@@ -153,7 +130,9 @@ void stripCalPoints(const float calPointsX[], const float calPointsY[], float st
  * outputs need to be length _noOfNotches
  */
 void computeStickAngles(float xInput[], float yInput[], float stickAngles[]){
+#ifdef ARDUINO
 	Serial.println("Computed stick angles:");
+#endif //ARDUINO
 	for(int i=0; i < _noOfNotches; i++){
 		if(i%2 == 0){//cardinal or diagonal
 			stickAngles[i] = _notchAngleDefaults[i];
@@ -175,7 +154,7 @@ void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus 
 	notchRemap
 	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
-void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams){
+void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep){
 	//determine the angle between the x unit vector and the current position vector
 	float angle = atan2f(yIn,xIn);
 
@@ -200,16 +179,18 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn + stickParams.affineCoeffs[region][2];
 	*yOut = stickParams.affineCoeffs[region][3]*xIn + stickParams.affineCoeffs[region][4]*yIn + stickParams.affineCoeffs[region][5];
 
-	if((abs(*xOut)<5) && (abs(*yOut)>95)){
-		*xOut = 0;
-	}
-	if((abs(*yOut)<5) && (abs(*xOut)>95)){
-		*yOut = 0;
-	}
+	if(currentCalStep == -1) {
+		if((abs(*xOut)<15) && (abs(*yOut)>80)){
+			*xOut = 0;
+		}
+		if((abs(*yOut)<15) && (abs(*xOut)>80)){
+			*yOut = 0;
+		}
 
-	if((abs(*xOut)<3) && (abs(*yOut)<3)) {
-		*xOut = 0;
-		*yOut = 0;
+		if((abs(*xOut)<3) && (abs(*yOut)<3)) {
+			*xOut = 0;
+			*yOut = 0;
+		}
 	}
 };
 
@@ -224,7 +205,7 @@ void transformCalPoints(const float xInput[], const float yInput[], float xOutpu
 		float yValue = linearize(yInput[i], stickParams.fitCoeffsY);
 		float outX;
 		float outY;
-		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams);
+		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
 	}
@@ -237,6 +218,7 @@ void transformCalPoints(const float xInput[], const float yInput[], float xOutpu
 *******************/
 void cleanCalPoints(const float calPointsX[], const float calPointsY[], const float notchAngles[], float cleanedPointsX[], float cleanedPointsY[], float notchPointsX[], float notchPointsY[], NotchStatus notchStatus[]){
 
+#ifdef ARDUINO
 	Serial.println("The raw calibration points (x,y) are:");
 	for(int i = 0; i< _noOfCalibrationPoints; i++){
 		Serial.print(calPointsX[i], 4);
@@ -248,13 +230,16 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 	for(int i = 0; i< _noOfNotches; i++){
 		Serial.println(notchAngles[i], 4);
 	}
+#endif //ARDUINO
 
 	notchPointsX[0] = 0;
 	notchPointsY[0] = 0;
 	cleanedPointsX[0] = 0;
 	cleanedPointsY[0] = 0;
 
+#ifdef ARDUINO
 	Serial.println("The notch points are:");
+#endif //ARDUINO
 	for(int i = 0; i < _noOfNotches; i++){
 		//add the origin values to the first x,y point
 		cleanedPointsX[0] += calPointsX[i*2];
@@ -269,9 +254,11 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 		notchPointsX[i+1] = round(notchPointsX[i+1]);
 		notchPointsY[i+1] = round(notchPointsY[i+1]);
 
+#ifdef ARDUINO
 		Serial.print(notchPointsX[i+1]);
 		Serial.print(",");
 		Serial.println(notchPointsY[i+1]);
+#endif //ARDUINO
 	}
 
 	//remove the largest and smallest two origin values to remove outliers
@@ -331,9 +318,8 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 		float deltaY = cleanedPointsY[i+1] - cleanedPointsY[0];
 		float mag = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-		if(mag < 0.02){//if the cleaned point was at the center
+		if(mag < 0.02 && (i%2) != 0){//if the cleaned point was at the center and would be a firefox notch
 			//average the previous and next points (cardinal & diagonal) for some sanity
-			//note: this will likely bork if this happens to a cardinal or diagonal
 			int prevIndex = ((i-1+_noOfNotches) % _noOfNotches) + 1;
 			int nextIndex = ((i+1) % _noOfNotches) + 1;
 
@@ -343,8 +329,10 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 			notchPointsX[i+1] = (notchPointsX[prevIndex] + notchPointsX[nextIndex])/2.0;
 			notchPointsY[i+1] = (notchPointsY[prevIndex] + notchPointsY[nextIndex])/2.0;
 
+#ifdef ARDUINO
 			Serial.print("no input was found for notch: ");
 			Serial.println(i+1);
+#endif //ARDUINO
 
 			//Mark that notch adjustment should be skipped for this
 			notchStatus[i] = TERT_INACTIVE;
@@ -353,6 +341,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 		}
 	}
 
+#ifdef ARDUINO
 	Serial.println("The cleaned calibration points are:");
 	for(int i = 0; i< (_noOfNotches+1); i++){
 		Serial.print(cleanedPointsX[i], 4);
@@ -371,6 +360,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 	for(int i = 0; i< (_noOfNotches); i++){
 		Serial.println(notchStatus[i]);
 	}
+#endif //ARDUINO
 };
 
 //adjustNotch is used to adjust the angles of the notch.
@@ -465,29 +455,29 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
 	const float deadzonePlus  = 0.3000/0.9500;//radians; we want to make sure the adjustment can make it here
 	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
-		upperStretchLimit = prevAngle + max(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
+		upperStretchLimit = prevAngle + fmax(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
 	}
 	//If the next one is a cardinal AND the angle is in the deadzone, we make the lowerstretchlimit smaller.
 	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
-		lowerStretchLimit = nextAngle - max(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
+		lowerStretchLimit = nextAngle - fmax(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
 	}
 
-	float lowerDistortLimit  = max(lowerCompressLimit, lowerStretchLimit);
-	float upperDistortLimit  = min(upperCompressLimit, upperStretchLimit);
+	float lowerDistortLimit  = fmax(lowerCompressLimit, lowerStretchLimit);
+	float upperDistortLimit  = fmin(upperCompressLimit, upperStretchLimit);
 	if(upperDistortLimit < lowerDistortLimit){
 		upperDistortLimit += 2*M_PI;
 	}
 
 	//Combine the limits
-	float lowerLimit = lowerDistortLimit;//max(lowerStretchLimit, lowerPosLimit);
-	float upperLimit = upperDistortLimit;//min(upperStretchLimit, upperPosLimit);
+	float lowerLimit = lowerDistortLimit;//fmax(lowerStretchLimit, lowerPosLimit);
+	float upperLimit = upperDistortLimit;//fmin(upperStretchLimit, upperPosLimit);
 	if(upperLimit < lowerLimit){
 		upperLimit += 2*M_PI;
 	}
 
 	//Apply the limits
-	notchAngles[notchIndex] = max(notchAngles[notchIndex], lowerLimit);
-	notchAngles[notchIndex] = min(notchAngles[notchIndex], upperLimit);
+	notchAngles[notchIndex] = fmax(notchAngles[notchIndex], lowerLimit);
+	notchAngles[notchIndex] = fmin(notchAngles[notchIndex], upperLimit);
 };
 
 //displayNotch is used in lieu of adjustNotch when doing basic calibration
@@ -509,49 +499,26 @@ void displayNotch(const int currentStepIn, const bool calibratingAStick, const f
 	}
 };
 
-void collectCalPoints(const WhichStick whichStick, const int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin){
-	Serial.print("Collecting cal point for step: ");
+void insertCalPoints(const WhichStick whichStick, const int currentStepIn, float calPointsX[], float calPointsY[], Pins &pin, float X, float Y){
+#ifdef ARDUINO
+	Serial.print("Inserting cal point for step: ");
 	Serial.println(currentStepIn);
+#endif //ARDUINO
     const int currentStep = _calOrder[currentStepIn];
 
+#ifdef ARDUINO
 	Serial.print("Cal point number: ");
 	Serial.println(currentStep);
-	float X;
-	float Y;
-
-
-	for(int j = 0; j < MEDIANLEN; j++){
-		X = 0;
-		Y = 0;
-		for(int i = 0; i < 128; i++){
-			if(whichStick == ASTICK){
-				X += adc->adc0->analogRead(pin.pinAx)/4096.0*_ADCScale;
-				Y += adc->adc0->analogRead(pin.pinAy)/4096.0*_ADCScale;
-			}
-			else{
-				X += adc->adc0->analogRead(pin.pinCx)/4096.0*_ADCScale;
-				Y += adc->adc0->analogRead(pin.pinCy)/4096.0*_ADCScale;
-			}
-		}
-		X = X/128.0;
-		Y = Y/128.0;
-
-#ifdef USEMEDIAN
-		static float xPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering;
-		static float yPosList[MEDIANLEN] = MEDIANARRAY;//for median filtering
-		static unsigned int xMedianIndex = 0;
-		static unsigned int yMedianIndex = 0;
-		runMedian(X, xPosList, xMedianIndex);
-		runMedian(Y, yPosList, yMedianIndex);
-#endif
-	}
+#endif //ARDUINO
 
 	calPointsX[currentStep] = X;
 	calPointsY[currentStep] = Y;
 
+#ifdef ARDUINO
 	Serial.println("The collected coordinates are: ");
 	Serial.println(calPointsX[currentStep],8);
 	Serial.println(calPointsY[currentStep],8);
+#endif //ARDUINO
 };
 
 /*******************
@@ -563,7 +530,9 @@ void collectCalPoints(const WhichStick whichStick, const int currentStepIn, floa
 		linearization fit coefficients for X and Y
 *******************/
 void linearizeCal(const float inX[], const float inY[], float outX[], float outY[], StickParams &stickParams){
+#ifdef ARDUINO
 	Serial.println("beginning linearization");
+#endif //ARDUINO
 
 	//do the curve fit first
 	//generate all the notched/not notched specific cstick values we will need
@@ -592,6 +561,7 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	double x_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 	double y_output[5] = {27.5,53.2537879754,127.5,201.7462120246,227.5};
 
+#ifdef ARDUINO
 	Serial.println("The fit input points are (x,y):");
 	for(int i = 0; i < 5; i++){
 		Serial.print(fitPointsX[i],8);
@@ -605,6 +575,7 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 		Serial.print(",");
 		Serial.println(y_output[i]);
 	}
+#endif //ARDUINO
 
 	//perform the curve fit, order is 3
 	double tempCoeffsX[_fitOrder+1];
@@ -628,6 +599,7 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	stickParams.fitCoeffsX[3] = stickParams.fitCoeffsX[3] - xZeroError;
 	stickParams.fitCoeffsY[3] = stickParams.fitCoeffsY[3] - yZeroError;
 
+#ifdef ARDUINO
 	Serial.println("The fit coefficients are  are (x,y):");
 	for(int i = 0; i < 4; i++){
 		Serial.print(stickParams.fitCoeffsX[i]);
@@ -636,74 +608,169 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	}
 
 	Serial.println("The linearized points are:");
+#endif //ARDUINO
 	for(int i = 0; i <= _noOfNotches; i++){
 		outX[i] = linearize(inX[i], stickParams.fitCoeffsX);
 		outY[i] = linearize(inY[i], stickParams.fitCoeffsY);
+#ifdef ARDUINO
 		Serial.print(outX[i],8);
 		Serial.print(",");
 		Serial.println(outY[i],8);
+#endif //ARDUINO
 	}
 };
 
-void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
-	for(int i = 1; i <= regions; i++){
-	Serial.print("calibrating region: ");
-	Serial.println(i);
+//Self-explanatory.
+void inverse(const float in[3][3], float (&out)[3][3])
+{
+	float det = in[0][0] * (in[1][1]*in[2][2] - in[2][1]*in[1][2]) -
+	            in[0][1] * (in[1][0]*in[2][2] - in[1][2]*in[2][0]) +
+	            in[0][2] * (in[1][0]*in[2][1] - in[1][1]*in[2][0]);
+	float invdet = 1 / det;
 
-	Eigen::MatrixXf pointsIn(3,3);
+	out[0][0] = (in[1][1]*in[2][2] - in[2][1]*in[1][2]) * invdet;
+	out[0][1] = (in[0][2]*in[2][1] - in[0][1]*in[2][2]) * invdet;
+	out[0][2] = (in[0][1]*in[1][2] - in[0][2]*in[1][1]) * invdet;
+	out[1][0] = (in[1][2]*in[2][0] - in[1][0]*in[2][2]) * invdet;
+	out[1][1] = (in[0][0]*in[2][2] - in[0][2]*in[2][0]) * invdet;
+	out[1][2] = (in[1][0]*in[0][2] - in[0][0]*in[1][2]) * invdet;
+	out[2][0] = (in[1][0]*in[2][1] - in[2][0]*in[1][1]) * invdet;
+	out[2][1] = (in[2][0]*in[0][1] - in[0][0]*in[2][1]) * invdet;
+	out[2][2] = (in[0][0]*in[1][1] - in[1][0]*in[0][1]) * invdet;
+}
 
-	Eigen::MatrixXf pointsOut(3,3);
-
-	if(i == (regions)){
-	Serial.println("final region");
-	pointsIn  << xIn[0],xIn[i],xIn[1],
-				 yIn[0],yIn[i],yIn[1],
-				 1,1,1;
-	pointsOut << xOut[0],xOut[i],xOut[1],
-				 yOut[0],yOut[i],yOut[1],
-				 1,1,1;
-	}
-	else{
-		pointsIn  << xIn[0],xIn[i],xIn[i+1],
-					 yIn[0],yIn[i],yIn[i+1],
-					 1,1,1;
-		pointsOut << xOut[0],xOut[i],xOut[i+1],
-					 yOut[0],yOut[i],yOut[i+1],
-					 1,1,1;
-	}
-
-	Serial.println("In points:");
-	print_mtxf(pointsIn);
-	Serial.println("Out points:");
-	print_mtxf(pointsOut);
-
-	Eigen::MatrixXf A(3,3);
-
-	A = pointsOut*pointsIn.inverse();
-	//A = pointsOut.colPivHouseholderQr().solve(pointsIn);
-
-
-	Serial.println("The transform matrix is:");
-	print_mtxf(A);
-
-	Serial.println("The affine transform coefficients for this region are:");
-
-	for(int j = 0; j <2;j++){
-		for(int k = 0; k<3;k++){
-			stickParams.affineCoeffs[i-1][j*3+k] = A(j,k);
-			Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
-			Serial.print(",");
+//Self-explanatory.
+void matrixMatrixMult(const float left[3][3], const float right[3][3], float (&output)[3][3])
+{
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			output[i][j] = 0;
+			for (int k = 0; k < 3; k++)
+			{
+				output[i][j] += left[i][k] * right[k][j];
+			}
 		}
 	}
+}
 
+void print_mtx(const float matrix[3][3]){
+#ifdef ARDUINO
+	int i, j, nrow, ncol;
+	nrow = 3;
+	ncol = 3;
 	Serial.println();
-	Serial.println("The angle defining this  regions is:");
-	stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
-	//unwrap the angles so that the first has the smallest value
-	if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
-		stickParams.boundaryAngles[i-1] += M_PI*2;
+	for (i=0; i<nrow; i++)
+	{
+		for (j=0; j<ncol; j++)
+		{
+			Serial.print(matrix[i][j], 6);   // print 6 decimal places
+			Serial.print(", ");
+		}
+		Serial.println();
 	}
-	Serial.println(stickParams.boundaryAngles[i-1]);
+	Serial.println();
+#endif //ARDUINO
+};
+
+
+void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
+	for(int i = 1; i <= regions; i++){
+#ifdef ARDUINO
+		Serial.print("calibrating region: ");
+		Serial.println(i);
+#endif //ARDUINO
+
+		float pointsIn[3][3];
+		float pointsOut[3][3];
+
+		if(i == (regions)){
+#ifdef ARDUINO
+			Serial.println("final region");
+#endif //ARDUINO
+			pointsIn[0][0] = xIn[0];
+			pointsIn[0][1] = xIn[i];
+			pointsIn[0][2] = xIn[1];
+			pointsIn[1][0] = yIn[0];
+			pointsIn[1][1] = yIn[i];
+			pointsIn[1][2] = yIn[1];
+			pointsIn[2][0] = 1;
+			pointsIn[2][1] = 1;
+			pointsIn[2][2] = 1;
+			pointsOut[0][0] = xOut[0];
+			pointsOut[0][1] = xOut[i];
+			pointsOut[0][2] = xOut[1];
+			pointsOut[1][0] = yOut[0];
+			pointsOut[1][1] = yOut[i];
+			pointsOut[1][2] = yOut[1];
+			pointsOut[2][0] = 1;
+			pointsOut[2][1] = 1;
+			pointsOut[2][2] = 1;
+		}
+		else{
+			pointsIn[0][0] = xIn[0];
+			pointsIn[0][1] = xIn[i];
+			pointsIn[0][2] = xIn[i+1];
+			pointsIn[1][0] = yIn[0];
+			pointsIn[1][1] = yIn[i];
+			pointsIn[1][2] = yIn[i+1];
+			pointsIn[2][0] = 1;
+			pointsIn[2][1] = 1;
+			pointsIn[2][2] = 1;
+			pointsOut[0][0] = xOut[0];
+			pointsOut[0][1] = xOut[i];
+			pointsOut[0][2] = xOut[i+1];
+			pointsOut[1][0] = yOut[0];
+			pointsOut[1][1] = yOut[i];
+			pointsOut[1][2] = yOut[i+1];
+			pointsOut[2][0] = 1;
+			pointsOut[2][1] = 1;
+			pointsOut[2][2] = 1;
+		}
+
+#ifdef ARDUINO
+		Serial.println("In points:");
+		print_mtx(pointsIn);
+		Serial.println("Out points:");
+		print_mtx(pointsOut);
+#endif //ARDUINO
+
+		float temp[3][3];
+		inverse(pointsIn, temp);
+
+		float A[3][3];
+		matrixMatrixMult(pointsOut, temp, A);
+
+#ifdef ARDUINO
+		Serial.println("The transform matrix is:");
+		print_mtx(A);
+
+		Serial.println("The affine transform coefficients for this region are:");
+#endif //ARDUINO
+
+		for(int j = 0; j <2;j++){
+			for(int k = 0; k<3;k++){
+				stickParams.affineCoeffs[i-1][j*3+k] = A[j][k];
+#ifdef ARDUINO
+				Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
+				Serial.print(",");
+#endif //ARDUINO
+			}
+		}
+
+#ifdef ARDUINO
+		Serial.println();
+		Serial.println("The angle defining this  regions is:");
+#endif //ARDUINO
+		stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
+		//unwrap the angles so that the first has the smallest value
+		if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
+			stickParams.boundaryAngles[i-1] += M_PI*2;
+		}
+#ifdef ARDUINO
+		Serial.println(stickParams.boundaryAngles[i-1]);
+#endif //ARDUINO
 	}
 };
 

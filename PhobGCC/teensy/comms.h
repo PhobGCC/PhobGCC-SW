@@ -5,6 +5,7 @@
 
 #include "TeensyTimerTool.h"
 #include "../common/structsAndEnums.h"
+#include "../common/variables.h"
 
 TeensyTimerTool::OneShotTimer timer1;
 

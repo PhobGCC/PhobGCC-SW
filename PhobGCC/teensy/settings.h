@@ -37,10 +37,12 @@ namespace Eeprom {
 	const int _eepromAyWaveshaping = _eepromAxWaveshaping+_bytesPerFloat;
 	const int _eepromCxWaveshaping = _eepromAyWaveshaping+_bytesPerFloat;
 	const int _eepromCyWaveshaping = _eepromCxWaveshaping+_bytesPerFloat;
-	const int _eepromExtrasUp = _eepromAutoInit+_bytesPerFloat*4;
+	const int _eepromExtrasUp = _eepromCyWaveshaping+_bytesPerFloat;
 	const int _eepromExtrasDown = _eepromExtrasUp+_bytesPerFloat*4;
 	const int _eepromExtrasLeft = _eepromExtrasDown+_bytesPerFloat*4;
 	const int _eepromExtrasRight = _eepromExtrasLeft+_bytesPerFloat*4;
+	const int _eepromSchema = _eepromExtrasRight+_bytesPerFloat*4;
+	//const int _nextSetting = _eepromSchema+bytesPerFloat;
 };
 
 JumpConfig getJumpSetting() {
@@ -93,23 +95,23 @@ void setROffsetSetting(const int R) {
 	EEPROM.put(Eeprom::_eepromROffset, R);
 };
 
-int getCXOffsetSetting() {
+int getCxOffsetSetting() {
 	int output;
 	EEPROM.get(Eeprom::_eepromcXOffset, output);
 	return output;
 };
 
-void setCXOffsetSetting(const int X) {
+void setCxOffsetSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromcXOffset, X);
 };
 
-int getCYOffsetSetting() {
+int getCyOffsetSetting() {
 	int output;
 	EEPROM.get(Eeprom::_eepromcYOffset, output);
 	return output;
 };
 
-void setCYOffsetSetting(const int Y) {
+void setCyOffsetSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromcYOffset, Y);
 };
 
@@ -133,43 +135,43 @@ void setYSnapbackSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromySnapback, Y);
 };
 
-float getXSmoothingSetting() {
-	float output;
+int getXSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromxSmoothing, output);
 	return output;
 };
 
-void setXSmoothingSetting(const float X) {
+void setXSmoothingSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromxSmoothing, X);
 };
 
-float getYSmoothingSetting() {
-	float output;
+int getYSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromySmoothing, output);
 	return output;
 };
 
-void setYSmoothingSetting(const float Y) {
+void setYSmoothingSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromySmoothing, Y);
 };
 
-float getCxSmoothingSetting() {
-	float output;
+int getCxSmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromCxSmoothing, output);
 	return output;
 };
 
-void setCxSmoothingSetting(const float X) {
+void setCxSmoothingSetting(const int X) {
 	EEPROM.put(Eeprom::_eepromCxSmoothing, X);
 };
 
-float getCySmoothingSetting() {
-	float output;
+int getCySmoothingSetting() {
+	int output;
 	EEPROM.get(Eeprom::_eepromCySmoothing, output);
 	return output;
 };
 
-void setCySmoothingSetting(const float Y) {
+void setCySmoothingSetting(const int Y) {
 	EEPROM.put(Eeprom::_eepromCySmoothing, Y);
 };
 
@@ -404,5 +406,15 @@ void setExtrasSettingFloat(const ExtrasSlot slot, const int offset, const float 
 			break;
 	}
 }
+
+int getSchemaSetting() {
+	int output;
+	EEPROM.get(Eeprom::_eepromSchema, output);
+	return output;
+};
+
+void setSchemaSetting(const int schema) {
+	EEPROM.put(Eeprom::_eepromSchema, schema);
+};
 
 #endif //SETTINGS_H

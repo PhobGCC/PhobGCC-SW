@@ -1,6 +1,8 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
+#include <stdint.h>
+
 enum JumpConfig {
 	DEFAULTJUMP,
 	SWAP_XZ,
@@ -134,6 +136,21 @@ struct HardwareButtons{
 	uint8_t Y;
 };
 
+struct RawStick{
+	float axRaw;
+	float ayRaw;
+	float cxRaw;
+	float cyRaw;
+	float axLinearized;
+	float ayLinearized;
+	float cxLinearized;
+	float cyLinearized;
+	float axUnfiltered;
+	float ayUnfiltered;
+	float cxUnfiltered;
+	float cyUnfiltered;
+};
+
 struct Cardinals{
 	uint8_t l : 1;
 	uint8_t r : 1;
@@ -173,12 +190,16 @@ struct ControlConfig{
 	const int snapbackDefault;
 	const int snapbackFactoryAX;
 	const int snapbackFactoryAY;
-	const float smoothingMin;
-	const float smoothingMax;
-	const float snapbackFactoryCX;
-	const float snapbackFactoryCY;
-	const float smoothingFactoryAX;
-	const float smoothingFactoryAY;
+	int axSmoothing;
+	int aySmoothing;
+	int cxSmoothing;
+	int cySmoothing;
+	const int smoothingMin;
+	const int smoothingMax;
+	const int snapbackFactoryCX;
+	const int snapbackFactoryCY;
+	const int smoothingFactoryAX;
+	const int smoothingFactoryAY;
 	int axWaveshaping;
 	int ayWaveshaping;
 	int cxWaveshaping;
@@ -226,11 +247,5 @@ struct FilterGains {
 	float cXSmoothing;
 	float cYSmoothing;
 };
-
-Buttons _btn;
-
-Buttons _hardware;
-
-int _rumblePower = 0;//just so it isn't uninitialized at startup
 
 #endif //ENUMS_H
