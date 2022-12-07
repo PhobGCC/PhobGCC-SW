@@ -249,4 +249,14 @@ struct FilterGains {
 	float cYSmoothing;
 };
 
+struct StickParams{
+	//these are the linearization coefficients
+	float fitCoeffsX[4];
+	float fitCoeffsY[4];
+
+	//these are the notch remap parameters
+	float affineCoeffs[16][4]; //affine transformation coefficients for all regions of the stick
+	float boundaryAngles[16]; //angles at the boundaries between regions of the stick (in the plane)
+};
+
 #endif //ENUMS_H

@@ -134,6 +134,8 @@ int videoOut(const uint8_t pin_base,
 		Buttons &hardware,
 		RawStick &raw,
 		ControlConfig &config,
+		StickParams &aStick,
+		StickParams &cStick,
 		volatile bool &extSync) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
@@ -221,7 +223,7 @@ int videoOut(const uint8_t pin_base,
 		if(redraw) {
 			redraw = false;
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, btn, raw, config);
+			drawMenu(_bitmap, menuIndex, itemIndex, btn, raw, config, aStick, cStick);
 		}
 
 		/*

@@ -254,7 +254,7 @@ int main() {
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
 		_vsyncSensors = true;
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _sync);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync);
 	} else {
 		enterMode(_pinTX, buttonsToGCReport);
 	}
