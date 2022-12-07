@@ -1,6 +1,7 @@
 #include "comms/joybus.hpp"
 
 #include "hardware/gpio.h"
+#include "hardware/pwm.h"
 
 #include "hardware/pio.h"
 #include "joybus.pio.h"
@@ -54,13 +55,29 @@ void __time_critical_func(convertToPio)(const uint8_t* command, const int len, u
     result[len / 2] += 3 << (2 * (8 * (len % 2)));
 }
 
-void __time_critical_func(enterMode)(const int dataPin, std::function<GCReport()> func) {
+void __time_critical_func(enterMode)(const int dataPin,
+                                     const int rumblePin,
+                                     const int brakePin,
+                                     int &rumblePower,
+                                     std::function<GCReport()> func) {
     gpio_init(dataPin);
     gpio_set_dir(dataPin, GPIO_IN);
     gpio_pull_up(dataPin);
 
-    //gpio_init(rumblePin);
-    //gpio_set_dir(rumblePin, GPIO_OUT);
+    gpio_init(rumblePin);
+    gpio_init(brakePin);
+    gpio_set_dir(rumblePin, GPIO_OUT);
+    gpio_set_dir(brakePin, GPIO_OUT);
+    gpio_set_function(rumblePin, GPIO_FUNC_PWM);
+    gpio_set_function(brakePin,  GPIO_FUNC_PWM);
+    const uint rumbleSlice_num = pwm_gpio_to_slice_num(rumblePin);
+    const uint brakeSlice_num  = pwm_gpio_to_slice_num(brakePin);
+    pwm_set_wrap(rumbleSlice_num, 255);
+    pwm_set_wrap(brakeSlice_num,  255);
+    pwm_set_chan_level(rumbleSlice_num, PWM_CHAN_B, 0);//B for odd pins
+    pwm_set_chan_level(brakeSlice_num,  PWM_CHAN_B, 0);//B for odd pins
+    pwm_set_enabled(rumbleSlice_num, true);
+    pwm_set_enabled(brakeSlice_num,  true);
 
     sleep_us(100); // Stabilize voltages
 
@@ -113,6 +130,13 @@ void __time_critical_func(enterMode)(const int dataPin, std::function<GCReport()
         }
         else if (buffer[0] == 0x40) { // Could check values past the first byte for reliability
             //gpio_put(rumblePin, buffer[0] & 1);
+            if(buffer[0] & 1) {
+                pwm_set_gpio_level(brakePin, 0);
+                pwm_set_gpio_level(rumblePin, rumblePower);
+            } else {
+                pwm_set_gpio_level(rumblePin, 0);
+                pwm_set_gpio_level(brakePin, 255);
+            }
 
             //TODO The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
             // It must be very fast (few us max) to be done between poll and response and still be compatible with adapters

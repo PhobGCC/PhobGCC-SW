@@ -256,7 +256,11 @@ int main() {
 		_vsyncSensors = true;
 		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync);
 	} else {
-		enterMode(_pinTX, buttonsToGCReport);
+		enterMode(_pinTX,
+				_pinRumble,
+				_pinBrake,
+				_rumblePower,
+				buttonsToGCReport);
 	}
 
 }
