@@ -179,6 +179,7 @@ struct ControlConfig{
 	const int rumbleMin;
 	const int rumbleMax;
 	const int rumbleDefault;
+	const int rumbleFactory;
 	bool safeMode;
 	int autoInit;
 	int lTrigInitial;

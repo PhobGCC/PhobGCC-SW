@@ -52,6 +52,7 @@ ControlConfig _controls{
 	.rumbleMin = 0,
 	.rumbleMax = 11,
 	.rumbleDefault = 9,//5 is the max for 3v cell rumble, 9 is for oem-feeling normal rumble motors
+	.rumbleFactory = 9,
 	.safeMode = true,
 	.autoInit = false,
 	.lTrigInitial = 0,
@@ -1359,7 +1360,11 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	setLOffsetSetting(controls.lTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
 
-	controls.rumble = controls.rumbleDefault;
+	if(reset == FACTORY){
+		controls.rumble = controls.rumbleFactory;
+	} else {
+		controls.rumble = controls.rumbleDefault;
+	}
 	_rumblePower = calcRumblePower(controls.rumble);
 	setRumbleSetting(controls.rumble);
 
