@@ -131,10 +131,11 @@ void drawString(unsigned char bitmap[],
                 const uint16_t x0,
 			    const uint16_t y0,
 			    const uint8_t color,
-			    const char string[]) {
+			    const char string[],
+                const uint8_t charLimit) {
 	uint16_t i = 0;
 	const char nullChar[] = "";
-	while(string[i] != nullChar[0]) {
+	while(string[i] != nullChar[0] && i < charLimit) {
 		int x = x0 + 10*i;
 		drawChar(bitmap, x, y0, color, string[i]);
 		i++;
@@ -185,10 +186,11 @@ void drawString2x(unsigned char bitmap[],
                   const uint16_t x0,
 			      const uint16_t y0,
 			      const uint8_t color,
-			      const char string[]) {
+			      const char string[],
+                  const uint8_t charLimit) {
 	uint16_t i = 0;
 	const char nullChar[] = "";
-	while(string[i] != nullChar[0]) {
+	while(string[i] != nullChar[0] && i < charLimit) {
 		int x = x0 + 20*i;
 		drawChar2x(bitmap, x, y0, color, string[i]);
 		i++;
@@ -200,6 +202,7 @@ void drawFloat(unsigned char bitmap[],
                const uint16_t y0,
                const uint8_t color,
                const uint8_t largestPower,
+			   const uint8_t totalChars,
                const float number) {
 	int offset = (number >= 0) ? 1 : 0;
 	int decimal = 1;
@@ -209,18 +212,23 @@ void drawFloat(unsigned char bitmap[],
 			offset += 1;
 		}
 	}
+	int charLimit = 99;
+	if(totalChars >= largestPower+2) {
+		charLimit = totalChars-offset;
+	}
 	offset *= 10;
 
 	std::string numberString = std::to_string(number);
 	const char* numberChar = numberString.c_str();
 
-	drawString(bitmap, x0 + offset, y0, color, numberChar);
+	drawString(bitmap, x0 + offset, y0, color, numberChar, charLimit);
 }
 void drawFloat2x(unsigned char bitmap[],
                  const uint16_t x0,
                  const uint16_t y0,
                  const uint8_t color,
                  const uint8_t largestPower,
+				 const uint8_t totalChars,
                  const float number) {
 	int offset = (number >= 0) ? 1 : 0;
 	int decimal = 1;
@@ -230,12 +238,16 @@ void drawFloat2x(unsigned char bitmap[],
 			offset += 1;
 		}
 	}
+	int charLimit = 99;
+	if(totalChars >= largestPower+2) {
+		charLimit = totalChars-offset;
+	}
 	offset *= 20;
 
 	std::string numberString = std::to_string(number);
 	const char* numberChar = numberString.c_str();
 
-	drawString(bitmap, x0 + offset, y0, color, numberChar);
+	drawString2x(bitmap, x0 + offset, y0, color, numberChar);
 }
 void drawInt(unsigned char bitmap[],
              const uint16_t x0,
@@ -277,5 +289,5 @@ void drawInt2x(unsigned char bitmap[],
 	std::string numberString = std::to_string(number);
 	const char* numberChar = numberString.c_str();
 
-	drawString(bitmap, x0 + offset, y0, color, numberChar);
+	drawString2x(bitmap, x0 + offset, y0, color, numberChar);
 }

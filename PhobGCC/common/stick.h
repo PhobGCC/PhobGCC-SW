@@ -11,6 +11,7 @@
 float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 
+//TODO: either put these const globals in varables.h or make them #defines
 //origin values, useful for writing readable stick positions
 const int _intOrigin = 127;
 const float _floatOrigin = 127.5;
@@ -67,15 +68,6 @@ const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACT
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 
-struct StickParams{
-	//these are the linearization coefficients
-	float fitCoeffsX[_fitOrder+1];
-	float fitCoeffsY[_fitOrder+1];
-
-	//these are the notch remap parameters
-	float affineCoeffs[_noOfNotches][6]; //affine transformation coefficients for all regions of the stick
-	float boundaryAngles[_noOfNotches]; //angles at the boundaries between regions of the stick (in the plane)
-};
 StickParams _aStickParams;
 StickParams _cStickParams;
 
@@ -176,8 +168,8 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	}
 
 	//Apply the affine transformation using the coefficients found during calibration
-	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn + stickParams.affineCoeffs[region][2];
-	*yOut = stickParams.affineCoeffs[region][3]*xIn + stickParams.affineCoeffs[region][4]*yIn + stickParams.affineCoeffs[region][5];
+	*xOut = stickParams.affineCoeffs[region][0]*xIn + stickParams.affineCoeffs[region][1]*yIn;
+	*yOut = stickParams.affineCoeffs[region][2]*xIn + stickParams.affineCoeffs[region][3]*yIn;
 
 	if(currentCalStep == -1) {
 		if((abs(*xOut)<15) && (abs(*yOut)>80)){
@@ -750,10 +742,10 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 #endif //ARDUINO
 
 		for(int j = 0; j <2;j++){
-			for(int k = 0; k<3;k++){
-				stickParams.affineCoeffs[i-1][j*3+k] = A[j][k];
+			for(int k = 0; k<2;k++){
+				stickParams.affineCoeffs[i-1][j*2+k] = A[j][k];
 #ifdef ARDUINO
-				Serial.print(stickParams.affineCoeffs[i-1][j*3+k]);
+				Serial.print(stickParams.affineCoeffs[i-1][j*2+k]);
 				Serial.print(",");
 #endif //ARDUINO
 			}

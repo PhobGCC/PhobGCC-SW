@@ -46,7 +46,7 @@ const uint8_t MenuIndex[31][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
 	{MENU_SPLASH,	4,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		255,			255},//main menu
-	{MENU_MAIN,		4,		MENU_ASTICKCAL,	MENU_ANOTCHADJ,	MENU_CSTICKCAL,	MENU_CNOTCHADJ,	255,			255},//calibration menu
+	{MENU_MAIN,		5,		MENU_ASTICKCAL,	MENU_ANOTCHADJ,	MENU_CSTICKCAL,	MENU_CNOTCHADJ,	MENU_STICKDBG,	255},//calibration menu
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//astickcal
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//anotchadj
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cstickcal
@@ -119,7 +119,9 @@ void drawMenu(unsigned char bitmap[],
 		const int itemIndex,
 		const Buttons btn,
 		const RawStick raw,
-		const ControlConfig &controls) {
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
 	//Basic menus
 	if(MenuIndex[menu][1] == 0) {
 		drawImage(bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, 0);//224x300
@@ -138,6 +140,10 @@ void drawMenu(unsigned char bitmap[],
 	//big switch case to draw bottom level pages and non-text graphics
 	// on other menus like in the trigger menu
 	switch(menu) {
+		case MENU_STICKDBG:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			drawString(bitmap,  30,  50, 15, "A affine");
+			break;
 		case MENU_SET_OVER:
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 			drawString(bitmap,  30,  50, 15, "AX SB:");
