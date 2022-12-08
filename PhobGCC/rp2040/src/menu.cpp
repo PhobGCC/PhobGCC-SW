@@ -142,7 +142,27 @@ void drawMenu(unsigned char bitmap[],
 	switch(menu) {
 		case MENU_STICKDBG:
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-			drawString(bitmap,  30,  50, 15, "A affine");
+			if(itemIndex == 0) {
+				//fit coefficients
+				drawString(bitmap,  30,  50, 15, "A coeffs X");
+			} else if (itemIndex == 1) {
+				//affine coefficients
+				drawString(bitmap,  30,  50, 15, "A affine");
+				drawString(bitmap, 280,  50, 15, "C affine");
+				for(int i = 0; i < 16; i++) {
+					drawFloat(bitmap,  30, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][0]);
+					drawFloat(bitmap,  80, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 130, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 180, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][3]);
+					drawFloat(bitmap, 280, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][0]);
+					drawFloat(bitmap, 330, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 380, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 430, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][3]);
+					//ends at y = 262
+				}
+			} else if(itemIndex == 2) {
+				//boundary angles
+			}
 			break;
 		case MENU_SET_OVER:
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
