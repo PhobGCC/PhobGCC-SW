@@ -163,32 +163,6 @@ int main() {
 		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 	}
 
-	/*
-	//output the stick cal points
-	float tempCalPointsX[_noOfCalibrationPoints];
-	float tempCalPointsY[_noOfCalibrationPoints];
-	float notchAngles[_noOfNotches];
-	getPointsSetting(tempCalPointsX, ASTICK, XAXIS);
-	getPointsSetting(tempCalPointsY, ASTICK, YAXIS);
-	getNotchAnglesSetting(notchAngles, ASTICK);
-
-	float cleanedPointsX[_noOfNotches+1];
-	float cleanedPointsY[_noOfNotches+1];
-	float notchPointsX[_noOfNotches+1];
-	float notchPointsY[_noOfNotches+1];
-	NotchStatus notchStatus[_noOfNotches];
-
-	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-
-	int cleanX[_noOfNotches+1];
-	int cleanY[_noOfNotches+1];
-
-	for(int i = 0; i < 17; i++) {
-		cleanX[i] = (int) round(cleanedPointsX[i]*1000);
-		cleanY[i] = (int) round(cleanedPointsY[i]*1000);
-	}
-	*/
-
 	setPinModes();
 
 	Pins pinList {//not actually necessary for any of the rp2040 read functions
