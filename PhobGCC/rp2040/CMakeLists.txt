@@ -36,6 +36,10 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/cvideo.pio.h
 	COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/cvideo.pio ${CMAKE_CURRENT_LIST_DIR}/generated/cvideo.pio.h
 	)
 
+target_compile_definitions(phobgcc_rp2040
+	PRIVATE
+	PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
+
 target_link_libraries(phobgcc_rp2040
 	PRIVATE
 	pico_stdlib
