@@ -1245,6 +1245,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
+	/*
 	//Migration
 	const int schema = getSchemaSetting();
 #ifdef ARDUINO
@@ -1285,6 +1286,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #endif //BATCHSETTINGS
 			}
 	}
+	*/
 	return numberOfNaN;
 }
 

@@ -158,10 +158,12 @@ int main() {
 	//Read settings
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 
+	/*
 	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
 		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
 		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
 	}
+	*/
 
 	setPinModes();
 
