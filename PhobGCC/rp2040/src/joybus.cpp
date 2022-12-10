@@ -75,7 +75,7 @@ void __time_critical_func(enterMode)(const int dataPin,
     pwm_set_wrap(rumbleSlice_num, 255);
     pwm_set_wrap(brakeSlice_num,  255);
     pwm_set_chan_level(rumbleSlice_num, PWM_CHAN_B, 0);//B for odd pins
-    pwm_set_chan_level(brakeSlice_num,  PWM_CHAN_B, 0);//B for odd pins
+    pwm_set_chan_level(brakeSlice_num,  PWM_CHAN_B, 255);//B for odd pins
     pwm_set_enabled(rumbleSlice_num, true);
     pwm_set_enabled(brakeSlice_num,  true);
 
@@ -129,16 +129,7 @@ void __time_critical_func(enterMode)(const int dataPin,
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
         }
         else if (buffer[0] == 0x40) { // Could check values past the first byte for reliability
-            //gpio_put(rumblePin, buffer[0] & 1);
-            if(buffer[0] & 1) {
-                pwm_set_gpio_level(brakePin, 0);
-                pwm_set_gpio_level(rumblePin, rumblePower);
-            } else {
-                pwm_set_gpio_level(rumblePin, 0);
-                pwm_set_gpio_level(brakePin, 255);
-            }
-
-            //TODO The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
+            //The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
             // It must be very fast (few us max) to be done between poll and response and still be compatible with adapters
             // Consider whether that makes sense for your project. If your state building is long, use a different control flow i.e precompute somehow and have func read it
             GCReport gcReport = func();
@@ -160,6 +151,16 @@ void __time_critical_func(enterMode)(const int dataPin,
             pio_sm_set_enabled(pio, 0, true);
 
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
+
+			//Rumble
+            if(buffer[0] & 1) {
+                pwm_set_gpio_level(brakePin, 0);
+                pwm_set_gpio_level(rumblePin, rumblePower);
+            } else {
+                pwm_set_gpio_level(rumblePin, 0);
+                pwm_set_gpio_level(brakePin, 255);
+            }
+
         }
         else {
             pio_sm_set_enabled(pio, 0, false);
