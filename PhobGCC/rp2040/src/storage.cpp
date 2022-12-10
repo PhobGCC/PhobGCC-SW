@@ -49,8 +49,8 @@ void getStoragePage() {
 }
 
 //Write back to persistent storage
-void commitSettings() {
-	Persistence::commit(_storage);
+void commitSettings(const bool noLock/* = false*/) {
+	Persistence::commit(_storage, noLock);
 }
 
 JumpConfig getJumpSetting() {

@@ -48,7 +48,7 @@ struct Storage {
 }
 
 //the code must commit settings after making any change or eles it won't get written
-void commitSettings();
+void commitSettings(const bool noLock = false);
 
 JumpConfig getJumpSetting();
 void setJumpSetting(const JumpConfig);

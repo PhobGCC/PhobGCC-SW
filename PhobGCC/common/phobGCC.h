@@ -887,7 +887,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 };
 
 
-int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
+int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	int numberOfNaN = 0;
 
 	//get the jump setting
@@ -1245,7 +1245,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
-	/*
 	//Migration
 	const int schema = getSchemaSetting();
 #ifdef ARDUINO
@@ -1282,15 +1281,14 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #endif //ARDUINO
 				setSchemaSetting(SW_VERSION);
 #ifdef BATCHSETTINGS
-				commitSettings();
+				commitSettings(noLock);
 #endif //BATCHSETTINGS
 			}
 	}
-	*/
 	return numberOfNaN;
 }
 
-void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams){
+void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 #ifdef ARDUINO
 	Serial.println("RESETTING ALL DEFAULTS");
 #endif //ARDUINO
@@ -1429,7 +1427,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 	}
 #ifdef BATCHSETTINGS
-	commitSettings();
+	commitSettings(noLock);
 #endif //BATCHSETTINGS
 }
 
