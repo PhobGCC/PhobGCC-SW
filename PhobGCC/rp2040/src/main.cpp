@@ -226,6 +226,9 @@ int main() {
 	_raw.cxUnfiltered = 0;
 	_raw.cyUnfiltered = 0;
 
+	//measure the trigger values for trigger tricking
+	initializeButtons(_pinList, _btn, _controls.lTrigInitial, _controls.rTrigInitial);
+
 	//Read buttons on startup to determine what mode to begin in
 	readButtons(_pinList, _hardware);
 
@@ -238,7 +241,6 @@ int main() {
 		//in normal mode, settings are changed by the second core
 		multicore_lockout_victim_init();
 	}
-
 
 	multicore_launch_core1(second_core);
 

@@ -1,6 +1,10 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#ifndef RUMBLE
+#define RUMBLE
+#endif //RUMBLE
+
 #ifndef CLEANADC
 #define CLEANADC
 #endif //CLEANADC
