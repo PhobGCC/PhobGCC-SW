@@ -141,7 +141,7 @@ void drawMenu(unsigned char bitmap[],
 	// on other menus like in the trigger menu
 	switch(menu) {
 		case MENU_STICKDBG:
-			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			drawString(bitmap,  20,  20, 15, "Stick Debug Info      Press A to cycle");
 			if(itemIndex == 0) {
 				//fit coefficients
 				drawString(bitmap,  30,  50, 15, "A coeffs X");
