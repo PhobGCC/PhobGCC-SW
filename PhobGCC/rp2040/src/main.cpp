@@ -8,6 +8,7 @@
 #include "cvideo.h"
 #include "cvideo_variables.h"
 
+volatile bool _videoOut = false;
 volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
 
@@ -25,8 +26,8 @@ GCReport __time_critical_func(buttonsToGCReport)() {
 		.dDown   = _btn.Dd,
 		.dUp     = _btn.Du,
 		.z       = _btn.Z,
-		.r       = _btn.L,
-		.l       = _btn.R,
+		.r       = _btn.R,
+		.l       = _btn.L,
 		.pad1    = 1,
 		.xStick  = _btn.Ax,
 		.yStick  = _btn.Ay,
@@ -39,6 +40,13 @@ GCReport __time_critical_func(buttonsToGCReport)() {
 }
 
 void second_core() {
+	if(_videoOut) {
+		//set up the secondary core so it can be paused by the other core
+		//this is necessary for flash writing
+		//in video mode, settings are changed by the main core
+		multicore_lockout_victim_init();
+	}
+	/*
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
 
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
@@ -46,10 +54,10 @@ void second_core() {
 	pwm_set_wrap(slice_num, 255);
 	pwm_set_chan_level(slice_num, PWM_CHAN_B, 25);
 	pwm_set_enabled(slice_num, true);
+	*/
 
 	extrasInit();
 
-	//gpio_put(_pinSpare0, 0);
 
 	while(true) { //main event loop
 
@@ -72,8 +80,8 @@ void second_core() {
 
 		static bool running = false;
 
-		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
-		pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
+		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
 		if((_btn.B || _controls.autoInit) && !running){
@@ -151,43 +159,13 @@ int main() {
 	//the comms library needs this clockspeed
 	//set_sys_clock_khz(1000*_us, true);
 
-	//set up the main core so it can be paused by the other core
-	//this is necessary for flash writing
-	multicore_lockout_victim_init();
-
 	//Read settings
-	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
 
 	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
-		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams);
-		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams);
+		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams, true);
+		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
 	}
-
-	/*
-	//output the stick cal points
-	float tempCalPointsX[_noOfCalibrationPoints];
-	float tempCalPointsY[_noOfCalibrationPoints];
-	float notchAngles[_noOfNotches];
-	getPointsSetting(tempCalPointsX, ASTICK, XAXIS);
-	getPointsSetting(tempCalPointsY, ASTICK, YAXIS);
-	getNotchAnglesSetting(notchAngles, ASTICK);
-
-	float cleanedPointsX[_noOfNotches+1];
-	float cleanedPointsY[_noOfNotches+1];
-	float notchPointsX[_noOfNotches+1];
-	float notchPointsY[_noOfNotches+1];
-	NotchStatus notchStatus[_noOfNotches];
-
-	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-
-	int cleanX[_noOfNotches+1];
-	int cleanY[_noOfNotches+1];
-
-	for(int i = 0; i < 17; i++) {
-		cleanX[i] = (int) round(cleanedPointsX[i]*1000);
-		cleanY[i] = (int) round(cleanedPointsY[i]*1000);
-	}
-	*/
 
 	setPinModes();
 
@@ -248,7 +226,22 @@ int main() {
 	_raw.cxUnfiltered = 0;
 	_raw.cyUnfiltered = 0;
 
+	//measure the trigger values for trigger tricking
+	initializeButtons(_pinList, _btn, _controls.lTrigInitial, _controls.rTrigInitial);
+
+	//Read buttons on startup to determine what mode to begin in
 	readButtons(_pinList, _hardware);
+
+	if(_hardware.Z) {
+		_videoOut = true;
+		//don't lock out the first core, but do lock out the second core
+	} else {
+		//set up the main core so it can be paused by the other core
+		//this is necessary for flash writing
+		//in normal mode, settings are changed by the second core
+		multicore_lockout_victim_init();
+	}
+
 	multicore_launch_core1(second_core);
 
 	//Run comms unless Z is held while plugging in

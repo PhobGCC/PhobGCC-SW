@@ -185,28 +185,6 @@ int videoOut(const uint8_t pin_base,
 	cvideo_dma_handler();
 	pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-	//drawImage(_bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, VHEIGHT/2-150);
-	/*
-	drawString(_bitmap, 105,  10, 13, "Hello World! +2 blah");
-	drawString2x(_bitmap, 0,  50, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 1, 100, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 2, 150, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 3, 200, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 4, 250, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 5, 300, 10, " !\"#$%&'()*+,-./0123456789");
-	drawString2x(_bitmap, 6, 350, 10, " !\"#$%&'()*+,-./0123456789");
-
-	uint8_t center = 128;
-	drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, WHITE);
-	drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, WHITE);
-	drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, WHITE);
-	drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, WHITE);
-	drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, WHITE);
-	drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, WHITE);
-	drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, WHITE);
-	drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, WHITE);
-	*/
-
 	unsigned int menuIndex = 0;;
 	int itemIndex = 0;;
 	bool redraw = true;//start off true

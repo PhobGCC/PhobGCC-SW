@@ -39,8 +39,8 @@ void setup() {
 
     ADCSetup(adc, _ADCScale, _ADCScaleFactor);
 
-	//measure the trigger values
-	initializeButtons(_pinList, _btn,_controls.lTrigInitial,_controls.rTrigInitial);
+	//measure the trigger values for trigger tricking
+	initializeButtons(_pinList, _btn, _controls.lTrigInitial, _controls.rTrigInitial);
 	//set the origin response before the sticks have been touched
 	//it will never be changed again after this
 

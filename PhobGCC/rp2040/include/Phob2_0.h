@@ -1,6 +1,10 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#ifndef RUMBLE
+#define RUMBLE
+#endif //RUMBLE
+
 #ifndef CLEANADC
 #define CLEANADC
 #endif //CLEANADC
@@ -9,10 +13,10 @@
 //GPIO
 const int _pinA  = 17;
 const int _pinB  = 16;
-const int _pinDr = 9;
-const int _pinDu = 21;
-const int _pinDl = 22;
-const int _pinDd = 28;
+const int _pinDr = 11;
+const int _pinDu = 9;
+const int _pinDl = 8;
+const int _pinDd = 10;
 const int _pinL  = 22;
 const int _pinR  = 21;
 const int _pinX  = 18;
