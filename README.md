@@ -1,18 +1,18 @@
 # PhobGCC
-Gamecube controller motherboard using a teensy as the microcontroller. Aim is to make an accessible and consistent controller. Has the option of using hall effect sensors instead of potentiometers, notch calibration, and snapback filtering.
 
-If your interested in making one, join the project discord to ask questions and get the most up to date information: https://discord.gg/eNJ7xWMvxf
+PhobGCC is an open-source Gamecube controller motherboard aiming to make an accessible and consistent controller. The key feature is the use of hall effect sensors instead of potentiometers, which eliminates a wear item. Additonally, it features notch calibration, digital snapback filtering, button remapping, and various trigger configurations..
 
-Check out the wiki for some info about how the phobGCC works: https://github.com/Phobos132/PhobGCC/wiki
+If you are interested in making one, join the project Discord to ask questions and get the most up to date information: https://discord.gg/eNJ7xWMvxf
 
+You can find all documentation here: https://github.com/PhobGCC/PhobGCC-doc
+
+Board version 1.2:
+
+![Board version 1.2](https://github.com/PhobGCC/PhobGCC-doc/raw/main/For_Makers/BuildPics_1.2.2/CVAC1118_1lwoupq-output.jpg?raw=true)
 
 Hall effect sensors:
 
 ![Prototypes](https://www.dropbox.com/s/fyltdef79c2z78y/Hall%20Sensors.png?raw=1)
-
-Board Version 1.1:
-
-![1.1](https://www.dropbox.com/s/cgxgo3ve1nrf6j9/20220218_182602.jpg?raw=1)
 
 Initial prototypes:
 

@@ -141,7 +141,7 @@ void drawMenu(unsigned char bitmap[],
 	// on other menus like in the trigger menu
 	switch(menu) {
 		case MENU_STICKDBG:
-			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			drawString(bitmap,  20,  20, 15, "Stick Debug Info      Press A to cycle");
 			if(itemIndex == 0) {
 				//fit coefficients
 				drawString(bitmap,  30,  50, 15, "A coeffs X");
@@ -150,18 +150,40 @@ void drawMenu(unsigned char bitmap[],
 				drawString(bitmap,  30,  50, 15, "A affine");
 				drawString(bitmap, 280,  50, 15, "C affine");
 				for(int i = 0; i < 16; i++) {
-					drawFloat(bitmap,  30, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][0]);
-					drawFloat(bitmap,  80, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][1]);
-					drawFloat(bitmap, 130, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][2]);
-					drawFloat(bitmap, 180, 70+12*i, 15, 0, 4, aStick.affineCoeffs[i][3]);
-					drawFloat(bitmap, 280, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][0]);
-					drawFloat(bitmap, 330, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][1]);
-					drawFloat(bitmap, 380, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][2]);
-					drawFloat(bitmap, 430, 70+12*i, 15, 0, 4, cStick.affineCoeffs[i][3]);
+					drawFloat(bitmap,  30, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][0]);
+					drawFloat(bitmap,  80, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 130, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 180, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][3]);
+					drawFloat(bitmap, 280, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][0]);
+					drawFloat(bitmap, 330, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 380, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 430, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][3]);
 					//ends at y = 262
 				}
 			} else if(itemIndex == 2) {
 				//boundary angles
+				drawString(bitmap,  30,  50, 15, "A boundaries");
+				drawString(bitmap, 280,  50, 15, "C boundaries");
+			} else if(itemIndex == 3) {
+				//raw output
+				drawString(bitmap,  30,  50, 15, "A raw values");
+				drawString(bitmap, 280,  50, 15, "C raw values");
+				drawFloat(bitmap,   30,  70, 15, 0, 6, raw.axRaw);
+				drawFloat(bitmap,  280,  70, 15, 0, 6, raw.cxRaw);
+				drawFloat(bitmap,   30,  90, 15, 0, 6, raw.ayRaw);
+				drawFloat(bitmap,  280,  90, 15, 0, 6, raw.cyRaw);
+				drawString(bitmap,  30, 120, 15, "A linearized values");
+				drawString(bitmap, 280, 120, 15, "C linearized values");
+				drawFloat(bitmap,   30, 140, 15, 2, 6, raw.axLinearized);
+				drawFloat(bitmap,  280, 140, 15, 2, 6, raw.cxLinearized);
+				drawFloat(bitmap,   30, 160, 15, 2, 6, raw.ayLinearized);
+				drawFloat(bitmap,  280, 160, 15, 2, 6, raw.cyLinearized);
+				drawString(bitmap,  30, 190, 15, "A remapped values");
+				drawString(bitmap, 280, 190, 15, "C remapped values");
+				drawFloat(bitmap,   30, 210, 15, 2, 6, raw.axUnfiltered);
+				drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
+				drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
+				drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
 			}
 			break;
 		case MENU_SET_OVER:
@@ -309,13 +331,39 @@ void navigateMenu(unsigned char bitmap[],
 				if(ddLockout == 0) {
 					ddLockout = 15;//a quarter of a second
 					duLockout = 0;
-					itemIndex = fmin(MenuIndex[menu][1], itemIndex+1);
+					itemIndex = fmin(MenuIndex[menu][1]-1, itemIndex+1);
 					redraw = true;
 					return;
 				}
 			}
 		} else {
 			//Big switch case for controls for all the bottom level items
+			switch(menu) {
+				case MENU_STICKDBG:
+					if(hardware.A) {
+						if(aLockout == 0) {
+							aLockout = 10;
+							itemIndex++;
+							if(itemIndex > 3) {
+								itemIndex = 0;
+							}
+							redraw = true;
+							return;
+						}
+					} else {
+						//only decrement the lockout if A is released
+						//it'll be unlocked after 1/6 of a second unpressed
+						aLockout = fmax(0, aLockout-1);
+						if(itemIndex == 3) {
+							redraw = true;
+							return;
+						}
+					}
+					break;
+				default:
+					//do nothing
+					return;
+			}
 		}
 	}
 }
