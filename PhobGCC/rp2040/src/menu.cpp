@@ -137,8 +137,8 @@ void drawMenu(unsigned char bitmap[],
 		//placeholder for other screens that don't need menu graphics drawn
 	}
 
-	//big switch case to draw bottom level pages and non-text graphics
-	// on other menus like in the trigger menu
+	//big switch case to draw bottom level pages
+	// and additional graphics on other menus
 	switch(menu) {
 		case MENU_STICKDBG:
 			drawString(bitmap,  20,  20, 15, "Stick Debug Info      Press A to cycle");
