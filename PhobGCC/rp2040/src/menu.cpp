@@ -1,9 +1,10 @@
 #include <cmath>
 #include "cvideo.h"
+#include "storage/pages/storage.h"
 
 #include "images/cuteGhost.h"
 
-enum ScreenNumber {
+enum ScreenNumber {//mark finished ones with asterisks
 	MENU_SPLASH,		//0		|0
 	MENU_MAIN,			//1		| 1
 	MENU_CALIBRATE,		//2		|  2
@@ -11,9 +12,9 @@ enum ScreenNumber {
 	MENU_ANOTCHFIX,		//4		|   3
 	MENU_CSTICKCAL,		//5		|   3
 	MENU_CNOTCHFIX,		//6		|   3
-	MENU_STICKDBG,		//7		|   3
+	MENU_STICKDBG,		//7*	|   3
 	MENU_SETTINGS,		//8		|  2
-	MENU_SET_OVER,		//9		|   3		Overview of all settings
+	MENU_SET_OVER,		//9*	|   3		Overview of all settings
 	MENU_FILTER,		//10	|   3
 	MENU_ASNAPBACK,		//11	|    4
 	MENU_AWAVE,			//12	|    4
