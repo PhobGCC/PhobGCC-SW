@@ -188,6 +188,7 @@ int videoOut(const uint8_t pin_base,
 	unsigned int menuIndex = 0;;
 	int itemIndex = 0;;
 	bool redraw = true;//start off true
+	bool changeMade = false;
 
 	while (true) {
 		//tight_loop_contents();
@@ -197,11 +198,11 @@ int videoOut(const uint8_t pin_base,
 		extSync = true;
 		_startSync = false;
 
-		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, hardware, config);
+		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, changeMade, hardware, config);
 		if(redraw) {
 			redraw = false;
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, btn, raw, config, aStick, cStick);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
 		}
 
 		/*

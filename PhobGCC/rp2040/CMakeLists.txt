@@ -16,10 +16,11 @@ add_executable(phobgcc_rp2040
 	src/cvideo.cpp
 	src/drawGraphics.cpp
 	src/drawImage.cpp
+	src/drawMenu.cpp
 	src/graph.cpp
 	src/joybus.cpp
 	src/main.cpp
-	src/menu.cpp
+	src/navigateMenu.cpp
 	src/storage.cpp
 	)
 
