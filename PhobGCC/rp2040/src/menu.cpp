@@ -8,9 +8,9 @@ enum ScreenNumber {
 	MENU_MAIN,			//1		| 1
 	MENU_CALIBRATE,		//2		|  2
 	MENU_ASTICKCAL,		//3		|   3
-	MENU_ANOTCHADJ,		//4		|   3
+	MENU_ANOTCHFIX,		//4		|   3
 	MENU_CSTICKCAL,		//5		|   3
-	MENU_CNOTCHADJ,		//6		|   3
+	MENU_CNOTCHFIX,		//6		|   3
 	MENU_STICKDBG,		//7		|   3
 	MENU_SETTINGS,		//8		|  2
 	MENU_SET_OVER,		//9		|   3		Overview of all settings
@@ -46,11 +46,11 @@ const uint8_t MenuIndex[31][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
 	{MENU_SPLASH,	4,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		255,			255},//main menu
-	{MENU_MAIN,		5,		MENU_ASTICKCAL,	MENU_ANOTCHADJ,	MENU_CSTICKCAL,	MENU_CNOTCHADJ,	MENU_STICKDBG,	255},//calibration menu
+	{MENU_MAIN,		5,		MENU_ASTICKCAL,	MENU_ANOTCHFIX,	MENU_CSTICKCAL,	MENU_CNOTCHFIX,	MENU_STICKDBG,	255},//calibration menu
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//astickcal
-	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//anotchadj
+	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//anotchfix
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cstickcal
-	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cnotchadj
+	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//cnotchfix
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//stick debug info
 	{MENU_MAIN,		5,		MENU_SET_OVER,	MENU_FILTER,	MENU_REMAP,		MENU_RUMBLE,	MENU_TRIGGER,	MENU_RESET},//settings menu
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//setting overview
@@ -85,9 +85,9 @@ const char MenuNames[31][28] = {
 	"Main Menu                  ",
 	"Stick Calibration          ",
 	"Calibrate Left Stick       ",
-	"Left Stick Notch Adjustment",
+	"Left Stick Notch Fix       ",
 	"Calibrate C-Stick          ",
-	"C-Stick Notch Adjustment   ",
+	"C-Stick Notch Fix          ",
 	"Stick Debug Info           ",
 	"Settings                   ",
 	"Settings Overview          ",
@@ -143,28 +143,6 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_STICKDBG:
 			drawString(bitmap,  20,  20, 15, "Stick Debug Info      Press A to cycle");
 			if(itemIndex == 0) {
-				//fit coefficients
-				drawString(bitmap,  30,  50, 15, "A coeffs X");
-			} else if (itemIndex == 1) {
-				//affine coefficients
-				drawString(bitmap,  30,  50, 15, "A affine");
-				drawString(bitmap, 280,  50, 15, "C affine");
-				for(int i = 0; i < 16; i++) {
-					drawFloat(bitmap,  30, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][0]);
-					drawFloat(bitmap,  80, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][1]);
-					drawFloat(bitmap, 130, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][2]);
-					drawFloat(bitmap, 180, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][3]);
-					drawFloat(bitmap, 280, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][0]);
-					drawFloat(bitmap, 330, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][1]);
-					drawFloat(bitmap, 380, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][2]);
-					drawFloat(bitmap, 430, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][3]);
-					//ends at y = 262
-				}
-			} else if(itemIndex == 2) {
-				//boundary angles
-				drawString(bitmap,  30,  50, 15, "A boundaries");
-				drawString(bitmap, 280,  50, 15, "C boundaries");
-			} else if(itemIndex == 3) {
 				//raw output
 				drawString(bitmap,  30,  50, 15, "A raw values");
 				drawString(bitmap, 280,  50, 15, "C raw values");
@@ -184,6 +162,52 @@ void drawMenu(unsigned char bitmap[],
 				drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
 				drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 				drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
+			} else if(itemIndex == 1) {
+				//fit coefficients
+				drawString(bitmap,  30,  50, 15, "A fit coeffs X");
+				drawFloat(bitmap,   30,  70, 15, 0, 10, aStick.fitCoeffsX[0]);
+				drawFloat(bitmap,   30,  90, 15, 0, 10, aStick.fitCoeffsX[0]);
+				drawFloat(bitmap,   30, 110, 15, 0, 10, aStick.fitCoeffsX[0]);
+				drawFloat(bitmap,   30, 130, 15, 0, 10, aStick.fitCoeffsX[0]);
+				drawString(bitmap,  30, 150, 15, "A fit coeffs Y");
+				drawFloat(bitmap,   30, 170, 15, 0, 10, aStick.fitCoeffsY[0]);
+				drawFloat(bitmap,   30, 190, 15, 0, 10, aStick.fitCoeffsY[0]);
+				drawFloat(bitmap,   30, 210, 15, 0, 10, aStick.fitCoeffsY[0]);
+				drawFloat(bitmap,   30, 230, 15, 0, 10, aStick.fitCoeffsY[0]);
+				drawString(bitmap, 280,  50, 15, "C fit coeffs X");
+				drawFloat(bitmap,  280,  70, 15, 0, 10, cStick.fitCoeffsX[0]);
+				drawFloat(bitmap,  280,  90, 15, 0, 10, cStick.fitCoeffsX[0]);
+				drawFloat(bitmap,  280, 110, 15, 0, 10, cStick.fitCoeffsX[0]);
+				drawFloat(bitmap,  280, 130, 15, 0, 10, cStick.fitCoeffsX[0]);
+				drawString(bitmap, 280, 150, 15, "C fit coeffs Y");
+				drawFloat(bitmap,  280, 170, 15, 0, 10, cStick.fitCoeffsY[0]);
+				drawFloat(bitmap,  280, 190, 15, 0, 10, cStick.fitCoeffsY[0]);
+				drawFloat(bitmap,  280, 210, 15, 0, 10, cStick.fitCoeffsY[0]);
+				drawFloat(bitmap,  280, 230, 15, 0, 10, cStick.fitCoeffsY[0]);
+			} else if(itemIndex == 2) {
+				//affine coefficients
+				drawString(bitmap,  30,  50, 15, "A affine transform");
+				drawString(bitmap, 280,  50, 15, "C affine transform");
+				for(int i = 0; i < 16; i++) {
+					drawFloat(bitmap,  30, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][0]);
+					drawFloat(bitmap,  80, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 130, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 180, 70+16*i, 15, 0, 4, aStick.affineCoeffs[i][3]);
+					drawFloat(bitmap, 280, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][0]);
+					drawFloat(bitmap, 330, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][1]);
+					drawFloat(bitmap, 380, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][2]);
+					drawFloat(bitmap, 430, 70+16*i, 15, 0, 4, cStick.affineCoeffs[i][3]);
+					//ends at y = 262
+				}
+			} else if(itemIndex == 3) {
+				//boundary angles
+				drawString(bitmap,  30,  50, 15, "A bounds angles");
+				drawString(bitmap, 280,  50, 15, "C bounds angles");
+				for(int i = 0; i < 16; i++) {
+					drawFloat(bitmap,  30, 70+16*i, 15, 2, 7, aStick.boundaryAngles[i]*180/M_PI);
+					drawFloat(bitmap, 280, 70+16*i, 15, 2, 7, cStick.boundaryAngles[i]*180/M_PI);
+					//ends at y = 262
+				}
 			}
 			break;
 		case MENU_SET_OVER:
