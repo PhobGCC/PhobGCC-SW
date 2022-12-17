@@ -179,7 +179,7 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			if(changeMade) {
 				drawString(bitmap, 300, 20, 15, "Press B to save");
 			}
-			//                                      100       200       300       400       500
+			//                                      100       200       300       400       500 //510 is the last char
 			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
 			drawString(bitmap,  30,  70, 15, "Set so that snapback < 23 for Melee.");
 			drawString(bitmap,  30,  90, 15, "0 disables the filter. >0 shortens rise time.");
@@ -201,7 +201,7 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			if(changeMade) {
 				drawString(bitmap, 300, 20, 15, "Press B to save");
 			}
-			//                                      100       200       300       400       500
+			//                                      100       200       300       400       500 //510 is the last char
 			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
 			drawString(bitmap,  30,  70, 15, "This makes the stick stop during fast inputs.");
 			drawString(bitmap,  30,  90, 15, "Higher values reduce the speed threshold.");
@@ -211,6 +211,28 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			drawInt(   bitmap, 160, 160, 15, 1, controls.axWaveshaping);
 			drawString(bitmap, 280, 160, 15, "Left stick Y:");
 			drawInt(   bitmap, 410, 160, 15, 1, controls.ayWaveshaping);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
+			//graph?
+			break;
+		case MENU_ASMOOTH:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This averages the stick position with the past.");
+			drawString(bitmap,  30,  90, 15, "It can be used to make one axis lag the other.");
+			drawString(bitmap,  30, 110, 15, "Use X=5 to make down and in ledgedashes work.");
+			drawString(bitmap,  30, 130, 15, "Min: 0  Max: 9  Default: 0");
+			drawString(bitmap,  30, 160, 15, "Left stick X:");
+			drawInt(   bitmap, 160, 160, 15, 0, controls.axSmoothing);
+			drawString(bitmap, 280, 160, 15, "Left stick Y:");
+			drawInt(   bitmap, 410, 160, 15, 0, controls.aySmoothing);
 			if(itemIndex == 0) {
 				drawString(bitmap,  10, 160, 15, ">");
 			} else {

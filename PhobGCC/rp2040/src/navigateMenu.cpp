@@ -214,7 +214,63 @@ void navigateMenu(unsigned char bitmap[],
 						changeMade = false;
 						redraw = true;
 						pleaseCommit = true;//ask the other thread to commit settings to flash
-						drawString(bitmap, 0, 0, 15, "aaa");
+					}
+					return;
+				case MENU_ASMOOTH:
+					if(!changeMade) {
+						tempInt1 = controls.axSmoothing;
+						tempInt2 = controls.aySmoothing;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.axSmoothing = fmin(controls.smoothingMax, controls.axSmoothing+1);
+						} else {//itemIndex == 1
+							controls.aySmoothing = fmin(controls.smoothingMax, controls.aySmoothing+1);
+						}
+						changeMade = (controls.axSmoothing != tempInt1) || (controls.aySmoothing != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.axSmoothing = fmax(controls.smoothingMin, controls.axSmoothing-1);
+						} else {//itemIndex == 1
+							controls.aySmoothing = fmax(controls.smoothingMin, controls.aySmoothing-1);
+						}
+						changeMade = (controls.axSmoothing != tempInt1) || (controls.aySmoothing != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setXSmoothingSetting(controls.axSmoothing);
+						setYSmoothingSetting(controls.aySmoothing);
+						tempInt1 = controls.axSmoothing;
+						tempInt2 = controls.aySmoothing;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
 					}
 					return;
 				default:
