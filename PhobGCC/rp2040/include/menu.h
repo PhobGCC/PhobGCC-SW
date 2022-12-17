@@ -13,7 +13,7 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_SETTINGS,		//8		|  2
 	MENU_SET_OVER,		//9		|   3*		Overview of all settings
 	MENU_FILTER,		//10	|   3
-	MENU_ASNAPBACK,		//11	|    4
+	MENU_ASNAPBACK,		//11	|    4*
 	MENU_AWAVE,			//12	|    4
 	MENU_ASMOOTH,		//13	|    4
 	MENU_CSNAPBACK,		//14	|    4

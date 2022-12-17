@@ -149,7 +149,7 @@ void navigateMenu(unsigned char bitmap[],
 						}
 						changeMade = (controls.xSnapback != tempInt1) || (controls.ySnapback != tempInt2);
 						redraw = true;
-					} else if(hardware.S && changeMade) {
+					} else if(backAccumulator > 5 && changeMade) {
 						setXSnapbackSetting(controls.xSnapback);
 						setYSnapbackSetting(controls.ySnapback);
 						tempInt1 = controls.xSnapback;
@@ -157,6 +157,64 @@ void navigateMenu(unsigned char bitmap[],
 						changeMade = false;
 						redraw = true;
 						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
+				case MENU_AWAVE:
+					if(!changeMade) {
+						tempInt1 = controls.axWaveshaping;
+						tempInt2 = controls.ayWaveshaping;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.axWaveshaping = fmin(controls.waveshapingMax, controls.axWaveshaping+1);
+						} else {//itemIndex == 1
+							controls.ayWaveshaping = fmin(controls.waveshapingMax, controls.ayWaveshaping+1);
+						}
+						changeMade = (controls.axWaveshaping != tempInt1) || (controls.ayWaveshaping != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.axWaveshaping = fmax(controls.waveshapingMin, controls.axWaveshaping-1);
+						} else {//itemIndex == 1
+							controls.ayWaveshaping = fmax(controls.waveshapingMin, controls.ayWaveshaping-1);
+						}
+						changeMade = (controls.axWaveshaping != tempInt1) || (controls.ayWaveshaping != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
+						setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
+						tempInt1 = controls.axWaveshaping;
+						tempInt2 = controls.ayWaveshaping;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+						drawString(bitmap, 0, 0, 15, "aaa");
 					}
 					return;
 				default:

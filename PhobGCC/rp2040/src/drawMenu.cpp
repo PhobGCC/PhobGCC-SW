@@ -196,6 +196,28 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			}
 			//graph?
 			break;
+		case MENU_AWAVE:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500
+			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This makes the stick stop during fast inputs.");
+			drawString(bitmap,  30,  90, 15, "Higher values reduce the speed threshold.");
+			drawString(bitmap,  30, 110, 15, "It affects pivots, DBOOC, dashback, and more.");
+			drawString(bitmap,  30, 130, 15, "Min: 0  Max: 15  Default: 0");
+			drawString(bitmap,  30, 160, 15, "Left stick X:");
+			drawInt(   bitmap, 160, 160, 15, 1, controls.axWaveshaping);
+			drawString(bitmap, 280, 160, 15, "Left stick Y:");
+			drawInt(   bitmap, 410, 160, 15, 1, controls.ayWaveshaping);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
+			//graph?
+			break;
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {

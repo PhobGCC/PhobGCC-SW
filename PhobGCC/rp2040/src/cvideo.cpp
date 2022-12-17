@@ -193,21 +193,17 @@ int videoOut(const uint8_t pin_base,
 
 	while (true) {
 		//tight_loop_contents();
-		gpio_put(0, 0);
 		while(!_startSync) {
 			tight_loop_contents();
 		}
 		extSync = true;
 		_startSync = false;
 
-		gpio_put(0, !gpio_get_out_level(0));
 		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
-		gpio_put(0, !gpio_get_out_level(0));
 		if(redraw) {
 			redraw = false;
 			memset(_bitmap, BLACK2, BUFFERLEN);
 			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
-			gpio_put(0, !gpio_get_out_level(0));
 		}
 
 		/*

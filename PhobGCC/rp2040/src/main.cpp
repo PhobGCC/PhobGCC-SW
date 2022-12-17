@@ -67,6 +67,7 @@ void second_core() {
 			_sync = false;
 		}
 
+
 		static bool running = false;
 
 		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
@@ -77,7 +78,6 @@ void second_core() {
 			running=true;
 		}
 
-		//pwm_set_gpio_level(_pinLED, 255*_btn.B);
 
 		static int currentCalStep = -1;//-1 means not calibrating
 
