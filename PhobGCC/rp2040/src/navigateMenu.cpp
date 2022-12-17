@@ -273,6 +273,63 @@ void navigateMenu(unsigned char bitmap[],
 						pleaseCommit = true;//ask the other thread to commit settings to flash
 					}
 					return;
+				case MENU_CSNAPBACK:
+					if(!changeMade) {
+						tempInt1 = controls.cxSmoothing;
+						tempInt2 = controls.cySmoothing;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.cxSmoothing = fmin(controls.smoothingMax, controls.cxSmoothing+1);
+						} else {//itemIndex == 1
+							controls.cySmoothing = fmin(controls.smoothingMax, controls.cySmoothing+1);
+						}
+						changeMade = (controls.cxSmoothing != tempInt1) || (controls.cySmoothing != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.cxSmoothing = fmax(controls.smoothingMin, controls.cxSmoothing-1);
+						} else {//itemIndex == 1
+							controls.cySmoothing = fmax(controls.smoothingMin, controls.cySmoothing-1);
+						}
+						changeMade = (controls.cxSmoothing != tempInt1) || (controls.cySmoothing != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setCxSmoothingSetting(controls.cxSmoothing);
+						setCySmoothingSetting(controls.cySmoothing);
+						tempInt1 = controls.cxSmoothing;
+						tempInt2 = controls.cySmoothing;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
 				default:
 					//do nothing
 					return;

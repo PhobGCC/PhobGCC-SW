@@ -240,6 +240,28 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			}
 			//graph?
 			break;
+		case MENU_CSNAPBACK:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This averages the stick position with the past.");
+			drawString(bitmap,  30,  90, 15, "Make them 5 or 6 to reduce snapback.");
+			drawString(bitmap,  30, 110, 15, "Make one axis higher to make it less responsive.");
+			drawString(bitmap,  30, 130, 15, "Min: 0  Max: 9  Default: 0");
+			drawString(bitmap,  30, 160, 15, "Right stick X:");
+			drawInt(   bitmap, 170, 160, 15, 0, controls.cxSmoothing);
+			drawString(bitmap, 280, 160, 15, "Right stick Y:");
+			drawInt(   bitmap, 420, 160, 15, 0, controls.cySmoothing);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
+			//graph?
+			break;
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {
