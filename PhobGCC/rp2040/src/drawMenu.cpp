@@ -1,10 +1,11 @@
 #include <cmath>
+#include "pico/platform.h"
 #include "cvideo.h"
 #include "menu.h"
 
 #include "images/cuteGhost.h"
 
-void drawMenu(unsigned char bitmap[],
+void __time_critical_func(drawMenu)(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
 		const bool changeMade,
@@ -176,17 +177,23 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_ASNAPBACK:
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 			if(changeMade) {
-				drawString(bitmap, 280, 20, 15, "Setting changed");
+				drawString(bitmap, 300, 20, 15, "Press B to save");
 			}
 			//                                      100       200       300       400       500
 			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
 			drawString(bitmap,  30,  70, 15, "Set so that snapback < 23 for Melee.");
 			drawString(bitmap,  30,  90, 15, "0 disables the filter. >0 shortens rise time.");
 			drawString(bitmap,  30, 110, 15, "Higher makes the stick return to center slower.");
-			drawString(bitmap,  30, 140, 15, "Left stick X:");
-			drawInt(   bitmap, 170, 140, 15, 1, controls.xSnapback);
-			drawString(bitmap, 280, 140, 15, "Left stick Y:");
-			drawInt(   bitmap, 420, 140, 15, 1, controls.ySnapback);
+			drawString(bitmap,  30, 130, 15, "Min: 0  Max: 10  Default: 4");
+			drawString(bitmap,  30, 160, 15, "Left stick X:");
+			drawInt(   bitmap, 160, 160, 15, 1, controls.xSnapback);
+			drawString(bitmap, 280, 160, 15, "Left stick Y:");
+			drawInt(   bitmap, 410, 160, 15, 1, controls.ySnapback);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
 			//graph?
 			break;
 		default:

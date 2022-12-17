@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstring>
 #include <string>
+#include "pico/platform.h"
 #include "cvideo.h"
 #include "images/font.h"
 
@@ -9,7 +10,7 @@
 
 //Draw a line from the first point to the second point including both.
 //This implements Bresenham's line algorithm
-void drawLineLow(unsigned char bitmap[],
+void __time_critical_func(drawLineLow)(unsigned char bitmap[],
                  const uint16_t x0,
                  const uint16_t y0,
                  const uint16_t x1,
@@ -41,7 +42,7 @@ void drawLineLow(unsigned char bitmap[],
 		}
 	}
 }
-void drawLineHigh(unsigned char bitmap[],
+void __time_critical_func(drawLineHigh)(unsigned char bitmap[],
                   const uint16_t x0,
                   const uint16_t y0,
                   const uint16_t x1,
@@ -98,7 +99,7 @@ void drawLine(unsigned char bitmap[],
 }
 
 //Draws 8x15 character in the specified location according to the ascii codepoints
-void drawChar(unsigned char bitmap[],
+void __time_critical_func(drawChar)(unsigned char bitmap[],
               const uint16_t x,
 			  const uint16_t y,
 			  const uint8_t color,
@@ -143,7 +144,7 @@ void drawString(unsigned char bitmap[],
 }
 
 //Draws 8x15 character in the specified location according to the ascii codepoints
-void drawChar2x(unsigned char bitmap[],
+void __time_critical_func(drawChar2x)(unsigned char bitmap[],
                 const uint16_t x,
 			    const uint16_t y,
 			    const uint8_t color,

@@ -11,6 +11,7 @@
 volatile bool _videoOut = false;
 volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
+volatile bool _pleaseCommit = false;
 
 //This gets called by the comms library
 GCReport __time_critical_func(buttonsToGCReport)() {
@@ -40,35 +41,23 @@ GCReport __time_critical_func(buttonsToGCReport)() {
 }
 
 void second_core() {
-	if(_videoOut) {
-		//set up the secondary core so it can be paused by the other core
-		//this is necessary for flash writing
-		//in video mode, settings are changed by the main core
-		multicore_lockout_victim_init();
-	}
-	/*
+
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
-
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
-
 	pwm_set_wrap(slice_num, 255);
 	pwm_set_chan_level(slice_num, PWM_CHAN_B, 25);
 	pwm_set_enabled(slice_num, true);
-	*/
 
 	extrasInit();
 
 
 	while(true) { //main event loop
 
-		//check if A is pressed to make it go at full speed
-		/*
-		if(_btn.A) {
-			_vsyncSensors = false;
-		} else {
-			_vsyncSensors = true;
+		//when requested by the other core, commit the settings
+		if(_pleaseCommit) {
+			_pleaseCommit = false;
+			commitSettings();
 		}
-		*/
 
 		//limit speed if video is running
 		if(_vsyncSensors) {
@@ -157,11 +146,11 @@ void second_core() {
 int main() {
 	//set the clock speed to 125 kHz
 	//the comms library needs this clockspeed
+	//it's actually the default so we don't need to
 	//set_sys_clock_khz(1000*_us, true);
 
-	//Read settings
+	//Read settings; true = don't lock out the core because running it on core 1 will freeze
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
-
 	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
 		resetDefaults(FACTORY, _controls, _gains, _normGains, _aStickParams, _cStickParams, true);
 		readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
@@ -234,20 +223,16 @@ int main() {
 
 	if(_hardware.Z) {
 		_videoOut = true;
-		//don't lock out the first core, but do lock out the second core
-	} else {
-		//set up the main core so it can be paused by the other core
-		//this is necessary for flash writing
-		//in normal mode, settings are changed by the second core
-		multicore_lockout_victim_init();
 	}
+
+	multicore_lockout_victim_init();
 
 	multicore_launch_core1(second_core);
 
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
 		_vsyncSensors = true;
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

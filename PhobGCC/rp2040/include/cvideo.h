@@ -25,7 +25,8 @@ int videoOut(const uint8_t pin_base,
 		ControlConfig &config,
 		StickParams &aStick,
 		StickParams &cStick,
-		volatile bool &extSync);
+		volatile bool &extSync,
+		volatile bool &pleaseCommit);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);
@@ -117,6 +118,7 @@ void navigateMenu(unsigned char bitmap[],
                   int &itemIndex,
                   bool &redraw,
 				  bool &changeMade,
+				  volatile bool &pleaseCommit,//for asking the other core to commit settings
                   Buttons &hardware,
                   ControlConfig &controls);
 
