@@ -1477,140 +1477,132 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	float triggerScaleL = (0.0112 * controls.lTriggerOffset) + 0.4494;
 	float triggerScaleR = (0.0112 * controls.rTriggerOffset) + 0.4494;
 
-	//Here we make sure LRAS actually operate.
-	if(hardware.L && hardware.R && hardware.A && hardware.S) {
-		tempBtn.L = (uint8_t) (1);
-		tempBtn.R = (uint8_t) (1);
-		tempBtn.A = (uint8_t) (1);
-		tempBtn.S = (uint8_t) (1);
-	} else {
-		switch(controls.lConfig) {
-			case 0: //Default Trigger state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				}
-				break;
-			case 1: //Digital Only Trigger state
+	switch(controls.lConfig) {
+		case 0: //Default Trigger state
+			if(lockoutL){
+				tempBtn.L  = (uint8_t) 0;
 				tempBtn.La = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			} else {
+				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			}
+			break;
+		case 1: //Digital Only Trigger state
+			tempBtn.La = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			if(lockoutL){
+				tempBtn.L  = (uint8_t) 0;
+				tempBtn.La = (uint8_t) 0;
+			} else {
+				tempBtn.L  = (uint8_t) 0;
+				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			}
+			break;
+		case 3: //Trigger Plug Emulation state
+			if(lockoutL){
+				tempBtn.L  = (uint8_t) 0;
+				tempBtn.La = (uint8_t) 0;
+			} else {
+				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+				if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
+					tempBtn.La = (uint8_t) controls.lTriggerOffset;
 				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-					if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
-						tempBtn.La = (uint8_t) controls.lTriggerOffset;
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(tempBtn.L) {
-					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
-				} else {
-					tempBtn.La = (uint8_t) 0;
-				}
-				tempBtn.L = (uint8_t) 0;
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(tempBtn.L) {
-					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
-				} else {
-					tempBtn.La = (uint8_t) 0;
-				}
-				break;
-			case 6: //Scales Analog Trigger Values
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
-				}
-				break;
-			default:
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				}
-		}
+			}
+			break;
+		case 4: //Digital => Analog Value state
+			if(tempBtn.L) {
+				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
+			} else {
+				tempBtn.La = (uint8_t) 0;
+			}
+			tempBtn.L = (uint8_t) 0;
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(tempBtn.L) {
+				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
+			} else {
+				tempBtn.La = (uint8_t) 0;
+			}
+			break;
+		case 6: //Scales Analog Trigger Values
+			if(lockoutL){
+				tempBtn.L  = (uint8_t) 0;
+				tempBtn.La = (uint8_t) 0;
+			} else {
+				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
+			}
+			break;
+		default:
+			if(lockoutL){
+				tempBtn.L  = (uint8_t) 0;
+				tempBtn.La = (uint8_t) 0;
+			} else {
+				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			}
+	}
 
-		switch(controls.rConfig) {
-			case 0: //Default Trigger state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				}
-				break;
-			case 1: //Digital Only Trigger state
+	switch(controls.rConfig) {
+		case 0: //Default Trigger state
+			if(lockoutR){
+				tempBtn.R  = (uint8_t) 0;
 				tempBtn.Ra = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			} else {
+				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			}
+			break;
+		case 1: //Digital Only Trigger state
+			tempBtn.Ra = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			if(lockoutR){
+				tempBtn.R  = (uint8_t) 0;
+				tempBtn.Ra = (uint8_t) 0;
+			} else {
+				tempBtn.R  = (uint8_t) 0;
+				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			}
+			break;
+		case 3: //Trigger Plug Emulation state
+			if(lockoutR){
+				tempBtn.R  = (uint8_t) 0;
+				tempBtn.Ra = (uint8_t) 0;
+			} else {
+				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+				if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
+					tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
 				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-					if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
-						tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(tempBtn.R) {
-					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
-				} else {
-					tempBtn.Ra = (uint8_t) 0;
-				}
-				tempBtn.R = (uint8_t) 0;
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(tempBtn.R) {
-					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
-				} else {
-					tempBtn.Ra = (uint8_t) 0;
-				}
-				break;
-			case 6: //Scales Analog Trigger Values
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
-				}
-				break;
-			default:
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				}
-		}
+			}
+			break;
+		case 4: //Digital => Analog Value state
+			if(tempBtn.R) {
+				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
+			} else {
+				tempBtn.Ra = (uint8_t) 0;
+			}
+			tempBtn.R = (uint8_t) 0;
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(tempBtn.R) {
+				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
+			} else {
+				tempBtn.Ra = (uint8_t) 0;
+			}
+			break;
+		case 6: //Scales Analog Trigger Values
+			if(lockoutR){
+				tempBtn.R  = (uint8_t) 0;
+				tempBtn.Ra = (uint8_t) 0;
+			} else {
+				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
+			}
+			break;
+		default:
+			if(lockoutR){
+				tempBtn.R  = (uint8_t) 0;
+				tempBtn.Ra = (uint8_t) 0;
+			} else {
+				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			}
 	}
 	//Implement a small trigger deadzone of 3 units so that Dolphin initializes properly.
 	//If we don't, then we can't trust that the waveshaping values display accurately
@@ -1625,6 +1617,15 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Apply any further button remapping to tempBtn here
 
+	//Here we make sure LRAS actually operate.
+	if(hardware.L && hardware.R && hardware.A && hardware.S) {
+		tempBtn.L = (uint8_t) (1);
+		tempBtn.R = (uint8_t) (1);
+		tempBtn.A = (uint8_t) (1);
+		tempBtn.S = (uint8_t) (1);
+		tempBtn.La = (uint8_t) (255);
+		tempBtn.Ra = (uint8_t) (255);
+	}
 	//Copy temp buttons (including analog triggers) back to btn
 	copyButtons(tempBtn, btn);
 
@@ -1777,7 +1778,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.S && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle)
+		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
@@ -1803,7 +1804,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.S && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle)
+		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
