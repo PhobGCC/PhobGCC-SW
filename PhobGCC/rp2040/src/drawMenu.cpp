@@ -110,36 +110,36 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			drawString(bitmap,  30, 110, 15, "AY WS:");
 			drawString(bitmap,  30, 130, 15, "AX SM:");
 			drawString(bitmap,  30, 150, 15, "AY SM:");
-			drawInt(bitmap,     90,  50, 15, 1, controls.xSnapback);
-			drawInt(bitmap,     90,  70, 15, 1, controls.ySnapback);
-			drawInt(bitmap,     90,  90, 15, 1, controls.axWaveshaping);
-			drawInt(bitmap,     90, 110, 15, 1, controls.ayWaveshaping);
-			drawInt(bitmap,     90, 130, 15, 1, controls.axSmoothing);
-			drawInt(bitmap,     90, 150, 15, 1, controls.aySmoothing);
+			drawInt(bitmap,     90,  50, 15, 2, controls.xSnapback);
+			drawInt(bitmap,     90,  70, 15, 2, controls.ySnapback);
+			drawInt(bitmap,     90,  90, 15, 2, controls.axWaveshaping);
+			drawInt(bitmap,     90, 110, 15, 2, controls.ayWaveshaping);
+			drawInt(bitmap,     90, 130, 15, 2, controls.axSmoothing);
+			drawInt(bitmap,     90, 150, 15, 2, controls.aySmoothing);
 			drawString(bitmap, 150,  50, 15, "CX SB:");
 			drawString(bitmap, 150,  70, 15, "CY SB:");
 			drawString(bitmap, 150,  90, 15, "CX WS:");
 			drawString(bitmap, 150, 110, 15, "CY WS:");
 			drawString(bitmap, 150, 130, 15, "CX OF:");
 			drawString(bitmap, 150, 150, 15, "CY OF:");
-			drawInt(bitmap,    210,  50, 15, 1, controls.cxSmoothing);
-			drawInt(bitmap,    210,  70, 15, 1, controls.cySmoothing);
-			drawInt(bitmap,    210,  90, 15, 1, controls.cxWaveshaping);
-			drawInt(bitmap,    210, 110, 15, 1, controls.cyWaveshaping);
-			drawInt(bitmap,    210, 130, 15, 1, controls.cXOffset);
-			drawInt(bitmap,    210, 150, 15, 1, controls.cYOffset);
+			drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
+			drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
+			drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
+			drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
+			drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
+			drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
 			drawString(bitmap, 280,  50, 15, "L Mode:");
 			drawString(bitmap, 280,  70, 15, "R Mode:");
 			drawString(bitmap, 280,  90, 15, "L Val:");
 			drawString(bitmap, 280, 110, 15, "R Val:");
 			drawString(bitmap, 280, 130, 15, "L WS:");
 			drawString(bitmap, 280, 150, 15, "L WS:");
-			drawInt(bitmap,    350,  50, 15, 1, controls.lConfig+1);
-			drawInt(bitmap,    350,  70, 15, 1, controls.rConfig+1);
-			drawInt(bitmap,    350,  90, 15, 1, controls.lTriggerOffset);
-			drawInt(bitmap,    350, 110, 15, 1, controls.rTriggerOffset);
-			drawInt(bitmap,    350, 130, 15, 1, -1);//controls.rTriggerWaveshaping);
-			drawInt(bitmap,    350, 150, 15, 1, -1);//controls.rTriggerWaveshaping);
+			drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
+			drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
+			drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
+			drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
+			drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
+			drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
 			drawString(bitmap,  30, 170, 15, "Rumble:");
 			drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
 			if(controls.autoInit) {
@@ -255,6 +255,50 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			drawInt(   bitmap, 170, 160, 15, 0, controls.cxSmoothing);
 			drawString(bitmap, 280, 160, 15, "Right stick Y:");
 			drawInt(   bitmap, 420, 160, 15, 0, controls.cySmoothing);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
+			//graph?
+			break;
+		case MENU_CWAVE:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This makes the stick stop during fast inputs.");
+			drawString(bitmap,  30,  90, 15, "Higher values reduce the speed threshold.");
+			drawString(bitmap,  30, 110, 15, "We're not sure what it can be used for here.");
+			drawString(bitmap,  30, 130, 15, "Min: 0  Max: 15  Default: 0");
+			drawString(bitmap,  30, 160, 15, "Right stick X:");
+			drawInt(   bitmap, 170, 160, 15, 1, controls.cxWaveshaping);
+			drawString(bitmap, 280, 160, 15, "Right stick Y:");
+			drawInt(   bitmap, 420, 160, 15, 1, controls.cyWaveshaping);
+			if(itemIndex == 0) {
+				drawString(bitmap,  10, 160, 15, ">");
+			} else {
+				drawString(bitmap, 260, 160, 15, ">");
+			}
+			//graph?
+			break;
+		case MENU_COFFSET:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad L/R selects setting, U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This changes the default origin of the C-Stick.");
+			drawString(bitmap,  30,  90, 15, "This was for down-angled fsmash but it's better");
+			drawString(bitmap,  30, 110, 15, " done by notch cal so this might be removed.");
+			drawString(bitmap,  30, 130, 15, "Min: -127  Max: 127  Default: 0");
+			drawString(bitmap,  30, 160, 15, "Right stick X:");
+			drawInt(   bitmap, 170, 160, 15, 2, controls.cXOffset);
+			drawString(bitmap, 280, 160, 15, "Right stick Y:");
+			drawInt(   bitmap, 420, 160, 15, 2, controls.cYOffset);
 			if(itemIndex == 0) {
 				drawString(bitmap,  10, 160, 15, ">");
 			} else {

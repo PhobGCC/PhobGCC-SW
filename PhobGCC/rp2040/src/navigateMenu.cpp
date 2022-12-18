@@ -27,6 +27,9 @@ void navigateMenu(unsigned char bitmap[],
 	ddLockout = fmax(0, ddLockout - 1);
 	dlLockout = fmax(0, dlLockout - 1);
 	drLockout = fmax(0, drLockout - 1);
+
+	static uint8_t duCounter = 0;//for controls that go faster when you hold them
+	static uint8_t ddCounter = 0;//for controls that go faster when you hold them
 	if(MenuIndex[menu][1] == 0) {
 		if(hardware.A) {
 			aLockout = buttonLockout;
@@ -328,6 +331,149 @@ void navigateMenu(unsigned char bitmap[],
 						changeMade = false;
 						redraw = true;
 						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
+				case MENU_CWAVE:
+					if(!changeMade) {
+						tempInt1 = controls.cxWaveshaping;
+						tempInt2 = controls.cyWaveshaping;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.cxWaveshaping = fmin(controls.waveshapingMax, controls.cxWaveshaping+1);
+						} else {//itemIndex == 1
+							controls.cyWaveshaping = fmin(controls.waveshapingMax, controls.cyWaveshaping+1);
+						}
+						changeMade = (controls.cxWaveshaping != tempInt1) || (controls.cyWaveshaping != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						if(itemIndex == 0) {
+							controls.cxWaveshaping = fmax(controls.waveshapingMin, controls.cxWaveshaping-1);
+						} else {//itemIndex == 1
+							controls.cyWaveshaping = fmax(controls.waveshapingMin, controls.cyWaveshaping-1);
+						}
+						changeMade = (controls.cxWaveshaping != tempInt1) || (controls.cyWaveshaping != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
+						setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
+						tempInt1 = controls.cxWaveshaping;
+						tempInt2 = controls.cyWaveshaping;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
+				case MENU_COFFSET:
+					if(!changeMade) {
+						tempInt1 = controls.cXOffset;
+						tempInt2 = controls.cYOffset;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(duCounter <= 10) {
+							duCounter++;
+						}
+						ddCounter = 0;
+						const uint8_t change = duCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.cXOffset = fmin(controls.cMax, controls.cXOffset+change);
+						} else {//itemIndex == 1
+							controls.cYOffset = fmin(controls.cMax, controls.cYOffset+change);
+						}
+						changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(ddCounter <= 10) {
+							ddCounter++;
+						}
+						duCounter = 0;
+						const uint8_t change = ddCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.cXOffset = fmax(controls.cMin, controls.cXOffset-change);
+						} else {//itemIndex == 1
+							controls.cYOffset = fmax(controls.cMin, controls.cYOffset-change);
+						}
+						changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						setCxOffsetSetting(controls.cXOffset);
+						setCyOffsetSetting(controls.cYOffset);
+						tempInt1 = controls.cXOffset;
+						tempInt2 = controls.cYOffset;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					} else {
+						//clear the repetition counters
+						if(duLockout == 0) {
+							duCounter = 0;
+						}
+						if(ddLockout == 0) {
+							ddCounter = 0;
+						}
 					}
 					return;
 				default:
