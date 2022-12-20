@@ -2096,7 +2096,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		cXSum += readCx(pin);
 		cYSum += readCy(pin);
 		afterMicros = micros();
-		adcDelta = min(10000, max(0, afterMicros-beforeMicros));
+		adcDelta = afterMicros-beforeMicros;
 		beforeMicros = afterMicros;
 	}
 	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 100000000));
