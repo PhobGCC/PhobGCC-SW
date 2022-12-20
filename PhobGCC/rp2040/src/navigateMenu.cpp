@@ -476,6 +476,30 @@ void navigateMenu(unsigned char bitmap[],
 						}
 					}
 					return;
+				case MENU_REMAP:
+					if(!changeMade) {
+						tempInt1 = controls.jumpConfig;
+					}
+					if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						controls.jumpConfig = (JumpConfig) fmin(controls.jumpConfigMax, controls.jumpConfig+1);
+						changeMade = controls.jumpConfig != tempInt1;
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						controls.jumpConfig = (JumpConfig) fmax(controls.jumpConfigMin, controls.jumpConfig-1);
+						changeMade = controls.jumpConfig != tempInt1;
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setJumpSetting(controls.jumpConfig);
+						tempInt1 = controls.jumpConfig;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
 				default:
 					//do nothing
 					return;

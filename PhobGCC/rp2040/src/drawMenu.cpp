@@ -310,6 +310,45 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			}
 			//graph?
 			break;
+		case MENU_REMAP:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This swaps one of L, R, or Z with either X or Y.");
+			drawString(bitmap,  30,  90, 15, "When L or R are swapped, they are digital only.");
+			drawString(bitmap,  30, 110, 15, "Use Trigger Mode 5 to get an analog trigger");
+			drawString(bitmap,  30, 130, 15, " value on a face button for lightshielding.");
+			drawString(bitmap,  30, 160, 15, "Current setting:");
+			switch(controls.jumpConfig) {
+				case DEFAULTJUMP:
+					drawString(bitmap, 200, 160, 15, "Default");
+					break;
+				case SWAP_XZ:
+					drawString(bitmap, 200, 160, 15, "Swap X and Z");
+					break;
+				case SWAP_YZ:
+					drawString(bitmap, 200, 160, 15, "Swap Y and Z");
+					break;
+				case SWAP_XL:
+					drawString(bitmap, 200, 160, 15, "Swap X and L");
+					break;
+				case SWAP_YL:
+					drawString(bitmap, 200, 160, 15, "Swap Y and L");
+					break;
+				case SWAP_XR:
+					drawString(bitmap, 200, 160, 15, "Swap X and R");
+					break;
+				case SWAP_YR:
+					drawString(bitmap, 200, 160, 15, "Swap Y and R");
+					break;
+				default:
+					drawString(bitmap, 200, 160, 15, "Broken Config");
+					break;
+			}
+			break;
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {

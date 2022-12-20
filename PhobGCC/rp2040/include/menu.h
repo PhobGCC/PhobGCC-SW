@@ -19,7 +19,7 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_CSNAPBACK,		//14	|    4*
 	MENU_CWAVE,			//15	|    4*
 	MENU_COFFSET,		//16	|    4*
-	MENU_REMAP,			//17	|   3
+	MENU_REMAP,			//17	|   3*
 	MENU_RUMBLE,		//18	|   3
 	MENU_TRIGGER,		//19	|   3		show current trigger settings and warn if illegal in melee
 	MENU_LTRIGGER,		//20	|    4
