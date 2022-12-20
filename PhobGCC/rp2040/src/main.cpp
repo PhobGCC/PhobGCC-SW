@@ -1,4 +1,5 @@
 #include "pico/stdlib.h"
+#include "pico/bootrom.h"
 #include "pico/multicore.h"
 #include "hardware/timer.h"
 #include "hardware/pwm.h"
@@ -221,7 +222,11 @@ int main() {
 	//Read buttons on startup to determine what mode to begin in
 	readButtons(_pinList, _hardware);
 
-	if(_hardware.Z) {
+	if(_hardware.S) { //hold start on powerup for BOOTSEL
+		reset_usb_boot(0, 0);
+	}
+
+	if(_hardware.Z) { //hold Z on powerup for PhobVision
 		_videoOut = true;
 	}
 

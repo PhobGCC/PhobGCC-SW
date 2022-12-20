@@ -47,6 +47,7 @@ target_compile_definitions(phobgcc_rp2040
 target_link_libraries(phobgcc_rp2040
 	PRIVATE
 	pico_stdlib
+	pico_bootrom
 	pico_multicore
 	pico_platform
 	hardware_adc
