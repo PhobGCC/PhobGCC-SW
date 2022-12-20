@@ -228,7 +228,7 @@ int readCy(const Pins &) {
 	return readExtAdc(CSTICK, YAXIS);
 }
 
-uint64_t micros() {
+uint32_t micros() {
 	return time_us_64();
 }
 

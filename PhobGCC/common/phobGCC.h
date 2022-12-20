@@ -2070,8 +2070,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 
 	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
 	//This is 2^32 microseconds
-	static unsigned long lastMicros = micros();
-	static unsigned long adcDelta = 0;
+	static uint32_t lastMicros = micros();
+	static uint32_t adcDelta = 0;
 	//We increment lastMicros by 1000 each timestep so that we can always try to catch up
 	// to the right timestep instead of always being late
 	//If the timestep goes past 2^32, then we subtract 2^32.
@@ -2082,13 +2082,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
 	//This is for denoising and making sure the loop runs at 1000 Hz
 	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
-	unsigned int adcCount = 0;
-	unsigned int aXSum = 0;
-	unsigned int aYSum = 0;
-	unsigned int cXSum = 0;
-	unsigned int cYSum = 0;
-	long beforeMicros = micros();
-	long afterMicros;
+	uint32_t adcCount = 0;
+	uint32_t aXSum = 0;
+	uint32_t aYSum = 0;
+	uint32_t cXSum = 0;
+	uint32_t cYSum = 0;
+	uint32_t beforeMicros = micros();
+	uint32_t afterMicros;
 	do{
 		adcCount++;
 		aXSum += readAx(pin);
@@ -2102,7 +2102,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 100000000));
 
 	//Then we spinlock to get the 1 kHz more exactly.
-	while((afterMicros-lastMicros < 1000) || (afterMicros-lastMicros > 100000000)) {
+	while(afterMicros-lastMicros < 1000) {
 		afterMicros = micros();
 	}
 
@@ -2116,21 +2116,12 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float aStickY = readAy(pin)/4096.0;
 	float cStickX = readCx(pin)/4096.0;
 	float cStickY = readCy(pin)/4096.0;
-	//float aStickX = 0.5;
-	//float aStickY = 0.5;
-	//float cStickX = 0.5;
-	//float cStickY = 0.5;
+	//note: this actually results in about 0.5 ms delay for the analog sticks
 
 	if(!runSynced) {
-		unsigned long thisMicros = micros();
-		if(thisMicros >= (2^32)) {
-			thisMicros -= (2^32);
-		}
-		while((thisMicros-lastMicros < 1000) || (thisMicros-lastMicros > 100000000)) {
+		uint32_t thisMicros = micros();
+		while(thisMicros-lastMicros < 1000) {
 			thisMicros = micros();
-			if(thisMicros >= (2^32)) {
-				thisMicros -= (2^32);
-			}
 		}
 	}
 #endif //CLEANADC
@@ -2138,15 +2129,12 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		dT = 1;
 		lastMicros += 1000;
 	} else {
-		//we make dT variable so that we know how long it actually took to cycle
-		dT = max((uint64_t) 0, (micros()-lastMicros)/1000);
+		//we the dT variable so that we know how long it actually took to cycle
+		dT = (micros()-lastMicros)/1000;
 		lastMicros = micros();
 	}
-	if(micros() > lastMicros+1000) {
+	if(micros() - lastMicros > 1500) { //handle the case that it was synced and now isn't
 		lastMicros = micros();
-	}
-	if(lastMicros >= (2^32)) {
-		lastMicros -= (2^32);
 	}
 	_raw.axRaw = aStickX;
 	_raw.ayRaw = aStickY;

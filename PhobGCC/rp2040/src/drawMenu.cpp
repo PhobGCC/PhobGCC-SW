@@ -32,6 +32,10 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 	//big switch case to draw bottom level pages
 	// and additional graphics on other menus
 	switch(menu) {
+		case MENU_ASTICKCAL:
+			//left stick calibration
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			//we need to display different text depending on the cal step. We use itemIndex to represent this.
 		case MENU_STICKDBG:
 			drawString(bitmap,  20,  20, 15, "Stick Debug Info      Press A to cycle");
 			if(itemIndex == 0) {
