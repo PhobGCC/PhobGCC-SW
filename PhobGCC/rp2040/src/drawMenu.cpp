@@ -349,6 +349,20 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 					break;
 			}
 			break;
+		case MENU_RUMBLE:
+			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+			if(changeMade) {
+				drawString(bitmap, 300, 20, 15, "Press B to save");
+			}
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30,  50, 15, "Dpad U/D changes setting.");
+			drawString(bitmap,  30,  70, 15, "This controls the strength of the rumble.");
+			drawString(bitmap,  30,  90, 15, "0 is off, the max is 11, and the default is 9.");
+			drawString(bitmap,  30, 110, 15, "9 is ~OEM strength. <5 won't spin OEM motors.");
+			drawString(bitmap,  30, 130, 15, "Use values 5 or lower for 3V cellphone rumble.");
+			drawString(bitmap,  30, 160, 15, "Current setting:");
+			drawInt(   bitmap, 190, 160, 15, 0, controls.rumble);
+			break;
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {

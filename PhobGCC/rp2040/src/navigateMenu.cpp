@@ -500,6 +500,30 @@ void navigateMenu(unsigned char bitmap[],
 						pleaseCommit = true;//ask the other thread to commit settings to flash
 					}
 					return;
+				case MENU_RUMBLE:
+					if(!changeMade) {
+						tempInt1 = controls.rumble;
+					}
+					if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						controls.rumble = fmin(controls.rumbleMax, controls.rumble+1);
+						changeMade = controls.rumble != tempInt1;
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						controls.rumble = fmax(controls.rumbleMin, controls.rumble-1);
+						changeMade = controls.rumble != tempInt1;
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						setRumbleSetting(controls.rumble);
+						tempInt1 = controls.rumble;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
 				default:
 					//do nothing
 					return;
