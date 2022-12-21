@@ -363,6 +363,26 @@ void __time_critical_func(drawMenu)(unsigned char bitmap[],
 			drawString(bitmap,  30, 160, 15, "Current setting:");
 			drawInt(   bitmap, 190, 160, 15, 0, controls.rumble);
 			break;
+		case MENU_TRIGGER:
+			//no need to draw the menu name
+			//                                      100       200       300       400       500 //510 is the last char
+			drawString(bitmap,  30, 190, 15, "L Mode:");
+			drawInt(   bitmap, 100, 190, 15, 0, controls.lConfig+1);
+			drawString(bitmap, 280, 190, 15, "R Mode:");
+			drawInt(   bitmap, 350, 190, 15, 0, controls.rConfig+1);
+			drawString(bitmap,  30, 210, 15, "L offset:");
+			drawInt(   bitmap, 120, 210, 15, 0, controls.lTriggerOffset);
+			drawString(bitmap, 280, 210, 15, "R offset:");
+			drawInt(   bitmap, 370, 210, 15, 0, controls.rTriggerOffset);
+			if(controls.lConfig == 4) {
+				if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
+					drawString(bitmap, 30, 230, 15, "Mode 5 conflict; R will be inoperable");
+				}
+			} else if(controls.rConfig == 4) {
+				if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
+					drawString(bitmap, 30, 230, 15, "Mode 5 conflict; L will be inoperable");
+				}
+			}
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {
