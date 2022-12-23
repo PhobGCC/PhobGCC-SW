@@ -17,8 +17,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -1474,8 +1474,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
-	float triggerScaleL = (0.0112 * controls.lTriggerOffset) + 0.4494;
-	float triggerScaleR = (0.0112 * controls.rTriggerOffset) + 0.4494;
+	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
+	float triggerScaleR = (0.0112f * controls.rTriggerOffset) + 0.4494f;
 
 	switch(controls.lConfig) {
 		case 0: //Default Trigger state
@@ -1603,16 +1603,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			} else {
 				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			}
-	}
-	//Implement a small trigger deadzone of 3 units so that Dolphin initializes properly.
-	//If we don't, then we can't trust that the waveshaping values display accurately
-	// or that Mode 4 will stop at the right value on Dolphin.
-	//Or on Smash Ult, maybe? No clue.
-	if(tempBtn.La <= 3 * triggerScaleL){
-		tempBtn.La = (uint8_t) 0;
-	}
-	if(tempBtn.Ra <= 3 * triggerScaleR){
-		tempBtn.Ra = (uint8_t) 0;
 	}
 
 	//Apply any further button remapping to tempBtn here

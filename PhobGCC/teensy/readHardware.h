@@ -69,12 +69,19 @@ void readADCScale(float &ADCScale, float ADCScaleFactor) {
 }
 
 //these are 12 bit but we right shift to get 8 bit
+//implement a 3 unit deadzone
 int readLa(const Pins &pin, const int initial, const float scale) {
 	float temp = (adc->adc0->analogRead(pin.pinLa)) / 16.0;
+	if(temp < 3) {
+		temp = 0.0f;
+	}
 	return (uint8_t) min(255, max(0, temp - initial) * scale);
 }
 int readRa(const Pins &pin, const int initial, const float scale) {
 	float temp = (adc->adc0->analogRead(pin.pinRa)) / 16.0;
+	if(temp < 3) {
+		temp = 0.0f;
+	}
 	return (uint8_t) min(255, max(0, temp - initial) * scale);
 }
 

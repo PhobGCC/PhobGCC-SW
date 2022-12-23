@@ -123,14 +123,21 @@ void readADCScale(float &, float ) {
 	//do nothing
 }
 
+//implement a 3 unit deadzone
 int readLa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinLadc);
 	float temp = adc_read() / 16.0;
+	if(temp < 3) {
+		temp = 0.0f;
+	}
 	return fmin(255, fmax(0, temp - initial) * scale);
 }
 int readRa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinRadc);
 	float temp = adc_read() / 16.0;
+	if(temp < 3) {
+		temp = 0.0f;
+	}
 	return fmin(255, fmax(0, temp - initial) * scale);
 }
 

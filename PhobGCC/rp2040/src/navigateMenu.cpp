@@ -66,22 +66,17 @@ void navigateMenu(unsigned char bitmap[],
 					itemIndex = 0;
 					changeMade = false;
 					redraw = true;
-					return;
 				}
-			}
-			if(hardware.Du && duLockout == 0) {
+			} else if(hardware.Du && duLockout == 0) {
 				duLockout = dpadLockout;//a quarter of a second
 				ddLockout = 0;
 				itemIndex = fmax(0, itemIndex-1);
 				redraw = true;
-				return;
-			}
-			if(hardware.Dd && ddLockout == 0) {
+			} else if(hardware.Dd && ddLockout == 0) {
 				ddLockout = dpadLockout;//a quarter of a second
 				duLockout = 0;
 				itemIndex = fmin(MenuIndex[menu][1]-1, itemIndex+1);
 				redraw = true;
-				return;
 			}
 		} else {
 			//Big switch case for controls for all the bottom level items
@@ -522,6 +517,178 @@ void navigateMenu(unsigned char bitmap[],
 						changeMade = false;
 						redraw = true;
 						pleaseCommit = true;//ask the other thread to commit settings to flash
+					}
+					return;
+				case MENU_LTRIGGER:
+					if(!changeMade) {
+						tempInt1 = controls.lConfig;
+						tempInt2 = controls.lTriggerOffset;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(duCounter <= 10) {
+							duCounter++;
+						}
+						ddCounter = 0;
+						const uint8_t change = duCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.lConfig = fmin(controls.triggerConfigMax, controls.lConfig+1);
+						} else {//itemIndex == 1
+							controls.lTriggerOffset = fmin(controls.triggerMax, controls.lTriggerOffset+change);
+						}
+						changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(ddCounter <= 10) {
+							ddCounter++;
+						}
+						duCounter = 0;
+						const uint8_t change = ddCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.lConfig = fmax(controls.triggerConfigMin, controls.lConfig-1);
+						} else {//itemIndex == 1
+							controls.lTriggerOffset = fmax(controls.triggerMin, controls.lTriggerOffset-change);
+						}
+						changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						setLSetting(controls.lConfig);
+						setLOffsetSetting(controls.lTriggerOffset);
+						tempInt1 = controls.lConfig;
+						tempInt2 = controls.lTriggerOffset;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					} else {
+						//clear the repetition counters
+						if(duLockout == 0) {
+							duCounter = 0;
+						}
+						if(ddLockout == 0) {
+							ddCounter = 0;
+						}
+					}
+					return;
+				case MENU_RTRIGGER:
+					if(!changeMade) {
+						tempInt1 = controls.rConfig;
+						tempInt2 = controls.rTriggerOffset;
+					}
+					if(hardware.Dl && dlLockout == 0) {
+						dlLockout = dpadLockout;
+						drLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 0;
+						redraw = true;
+					} else if(hardware.Dr && drLockout == 0) {
+						drLockout = dpadLockout;
+						dlLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						ddLockout = dpadLockout;
+						duLockout = dpadLockout;
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						itemIndex = 1;
+						redraw = true;
+					} else if(hardware.Du && duLockout == 0) {
+						duLockout = dpadLockout;
+						ddLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(duCounter <= 10) {
+							duCounter++;
+						}
+						ddCounter = 0;
+						const uint8_t change = duCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.rConfig = fmin(controls.triggerConfigMax, controls.rConfig+1);
+						} else {//itemIndex == 1
+							controls.rTriggerOffset = fmin(controls.triggerMax, controls.rTriggerOffset+change);
+						}
+						changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
+						redraw = true;
+					} else if(hardware.Dd && ddLockout == 0) {
+						ddLockout = dpadLockout;
+						duLockout = 0;
+						//also lock out perpendicular directions to prevent misinputs
+						dlLockout = dpadLockout;
+						drLockout = dpadLockout;
+						//Go by 10 after 10 steps
+						if(ddCounter <= 10) {
+							ddCounter++;
+						}
+						duCounter = 0;
+						const uint8_t change = ddCounter > 10 ? 10 : 1;
+						if(itemIndex == 0) {
+							controls.rConfig = fmax(controls.triggerConfigMin, controls.rConfig-1);
+						} else {//itemIndex == 1
+							controls.rTriggerOffset = fmax(controls.triggerMin, controls.rTriggerOffset-change);
+						}
+						changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
+						redraw = true;
+					} else if(backAccumulator > 5 && changeMade) {
+						//clear the repetition counters
+						duCounter = 0;
+						ddCounter = 0;
+						setRSetting(controls.rConfig);
+						setROffsetSetting(controls.rTriggerOffset);
+						tempInt1 = controls.rConfig;
+						tempInt2 = controls.rTriggerOffset;
+						changeMade = false;
+						redraw = true;
+						pleaseCommit = true;//ask the other thread to commit settings to flash
+					} else {
+						//clear the repetition counters
+						if(duLockout == 0) {
+							duCounter = 0;
+						}
+						if(ddLockout == 0) {
+							ddCounter = 0;
+						}
 					}
 					return;
 				default:

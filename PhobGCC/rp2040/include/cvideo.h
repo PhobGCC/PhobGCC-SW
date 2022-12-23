@@ -75,6 +75,8 @@ void graphStickmap(unsigned char bitmap[],
 // Only does something if it's at least largestPower+2, which should only show whole numbers and the negative sign
 // largestPower+3 makes it stop after writing the decimal point.
 //0123456789
+//-x.y for largestPower 0
+//-xx.y for largestPower 1
 //-xxx.y for largestPower 2
 void drawFloat(unsigned char bitmap[],
                const uint16_t x0,
