@@ -17,8 +17,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -1479,35 +1479,17 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	switch(controls.lConfig) {
 		case 0: //Default Trigger state
-			if(lockoutL){
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) 0;
-			} else {
-				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-			}
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 			break;
 		case 1: //Digital Only Trigger state
 			tempBtn.La = (uint8_t) 0;
 			break;
 		case 2: //Analog Only Trigger state
-			if(lockoutL){
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) 0;
-			} else {
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-			}
+			tempBtn.L  = (uint8_t) 0;
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			if(lockoutL){
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) 0;
-			} else {
-				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
-					tempBtn.La = (uint8_t) controls.lTriggerOffset;
-				}
-			}
+			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.L) {
@@ -1525,53 +1507,29 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			}
 			break;
 		case 6: //Scales Analog Trigger Values
-			if(lockoutL){
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) 0;
-			} else {
-				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
-			}
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 			break;
 		default:
-			if(lockoutL){
-				tempBtn.L  = (uint8_t) 0;
-				tempBtn.La = (uint8_t) 0;
-			} else {
-				tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-			}
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+	}
+	if(lockoutL){
+		tempBtn.L  = (uint8_t) 0;
+		tempBtn.La = (uint8_t) 0;
 	}
 
 	switch(controls.rConfig) {
 		case 0: //Default Trigger state
-			if(lockoutR){
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) 0;
-			} else {
-				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-			}
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			break;
 		case 1: //Digital Only Trigger state
 			tempBtn.Ra = (uint8_t) 0;
 			break;
 		case 2: //Analog Only Trigger state
-			if(lockoutR){
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) 0;
-			} else {
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-			}
+			tempBtn.R  = (uint8_t) 0;
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			if(lockoutR){
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) 0;
-			} else {
-				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
-					tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
-				}
-			}
+			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.R) {
@@ -1589,20 +1547,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			}
 			break;
 		case 6: //Scales Analog Trigger Values
-			if(lockoutR){
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) 0;
-			} else {
-				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
-			}
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 			break;
 		default:
-			if(lockoutR){
-				tempBtn.R  = (uint8_t) 0;
-				tempBtn.Ra = (uint8_t) 0;
-			} else {
-				tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-			}
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+	}
+	if(lockoutR){
+		tempBtn.R  = (uint8_t) 0;
+		tempBtn.Ra = (uint8_t) 0;
 	}
 
 	//Apply any further button remapping to tempBtn here

@@ -15,7 +15,7 @@ volatile bool _sync = false;
 volatile bool _pleaseCommit = false;
 
 //This gets called by the comms library
-GCReport __time_critical_func(buttonsToGCReport)() {
+GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
 	GCReport report = {
 		.a       = _btn.A,
 		.b       = _btn.B,
@@ -60,6 +60,9 @@ void second_core() {
 			commitSettings();
 		}
 
+		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
+
 		//limit speed if video is running
 		if(_vsyncSensors) {
 			while(!_sync) {
@@ -71,7 +74,7 @@ void second_core() {
 
 		static bool running = false;
 
-		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet

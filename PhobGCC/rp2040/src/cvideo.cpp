@@ -202,8 +202,11 @@ int videoOut(const uint8_t pin_base,
 		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
 		if(redraw) {
 			redraw = false;
+			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
+			gpio_put(0, !gpio_get_out_level(0));
 			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
+			gpio_put(0, !gpio_get_out_level(0));
 		}
 
 		/*
@@ -247,7 +250,7 @@ int videoOut(const uint8_t pin_base,
 // The DMA interrupt handler
 // This is triggered by DMA_IRQ_0
 
-void __time_critical_func(cvideo_dma_handler)(void) {
+void __no_inline_not_in_flash_func(cvideo_dma_handler)(void) {
 
 	if ( ++vline <= VERT_scanlines ) {
 	} else {

@@ -10,7 +10,7 @@
 
 //Draw a line from the first point to the second point including both.
 //This implements Bresenham's line algorithm
-void __no_inline_not_in_flash_func(drawLineLow)(unsigned char bitmap[],
+void drawLineLow(unsigned char bitmap[],
                  const uint16_t x0,
                  const uint16_t y0,
                  const uint16_t x1,
@@ -42,7 +42,7 @@ void __no_inline_not_in_flash_func(drawLineLow)(unsigned char bitmap[],
 		}
 	}
 }
-void __no_inline_not_in_flash_func(drawLineHigh)(unsigned char bitmap[],
+void drawLineHigh(unsigned char bitmap[],
                   const uint16_t x0,
                   const uint16_t y0,
                   const uint16_t x1,
@@ -99,7 +99,7 @@ void drawLine(unsigned char bitmap[],
 }
 
 //Draws 8x15 character in the specified location according to the ascii codepoints
-void __no_inline_not_in_flash_func(drawChar)(unsigned char bitmap[],
+void drawChar(unsigned char bitmap[],
               const uint16_t x,
 			  const uint16_t y,
 			  const uint8_t color,
@@ -128,7 +128,7 @@ void __no_inline_not_in_flash_func(drawChar)(unsigned char bitmap[],
 	}
 }
 
-void __no_inline_not_in_flash_func(drawString)(unsigned char bitmap[],
+void drawString(unsigned char bitmap[],
                 const uint16_t x0,
 			    const uint16_t y0,
 			    const uint8_t color,
@@ -198,7 +198,7 @@ void drawString2x(unsigned char bitmap[],
 	}
 }
 
-void __no_inline_not_in_flash_func(drawFloat)(unsigned char bitmap[],
+void drawFloat(unsigned char bitmap[],
                const uint16_t x0,
                const uint16_t y0,
                const uint8_t color,
@@ -250,7 +250,7 @@ void drawFloat2x(unsigned char bitmap[],
 
 	drawString2x(bitmap, x0 + offset, y0, color, numberChar);
 }
-void __no_inline_not_in_flash_func(drawInt)(unsigned char bitmap[],
+void drawInt(unsigned char bitmap[],
              const uint16_t x0,
              const uint16_t y0,
              const uint8_t color,
