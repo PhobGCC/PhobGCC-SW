@@ -621,7 +621,6 @@ void drawMenu(unsigned char bitmap[],
 	//big switch case to draw bottom level pages
 	// and additional graphics on other menus
 	switch(menu) {
-		/*
 		case MENU_ASTICKCAL:
 			//left stick calibration
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
@@ -665,7 +664,6 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_RTRIGGER:
 			drawRtrigger(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
-			*/
 		default:
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {
