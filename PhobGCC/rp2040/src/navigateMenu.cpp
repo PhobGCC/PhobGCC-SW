@@ -14,17 +14,17 @@
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
 		int &itemIndex,
-		bool &redraw,
+		uint8_t &redraw,
 		bool &changeMade,
 		volatile bool &pleaseCommit,
-		const uint8_t presses,
+		uint8_t presses,
 		const uint8_t increment,
 		ControlConfig &controls);
 
 void handleMenuButtons(unsigned char bitmap[],
 		unsigned int &menu,
 		int &itemIndex,
-		bool &redraw,
+		uint8_t &redraw,
 		bool &changeMade,
 		volatile bool &pleaseCommit,
 		const Buttons &hardware,
@@ -142,49 +142,57 @@ void handleMenuButtons(unsigned char bitmap[],
 				controls);
 	}
 	//handle always-redrawing screens since we don't always call navigation
-	if(menu == MENU_STICKDBG && itemIndex == 0) {
-		redraw = true;
+	//redraw = 2 asks for a fast-path
+	if(redraw == 0) {
+		if(menu == MENU_STICKDBG && itemIndex == 0) {
+			redraw = 2;
+		}
 	}
 }
 
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
 		int &itemIndex,
-		bool &redraw,
+		uint8_t &redraw,
 		bool &changeMade,
 		volatile bool &pleaseCommit,
-		const uint8_t presses,
+		uint8_t presses,
 		const uint8_t increment,
 		ControlConfig &controls) {
 	if(MenuIndex[menu][1] == 0) {
 		if(presses & APRESS) {
+			presses = 0;
 			menu = MenuIndex[menu][2];
 			itemIndex = 0;
-			redraw = true;
+			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
 		//handle holding the B buttton as long as you're not on the splashscreen
 		if(presses & BPRESS) {
+			presses = 0;
 			menu = MenuIndex[menu][0];
 			itemIndex = 0;
 			changeMade = false;
-			redraw = true;
+			redraw = 1;
 		}
 		if(MenuIndex[menu][1] <= 6) {
 			//if it's a submenu, handle a, dup, and ddown
 			if(presses & APRESS) {
+				presses = 0;
 				menu = MenuIndex[menu][itemIndex + 2];
 				itemIndex = 0;
 				changeMade = false;
-				redraw = true;
+				redraw = 1;
 				//don't return, we may want to handle setup things below
 			} else if(presses & DUPRESS) {
+				presses = 0;
 				itemIndex = fmax(0, itemIndex-1);
-				redraw = true;
+				redraw = 1;
 				return;
 			} else if(presses & DDPRESS) {
+				presses = 0;
 				itemIndex = fmin(MenuIndex[menu][1]-1, itemIndex+1);
-				redraw = true;
+				redraw = 1;
 			}
 		}
 		//Big switch case for controls for all the bottom level items
@@ -198,7 +206,7 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex > 3) {
 						itemIndex = 0;
 					}
-					redraw = true;
+					redraw = 1;
 				}
 				return;
 			case MENU_ASNAPBACK:
@@ -208,10 +216,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.xSnapback = fmin(controls.snapbackMax, controls.xSnapback+1);
@@ -219,7 +227,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.ySnapback = fmin(controls.snapbackMax, controls.ySnapback+1);
 					}
 					changeMade = (controls.xSnapback != tempInt1) || (controls.ySnapback != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.xSnapback = fmax(controls.snapbackMin, controls.xSnapback-1);
@@ -227,14 +235,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.ySnapback = fmax(controls.snapbackMin, controls.ySnapback-1);
 					}
 					changeMade = (controls.xSnapback != tempInt1) || (controls.ySnapback != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setXSnapbackSetting(controls.xSnapback);
 					setYSnapbackSetting(controls.ySnapback);
 					tempInt1 = controls.xSnapback;
 					tempInt2 = controls.ySnapback;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -245,10 +253,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.axWaveshaping = fmin(controls.waveshapingMax, controls.axWaveshaping+1);
@@ -256,7 +264,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.ayWaveshaping = fmin(controls.waveshapingMax, controls.ayWaveshaping+1);
 					}
 					changeMade = (controls.axWaveshaping != tempInt1) || (controls.ayWaveshaping != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.axWaveshaping = fmax(controls.waveshapingMin, controls.axWaveshaping-1);
@@ -264,14 +272,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.ayWaveshaping = fmax(controls.waveshapingMin, controls.ayWaveshaping-1);
 					}
 					changeMade = (controls.axWaveshaping != tempInt1) || (controls.ayWaveshaping != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
 					setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
 					tempInt1 = controls.axWaveshaping;
 					tempInt2 = controls.ayWaveshaping;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -282,10 +290,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.axSmoothing = fmin(controls.smoothingMax, controls.axSmoothing+1);
@@ -293,7 +301,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.aySmoothing = fmin(controls.smoothingMax, controls.aySmoothing+1);
 					}
 					changeMade = (controls.axSmoothing != tempInt1) || (controls.aySmoothing != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.axSmoothing = fmax(controls.smoothingMin, controls.axSmoothing-1);
@@ -301,14 +309,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.aySmoothing = fmax(controls.smoothingMin, controls.aySmoothing-1);
 					}
 					changeMade = (controls.axSmoothing != tempInt1) || (controls.aySmoothing != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setXSmoothingSetting(controls.axSmoothing);
 					setYSmoothingSetting(controls.aySmoothing);
 					tempInt1 = controls.axSmoothing;
 					tempInt2 = controls.aySmoothing;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -319,10 +327,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.cxSmoothing = fmin(controls.smoothingMax, controls.cxSmoothing+1);
@@ -330,7 +338,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cySmoothing = fmin(controls.smoothingMax, controls.cySmoothing+1);
 					}
 					changeMade = (controls.cxSmoothing != tempInt1) || (controls.cySmoothing != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.cxSmoothing = fmax(controls.smoothingMin, controls.cxSmoothing-1);
@@ -338,14 +346,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cySmoothing = fmax(controls.smoothingMin, controls.cySmoothing-1);
 					}
 					changeMade = (controls.cxSmoothing != tempInt1) || (controls.cySmoothing != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setCxSmoothingSetting(controls.cxSmoothing);
 					setCySmoothingSetting(controls.cySmoothing);
 					tempInt1 = controls.cxSmoothing;
 					tempInt2 = controls.cySmoothing;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -356,10 +364,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.cxWaveshaping = fmin(controls.waveshapingMax, controls.cxWaveshaping+1);
@@ -367,7 +375,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cyWaveshaping = fmin(controls.waveshapingMax, controls.cyWaveshaping+1);
 					}
 					changeMade = (controls.cxWaveshaping != tempInt1) || (controls.cyWaveshaping != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.cxWaveshaping = fmax(controls.waveshapingMin, controls.cxWaveshaping-1);
@@ -375,14 +383,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cyWaveshaping = fmax(controls.waveshapingMin, controls.cyWaveshaping-1);
 					}
 					changeMade = (controls.cxWaveshaping != tempInt1) || (controls.cyWaveshaping != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
 					setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
 					tempInt1 = controls.cxWaveshaping;
 					tempInt2 = controls.cyWaveshaping;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -393,10 +401,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.cXOffset = fmin(controls.cMax, controls.cXOffset+increment);
@@ -404,7 +412,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cYOffset = fmin(controls.cMax, controls.cYOffset+increment);
 					}
 					changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.cXOffset = fmax(controls.cMin, controls.cXOffset-increment);
@@ -412,14 +420,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.cYOffset = fmax(controls.cMin, controls.cYOffset-increment);
 					}
 					changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setCxOffsetSetting(controls.cXOffset);
 					setCyOffsetSetting(controls.cYOffset);
 					tempInt1 = controls.cXOffset;
 					tempInt2 = controls.cYOffset;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -430,16 +438,16 @@ void navigateMenu(unsigned char bitmap[],
 				if(presses & DUPRESS) {
 					controls.jumpConfig = (JumpConfig) fmin(controls.jumpConfigMax, controls.jumpConfig+1);
 					changeMade = controls.jumpConfig != tempInt1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					controls.jumpConfig = (JumpConfig) fmax(controls.jumpConfigMin, controls.jumpConfig-1);
 					changeMade = controls.jumpConfig != tempInt1;
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setJumpSetting(controls.jumpConfig);
 					tempInt1 = controls.jumpConfig;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -450,16 +458,16 @@ void navigateMenu(unsigned char bitmap[],
 				if(presses & DUPRESS) {
 					controls.rumble = fmin(controls.rumbleMax, controls.rumble+1);
 					changeMade = controls.rumble != tempInt1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					controls.rumble = fmax(controls.rumbleMin, controls.rumble-1);
 					changeMade = controls.rumble != tempInt1;
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setRumbleSetting(controls.rumble);
 					tempInt1 = controls.rumble;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -470,10 +478,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.lConfig = fmin(controls.triggerConfigMax, controls.lConfig+1);
@@ -481,7 +489,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.lTriggerOffset = fmin(controls.triggerMax, controls.lTriggerOffset+increment);
 					}
 					changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.lConfig = fmax(controls.triggerConfigMin, controls.lConfig-1);
@@ -489,14 +497,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.lTriggerOffset = fmax(controls.triggerMin, controls.lTriggerOffset-increment);
 					}
 					changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setLSetting(controls.lConfig);
 					setLOffsetSetting(controls.lTriggerOffset);
 					tempInt1 = controls.lConfig;
 					tempInt2 = controls.lTriggerOffset;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
@@ -507,10 +515,10 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DRPRESS) {
 					itemIndex = 1;
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.rConfig = fmin(controls.triggerConfigMax, controls.rConfig+1);
@@ -518,7 +526,7 @@ void navigateMenu(unsigned char bitmap[],
 						controls.rTriggerOffset = fmin(controls.triggerMax, controls.rTriggerOffset+increment);
 					}
 					changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.rConfig = fmax(controls.triggerConfigMin, controls.rConfig-1);
@@ -526,14 +534,14 @@ void navigateMenu(unsigned char bitmap[],
 						controls.rTriggerOffset = fmax(controls.triggerMin, controls.rTriggerOffset-increment);
 					}
 					changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
-					redraw = true;
+					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setRSetting(controls.rConfig);
 					setROffsetSetting(controls.rTriggerOffset);
 					tempInt1 = controls.rConfig;
 					tempInt2 = controls.rTriggerOffset;
 					changeMade = false;
-					redraw = true;
+					redraw = 1;
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;

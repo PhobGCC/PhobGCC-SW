@@ -188,7 +188,7 @@ int videoOut(const uint8_t pin_base,
 
 	unsigned int menuIndex = 0;;
 	int itemIndex = 0;;
-	bool redraw = true;//start off true
+	uint8_t redraw = 1;//start off with a normal redraw
 	bool changeMade = false;
 
 	while (true) {
@@ -200,8 +200,11 @@ int videoOut(const uint8_t pin_base,
 		_startSync = false;
 
 		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
-		if(redraw) {
-			redraw = false;
+		if(redraw == 2) { //fast redraw
+			redraw = 0;
+			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
+		} else if(redraw == 1) { //slow redraw
+			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
 			gpio_put(0, !gpio_get_out_level(0));

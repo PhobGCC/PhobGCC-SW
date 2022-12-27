@@ -84,6 +84,37 @@ void drawStickdbg(unsigned char bitmap[],
 		}
 	}
 }
+void drawStickdbgFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	if(itemIndex == 0) {
+		//raw output
+		eraseCharLine(bitmap, 70);
+		drawFloat(bitmap,   30,  70, 15, 0, 6, raw.axRaw);
+		drawFloat(bitmap,  280,  70, 15, 0, 6, raw.cxRaw);
+		eraseCharLine(bitmap, 90);
+		drawFloat(bitmap,   30,  90, 15, 0, 6, raw.ayRaw);
+		drawFloat(bitmap,  280,  90, 15, 0, 6, raw.cyRaw);
+		eraseCharLine(bitmap, 140);
+		drawFloat(bitmap,   30, 140, 15, 2, 6, raw.axLinearized);
+		drawFloat(bitmap,  280, 140, 15, 2, 6, raw.cxLinearized);
+		eraseCharLine(bitmap, 160);
+		drawFloat(bitmap,   30, 160, 15, 2, 6, raw.ayLinearized);
+		drawFloat(bitmap,  280, 160, 15, 2, 6, raw.cyLinearized);
+		eraseCharLine(bitmap, 210);
+		drawFloat(bitmap,   30, 210, 15, 2, 6, raw.axUnfiltered);
+		drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
+		eraseCharLine(bitmap, 230);
+		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
+		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
+	}
+}
 
 void drawSet_over(unsigned char bitmap[],
 		const unsigned int menu,
@@ -592,6 +623,31 @@ void drawRtrigger(unsigned char bitmap[],
 			break;
 	}
 	//graph?
+}
+
+void drawMenuFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	if (MenuIndex[menu][1] <= 6) {
+		drawString(bitmap, 20, 20, 15, MenuNames[menu]);
+		for(int i = 0; i < MenuIndex[menu][1]; i++) {
+			drawString(bitmap, 50, 80 + 30*i, 15, MenuNames[MenuIndex[menu][i+2]]);
+		}
+		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowPointer);
+	}
+	switch(menu) {
+		case MENU_STICKDBG:
+			drawStickdbgFast(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		default:
+			break;
+	}
 }
 
 void drawMenu(unsigned char bitmap[],

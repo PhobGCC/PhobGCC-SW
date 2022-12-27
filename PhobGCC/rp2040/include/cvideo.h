@@ -6,6 +6,9 @@
 #ifndef VWIDTH
 #define VWIDTH 512
 #endif
+#ifndef VWIDTHBYTE
+#define VWIDTHBYTE 256
+#endif
 #ifndef VHEIGHT
 #define VHEIGHT 384
 #endif
@@ -105,6 +108,16 @@ void drawInt2x(unsigned char bitmap[],
                const uint8_t largestPower,
                const int number);
 
+void drawMenuFast(unsigned char bitmap[],
+                  const unsigned int menu,
+                  const int itemIndex,
+			      const bool changeMade,
+                  const Buttons btn,
+                  const RawStick raw,
+                  const ControlConfig &controls,
+			      const StickParams &aStick,
+			      const StickParams &cStick);
+
 void drawMenu(unsigned char bitmap[],
               const unsigned int menu,
               const int itemIndex,
@@ -118,10 +131,17 @@ void drawMenu(unsigned char bitmap[],
 void handleMenuButtons(unsigned char bitmap[],
                        unsigned int &menu,
                        int &itemIndex,
-                       bool &redraw,
+                       uint8_t &redraw,
 				       bool &changeMade,
 				       volatile bool &pleaseCommit,//for asking the other core to commit settings
                        const Buttons &hardware,
                        ControlConfig &controls);
+
+void eraseCharLine(unsigned char bitmap[],
+                    uint16_t y0);
+
+void eraseRows(unsigned char bitmap[],
+               uint16_t y0,
+               uint16_t rows);
 
 #endif //CVIDEO_H
