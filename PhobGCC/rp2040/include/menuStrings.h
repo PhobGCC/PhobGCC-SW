@@ -132,5 +132,7 @@ const char lrtrigger19[]     = "This increases the sensitivity of the analog by"
 const char lrtrigger20[]     = " a multiplier that changes with the offset.";
 const char lrtrigger21[]     = "This makes it respond quicker in Ultimate.";
 const char lrtrigger22[]     = "Multiplier:";
+const char lrtrigger23[]     = "Trigger Inputs:";
+const char lrtrigger24[]     = "Trigger Outputs:";
 
 #endif //MENUSTRINGS_H

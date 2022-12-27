@@ -202,7 +202,7 @@ int videoOut(const uint8_t pin_base,
 		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
-			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
+			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, btn, hardware, raw, config, aStick, cStick);
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));

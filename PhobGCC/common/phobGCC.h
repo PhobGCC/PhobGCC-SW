@@ -1451,6 +1451,8 @@ void copyButtons(const Buttons &src, Buttons &dest) {
 void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, hardware);
+	hardware.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1);
+	hardware.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1);
 
 	//Copy hardware buttons into a temp
 	Buttons tempBtn;
@@ -1466,8 +1468,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//when a trigger is in lockout due to the other being mode 5,
 	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
 	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4;
-	const bool lockoutR = controls.lConfig == 4;
+	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
+	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
 
 	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
 	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;

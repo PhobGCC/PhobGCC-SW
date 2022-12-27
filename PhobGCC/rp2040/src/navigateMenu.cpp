@@ -146,6 +146,9 @@ void handleMenuButtons(unsigned char bitmap[],
 	if(redraw == 0) {
 		if(menu == MENU_STICKDBG && itemIndex == 0) {
 			redraw = 2;
+		} else if(menu == MENU_TRIGGER || menu == MENU_LTRIGGER || menu == MENU_RTRIGGER) {
+			redraw = 2;
+			return;
 		}
 	}
 }

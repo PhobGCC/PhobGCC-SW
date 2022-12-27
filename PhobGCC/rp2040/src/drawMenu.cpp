@@ -473,6 +473,51 @@ void drawTrigger(unsigned char bitmap[],
 			drawString(bitmap, 30, 230, 15, trigger6);
 		}
 	}
+	drawString(bitmap,  30, 250, 15, lrtrigger23);
+	drawString(bitmap,  30, 310, 15, lrtrigger24);
+}
+
+void drawTriggerFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const Buttons hardware,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	//input
+	eraseCharLine(bitmap, 270);
+	eraseCharLine(bitmap, 290);
+	drawString(bitmap, 30, 270, 15, "LD");
+	drawString(bitmap, 30, 290, 15, "RD");
+	if(hardware.L) {
+		drawString(bitmap, 70, 270, 15, "Pressed");
+	}
+	if(hardware.R) {
+		drawString(bitmap, 70, 290, 15, "Pressed");
+	}
+	drawString(bitmap, 280, 270, 15, "LA:");
+	drawInt   (bitmap, 310, 270, 15, 2, hardware.La);
+	drawString(bitmap, 280, 290, 15, "RA:");
+	drawInt   (bitmap, 310, 290, 15, 2, hardware.Ra);
+
+	//output
+	eraseCharLine(bitmap, 330);
+	eraseCharLine(bitmap, 350);
+	drawString(bitmap, 30, 330, 15, "LD");
+	drawString(bitmap, 30, 350, 15, "RD");
+	if(btn.L) {
+		drawString(bitmap, 70, 330, 15, "Pressed");
+	}
+	if(btn.R) {
+		drawString(bitmap, 70, 350, 15, "Pressed");
+	}
+	drawString(bitmap, 280, 330, 15, "LA:");
+	drawInt   (bitmap, 310, 330, 15, 2, btn.La);
+	drawString(bitmap, 280, 350, 15, "RA:");
+	drawInt   (bitmap, 310, 350, 15, 2, btn.Ra);
 }
 
 void drawLtrigger(unsigned char bitmap[],
@@ -494,6 +539,8 @@ void drawLtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.lConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.lTriggerOffset);
+	drawString(bitmap,  30, 250, 15, lrtrigger23);
+	drawString(bitmap,  30, 310, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowPointer);
 	} else {
@@ -569,6 +616,8 @@ void drawRtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.rConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.rTriggerOffset);
+	drawString(bitmap,  30, 250, 15, lrtrigger23);
+	drawString(bitmap,  30, 310, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowPointer);
 	} else {
@@ -630,6 +679,7 @@ void drawMenuFast(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const Buttons btn,
+		const Buttons hardware,
 		const RawStick raw,
 		const ControlConfig &controls,
 		const StickParams &aStick,
@@ -644,6 +694,11 @@ void drawMenuFast(unsigned char bitmap[],
 	switch(menu) {
 		case MENU_STICKDBG:
 			drawStickdbgFast(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_TRIGGER:
+		case MENU_LTRIGGER:
+		case MENU_RTRIGGER:
+			drawTriggerFast(bitmap, menu, itemIndex, changeMade, btn, hardware, raw, controls, aStick, cStick);
 			break;
 		default:
 			break;
