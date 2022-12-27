@@ -115,13 +115,13 @@ void drawMenu(unsigned char bitmap[],
 			  const StickParams &aStick,
 			  const StickParams &cStick);
 
-void navigateMenu(unsigned char bitmap[],
-                  unsigned int &menu,
-                  int &itemIndex,
-                  bool &redraw,
-				  bool &changeMade,
-				  volatile bool &pleaseCommit,//for asking the other core to commit settings
-                  Buttons &hardware,
-                  ControlConfig &controls);
+void handleMenuButtons(unsigned char bitmap[],
+                       unsigned int &menu,
+                       int &itemIndex,
+                       bool &redraw,
+				       bool &changeMade,
+				       volatile bool &pleaseCommit,//for asking the other core to commit settings
+                       const Buttons &hardware,
+                       ControlConfig &controls);
 
 #endif //CVIDEO_H

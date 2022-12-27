@@ -199,7 +199,7 @@ int videoOut(const uint8_t pin_base,
 		extSync = true;
 		_startSync = false;
 
-		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
 		if(redraw) {
 			redraw = false;
 			gpio_put(0, !gpio_get_out_level(0));
