@@ -6,6 +6,31 @@
 #include "menuStrings.h"
 #include "images/cuteGhost.h"
 
+void drawAutoinit(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, ud_only);
+	drawString(bitmap,  30,  70, 15, autoinit1);
+	drawString(bitmap,  30,  90, 15, autoinit2);
+	drawString(bitmap,  30, 110, 15, autoinit3);
+	drawString(bitmap,  30, 130, 15, autoinit4);
+	if(controls.autoInit) {
+		drawString(bitmap,  30, 160, 15, set_overAutoOn);
+	} else {
+		drawString(bitmap,  30, 160, 15, set_overAutoOff);
+	}
+}
+
 void drawStickdbg(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -40,24 +65,24 @@ void drawStickdbg(unsigned char bitmap[],
 		//fit coefficients
 		drawString(bitmap,  30,  50, 15, stickdbgAXfit);
 		drawFloat(bitmap,   30,  70, 15, 0, 10, aStick.fitCoeffsX[0]);
-		drawFloat(bitmap,   30,  90, 15, 0, 10, aStick.fitCoeffsX[0]);
-		drawFloat(bitmap,   30, 110, 15, 0, 10, aStick.fitCoeffsX[0]);
-		drawFloat(bitmap,   30, 130, 15, 0, 10, aStick.fitCoeffsX[0]);
+		drawFloat(bitmap,   30,  90, 15, 0, 10, aStick.fitCoeffsX[1]);
+		drawFloat(bitmap,   30, 110, 15, 0, 10, aStick.fitCoeffsX[2]);
+		drawFloat(bitmap,   30, 130, 15, 0, 10, aStick.fitCoeffsX[3]);
 		drawString(bitmap,  30, 150, 15, stickdbgAYfit);
 		drawFloat(bitmap,   30, 170, 15, 0, 10, aStick.fitCoeffsY[0]);
-		drawFloat(bitmap,   30, 190, 15, 0, 10, aStick.fitCoeffsY[0]);
-		drawFloat(bitmap,   30, 210, 15, 0, 10, aStick.fitCoeffsY[0]);
-		drawFloat(bitmap,   30, 230, 15, 0, 10, aStick.fitCoeffsY[0]);
+		drawFloat(bitmap,   30, 190, 15, 0, 10, aStick.fitCoeffsY[1]);
+		drawFloat(bitmap,   30, 210, 15, 0, 10, aStick.fitCoeffsY[2]);
+		drawFloat(bitmap,   30, 230, 15, 0, 10, aStick.fitCoeffsY[3]);
 		drawString(bitmap, 280,  50, 15, stickdbgCXfit);
 		drawFloat(bitmap,  280,  70, 15, 0, 10, cStick.fitCoeffsX[0]);
-		drawFloat(bitmap,  280,  90, 15, 0, 10, cStick.fitCoeffsX[0]);
-		drawFloat(bitmap,  280, 110, 15, 0, 10, cStick.fitCoeffsX[0]);
-		drawFloat(bitmap,  280, 130, 15, 0, 10, cStick.fitCoeffsX[0]);
+		drawFloat(bitmap,  280,  90, 15, 0, 10, cStick.fitCoeffsX[1]);
+		drawFloat(bitmap,  280, 110, 15, 0, 10, cStick.fitCoeffsX[2]);
+		drawFloat(bitmap,  280, 130, 15, 0, 10, cStick.fitCoeffsX[3]);
 		drawString(bitmap, 280, 150, 15, stickdbgCYfit);
 		drawFloat(bitmap,  280, 170, 15, 0, 10, cStick.fitCoeffsY[0]);
-		drawFloat(bitmap,  280, 190, 15, 0, 10, cStick.fitCoeffsY[0]);
-		drawFloat(bitmap,  280, 210, 15, 0, 10, cStick.fitCoeffsY[0]);
-		drawFloat(bitmap,  280, 230, 15, 0, 10, cStick.fitCoeffsY[0]);
+		drawFloat(bitmap,  280, 190, 15, 0, 10, cStick.fitCoeffsY[1]);
+		drawFloat(bitmap,  280, 210, 15, 0, 10, cStick.fitCoeffsY[2]);
+		drawFloat(bitmap,  280, 230, 15, 0, 10, cStick.fitCoeffsY[3]);
 	} else if(itemIndex == 2) {
 		//affine coefficients
 		drawString(bitmap,  30,  50, 15, stickdbgAaff);
@@ -488,6 +513,7 @@ void drawTriggerFast(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	//input
+	/*
 	eraseCharLine(bitmap, 270);
 	eraseCharLine(bitmap, 290);
 	drawString(bitmap, 30, 270, 15, "LD");
@@ -502,6 +528,7 @@ void drawTriggerFast(unsigned char bitmap[],
 	drawInt   (bitmap, 310, 270, 15, 2, hardware.La);
 	drawString(bitmap, 280, 290, 15, "RA:");
 	drawInt   (bitmap, 310, 290, 15, 2, hardware.Ra);
+	*/
 
 	//output
 	eraseCharLine(bitmap, 330);
@@ -736,6 +763,9 @@ void drawMenu(unsigned char bitmap[],
 			//left stick calibration
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 			//we need to display different text depending on the cal step. We use itemIndex to represent this.
+		case MENU_AUTOINIT:
+			drawAutoinit(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
 		case MENU_STICKDBG:
 			drawStickdbg(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;

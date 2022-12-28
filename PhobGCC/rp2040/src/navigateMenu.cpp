@@ -1,4 +1,5 @@
 #include <cmath>
+#include "pico/platform.h"
 #include "cvideo.h"
 #include "menu.h"
 #include "storage/pages/storage.h"
@@ -21,7 +22,7 @@ void navigateMenu(unsigned char bitmap[],
 		const uint8_t increment,
 		ControlConfig &controls);
 
-void handleMenuButtons(unsigned char bitmap[],
+void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		unsigned int &menu,
 		int &itemIndex,
 		uint8_t &redraw,
@@ -202,6 +203,26 @@ void navigateMenu(unsigned char bitmap[],
 		static int tempInt1 = 0;
 		static int tempInt2 = 0;
 		switch(menu) {
+			case MENU_AUTOINIT:
+				if(!changeMade) {
+					tempInt1 = controls.autoInit;
+				}
+				if(presses & DUPRESS) {
+					controls.autoInit = true;
+					changeMade = controls.autoInit != tempInt1;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					controls.autoInit = false;
+					changeMade = controls.autoInit != tempInt1;
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setAutoInitSetting(controls.autoInit);
+					tempInt1 = controls.autoInit;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = true;//ask the other thread to commit settings to flash
+				}
+				return;
 			case MENU_STICKDBG:
 				//A cycles through pages
 				if(presses & APRESS) {

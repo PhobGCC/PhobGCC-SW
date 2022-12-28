@@ -15,8 +15,6 @@
 #include "structsAndEnums.h"
 #include "storage/pages/storage.h"
 
-const int _us = 125;
-
 void setPinModes() {
 	gpio_init(_pinA);
 	gpio_pull_up(_pinA);

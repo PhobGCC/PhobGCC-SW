@@ -101,7 +101,8 @@ const int   VERT_bitmap    = VHEIGHT/2;
 /*-------------------------------------------------------------------*/
 
 const float PIO_clkdot = 1.0;        	// PIO instructions per dot
-const float PIO_sysclk = 125000000.0;	// default Pico system clock
+//const float PIO_sysclk = 125000000.0;	// default Pico system clock
+const float PIO_sysclk = 250000000.0;	// default Pico system clock
 const float PIO_clkdiv = PIO_sysclk / VIDEO_horizontal_freq / PIO_clkdot / HORIZ_dots;
 
 #define state_machine 0     // The PIO state machine to use
@@ -199,15 +200,19 @@ int videoOut(const uint8_t pin_base,
 		extSync = true;
 		_startSync = false;
 
+		gpio_put(0, !gpio_get_out_level(0));
 		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
+		gpio_put(0, !gpio_get_out_level(0));
+
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
+			gpio_put(0, !gpio_get_out_level(0));
 			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, btn, hardware, raw, config, aStick, cStick);
+			gpio_put(0, !gpio_get_out_level(0));
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			gpio_put(0, !gpio_get_out_level(0));
 			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
 			gpio_put(0, !gpio_get_out_level(0));
 		}

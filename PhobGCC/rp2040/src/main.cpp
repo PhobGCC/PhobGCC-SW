@@ -60,7 +60,7 @@ void second_core() {
 			commitSettings();
 		}
 
-		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//limit speed if video is running
@@ -74,7 +74,7 @@ void second_core() {
 
 		static bool running = false;
 
-		gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
+		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
@@ -231,6 +231,7 @@ int main() {
 
 	if(_hardware.Z) { //hold Z on powerup for PhobVision
 		_videoOut = true;
+		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, see if this works
 	}
 
 	multicore_lockout_victim_init();
