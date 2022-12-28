@@ -569,6 +569,68 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = true;//ask the other thread to commit settings to flash
 				}
 				return;
+			case MENU_RESET:
+				if(presses & DUPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if((presses & BSAVE) && itemIndex >= 2) {
+					//if they briefly press B, back out
+					itemIndex -= 2;
+					redraw = 1;
+				} else if((presses & APRESS) && itemIndex < 2) {
+					//if they press A, go to the confirmation
+					itemIndex += 2;
+					redraw = 1;
+				} else if((presses & APRESS) && itemIndex >= 2) {
+					itemIndex -= 2;
+					redraw = 1;
+					pleaseCommit = true;
+					if(itemIndex == 0) {
+						controls.jumpConfig = (JumpConfig) controls.jumpConfigMin;
+						setJumpSetting(controls.jumpConfig);
+						controls.lConfig = controls.triggerDefault;
+						controls.rConfig = controls.triggerDefault;
+						setLSetting(controls.lConfig);
+						setRSetting(controls.rConfig);
+						controls.lTriggerOffset = controls.triggerMin;
+						controls.rTriggerOffset = controls.triggerMin;
+						setLOffsetSetting(controls.lTriggerOffset);
+						setROffsetSetting(controls.rTriggerOffset);
+						controls.cXOffset = 0;
+						controls.cYOffset = 0;
+						setCxOffsetSetting(0);
+						setCyOffsetSetting(0);
+						controls.rumble = controls.rumbleDefault;
+						setRumbleSetting(controls.rumble);
+						controls.autoInit = false;
+						setAutoInitSetting(false);
+						controls.xSnapback = controls.snapbackDefault;
+						controls.ySnapback = controls.snapbackDefault;
+						setXSnapbackSetting(controls.xSnapback);
+						setYSnapbackSetting(controls.ySnapback);
+						controls.axSmoothing = controls.smoothingMin;
+						controls.aySmoothing = controls.smoothingMin;
+						controls.cxSmoothing = controls.smoothingMin;
+						controls.cySmoothing = controls.smoothingMin;
+						setXSmoothingSetting(controls.axSmoothing);
+						setYSmoothingSetting(controls.aySmoothing);
+						setCxSmoothingSetting(controls.cxSmoothing);
+						setCySmoothingSetting(controls.cySmoothing);
+						controls.axWaveshaping = controls.waveshapingMin;
+						controls.ayWaveshaping = controls.waveshapingMin;
+						controls.cxWaveshaping = controls.waveshapingMin;
+						controls.cyWaveshaping = controls.waveshapingMin;
+						setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
+						setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
+						setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
+						setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
+					} else {
+						//set the stick params to default
+					}
+				}
 			default:
 				//do nothing
 				return;

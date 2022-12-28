@@ -141,4 +141,14 @@ const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
 
+//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+const char reset1[]          = "Press U/D to select which, and press A to reset.";
+const char reset2[]          = "This resets everything to defaults except for";
+const char reset3[]          = " stick calibration, which is untouched.";
+const char reset4[]          = "This resets everything including stick cal.";
+const char reset5[]          = "You'll need to perform stick calibration again.";
+const char reset6[]          = "Are you sure you want to reset? Cancel with B.";
+const char reset7[]          = "Soft Reset";
+const char reset8[]          = "Hard Reset";
+
 #endif //MENUSTRINGS_H

@@ -701,6 +701,33 @@ void drawRtrigger(unsigned char bitmap[],
 	//graph?
 }
 
+void drawReset(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap,  30,  50, 15, reset1);
+	drawString(bitmap,  30, 140, 15, reset7);
+	drawString(bitmap,  30, 170, 15, reset7);
+	if(itemIndex == 0 || itemIndex == 2) {//soft reset
+		drawString(bitmap,  30,  70, 15, reset2);
+		drawString(bitmap,  30,  90, 15, reset3);
+		drawString(bitmap,  10, 140, 15, arrowPointer);
+	} else {
+		drawString(bitmap,  30,  70, 15, reset4);
+		drawString(bitmap,  30,  90, 15, reset5);
+		drawString(bitmap,  10, 170, 15, arrowPointer);
+	}
+	if(itemIndex >= 2) {//confirm
+		drawString(bitmap,  30, 110, 15, reset6);
+	}
+}
+
 void drawMenuFast(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
