@@ -231,7 +231,7 @@ int main() {
 
 	if(_hardware.Z) { //hold Z on powerup for PhobVision
 		_videoOut = true;
-		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, see if this works
+		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, to alleviate performance issues
 	}
 
 	multicore_lockout_victim_init();

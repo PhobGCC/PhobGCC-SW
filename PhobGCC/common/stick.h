@@ -7,10 +7,6 @@
 #include "structsAndEnums.h"
 #include "filter.h"
 
-//ADC reference values for Phob 1.0; may need to be moved into hardware-specific section
-float _ADCScale = 1;
-float _ADCScaleFactor = 1;
-
 //TODO: either put these const globals in varables.h or make them #defines
 //origin values, useful for writing readable stick positions
 const int _intOrigin = 127;
@@ -67,9 +63,6 @@ const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0
 const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
-
-StickParams _aStickParams;
-StickParams _cStickParams;
 
 float linearize(const float point, const float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
