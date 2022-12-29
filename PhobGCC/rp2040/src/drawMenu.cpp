@@ -712,19 +712,19 @@ void drawReset(unsigned char bitmap[],
 		const StickParams &cStick) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 	drawString(bitmap,  30,  50, 15, reset1);
-	drawString(bitmap,  30, 140, 15, reset7);
-	drawString(bitmap,  30, 170, 15, reset7);
+	drawString(bitmap,  30, 120, 15, reset7);
+	drawString(bitmap,  30, 150, 15, reset8);
 	if(itemIndex == 0 || itemIndex == 2) {//soft reset
 		drawString(bitmap,  30,  70, 15, reset2);
 		drawString(bitmap,  30,  90, 15, reset3);
-		drawString(bitmap,  10, 140, 15, arrowPointer);
+		drawString(bitmap,  10, 120, 15, arrowPointer);
 	} else {
 		drawString(bitmap,  30,  70, 15, reset4);
 		drawString(bitmap,  30,  90, 15, reset5);
-		drawString(bitmap,  10, 170, 15, arrowPointer);
+		drawString(bitmap,  10, 150, 15, arrowPointer);
 	}
 	if(itemIndex >= 2) {//confirm
-		drawString(bitmap,  30, 110, 15, reset6);
+		drawString(bitmap,  30, 180, 15, reset6);
 	}
 }
 
@@ -831,6 +831,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_RTRIGGER:
 			drawRtrigger(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_RESET:
+			drawReset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		default:
 			//placeholder for screens that don't have anything defined

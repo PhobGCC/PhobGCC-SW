@@ -17,7 +17,7 @@ void navigateMenu(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
-		volatile bool &pleaseCommit,
+		volatile uint8_t &pleaseCommit,
 		uint8_t presses,
 		const uint8_t increment,
 		ControlConfig &controls);
@@ -27,7 +27,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
-		volatile bool &pleaseCommit,
+		volatile uint8_t &pleaseCommit,
 		const Buttons &hardware,
 		ControlConfig &controls) {
 	uint8_t presses = 0;
@@ -159,7 +159,7 @@ void navigateMenu(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
-		volatile bool &pleaseCommit,
+		volatile uint8_t &pleaseCommit,
 		uint8_t presses,
 		const uint8_t increment,
 		ControlConfig &controls) {
@@ -220,7 +220,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt1 = controls.autoInit;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_STICKDBG:
@@ -267,7 +267,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.ySnapback;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_AWAVE:
@@ -304,7 +304,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.ayWaveshaping;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_ASMOOTH:
@@ -341,7 +341,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.aySmoothing;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_CSNAPBACK:
@@ -378,7 +378,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.cySmoothing;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_CWAVE:
@@ -415,7 +415,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.cyWaveshaping;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_COFFSET:
@@ -452,7 +452,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.cYOffset;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_REMAP:
@@ -472,7 +472,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt1 = controls.jumpConfig;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_RUMBLE:
@@ -492,7 +492,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt1 = controls.rumble;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_LTRIGGER:
@@ -529,7 +529,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.lTriggerOffset;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_RTRIGGER:
@@ -566,7 +566,7 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt2 = controls.rTriggerOffset;
 					changeMade = false;
 					redraw = 1;
-					pleaseCommit = true;//ask the other thread to commit settings to flash
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
 			case MENU_RESET:
@@ -587,48 +587,12 @@ void navigateMenu(unsigned char bitmap[],
 				} else if((presses & APRESS) && itemIndex >= 2) {
 					itemIndex -= 2;
 					redraw = 1;
-					pleaseCommit = true;
 					if(itemIndex == 0) {
-						controls.jumpConfig = (JumpConfig) controls.jumpConfigMin;
-						setJumpSetting(controls.jumpConfig);
-						controls.lConfig = controls.triggerDefault;
-						controls.rConfig = controls.triggerDefault;
-						setLSetting(controls.lConfig);
-						setRSetting(controls.rConfig);
-						controls.lTriggerOffset = controls.triggerMin;
-						controls.rTriggerOffset = controls.triggerMin;
-						setLOffsetSetting(controls.lTriggerOffset);
-						setROffsetSetting(controls.rTriggerOffset);
-						controls.cXOffset = 0;
-						controls.cYOffset = 0;
-						setCxOffsetSetting(0);
-						setCyOffsetSetting(0);
-						controls.rumble = controls.rumbleDefault;
-						setRumbleSetting(controls.rumble);
-						controls.autoInit = false;
-						setAutoInitSetting(false);
-						controls.xSnapback = controls.snapbackDefault;
-						controls.ySnapback = controls.snapbackDefault;
-						setXSnapbackSetting(controls.xSnapback);
-						setYSnapbackSetting(controls.ySnapback);
-						controls.axSmoothing = controls.smoothingMin;
-						controls.aySmoothing = controls.smoothingMin;
-						controls.cxSmoothing = controls.smoothingMin;
-						controls.cySmoothing = controls.smoothingMin;
-						setXSmoothingSetting(controls.axSmoothing);
-						setYSmoothingSetting(controls.aySmoothing);
-						setCxSmoothingSetting(controls.cxSmoothing);
-						setCySmoothingSetting(controls.cySmoothing);
-						controls.axWaveshaping = controls.waveshapingMin;
-						controls.ayWaveshaping = controls.waveshapingMin;
-						controls.cxWaveshaping = controls.waveshapingMin;
-						controls.cyWaveshaping = controls.waveshapingMin;
-						setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
-						setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
-						setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
-						setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
+						//request a soft reset
+						pleaseCommit = 2;
 					} else {
-						//set the stick params to default
+						//request a hard reset
+						pleaseCommit = 3;
 					}
 				}
 			default:

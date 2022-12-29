@@ -10,9 +10,10 @@
 #include "cvideo_variables.h"
 
 volatile bool _videoOut = false;
+//Variables used by PhobVision to communicate with the event loop core
 volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
-volatile bool _pleaseCommit = false;
+volatile uint8_t _pleaseCommit = 0;
 
 //This gets called by the comms library
 GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
@@ -55,9 +56,15 @@ void second_core() {
 	while(true) { //main event loop
 
 		//when requested by the other core, commit the settings
-		if(_pleaseCommit) {
-			_pleaseCommit = false;
+		if(_pleaseCommit == 1) {
+			_pleaseCommit = 0;
 			commitSettings();
+		} else if(_pleaseCommit == 2) {
+			_pleaseCommit = 0;
+			resetDefaults(SOFT, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+		} else if(_pleaseCommit == 3) {
+			_pleaseCommit = 0;
+			resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);
 		}
 
 		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));

@@ -138,7 +138,7 @@ int videoOut(const uint8_t pin_base,
 		StickParams &aStick,
 		StickParams &cStick,
 		volatile bool &extSync,
-		volatile bool &pleaseCommit) {
+		volatile uint8_t &pleaseCommit) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 

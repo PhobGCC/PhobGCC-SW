@@ -2073,7 +2073,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		dT = 1;
 		lastMicros += 1000;
 	} else {
-		//we the dT variable so that we know how long it actually took to cycle
+		//calculate the dT variable so that we know how long it actually took to cycle
 		dT = (micros()-lastMicros)/1000;
 		lastMicros = micros();
 	}

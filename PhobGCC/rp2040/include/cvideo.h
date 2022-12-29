@@ -29,7 +29,7 @@ int videoOut(const uint8_t pin_base,
 		StickParams &aStick,
 		StickParams &cStick,
 		volatile bool &extSync,
-		volatile bool &pleaseCommit);
+		volatile uint8_t &pleaseCommit);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);
@@ -134,7 +134,7 @@ void handleMenuButtons(unsigned char bitmap[],
                        int &itemIndex,
                        uint8_t &redraw,
 				       bool &changeMade,
-				       volatile bool &pleaseCommit,//for asking the other core to commit settings
+				       volatile uint8_t &pleaseCommit,//for asking the other core to commit settings
                        const Buttons &hardware,
                        ControlConfig &controls);
 
