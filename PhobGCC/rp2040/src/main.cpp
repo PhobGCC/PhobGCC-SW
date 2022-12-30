@@ -14,6 +14,7 @@ volatile bool _videoOut = false;
 volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;
+int _currentCalStep = -1;//-1 means not calibrating
 
 //This gets called by the comms library
 GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
@@ -89,9 +90,6 @@ void second_core() {
 			running=true;
 		}
 
-
-		static int currentCalStep = -1;//-1 means not calibrating
-
 		//Set up persistent storage for calibration
 		static float tempCalPointsX[_noOfCalibrationPoints];
 		static float tempCalPointsY[_noOfCalibrationPoints];
@@ -101,10 +99,10 @@ void second_core() {
 		static float measuredNotchAngles[_noOfNotches];
 
 		//check to see if we are calibrating
-		if(currentCalStep >= 0){
+		if(_currentCalStep >= 0){
 			if(whichStick == ASTICK){
-				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-					adjustNotch(currentCalStep, _dT, true, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+					adjustNotch(_currentCalStep, _dT, true, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
 					if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 						//clean full cal points again, feeding updated angles in
 						float cleanedPointsX[_noOfNotches+1];
@@ -118,13 +116,13 @@ void second_core() {
 						notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _aStickParams);
 					}
 				}else{//just show desired stick position
-					displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
+					displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
 			}
 			else{//WHICHSTICK == CSTICK
-				if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-					adjustNotch(currentCalStep, _dT, false, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
+					adjustNotch(_currentCalStep, _dT, false, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
 					if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
 						//clean full cal points again, feeding updated angles in
 						float cleanedPointsX[_noOfNotches+1];
@@ -138,18 +136,18 @@ void second_core() {
 						notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, _cStickParams);
 					}
 				}else{//just show desired stick position
-					displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
+					displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, _vsyncSensors);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
 		}
 
 		//read the controller's buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	}
 }
@@ -248,7 +246,7 @@ int main() {
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
 		_vsyncSensors = true;
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit, _currentCalStep);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

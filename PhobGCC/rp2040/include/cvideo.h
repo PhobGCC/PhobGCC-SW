@@ -29,7 +29,8 @@ int videoOut(const uint8_t pin_base,
 		StickParams &aStick,
 		StickParams &cStick,
 		volatile bool &extSync,
-		volatile uint8_t &pleaseCommit);
+		volatile uint8_t &pleaseCommit,
+		int &currentCalStep);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);
@@ -123,6 +124,7 @@ void drawMenu(unsigned char bitmap[],
               const unsigned int menu,
               const int itemIndex,
 			  const bool changeMade,
+			  const int currentCalStep,
               const Buttons btn,
               const RawStick raw,
               const ControlConfig &controls,

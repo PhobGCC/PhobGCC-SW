@@ -138,7 +138,8 @@ int videoOut(const uint8_t pin_base,
 		StickParams &aStick,
 		StickParams &cStick,
 		volatile bool &extSync,
-		volatile uint8_t &pleaseCommit) {
+		volatile uint8_t &pleaseCommit,
+		int &currentCalStep) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -213,7 +214,7 @@ int videoOut(const uint8_t pin_base,
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, btn, raw, config, aStick, cStick);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, raw, config, aStick, cStick);
 			gpio_put(0, !gpio_get_out_level(0));
 		}
 

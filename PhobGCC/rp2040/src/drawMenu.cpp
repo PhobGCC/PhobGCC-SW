@@ -6,6 +6,18 @@
 #include "menuStrings.h"
 #include "images/cuteGhost.h"
 
+void drawStickCal(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,//used for currentCalStep
+		const bool changeMade, 
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+}
+
 void drawAutoinit(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -513,7 +525,6 @@ void drawTriggerFast(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	//input
-	/*
 	eraseCharLine(bitmap, 270);
 	eraseCharLine(bitmap, 290);
 	drawString(bitmap, 30, 270, 15, "LD");
@@ -528,7 +539,6 @@ void drawTriggerFast(unsigned char bitmap[],
 	drawInt   (bitmap, 310, 270, 15, 2, hardware.La);
 	drawString(bitmap, 280, 290, 15, "RA:");
 	drawInt   (bitmap, 310, 290, 15, 2, hardware.Ra);
-	*/
 
 	//output
 	eraseCharLine(bitmap, 330);
@@ -763,6 +773,7 @@ void drawMenu(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
 		const bool changeMade,
+		const int currentCalStep,
 		const Buttons btn,
 		const RawStick raw,
 		const ControlConfig &controls,
@@ -790,6 +801,7 @@ void drawMenu(unsigned char bitmap[],
 			//left stick calibration
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 			//we need to display different text depending on the cal step. We use itemIndex to represent this.
+			break;
 		case MENU_AUTOINIT:
 			drawAutoinit(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;

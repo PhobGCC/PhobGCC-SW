@@ -11,6 +11,7 @@
 #define DDPRESS 0b0001'0000
 #define DLPRESS 0b0010'0000
 #define DRPRESS 0b0100'0000
+#define LRPRESS 0b1000'0000
 
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
@@ -39,6 +40,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	const uint8_t buttonLockout = 10;// 1/6 of a second of ignoring button bounce
 	const uint8_t dpadLockout = 15;// 1/4 of a second of ignoring button bounce
 	static uint8_t aLockout = 0;
+	static uint8_t lrLockout = 0;
 	static uint8_t duLockout = 0;
 	static uint8_t ddLockout = 0;
 	static uint8_t dlLockout = 0;
@@ -47,6 +49,9 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	//it'll be unlocked after it hits zero
 	if(!hardware.A && aLockout > 0) {
 		aLockout--;
+	}
+	if(!hardware.L && !hardware.R && lrLockout > 0) {
+		lrLockout--;
 	}
 	//dpad directions do repeat
 	duLockout = fmax(0, duLockout - 1);
@@ -74,6 +79,9 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		if(hardware.A && aLockout == 0) {
 			presses = presses | APRESS;
 			aLockout = buttonLockout;
+		} else if((hardware.L || hardware.R) && lrLockout == 0) {
+			presses = presses | LRPRESS;
+			lrLockout = buttonLockout;
 		} else if(hardware.Dl && dlLockout == 0) {
 			presses = presses | DLPRESS;
 			dlLockout = dpadLockout;
@@ -203,6 +211,10 @@ void navigateMenu(unsigned char bitmap[],
 		static int tempInt1 = 0;
 		static int tempInt2 = 0;
 		switch(menu) {
+			case MENU_ASTICKCAL:
+				if(presses & (APRESS | LRPRESS)) {
+					pleaseCommit = 4;
+				}
 			case MENU_AUTOINIT:
 				if(!changeMade) {
 					tempInt1 = controls.autoInit;
