@@ -55,17 +55,53 @@ void second_core() {
 
 
 	while(true) { //main event loop
+		//Set up persistent storage for calibration
+		static float tempCalPointsX[_noOfCalibrationPoints];
+		static float tempCalPointsY[_noOfCalibrationPoints];
+		static WhichStick whichStick = ASTICK;
+		static NotchStatus notchStatus[_noOfNotches];
+		static float notchAngles[_noOfNotches];
+		static float measuredNotchAngles[_noOfNotches];
+		static bool advanceCal = false;
+		static bool undoCal = false;
+
 
 		//when requested by the other core, commit the settings
-		if(_pleaseCommit == 1) {
-			_pleaseCommit = 0;
-			commitSettings();
-		} else if(_pleaseCommit == 2) {
-			_pleaseCommit = 0;
-			resetDefaults(SOFT, _controls, _gains, _normGains, _aStickParams, _cStickParams);
-		} else if(_pleaseCommit == 3) {
-			_pleaseCommit = 0;
-			resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+		if(_pleaseCommit != 0) {
+			if(_pleaseCommit == 1) {
+				_pleaseCommit = 0;
+				commitSettings();
+			} else if(_pleaseCommit == 2) {
+				_pleaseCommit = 0;
+				resetDefaults(SOFT, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+			} else if(_pleaseCommit == 3) {
+				_pleaseCommit = 0;
+				resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);
+			} else if(_pleaseCommit == 4) {
+				//Advance cal, A-stick
+				_pleaseCommit - 0;
+				whichStick = ASTICK;
+				if(_currentCalStep == -1) {
+					_currentCalStep++;
+				}
+				calibrationAdvance(_controls, _currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, _aStickParams, _cStickParams);
+			} else if(_pleaseCommit == 5) {
+				//Advance cal, C-stick
+				_pleaseCommit = 0;
+				whichStick = CSTICK;
+				if(_currentCalStep == -1) {
+					_currentCalStep++;
+				}
+				calibrationAdvance(_controls, _currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, _aStickParams, _cStickParams);
+			} else if(_pleaseCommit == 7) {
+				//undo cal
+				_pleaseCommit = 0;
+				calibrationUndo(_currentCalStep, whichStick, notchStatus);
+			} else if(_pleaseCommit == 8) {
+				//skip cal
+				_pleaseCommit = 0;
+				calibrationSkipMeasurement(_currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+			}
 		}
 
 		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
@@ -90,16 +126,10 @@ void second_core() {
 			running=true;
 		}
 
-		//Set up persistent storage for calibration
-		static float tempCalPointsX[_noOfCalibrationPoints];
-		static float tempCalPointsY[_noOfCalibrationPoints];
-		static WhichStick whichStick = ASTICK;
-		static NotchStatus notchStatus[_noOfNotches];
-		static float notchAngles[_noOfNotches];
-		static float measuredNotchAngles[_noOfNotches];
-
 		//check to see if we are calibrating
 		if(_currentCalStep >= 0){
+			//Respond to inputs
+			//Display and notch adjust stuff that needs to be updated every loop
 			if(whichStick == ASTICK){
 				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
 					adjustNotch(_currentCalStep, _dT, true, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);

@@ -274,7 +274,11 @@ void __no_inline_not_in_flash_func(cvideo_dma_handler)(void) {
 			switch(vline) {
 				case 0:
 					// for some reason interlace fails unless there's a 30usec delay here:
-					busy_wait_us(HORIZ_usec/2);
+					//busy_wait_us(HORIZ_usec/2);
+					//busy_wait_us(HORIZ_usec/4);
+					//actually, for phobvision it seems to work best with no delay
+					//with the delay, the adc reads make it twitch for some reason
+					//interlacing works fine without it too, if not better without
 					if ( !field ) {
 						// odd field - blank, full line
 						dma_channel_set_read_addr(dma_channel, vsync_bb, true);
