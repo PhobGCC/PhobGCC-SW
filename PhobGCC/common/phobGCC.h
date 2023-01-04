@@ -1985,7 +1985,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		}
 	}
 
-
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
 		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams);

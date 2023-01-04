@@ -139,7 +139,8 @@ int videoOut(const uint8_t pin_base,
 		StickParams &cStick,
 		volatile bool &extSync,
 		volatile uint8_t &pleaseCommit,
-		int &currentCalStep) {
+		int &currentCalStep,
+		const int version) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -205,6 +206,11 @@ int videoOut(const uint8_t pin_base,
 		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
 		gpio_put(0, !gpio_get_out_level(0));
 
+		if(pleaseCommit == 255) {
+			//this is a signal from the other side to redraw after variables have changed
+			redraw = 1;
+		}
+
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
@@ -214,7 +220,7 @@ int videoOut(const uint8_t pin_base,
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, raw, config, aStick, cStick);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick);
 			gpio_put(0, !gpio_get_out_level(0));
 		}
 

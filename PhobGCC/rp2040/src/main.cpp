@@ -13,7 +13,7 @@ volatile bool _videoOut = false;
 //Variables used by PhobVision to communicate with the event loop core
 volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
-volatile uint8_t _pleaseCommit = 0;
+volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
 
 //This gets called by the comms library
@@ -79,7 +79,7 @@ void second_core() {
 				resetDefaults(HARD, _controls, _gains, _normGains, _aStickParams, _cStickParams);
 			} else if(_pleaseCommit == 4) {
 				//Advance cal, A-stick
-				_pleaseCommit - 0;
+				_pleaseCommit = 255;
 				whichStick = ASTICK;
 				if(_currentCalStep == -1) {
 					_currentCalStep++;
@@ -87,20 +87,22 @@ void second_core() {
 				calibrationAdvance(_controls, _currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, _aStickParams, _cStickParams);
 			} else if(_pleaseCommit == 5) {
 				//Advance cal, C-stick
-				_pleaseCommit = 0;
+				_pleaseCommit = 255;
 				whichStick = CSTICK;
 				if(_currentCalStep == -1) {
 					_currentCalStep++;
 				}
 				calibrationAdvance(_controls, _currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, _aStickParams, _cStickParams);
-			} else if(_pleaseCommit == 7) {
+			} else if(_pleaseCommit == 6) {
 				//undo cal
-				_pleaseCommit = 0;
+				_pleaseCommit = 255;
 				calibrationUndo(_currentCalStep, whichStick, notchStatus);
-			} else if(_pleaseCommit == 8) {
-				//skip cal
-				_pleaseCommit = 0;
+				/*
+			} else if(_pleaseCommit == 7) {
+				//skip cal (might not actually get used?)
+				_pleaseCommit = 255;
 				calibrationSkipMeasurement(_currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+				*/
 			}
 		}
 
@@ -122,7 +124,7 @@ void second_core() {
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
-		if((_btn.B || _controls.autoInit) && !running){
+		if((_btn.B || _controls.autoInit || _videoOut) && !running){
 			running=true;
 		}
 
@@ -275,8 +277,13 @@ int main() {
 
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
-		_vsyncSensors = true;
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit, _currentCalStep);
+		//_vsyncSensors = true;
+#ifdef BUILD_DEV
+		const int version = -SW_VERSION;
+#else //BUILD_DEV
+		const int version = SW_VERSION;
+#endif //BUILD_DEV
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit, _currentCalStep, version);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

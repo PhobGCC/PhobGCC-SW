@@ -4,14 +4,18 @@
 #include "menu.h"
 #include "storage/pages/storage.h"
 
-#define APRESS  0b0000'0001
-#define BSAVE   0b0000'0010
-#define BPRESS  0b0000'0100
-#define DUPRESS 0b0000'1000
-#define DDPRESS 0b0001'0000
-#define DLPRESS 0b0010'0000
-#define DRPRESS 0b0100'0000
-#define LRPRESS 0b1000'0000
+#define APRESS  0b0000'0000'0000'0001
+#define BSAVE   0b0000'0000'0000'0010
+#define BPRESS  0b0000'0000'0000'0100
+#define DUPRESS 0b0000'0000'0000'1000
+#define DDPRESS 0b0000'0000'0001'0000
+#define DLPRESS 0b0000'0000'0010'0000
+#define DRPRESS 0b0000'0000'0100'0000
+#define LRPRESS 0b0000'0000'1000'0000
+#define XPRESS  0b0000'0001'0000'0000
+#define YPRESS  0b0000'0010'0000'0000
+#define ZPRESS  0b0000'0100'0000'0000
+#define SPRESS  0b0000'1000'0000'0000
 
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
@@ -19,7 +23,7 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		volatile uint8_t &pleaseCommit,
-		uint8_t presses,
+		uint16_t presses,
 		const uint8_t increment,
 		ControlConfig &controls);
 
@@ -31,7 +35,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		volatile uint8_t &pleaseCommit,
 		const Buttons &hardware,
 		ControlConfig &controls) {
-	uint8_t presses = 0;
+	uint16_t presses = 0;
 	uint8_t changeIncrement = 1;
 
 	//b button needs to accumulate before acting
@@ -40,6 +44,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	const uint8_t buttonLockout = 10;// 1/6 of a second of ignoring button bounce
 	const uint8_t dpadLockout = 15;// 1/4 of a second of ignoring button bounce
 	static uint8_t aLockout = 0;
+	static uint8_t zLockout = 0;
+	static uint8_t sLockout = 0;
 	static uint8_t lrLockout = 0;
 	static uint8_t duLockout = 0;
 	static uint8_t ddLockout = 0;
@@ -52,6 +58,12 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	}
 	if(!hardware.L && !hardware.R && lrLockout > 0) {
 		lrLockout--;
+	}
+	if(!hardware.Z && zLockout > 0) {
+		zLockout--;
+	}
+	if(!hardware.S && sLockout > 0) {
+		sLockout--;
 	}
 	//dpad directions do repeat
 	duLockout = fmax(0, duLockout - 1);
@@ -78,6 +90,12 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		}
 		if(hardware.A && aLockout == 0) {
 			presses = presses | APRESS;
+			aLockout = buttonLockout;
+		} else if(hardware.Z && zLockout == 0) {
+			presses = presses | ZPRESS;
+			aLockout = buttonLockout;
+		} else if(hardware.S && sLockout == 0) {
+			presses = presses | SPRESS;
 			aLockout = buttonLockout;
 		} else if((hardware.L || hardware.R) && lrLockout == 0) {
 			presses = presses | LRPRESS;
@@ -137,6 +155,13 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				ddCounter = 0;
 			}
 		}
+		//Other presses that don't get locked out, not for navigation
+		if(hardware.X) {
+			presses = presses | XPRESS;
+		}
+		if(hardware.Y) {
+			presses = presses | YPRESS;
+		}
 	}
 	//handle actual navigation and settings changes
 	if(presses) {
@@ -168,7 +193,7 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		volatile uint8_t &pleaseCommit,
-		uint8_t presses,
+		uint16_t presses,
 		const uint8_t increment,
 		ControlConfig &controls) {
 	if(MenuIndex[menu][1] == 0) {
@@ -179,7 +204,7 @@ void navigateMenu(unsigned char bitmap[],
 			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
-		//handle holding the B buttton as long as you're not on the splashscreen
+		//handle holding the B button as long as you're not on the splashscreen
 		if(presses & BPRESS) {
 			presses = 0;
 			menu = MenuIndex[menu][0];
@@ -211,10 +236,13 @@ void navigateMenu(unsigned char bitmap[],
 		static int tempInt1 = 0;
 		static int tempInt2 = 0;
 		switch(menu) {
+			/*
 			case MENU_ASTICKCAL:
 				if(presses & (APRESS | LRPRESS)) {
 					pleaseCommit = 4;
 				}
+				return;
+				*/
 			case MENU_AUTOINIT:
 				if(!changeMade) {
 					tempInt1 = controls.autoInit;

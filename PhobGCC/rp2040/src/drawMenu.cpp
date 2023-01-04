@@ -774,6 +774,7 @@ void drawMenu(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const int currentCalStep,
+		const int version,
 		const Buttons btn,
 		const RawStick raw,
 		const ControlConfig &controls,
@@ -784,6 +785,15 @@ void drawMenu(unsigned char bitmap[],
 		drawImage(bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, 0);//224x300
 		drawString(bitmap, VWIDTH/2-105, 320, 15, splashWelcome);
 		drawString(bitmap, VWIDTH/2- 70, 340, 15, splashPress);
+		drawString(bitmap,           10, 340, 15, "v0.");
+		drawInt(   bitmap,           30, 340, 15, 0, abs(version));
+		if(version < 0) {
+			if(version > -100) {
+				drawString(bitmap,   70, 340, 15, "Beta");
+			} else {//handle versions up to 9999
+				drawString(bitmap,   80, 340, 15, "Beta");
+			}
+		}
 	} else if (MenuIndex[menu][1] <= 6) {
 		drawString(bitmap, 20, 20, 15, MenuNames[menu]);
 		for(int i = 0; i < MenuIndex[menu][1]; i++) {
@@ -797,11 +807,13 @@ void drawMenu(unsigned char bitmap[],
 	//big switch case to draw bottom level pages
 	// and additional graphics on other menus
 	switch(menu) {
+		/*
 		case MENU_ASTICKCAL:
 			//left stick calibration
 			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
 			//we need to display different text depending on the cal step. We use itemIndex to represent this.
 			break;
+			*/
 		case MENU_AUTOINIT:
 			drawAutoinit(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
@@ -851,6 +863,7 @@ void drawMenu(unsigned char bitmap[],
 			//placeholder for screens that don't have anything defined
 			if(MenuIndex[menu][1] > 6) {
 				drawString(bitmap, 20, 20, 15, MenuNames[menu]);
+				drawString2x(bitmap, 80, 180, 15, "Under Construction");
 			}
 	}
 }
