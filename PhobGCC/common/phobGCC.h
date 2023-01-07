@@ -17,8 +17,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -1467,8 +1467,7 @@ void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick
 void calibrationUndo(int &currentCalStep, const WhichStick whichStick, NotchStatus notchStatus[]) {
 	if(currentCalStep % 2 == 0 && currentCalStep < 32 && currentCalStep != 0 ) {
 		//If it's measuring zero, go back to the previous zero
-		currentCalStep --;
-		currentCalStep --;
+		currentCalStep -= 2;
 	} else if(currentCalStep % 2 == 1 && currentCalStep < 32 && currentCalStep != 0 ) {
 		//If it's measuring a notch, go back to the zero before the previous notch
 		currentCalStep -= 3;
@@ -1515,10 +1514,13 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 			undoCal = false;
 		}
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
+			//bring all notches into a legal range; this helps recover from freakout situations
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
 			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
 			//skip to the next valid notch
 			currentCalStep++;
 			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
@@ -1578,10 +1580,13 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 			undoCal = false;
 		}
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
+			//bring all notches into a legal range; this helps recover from freakout situations
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
 			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
 			//skip to the next valid notch
 			currentCalStep++;
 			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
@@ -2082,12 +2087,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		}
 	}
 #endif //CLEANADC
+	dT = (micros()-lastMicros)/1000;
 	if(!runSynced) {
-		dT = 1;
 		lastMicros += 1000;
 	} else {
-		//calculate the dT variable so that we know how long it actually took to cycle
-		dT = (micros()-lastMicros)/1000;
 		lastMicros = micros();
 	}
 	if(micros() - lastMicros > 1500) { //handle the case that it was synced and now isn't

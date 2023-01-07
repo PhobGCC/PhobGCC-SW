@@ -23,18 +23,24 @@ void drawStickCal(unsigned char bitmap[],
 	int yCenter = 168;//starts at 40
 
 	//octagon
-	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter+74, yCenter-74, 7);
-	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter-74, 7);
-	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter+74, 7);
-	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter+74, yCenter+74, 7);
-	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter-74, yCenter+74, 7);
-	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter+74, 7);
-	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter-74, 7);
-	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 7);
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter+74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter+74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter+74, yCenter+74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter-74, yCenter+74, 10);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter+74, 10);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 10);
 
-	int xTarget = 0;
-	int yTarget = 0;
+	if(whichStick == ASTICK && itemIndex > -1) {
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Cx-127, yCenter-btn.Cy+127, 15);
+	} else if(whichStick == CSTICK && itemIndex > -1) {
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Ax-127, yCenter-btn.Ay+127, 15);
+	} else {
+		drawLine(bitmap, xCenter, yCenter, xCenter, yCenter, 15);
+	}
 	//where to put the stick
+	drawInt(bitmap,  400,  30, 15, 1, itemIndex);
 }
 
 void drawStickCalFast(unsigned char bitmap[],
@@ -845,10 +851,10 @@ void drawMenu(unsigned char bitmap[],
 	// and additional graphics on other menus
 	switch(menu) {
 		case MENU_ASTICKCAL:
-			drawStickCal(bitmap, menu, itemIndex, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
+			drawStickCal(bitmap, menu, currentCalStep, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_CSTICKCAL:
-			drawStickCal(bitmap, menu, itemIndex, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
+			drawStickCal(bitmap, menu, currentCalStep, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_AUTOINIT:
 			drawAutoinit(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);

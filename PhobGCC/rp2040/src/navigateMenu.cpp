@@ -93,10 +93,10 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			aLockout = buttonLockout;
 		} else if(hardware.Z && zLockout == 0) {
 			presses = presses | ZPRESS;
-			aLockout = buttonLockout;
+			zLockout = buttonLockout;
 		} else if(hardware.S && sLockout == 0) {
 			presses = presses | SPRESS;
-			aLockout = buttonLockout;
+			sLockout = buttonLockout;
 		} else if((hardware.L || hardware.R) && lrLockout == 0) {
 			presses = presses | LRPRESS;
 			lrLockout = buttonLockout;
