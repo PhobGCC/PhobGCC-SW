@@ -3,6 +3,7 @@
 #include "cvideo.h"
 #include "menu.h"
 
+#include "structsAndEnums.h"
 #include "menuStrings.h"
 #include "images/cuteGhost.h"
 
@@ -10,12 +11,42 @@ void drawStickCal(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,//used for currentCalStep
 		const bool changeMade, 
+		const WhichStick whichStick,
 		const Buttons btn,
 		const RawStick raw,
 		const ControlConfig &controls,
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	
+	int xCenter = 128;
+	int yCenter = 168;//starts at 40
+
+	//octagon
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter+74, yCenter-74, 7);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter-74, 7);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter+74, 7);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter+74, yCenter+74, 7);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter-74, yCenter+74, 7);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter+74, 7);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter-74, 7);
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 7);
+
+	int xTarget = 0;
+	int yTarget = 0;
+	//where to put the stick
+}
+
+void drawStickCalFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,//used for currentCalStep
+		const bool changeMade, 
+		const WhichStick whichStick,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
 }
 
 void drawAutoinit(unsigned char bitmap[],
@@ -756,6 +787,12 @@ void drawMenuFast(unsigned char bitmap[],
 		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowPointer);
 	}
 	switch(menu) {
+		case MENU_ASTICKCAL:
+			drawStickCalFast(bitmap, menu, itemIndex, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_CSTICKCAL:
+			drawStickCalFast(bitmap, menu, itemIndex, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
+			break;
 		case MENU_STICKDBG:
 			drawStickdbgFast(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
@@ -807,13 +844,12 @@ void drawMenu(unsigned char bitmap[],
 	//big switch case to draw bottom level pages
 	// and additional graphics on other menus
 	switch(menu) {
-		/*
 		case MENU_ASTICKCAL:
-			//left stick calibration
-			drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-			//we need to display different text depending on the cal step. We use itemIndex to represent this.
+			drawStickCal(bitmap, menu, itemIndex, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
 			break;
-			*/
+		case MENU_CSTICKCAL:
+			drawStickCal(bitmap, menu, itemIndex, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
+			break;
 		case MENU_AUTOINIT:
 			drawAutoinit(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;

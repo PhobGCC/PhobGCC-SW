@@ -183,6 +183,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		} else if(menu == MENU_TRIGGER || menu == MENU_LTRIGGER || menu == MENU_RTRIGGER) {
 			redraw = 2;
 			return;
+		} else if(menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) {
+			redraw = 2;
 		}
 	}
 }
@@ -236,13 +238,15 @@ void navigateMenu(unsigned char bitmap[],
 		static int tempInt1 = 0;
 		static int tempInt2 = 0;
 		switch(menu) {
-			/*
 			case MENU_ASTICKCAL:
 				if(presses & (APRESS | LRPRESS)) {
 					pleaseCommit = 4;
+				} else if(presses & SPRESS) {
+					pleaseCommit = 7;
+				} else if(presses & ZPRESS) {
+					pleaseCommit = 6;
 				}
 				return;
-				*/
 			case MENU_AUTOINIT:
 				if(!changeMade) {
 					tempInt1 = controls.autoInit;
