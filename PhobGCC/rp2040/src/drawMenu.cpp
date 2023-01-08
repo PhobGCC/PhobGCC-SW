@@ -1,11 +1,20 @@
 #include <cmath>
+#include <cstring>
 #include "pico/platform.h"
 #include "cvideo.h"
+#include "cvideo_variables.h"
 #include "menu.h"
 
 #include "structsAndEnums.h"
 #include "menuStrings.h"
 #include "images/cuteGhost.h"
+
+void meleeCoordClamp(const int xIn, const int yIn, float &xOut, float &yOut) {
+	const float magnitude = sqrt((float) xIn*xIn + yIn*yIn);
+	const float scale = fmin(1.0f, 80.0f/magnitude);
+	xOut = truncf(xIn*scale)/80.0f;
+	yOut = truncf(yIn*scale)/80.0f;
+}
 
 void drawStickCal(unsigned char bitmap[],
 		const unsigned int menu,
@@ -18,7 +27,60 @@ void drawStickCal(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	
+
+	if(itemIndex < 32) {
+		drawString(bitmap, 280, 20, 15, stickCal0);//measurement phase
+	} else {
+		drawString(bitmap, 280, 20, 15, stickCal1);//notch adjust phase
+	}
+
+	drawString(bitmap, 300,  50, 15, stickCal2);
+	drawInt(bitmap,    350,  50, 15, 1, fmax(0,itemIndex));//step number
+	drawString(bitmap, 380,  50, 15, "/44");
+
+	if(itemIndex == -1 || ((itemIndex < 32) && (itemIndex % 2 == 0))) {
+		drawString(bitmap, 260,  80, 15, stickCal3);
+		drawString(bitmap, 260, 100, 15, stickCal4);
+		drawString(bitmap, 260, 120, 15, stickCal5);
+	} else if(itemIndex <= 15 && (itemIndex % 2 == 1)) {
+		drawString(bitmap, 260,  80, 15, stickCal6);
+		drawString(bitmap, 260, 100, 15, stickCal4);
+		drawString(bitmap, 260, 120, 15, stickCal5);
+	} else if(itemIndex <= 31 && (itemIndex % 2 == 1)) {
+		drawString(bitmap, 260,  80, 15, stickCal6);
+		drawString(bitmap, 260, 100, 15, stickCal4);
+		drawString(bitmap, 260, 120, 15, stickCal5);
+		drawString(bitmap, 260, 140, 15, stickCal7);
+		drawString(bitmap, 260, 160, 15, stickCal8);
+	} else {
+		drawString(bitmap, 260,  80, 15, stickCal9);
+		drawString(bitmap, 260, 100, 15, stickCal10);
+		drawString(bitmap, 260, 120, 15, stickCal11);
+		drawString(bitmap, 260, 140, 15, stickCal12);
+		drawString(bitmap, 260, 160, 15, stickCal13);
+		drawString(bitmap, 260, 180, 15, stickCal14);
+		drawString(bitmap, 260, 200, 15, stickCal5);
+	}
+
+	drawString(bitmap,  30, 300, 15, stickCal15);
+	drawString(bitmap,  30, 320, 15, stickCal16);
+}
+
+void drawStickCalFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,//used for currentCalStep
+		const bool changeMade, 
+		const WhichStick whichStick,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	//erase the graph
+	for(int y=40; y<256+40; y++) {
+		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128/*256 pixels = 128 bytes*/);
+	}
+
 	int xCenter = 128;
 	int yCenter = 168;//starts at 40
 
@@ -32,27 +94,57 @@ void drawStickCal(unsigned char bitmap[],
 	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter-74, 10);
 	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 10);
 
+	//where to point the stick
 	if(whichStick == ASTICK && itemIndex > -1) {
-		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Cx-127, yCenter-btn.Cy+127, 15);
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Cx-127, yCenter-btn.Cy+127, 12);
 	} else if(whichStick == CSTICK && itemIndex > -1) {
-		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Ax-127, yCenter-btn.Ay+127, 15);
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Ax-127, yCenter-btn.Ay+127, 12);
 	} else {
 		drawLine(bitmap, xCenter, yCenter, xCenter, yCenter, 15);
 	}
-	//where to put the stick
-	drawInt(bitmap,  400,  30, 15, 1, itemIndex);
-}
 
-void drawStickCalFast(unsigned char bitmap[],
-		const unsigned int menu,
-		const int itemIndex,//used for currentCalStep
-		const bool changeMade, 
-		const WhichStick whichStick,
-		const Buttons btn,
-		const RawStick raw,
-		const ControlConfig &controls,
-		const StickParams &aStick,
-		const StickParams &cStick) {
+	//current stick position, only if currently in notch adj
+	if(itemIndex >= 32) {
+		if(whichStick == ASTICK) {
+			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+1, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+0, 15);
+			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127-1, xCenter+btn.Ax-127+0, yCenter-btn.Ay+127-1, 15);
+			drawLine(bitmap, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127-1, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127+0, 15);
+			drawLine(bitmap, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127+1, xCenter+btn.Ax-127+0, yCenter-btn.Ay+127+1, 15);
+		} else {
+			drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+0, 15);
+			drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127-1, 15);
+			drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+0, 15);
+			drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127+1, 15);
+		}
+	}
+
+	eraseCharLine(bitmap, 340);
+	eraseCharLine(bitmap, 360);
+	if(whichStick == ASTICK) {
+		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.axRaw);
+		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.ayRaw);
+		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.axUnfiltered);
+		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.ayUnfiltered);
+		const int xCoord = btn.Ax - 127;
+		const int yCoord = btn.Ay - 127;
+		float xMelee;
+		float yMelee;
+		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+	} else {
+		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.cxRaw);
+		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.cyRaw);
+		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.cxUnfiltered);
+		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.cyUnfiltered);
+		const int xCoord = btn.Cx - 127;
+		const int yCoord = btn.Cy - 127;
+		float xMelee;
+		float yMelee;
+		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+	}
 }
 
 void drawAutoinit(unsigned char bitmap[],
@@ -779,6 +871,7 @@ void drawMenuFast(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
 		const bool changeMade,
+		const int currentCalStep,
 		const Buttons btn,
 		const Buttons hardware,
 		const RawStick raw,
@@ -794,10 +887,10 @@ void drawMenuFast(unsigned char bitmap[],
 	}
 	switch(menu) {
 		case MENU_ASTICKCAL:
-			drawStickCalFast(bitmap, menu, itemIndex, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
+			drawStickCalFast(bitmap, menu, currentCalStep, changeMade, ASTICK, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_CSTICKCAL:
-			drawStickCalFast(bitmap, menu, itemIndex, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
+			drawStickCalFast(bitmap, menu, currentCalStep, changeMade, CSTICK, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_STICKDBG:
 			drawStickdbgFast(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);

@@ -10,6 +10,30 @@ const char currentSetting[] = "Current setting:";
 const char splashWelcome[] = "Welcome to PhobVision";
 const char splashPress[] = "Please press A";
 
+//For continuity, begin the character on the x coordinate of the number above the last character
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+//Guide relative to offset   =  10  50   100  150
+
+//Guide relative to offset   =  10  50   100  150  200  250  300
+const char stickCal0[]       = "Measurement Phase";
+const char stickCal1[]       = "Notch Adjust Phase";
+const char stickCal2[]       = "Step:";
+const char stickCal3[]       = "Let go of the stick";
+const char stickCal4[]       = "and press A/L/R.";
+const char stickCal5[]       = "Press Z to go back.";
+const char stickCal6[]       = "Hold stick into notch";
+const char stickCal7[]       = "If no notch exists,";
+const char stickCal8[]       = "leave stick centered.";
+const char stickCal9[]       = "You can now preview the";
+const char stickCal10[]      = "stick motion. Put the";
+const char stickCal11[]      = "stick in the indicated";
+const char stickCal12[]      = "notch and press X/Y to";
+const char stickCal13[]      = "move its output CW/CCW.";
+const char stickCal14[]      = "Press A/L/R to move on.";
+//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+const char stickCal15[]      = "Raw values:      Stick Coords:    Melee Coords:";
+const char stickCal16[]      = "(0 to 1)         (-127 to 127)    (-1 to 1)";
+
 //Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
 const char autoinit1[]       = "By default you have to press B to get the sticks";
 const char autoinit2[]       = " working, which is important for calibration on";

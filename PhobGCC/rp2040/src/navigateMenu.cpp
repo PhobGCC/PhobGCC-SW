@@ -22,6 +22,7 @@ void navigateMenu(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
+		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
 		const uint8_t increment,
@@ -32,6 +33,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
+		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &hardware,
 		ControlConfig &controls) {
@@ -170,6 +172,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				itemIndex,
 				redraw,
 				changeMade,
+				currentCalStep,
 				pleaseCommit,
 				presses,
 				changeIncrement,
@@ -182,7 +185,6 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			redraw = 2;
 		} else if(menu == MENU_TRIGGER || menu == MENU_LTRIGGER || menu == MENU_RTRIGGER) {
 			redraw = 2;
-			return;
 		} else if(menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) {
 			redraw = 2;
 		}
@@ -194,6 +196,7 @@ void navigateMenu(unsigned char bitmap[],
 		int &itemIndex,
 		uint8_t &redraw,
 		bool &changeMade,
+		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
 		const uint8_t increment,
@@ -206,13 +209,17 @@ void navigateMenu(unsigned char bitmap[],
 			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
-		//handle holding the B button as long as you're not on the splashscreen
+		//handle holding the B button as long as you're not on the splashscreen or calibrating
 		if(presses & BPRESS) {
-			presses = 0;
-			menu = MenuIndex[menu][0];
-			itemIndex = 0;
-			changeMade = false;
-			redraw = 1;
+			if((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0)) {
+				//do nothing
+			} else {
+				presses = 0;
+				menu = MenuIndex[menu][0];
+				itemIndex = 0;
+				changeMade = false;
+				redraw = 1;
+			}
 		}
 		if(MenuIndex[menu][1] <= 6) {
 			//if it's a submenu, handle a, dup, and ddown
@@ -241,6 +248,15 @@ void navigateMenu(unsigned char bitmap[],
 			case MENU_ASTICKCAL:
 				if(presses & (APRESS | LRPRESS)) {
 					pleaseCommit = 4;
+				} else if(presses & SPRESS) {
+					pleaseCommit = 7;
+				} else if(presses & ZPRESS) {
+					pleaseCommit = 6;
+				}
+				return;
+			case MENU_CSTICKCAL:
+				if(presses & (APRESS | LRPRESS)) {
+					pleaseCommit = 5;
 				} else if(presses & SPRESS) {
 					pleaseCommit = 7;
 				} else if(presses & ZPRESS) {

@@ -202,19 +202,20 @@ int videoOut(const uint8_t pin_base,
 		extSync = true;
 		_startSync = false;
 
-		gpio_put(0, !gpio_get_out_level(0));
-		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, pleaseCommit, hardware, config);
-		gpio_put(0, !gpio_get_out_level(0));
-
 		if(pleaseCommit == 255) {
 			//this is a signal from the other side to redraw after variables have changed
 			redraw = 1;
+			pleaseCommit = 0;
 		}
+
+		gpio_put(0, !gpio_get_out_level(0));
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, hardware, config);
+		gpio_put(0, !gpio_get_out_level(0));
 
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
-			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, btn, hardware, raw, config, aStick, cStick);
+			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, hardware, raw, config, aStick, cStick);
 			gpio_put(0, !gpio_get_out_level(0));
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
