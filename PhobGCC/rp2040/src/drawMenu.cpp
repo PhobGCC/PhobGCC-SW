@@ -871,6 +871,96 @@ void drawReset(unsigned char bitmap[],
 	}
 }
 
+void drawInputview(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap, 280,  50, 15, "Hardware Inputs:");
+	drawString(bitmap, 280, 160, 15, "Controller Outputs:");
+}
+
+void drawInputviewFast(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const Buttons hardware,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	//Button Inputs
+	eraseCharLine(bitmap, 70);
+	drawString(bitmap, 280,  70, 8+7*hardware.L,  "L");
+	drawInt(   bitmap, 300,  70, 8+7*hardware.L, 2, hardware.La);
+	drawString(bitmap, 420,  70, 8+7*hardware.R,  "R");
+	drawInt(   bitmap, 440,  70, 8+7*hardware.R, 2, hardware.Ra);
+	drawString(bitmap, 370, 100, 8+7*hardware.S,  "S");
+	drawString(bitmap, 300, 120, 10,              "D");
+	drawString(bitmap, 280, 120, 8+7*hardware.Dl, "L");
+	drawString(bitmap, 320, 120, 8+7*hardware.Dr, "R");
+	drawString(bitmap, 300, 100, 8+7*hardware.Du, "U");
+	drawString(bitmap, 300, 140, 8+7*hardware.Dd, "D");
+	drawString(bitmap, 440, 130, 8+7*hardware.A,  "A");
+	drawString(bitmap, 420, 135, 8+7*hardware.B,  "B");
+	drawString(bitmap, 460, 125, 8+7*hardware.X,  "X");
+	drawString(bitmap, 435, 110, 8+7*hardware.Y,  "Y");
+	drawString(bitmap, 450,  90, 8+7*hardware.Z,  "Z");
+	//Button Outputs
+	eraseCharLine(bitmap, 180);
+	drawString(bitmap, 280, 180, 8+7*btn.L,  "L");
+	drawInt(   bitmap, 300, 180, 8+7*btn.L, 2, btn.La);
+	drawString(bitmap, 420, 180, 8+7*btn.R,  "R");
+	drawInt(   bitmap, 440, 180, 8+7*btn.R, 2, btn.Ra);
+	drawString(bitmap, 370, 210, 8+7*btn.S,  "S");
+	drawString(bitmap, 300, 230, 10,         "D");
+	drawString(bitmap, 280, 230, 8+7*btn.Dl, "L");
+	drawString(bitmap, 320, 230, 8+7*btn.Dr, "R");
+	drawString(bitmap, 300, 210, 8+7*btn.Du, "U");
+	drawString(bitmap, 300, 250, 8+7*btn.Dd, "D");
+	drawString(bitmap, 440, 240, 8+7*btn.A,  "A");
+	drawString(bitmap, 420, 245, 8+7*btn.B,  "B");
+	drawString(bitmap, 460, 235, 8+7*btn.X,  "X");
+	drawString(bitmap, 435, 220, 8+7*btn.Y,  "Y");
+	drawString(bitmap, 450, 200, 8+7*btn.Z,  "Z");
+
+	//erase the graph
+	for(int y=40; y<256+40+1; y++) {
+		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+1/*256 pixels = 128 bytes*/);
+	}
+
+	int xCenter = 128;//starts at 1
+	int yCenter = 168;//starts at 40
+
+	//octagon
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter+74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+100, yCenter+  0, xCenter+74, yCenter+74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter+74, yCenter+74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter+100, xCenter-74, yCenter+74, 10);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter+74, 10);
+	drawLine(bitmap, xCenter-100, yCenter+  0, xCenter-74, yCenter-74, 10);
+	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 10);
+
+	//current left stick position
+	drawLine(bitmap, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127+3, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127-2, 15);
+	drawLine(bitmap, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127-3, xCenter+btn.Ax-127-2, yCenter-btn.Ay+127-3, 15);
+	drawLine(bitmap, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127-3, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127+2, 15);
+	drawLine(bitmap, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127+3, xCenter+btn.Ax-127+2, yCenter-btn.Ay+127+3, 15);
+
+	//current c-stick position
+	drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+0, 15);
+	drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127-1, 15);
+	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+0, 15);
+	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127+1, 15);
+}
+
 void drawMenuFast(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -903,6 +993,9 @@ void drawMenuFast(unsigned char bitmap[],
 		case MENU_LTRIGGER:
 		case MENU_RTRIGGER:
 			drawTriggerFast(bitmap, menu, itemIndex, changeMade, btn, hardware, raw, controls, aStick, cStick);
+			break;
+		case MENU_INPUTVIEW:
+			drawInputviewFast(bitmap, menu, itemIndex, changeMade, btn, hardware, raw, controls, aStick, cStick);
 			break;
 		default:
 			break;
@@ -997,6 +1090,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_RESET:
 			drawReset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_INPUTVIEW:
+			drawInputview(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		default:
 			//placeholder for screens that don't have anything defined

@@ -187,6 +187,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			redraw = 2;
 		} else if(menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) {
 			redraw = 2;
+		} else if(menu == MENU_INPUTVIEW) {
+			redraw = 2;
 		}
 	}
 }

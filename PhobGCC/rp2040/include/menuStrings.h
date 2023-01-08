@@ -31,7 +31,7 @@ const char stickCal12[]      = "notch and press X/Y to";
 const char stickCal13[]      = "move its output CW/CCW.";
 const char stickCal14[]      = "Press A/L/R to move on.";
 //Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
-const char stickCal15[]      = "Raw values:      Stick Coords:    Melee Coords:";
+const char stickCal15[]      = "Raw Values:      Stick Coords:    Melee Coords:";
 const char stickCal16[]      = "(0 to 1)         (-127 to 127)    (-1 to 1)";
 
 //Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
