@@ -41,7 +41,9 @@ void drawStickCal(unsigned char bitmap[],
 	if(itemIndex == -1 || ((itemIndex < 32) && (itemIndex % 2 == 0))) {
 		drawString(bitmap, 260,  80, 15, stickCal3);
 		drawString(bitmap, 260, 100, 15, stickCal4);
-		drawString(bitmap, 260, 120, 15, stickCal5);
+		if(itemIndex > 0) {
+			drawString(bitmap, 260, 120, 15, stickCal5);//z to go back
+		}
 	} else if(itemIndex <= 15 && (itemIndex % 2 == 1)) {
 		drawString(bitmap, 260,  80, 15, stickCal6);
 		drawString(bitmap, 260, 100, 15, stickCal4);
@@ -59,7 +61,9 @@ void drawStickCal(unsigned char bitmap[],
 		drawString(bitmap, 260, 140, 15, stickCal12);
 		drawString(bitmap, 260, 160, 15, stickCal13);
 		drawString(bitmap, 260, 180, 15, stickCal14);
-		drawString(bitmap, 260, 200, 15, stickCal5);
+		if(itemIndex > 32) {
+			drawString(bitmap, 260, 200, 15, stickCal5);//z to go back
+		}
 	}
 
 	drawString(bitmap,  30, 300, 15, stickCal15);
@@ -104,7 +108,7 @@ void drawStickCalFast(unsigned char bitmap[],
 	}
 
 	//current stick position, only if currently in notch adj
-	if(itemIndex >= 32) {
+	if(itemIndex >= 32 || itemIndex == -1) {
 		if(whichStick == ASTICK) {
 			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+1, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+0, 15);
 			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127-1, xCenter+btn.Ax-127+0, yCenter-btn.Ay+127-1, 15);
