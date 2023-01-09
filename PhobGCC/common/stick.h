@@ -165,10 +165,10 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*yOut = stickParams.affineCoeffs[region][2]*xIn + stickParams.affineCoeffs[region][3]*yIn;
 
 	if(currentCalStep == -1) {
-		if((abs(*xOut)<15) && (abs(*yOut)>80)){
+		if((abs(*xOut)<6) && (abs(*yOut)>80)){
 			*xOut = 0;
 		}
-		if((abs(*yOut)<15) && (abs(*xOut)>80)){
+		if((abs(*yOut)<6) && (abs(*xOut)>80)){
 			*yOut = 0;
 		}
 
