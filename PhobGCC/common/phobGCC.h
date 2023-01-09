@@ -17,7 +17,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
 //#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
@@ -26,8 +26,8 @@ using std::max;
 #include "stick.h"
 #include "../extras/extras.h"
 
-//#define BUILD_RELEASE
-#define BUILD_DEV
+#define BUILD_RELEASE
+//#define BUILD_DEV
 
 //This is just an integer.
 #define SW_VERSION 28
@@ -1448,9 +1448,187 @@ void copyButtons(const Buttons &src, Buttons &dest) {
 	dest.Ra = src.Ra;
 }
 
+void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams) {
+	currentCalStep = _noOfCalibrationPoints;
+	//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
+	if(whichStick == CSTICK){
+		//get the calibration points collected during the last stick calibration
+		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
+		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+	} else if(whichStick == ASTICK){
+		//get the calibration points collected during the last stick calibration
+		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
+		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+	}
+}
+
+void calibrationUndo(int &currentCalStep, const WhichStick whichStick, NotchStatus notchStatus[]) {
+	if(currentCalStep % 2 == 0 && currentCalStep < 32 && currentCalStep != 0 ) {
+		//If it's measuring zero, go back to the previous zero
+		currentCalStep -= 2;
+	} else if(currentCalStep % 2 == 1 && currentCalStep < 32 && currentCalStep != 0 ) {
+		//If it's measuring a notch, go back to the zero before the previous notch
+		currentCalStep -= 3;
+		currentCalStep = max(currentCalStep, 0);
+	} else if(currentCalStep > 32) {
+		//We can go directly between notches when adjusting notches
+		currentCalStep --;
+	}
+	if(whichStick == CSTICK){
+		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			//skip to the next valid notch
+			currentCalStep--;
+			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		}
+	} else if(whichStick == ASTICK){
+		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			//skip to the next valid notch
+			currentCalStep--;
+			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		}
+	}
+}
+
+void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], bool &undoCal, float notchAngles[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams) {
+	if(whichStick == CSTICK){
+		if(currentCalStep < _noOfCalibrationPoints){//still collecting points
+			readADCScale(_ADCScale, _ADCScaleFactor);
+			float X = 0;
+			float Y = 0;
+			for(int i=0; i<128; i++) {
+				X += readCx(_pinList)/4096.0*_ADCScale;
+				Y += readCy(_pinList)/4096.0*_ADCScale;
+			}
+			X /= 128.0;
+			Y /= 128.0;
+			insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
+		}
+		currentCalStep ++;
+		if(currentCalStep >= 2 && currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
+			undoCal = true;
+		} else {
+			undoCal = false;
+		}
+		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
+			//bring all notches into a legal range; this helps recover from freakout situations
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+		}
+		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
+			//skip to the next valid notch
+			currentCalStep++;
+			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		}
+		if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
+#ifdef ARDUINO
+			Serial.println("finished adjusting notches for the C stick");
+#endif //ARDUINO
+			setPointsSetting(tempCalPointsX, whichStick, XAXIS);
+			setPointsSetting(tempCalPointsY, whichStick, YAXIS);
+			setNotchAnglesSetting(notchAngles, whichStick);
+			controls.autoInit = 0;
+			setAutoInitSetting(controls.autoInit);
+#ifdef BATCHSETTINGS
+			commitSettings();
+#endif //BATCHSETTINGS
+#ifdef ARDUINO
+			Serial.println("calibration points stored in EEPROM");
+#endif //ARDUINO
+			float cleanedPointsX[_noOfNotches+1];
+			float cleanedPointsY[_noOfNotches+1];
+			float notchPointsX[_noOfNotches+1];
+			float notchPointsY[_noOfNotches+1];
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+#ifdef ARDUINO
+			Serial.println("calibration points cleaned");
+#endif //ARDUINO
+			linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
+#ifdef ARDUINO
+			Serial.println("C stick linearized");
+#endif //ARDUINO
+			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
+			currentCalStep = -1;
+		}
+	}
+	else if (whichStick == ASTICK){
+#ifdef ARDUINO
+		Serial.println("Current step:");
+		Serial.println(currentCalStep);
+#endif //ARDUINO
+		if(currentCalStep < _noOfCalibrationPoints){//still collecting points
+			readADCScale(_ADCScale, _ADCScaleFactor);
+			float X = 0;
+			float Y = 0;
+			for(int i=0; i<128; i++) {
+				X += readAx(_pinList)/4096.0*_ADCScale;
+				Y += readAy(_pinList)/4096.0*_ADCScale;
+			}
+			X /= 128.0;
+			Y /= 128.0;
+			insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
+		}
+		currentCalStep ++;
+		if(currentCalStep >= 2 && currentCalStep != _noOfCalibrationPoints) {//don't undo at the beginning of collection or notch adjust
+			undoCal = true;
+		} else {
+			undoCal = false;
+		}
+		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
+			//bring all notches into a legal range; this helps recover from freakout situations
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+		}
+		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
+			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
+			//skip to the next valid notch
+			currentCalStep++;
+			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
+		}
+		if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
+#ifdef ARDUINO
+			Serial.println("finished adjusting notches for the A stick");
+#endif //ARDUINO
+			setPointsSetting(tempCalPointsX, whichStick, XAXIS);
+			setPointsSetting(tempCalPointsY, whichStick, YAXIS);
+			setNotchAnglesSetting(notchAngles, whichStick);
+			controls.autoInit = 0;
+			setAutoInitSetting(controls.autoInit);
+#ifdef BATCHSETTINGS
+			commitSettings();
+#endif //BATCHSETTINGS
+#ifdef ARDUINO
+			Serial.println("calibration points stored in EEPROM");
+#endif //ARDUINO
+			float cleanedPointsX[_noOfNotches+1];
+			float cleanedPointsY[_noOfNotches+1];
+			float notchPointsX[_noOfNotches+1];
+			float notchPointsY[_noOfNotches+1];
+			cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+#ifdef ARDUINO
+			Serial.println("calibration points cleaned");
+#endif //ARDUINO
+			linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
+#ifdef ARDUINO
+			Serial.println("A stick linearized");
+#endif //ARDUINO
+			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
+			currentCalStep = -1;
+		}
+	}
+}
+
 void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, hardware);
+	hardware.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1);
+	hardware.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1);
 
 	//Copy hardware buttons into a temp
 	Buttons tempBtn;
@@ -1466,16 +1644,98 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//when a trigger is in lockout due to the other being mode 5,
 	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
 	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4;
-	const bool lockoutR = controls.lConfig == 4;
+	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
+	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
 
 	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
 	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
 	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
-	float triggerScaleL = (0.0112 * controls.rTriggerOffset) + 0.4494;
-	float triggerScaleR = (0.0112 * controls.rTriggerOffset) + 0.4494;
+	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
+	float triggerScaleR = (0.0112f * controls.rTriggerOffset) + 0.4494f;
+
+	switch(controls.lConfig) {
+		case 0: //Default Trigger state
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			break;
+		case 1: //Digital Only Trigger state
+			tempBtn.La = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			tempBtn.L  = (uint8_t) 0;
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+			break;
+		case 3: //Trigger Plug Emulation state
+			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			break;
+		case 4: //Digital => Analog Value state
+			if(tempBtn.L) {
+				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
+			} else {
+				tempBtn.La = (uint8_t) 0;
+			}
+			tempBtn.L = (uint8_t) 0;
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(tempBtn.L) {
+				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
+			} else {
+				tempBtn.La = (uint8_t) 0;
+			}
+			break;
+		case 6: //Scales Analog Trigger Values
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
+			break;
+		default:
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
+	}
+	if(lockoutL){
+		tempBtn.L  = (uint8_t) 0;
+		tempBtn.La = (uint8_t) 0;
+	}
+
+	switch(controls.rConfig) {
+		case 0: //Default Trigger state
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			break;
+		case 1: //Digital Only Trigger state
+			tempBtn.Ra = (uint8_t) 0;
+			break;
+		case 2: //Analog Only Trigger state
+			tempBtn.R  = (uint8_t) 0;
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+			break;
+		case 3: //Trigger Plug Emulation state
+			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			break;
+		case 4: //Digital => Analog Value state
+			if(tempBtn.R) {
+				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
+			} else {
+				tempBtn.Ra = (uint8_t) 0;
+			}
+			tempBtn.R = (uint8_t) 0;
+			break;
+		case 5: //Digital => Analog Value + Digital state
+			if(tempBtn.R) {
+				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
+			} else {
+				tempBtn.Ra = (uint8_t) 0;
+			}
+			break;
+		case 6: //Scales Analog Trigger Values
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
+			break;
+		default:
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
+	}
+	if(lockoutR){
+		tempBtn.R  = (uint8_t) 0;
+		tempBtn.Ra = (uint8_t) 0;
+	}
+
+	//Apply any further button remapping to tempBtn here
 
 	//Here we make sure LRAS actually operate.
 	if(hardware.L && hardware.R && hardware.A && hardware.S) {
@@ -1483,148 +1743,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		tempBtn.R = (uint8_t) (1);
 		tempBtn.A = (uint8_t) (1);
 		tempBtn.S = (uint8_t) (1);
-	} else {
-		switch(controls.lConfig) {
-			case 0: //Default Trigger state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				}
-				break;
-			case 1: //Digital Only Trigger state
-				tempBtn.La = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-					if (tempBtn.La > ((uint8_t) controls.lTriggerOffset)) {
-						tempBtn.La = (uint8_t) controls.lTriggerOffset;
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(tempBtn.L) {
-					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
-				} else {
-					tempBtn.La = (uint8_t) 0;
-				}
-				tempBtn.L = (uint8_t) 0;
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(tempBtn.L) {
-					tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
-				} else {
-					tempBtn.La = (uint8_t) 0;
-				}
-				break;
-			case 6: //Scales Analog Trigger Values
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
-				}
-				break;
-			default:
-				if(lockoutL){
-					tempBtn.L  = (uint8_t) 0;
-					tempBtn.La = (uint8_t) 0;
-				} else {
-					tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-				}
-		}
-
-		switch(controls.rConfig) {
-			case 0: //Default Trigger state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				}
-				break;
-			case 1: //Digital Only Trigger state
-				tempBtn.Ra = (uint8_t) 0;
-				break;
-			case 2: //Analog Only Trigger state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				}
-				break;
-			case 3: //Trigger Plug Emulation state
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-					if (tempBtn.Ra > ((uint8_t) controls.rTriggerOffset)) {
-						tempBtn.Ra = (uint8_t) controls.rTriggerOffset;
-					}
-				}
-				break;
-			case 4: //Digital => Analog Value state
-				if(tempBtn.R) {
-					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
-				} else {
-					tempBtn.Ra = (uint8_t) 0;
-				}
-				tempBtn.R = (uint8_t) 0;
-				break;
-			case 5: //Digital => Analog Value + Digital state
-				if(tempBtn.R) {
-					tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
-				} else {
-					tempBtn.Ra = (uint8_t) 0;
-				}
-				break;
-			case 6: //Scales Analog Trigger Values
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
-				}
-				break;
-			default:
-				if(lockoutR){
-					tempBtn.R  = (uint8_t) 0;
-					tempBtn.Ra = (uint8_t) 0;
-				} else {
-					tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-				}
-		}
+		tempBtn.La = (uint8_t) (255);
+		tempBtn.Ra = (uint8_t) (255);
 	}
-	//Implement a small trigger deadzone of 3 units so that Dolphin initializes properly.
-	//If we don't, then we can't trust that the waveshaping values display accurately
-	// or that Mode 4 will stop at the right value on Dolphin.
-	//Or on Smash Ult, maybe? No clue.
-	if(tempBtn.La <= 3 * triggerScaleL){
-		tempBtn.La = (uint8_t) 0;
-	}
-	if(tempBtn.Ra <= 3 * triggerScaleR){
-		tempBtn.Ra = (uint8_t) 0;
-	}
-
-	//Apply any further button remapping to tempBtn here
-
 	//Copy temp buttons (including analog triggers) back to btn
 	copyButtons(tempBtn, btn);
 
@@ -1777,7 +1898,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.S && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle)
+		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
@@ -1803,7 +1924,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.S && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle)
+		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
@@ -1869,55 +1990,17 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		}
 	}
 
-
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
-		currentCalStep = _noOfCalibrationPoints;
-		//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
-		if(whichStick == CSTICK){
-			//get the calibration points collected during the last stick calibration
-			getPointsSetting(tempCalPointsX, whichStick, XAXIS);
-			getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
-		} else if(whichStick == ASTICK){
-			//get the calibration points collected during the last stick calibration
-			getPointsSetting(tempCalPointsX, whichStick, XAXIS);
-			getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
-		}
+		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams);
 	}
+
 	//Undo Calibration using Z-button
 	static bool undoCal = false;
 	static bool undoCalPressed = false;
 	if(hardware.Z && undoCal && !undoCalPressed) {
 		undoCalPressed = true;
-		if(currentCalStep % 2 == 0 && currentCalStep < 32 && currentCalStep != 0 ) {
-			//If it's measuring zero, go back to the previous zero
-			currentCalStep --;
-			currentCalStep --;
-		} else if(currentCalStep % 2 == 1 && currentCalStep < 32 && currentCalStep != 0 ) {
-			//If it's measuring a notch, go back to the zero before the previous notch
-			currentCalStep -= 3;
-			currentCalStep = max(currentCalStep, 0);
-		} else if(currentCalStep > 32) {
-			//We can go directly between notches when adjusting notches
-			currentCalStep --;
-		}
-		if(whichStick == CSTICK){
-			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
-				//skip to the next valid notch
-				currentCalStep--;
-				notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			}
-		} else if(whichStick == ASTICK){
-			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
-				//skip to the next valid notch
-				currentCalStep--;
-				notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			}
-		}
+		calibrationUndo(currentCalStep, whichStick, notchStatus);
 	} else if(!hardware.Z) {
 		undoCalPressed = false;
 	}
@@ -1933,129 +2016,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	static bool advanceCalPressed = false;
 	if(advanceCalAccumulator > 0.75 && !advanceCalPressed){
 		advanceCalPressed = true;
-		if (whichStick == CSTICK){
-			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				readADCScale(_ADCScale, _ADCScaleFactor);
-				float X = 0;
-				float Y = 0;
-				for(int i=0; i<128; i++) {
-					X += readCx(_pinList)/4096.0*_ADCScale;
-					Y += readCy(_pinList)/4096.0*_ADCScale;
-				}
-				X /= 128.0;
-				Y /= 128.0;
-				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
-			}
-			currentCalStep ++;
-			if(currentCalStep >= 2 && currentCalStep != _noOfNotches*2) {//don't undo at the beginning of collection or notch adjust
-				undoCal = true;
-			} else {
-				undoCal = false;
-			}
-			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
-				applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
-			}
-			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
-				//skip to the next valid notch
-				currentCalStep++;
-				notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			}
-			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
-#ifdef ARDUINO
-				Serial.println("finished adjusting notches for the C stick");
-#endif //ARDUINO
-				setPointsSetting(tempCalPointsX, whichStick, XAXIS);
-				setPointsSetting(tempCalPointsY, whichStick, YAXIS);
-				setNotchAnglesSetting(notchAngles, whichStick);
-				controls.autoInit = 0;
-				setAutoInitSetting(controls.autoInit);
-#ifdef BATCHSETTINGS
-				commitSettings();
-#endif //BATCHSETTINGS
-#ifdef ARDUINO
-				Serial.println("calibration points stored in EEPROM");
-#endif //ARDUINO
-				float cleanedPointsX[_noOfNotches+1];
-				float cleanedPointsY[_noOfNotches+1];
-				float notchPointsX[_noOfNotches+1];
-				float notchPointsY[_noOfNotches+1];
-				cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-				Serial.println("calibration points cleaned");
-#endif //ARDUINO
-				linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
-#ifdef ARDUINO
-				Serial.println("C stick linearized");
-#endif //ARDUINO
-				notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
-				currentCalStep = -1;
-				advanceCal = false;
-			}
-		}
-		else if (whichStick == ASTICK){
-#ifdef ARDUINO
-			Serial.println("Current step:");
-			Serial.println(currentCalStep);
-#endif //ARDUINO
-			if(currentCalStep < _noOfCalibrationPoints){//still collecting points
-				readADCScale(_ADCScale, _ADCScaleFactor);
-				float X = 0;
-				float Y = 0;
-				for(int i=0; i<128; i++) {
-					X += readAx(_pinList)/4096.0*_ADCScale;
-					Y += readAy(_pinList)/4096.0*_ADCScale;
-				}
-				X /= 128.0;
-				Y /= 128.0;
-				insertCalPoints(whichStick, currentCalStep, tempCalPointsX, tempCalPointsY, _pinList, X, Y);
-			}
-			currentCalStep ++;
-			if(currentCalStep >= 2 && currentCalStep != _noOfCalibrationPoints) {//don't undo at the beginning of collection or notch adjust
-				undoCal = true;
-			} else {
-				undoCal = false;
-			}
-			if(currentCalStep == _noOfCalibrationPoints){//done collecting points
-				applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
-			}
-			int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
-				//skip to the next valid notch
-				currentCalStep++;
-				notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
-			}
-			if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
-#ifdef ARDUINO
-				Serial.println("finished adjusting notches for the A stick");
-#endif //ARDUINO
-				setPointsSetting(tempCalPointsX, whichStick, XAXIS);
-				setPointsSetting(tempCalPointsY, whichStick, YAXIS);
-				setNotchAnglesSetting(notchAngles, whichStick);
-				controls.autoInit = 0;
-				setAutoInitSetting(controls.autoInit);
-#ifdef BATCHSETTINGS
-				commitSettings();
-#endif //BATCHSETTINGS
-#ifdef ARDUINO
-				Serial.println("calibration points stored in EEPROM");
-#endif //ARDUINO
-				float cleanedPointsX[_noOfNotches+1];
-				float cleanedPointsY[_noOfNotches+1];
-				float notchPointsX[_noOfNotches+1];
-				float notchPointsY[_noOfNotches+1];
-				cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-				Serial.println("calibration points cleaned");
-#endif //ARDUINO
-				linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
-#ifdef ARDUINO
-				Serial.println("A stick linearized");
-#endif //ARDUINO
-				notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
-				currentCalStep = -1;
-				advanceCal = false;
-			}
+		calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
+		if(currentCalStep == -1) {
+			advanceCal = false;
 		}
 	} else if(advanceCalAccumulator <= 0.25) {
 		advanceCalPressed = false;
@@ -2069,8 +2032,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 
 	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
 	//This is 2^32 microseconds
-	static unsigned long lastMicros = micros();
-	static unsigned long adcDelta = 0;
+	static uint32_t lastMicros = micros();
+	static uint32_t adcDelta = 0;
 	//We increment lastMicros by 1000 each timestep so that we can always try to catch up
 	// to the right timestep instead of always being late
 	//If the timestep goes past 2^32, then we subtract 2^32.
@@ -2081,13 +2044,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
 	//This is for denoising and making sure the loop runs at 1000 Hz
 	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
-	unsigned int adcCount = 0;
-	unsigned int aXSum = 0;
-	unsigned int aYSum = 0;
-	unsigned int cXSum = 0;
-	unsigned int cYSum = 0;
-	long beforeMicros = micros();
-	long afterMicros;
+	uint32_t adcCount = 0;
+	uint32_t aXSum = 0;
+	uint32_t aYSum = 0;
+	uint32_t cXSum = 0;
+	uint32_t cYSum = 0;
+	uint32_t beforeMicros = micros();
+	uint32_t afterMicros;
 	do{
 		adcCount++;
 		aXSum += readAx(pin);
@@ -2095,13 +2058,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		cXSum += readCx(pin);
 		cYSum += readCy(pin);
 		afterMicros = micros();
-		adcDelta = min(10000, max(0, afterMicros-beforeMicros));
+		adcDelta = afterMicros-beforeMicros;
 		beforeMicros = afterMicros;
 	}
 	while((afterMicros-lastMicros < 1000 - adcDelta) || (afterMicros-lastMicros > 100000000));
 
 	//Then we spinlock to get the 1 kHz more exactly.
-	while((afterMicros-lastMicros < 1000) || (afterMicros-lastMicros > 100000000)) {
+	while(afterMicros-lastMicros < 1000) {
 		afterMicros = micros();
 	}
 
@@ -2115,37 +2078,23 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float aStickY = readAy(pin)/4096.0;
 	float cStickX = readCx(pin)/4096.0;
 	float cStickY = readCy(pin)/4096.0;
-	//float aStickX = 0.5;
-	//float aStickY = 0.5;
-	//float cStickX = 0.5;
-	//float cStickY = 0.5;
+	//note: this actually results in about 0.5 ms delay for the analog sticks
 
 	if(!runSynced) {
-		unsigned long thisMicros = micros();
-		if(thisMicros >= (2^32)) {
-			thisMicros -= (2^32);
-		}
-		while((thisMicros-lastMicros < 1000) || (thisMicros-lastMicros > 100000000)) {
+		uint32_t thisMicros = micros();
+		while(thisMicros-lastMicros < 1000) {
 			thisMicros = micros();
-			if(thisMicros >= (2^32)) {
-				thisMicros -= (2^32);
-			}
 		}
 	}
 #endif //CLEANADC
+	dT = (micros()-lastMicros)/1000;
 	if(!runSynced) {
-		dT = 1;
 		lastMicros += 1000;
 	} else {
-		//we make dT variable so that we know how long it actually took to cycle
-		dT = max((uint64_t) 0, (micros()-lastMicros)/1000);
 		lastMicros = micros();
 	}
-	if(micros() > lastMicros+1000) {
+	if(micros() - lastMicros > 1500) { //handle the case that it was synced and now isn't
 		lastMicros = micros();
-	}
-	if(lastMicros >= (2^32)) {
-		lastMicros -= (2^32);
 	}
 	_raw.axRaw = aStickX;
 	_raw.ayRaw = aStickY;

@@ -7,10 +7,6 @@
 #include "structsAndEnums.h"
 #include "filter.h"
 
-//ADC reference values for Phob 1.0; may need to be moved into hardware-specific section
-float _ADCScale = 1;
-float _ADCScaleFactor = 1;
-
 //TODO: either put these const globals in varables.h or make them #defines
 //origin values, useful for writing readable stick positions
 const int _intOrigin = 127;
@@ -67,9 +63,6 @@ const float _notchAngleDefaults[_noOfNotches] =           {0,           M_PI/8.0
 const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE, CARDINAL,    TERT_ACTIVE, SECONDARY,   TERT_ACTIVE};
 //                                                         up right     up left      down left    down right   notch 1      notch 2      notch 3      notch 4      notch 5      notch 6      notch 7      notch 8
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
-
-StickParams _aStickParams;
-StickParams _cStickParams;
 
 float linearize(const float point, const float coefficients[]){
 	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
@@ -355,50 +348,10 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 #endif //ARDUINO
 };
 
-//adjustNotch is used to adjust the angles of the notch.
-//It is run after calibration points are collected.
 //The notch adjustment is limited in order to control
 //1. displacement of points (max 12 units out of +/- 100, for now)
 //2. stretching of coordinates (max +/- 30%)
-void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[], Buttons &btn, Buttons &hardware){
-	//set up variables based on current button state
-	bool CW = hardware.X;
-	bool CCW = hardware.Y;
-	bool reset = btn.B;
-
-	//This gets run after all the calibration points are collected
-	//So we subtract the number of calibration points and switch over to notch adjust order
-	const int notchIndex = _notchAdjOrder[currentStepIn-_noOfCalibrationPoints];
-
-	//display the desired value on the other stick
-	float x = 0;
-	float y = 0;
-	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
-	if(calibratingAStick){
-		btn.Cx = (uint8_t) (x + _floatOrigin);
-		btn.Cy = (uint8_t) (y + _floatOrigin);
-	}else{
-		btn.Ax = (uint8_t) (x + _floatOrigin);
-		btn.Ay = (uint8_t) (y + _floatOrigin);
-	}
-
-	//do nothing if it's not a valid notch to calibrate
-	//it'll skip them anyway but just in case
-	if(notchStatus[notchIndex] == TERT_INACTIVE){
-		return;
-	}
-
-	//Adjust notch angle according to which button is pressed (do nothing for both buttons)
-	if(CW && !CCW){
-		notchAngles[notchIndex] -= loopDelta*0.000075;
-	}else if(CCW && !CW){
-		notchAngles[notchIndex] += loopDelta*0.000075;
-	}else if(reset){
-		notchAngles[notchIndex] = measuredNotchAngles[notchIndex];
-	}else{
-		return;
-	}
-
+void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[]){
 	//Limit the notch adjustment
 
 	//Start out with the limits being 12 units around the circle at the gate
@@ -470,6 +423,59 @@ void adjustNotch(int currentStepIn, float loopDelta, bool calibratingAStick, flo
 	//Apply the limits
 	notchAngles[notchIndex] = fmax(notchAngles[notchIndex], lowerLimit);
 	notchAngles[notchIndex] = fmin(notchAngles[notchIndex], upperLimit);
+}
+
+void legalizeNotches(const int currentStepIn, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[]){
+	for(int i=currentStepIn; i < 44; i++) {
+		const int notchIndex = _notchAdjOrder[i-_noOfCalibrationPoints];
+		legalizeNotch(notchIndex, measuredNotchAngles, notchAngles, notchStatus);
+	}
+}
+
+//adjustNotch is used to adjust the angles of the notch.
+//It is run after calibration points are collected.
+//It runs a legalization routine to limit subsequent notches
+void adjustNotch(const int currentStepIn, const float loopDelta, const WhichStick whichStick, float measuredNotchAngles[], float notchAngles[], NotchStatus notchStatus[], Buttons &btn, Buttons &hardware){
+	//set up variables based on current button state
+	bool CW = hardware.X;
+	bool CCW = hardware.Y;
+	bool reset = btn.B;
+
+	//This gets run after all the calibration points are collected
+	//So we subtract the number of calibration points and switch over to notch adjust order
+	const int notchIndex = _notchAdjOrder[currentStepIn-_noOfCalibrationPoints];
+
+	//display the desired value on the other stick
+	float x = 0;
+	float y = 0;
+	calcStickValues(measuredNotchAngles[notchIndex], &x, &y);
+	if(whichStick == ASTICK){
+		btn.Cx = (uint8_t) (x + _floatOrigin);
+		btn.Cy = (uint8_t) (y + _floatOrigin);
+	} else {
+		btn.Ax = (uint8_t) (x + _floatOrigin);
+		btn.Ay = (uint8_t) (y + _floatOrigin);
+	}
+
+	//do nothing if it's not a valid notch to calibrate
+	//it'll skip them anyway but just in case
+	if(notchStatus[notchIndex] == TERT_INACTIVE){
+		return;
+	}
+
+	//Adjust notch angle according to which button is pressed (do nothing for both buttons)
+	if(CW && !CCW){
+		notchAngles[notchIndex] -= loopDelta*0.000075;
+	} else if(CCW && !CW){
+		notchAngles[notchIndex] += loopDelta*0.000075;
+	} else if(reset){
+		notchAngles[notchIndex] = measuredNotchAngles[notchIndex];
+	} else {
+		return;
+	}
+
+	legalizeNotches(currentStepIn, measuredNotchAngles, notchAngles, notchStatus);
+	//legalizeNotch(notchIndex, measuredNotchAngles, notchAngles, notchStatus);
 };
 
 //displayNotch is used in lieu of adjustNotch when doing basic calibration

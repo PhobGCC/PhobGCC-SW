@@ -76,8 +76,8 @@ void loop() {
 	if(currentCalStep >= 0){
 		if(whichStick == ASTICK){
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(currentCalStep, _dT, true, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
-				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
+				adjustNotch(currentCalStep, _dT, ASTICK, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+				if(_hardware.Y || _hardware.X || _hardware.B){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					float cleanedPointsX[_noOfNotches+1];
 					float cleanedPointsY[_noOfNotches+1];
@@ -96,8 +96,8 @@ void loop() {
 		}
 		else{//WHICHSTICK == CSTICK
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
-				adjustNotch(currentCalStep, _dT, false, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
-				if(_hardware.Y || _hardware.X || (_btn.B)){//only run this if the notch was adjusted
+				adjustNotch(currentCalStep, _dT, CSTICK, measuredNotchAngles, notchAngles, notchStatus, _btn, _hardware);
+				if(_hardware.Y || _hardware.X || _hardware.B){//only run this if the notch was adjusted
 					//clean full cal points again, feeding updated angles in
 					float cleanedPointsX[_noOfNotches+1];
 					float cleanedPointsY[_noOfNotches+1];

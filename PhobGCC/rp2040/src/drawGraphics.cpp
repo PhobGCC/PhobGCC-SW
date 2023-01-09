@@ -2,7 +2,9 @@
 #include <cmath>
 #include <cstring>
 #include <string>
+#include "pico/platform.h"
 #include "cvideo.h"
+#include "cvideo_variables.h"
 #include "images/font.h"
 
 //Misc graphics drawing routines go here.
@@ -290,4 +292,15 @@ void drawInt2x(unsigned char bitmap[],
 	const char* numberChar = numberString.c_str();
 
 	drawString2x(bitmap, x0 + offset, y0, color, numberChar);
+}
+
+void eraseCharLine(unsigned char bitmap[],
+		const uint16_t y0) {
+	memset(bitmap + y0*VWIDTHBYTE, BLACK2, 15*VWIDTHBYTE);
+}
+
+void eraseRows(unsigned char bitmap[],
+		const uint16_t y0,
+		const uint16_t rows) {
+	memset(bitmap + y0*VWIDTHBYTE, BLACK2, rows*VWIDTHBYTE);
 }

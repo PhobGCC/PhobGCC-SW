@@ -47,7 +47,7 @@ struct Storage {
 }
 }
 
-//the code must commit settings after making any change or eles it won't get written
+//the code must commit settings after making any change or else it won't get written
 void commitSettings(const bool noLock = false);
 
 JumpConfig getJumpSetting();
@@ -77,17 +77,17 @@ void setXSnapbackSetting(const int);
 int  getYSnapbackSetting();
 void setYSnapbackSetting(const int);
 
-int getXSmoothingSetting();
-void  setXSmoothingSetting(const int);
+int  getXSmoothingSetting();
+void setXSmoothingSetting(const int);
 
-int getYSmoothingSetting();
-void  setYSmoothingSetting(const int);
+int  getYSmoothingSetting();
+void setYSmoothingSetting(const int);
 
-int getCxSmoothingSetting();
-void  setCxSmoothingSetting(const int);
+int  getCxSmoothingSetting();
+void setCxSmoothingSetting(const int);
 
-int getCySmoothingSetting();
-void  setCySmoothingSetting(const int);
+int  getCySmoothingSetting();
+void setCySmoothingSetting(const int);
 
 int  getRumbleSetting();
 void setRumbleSetting(const int);

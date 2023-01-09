@@ -144,7 +144,8 @@ void __time_critical_func(enterMode)(const int dataPin,
 			//get the third byte; we do this interleaved with work that must be done
             buffer[0] = pio_sm_get_blocking(pio, 0);
 
-			sleep_us(4);//add delay so we don't overwrite the stop bit
+			//sleep_us(4);//add delay so we don't overwrite the stop bit
+			sleep_us(7);//add delay so we don't overwrite the stop bit
 
             pio_sm_set_enabled(pio, 0, false);
             pio_sm_init(pio, 0, offset+joybus_offset_outmode, &config);

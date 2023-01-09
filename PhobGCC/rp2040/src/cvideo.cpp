@@ -101,7 +101,8 @@ const int   VERT_bitmap    = VHEIGHT/2;
 /*-------------------------------------------------------------------*/
 
 const float PIO_clkdot = 1.0;        	// PIO instructions per dot
-const float PIO_sysclk = 125000000.0;	// default Pico system clock
+//const float PIO_sysclk = 125000000.0;	// default Pico system clock
+const float PIO_sysclk = 250000000.0;	// default Pico system clock
 const float PIO_clkdiv = PIO_sysclk / VIDEO_horizontal_freq / PIO_clkdot / HORIZ_dots;
 
 #define state_machine 0     // The PIO state machine to use
@@ -136,7 +137,10 @@ int videoOut(const uint8_t pin_base,
 		ControlConfig &config,
 		StickParams &aStick,
 		StickParams &cStick,
-		volatile bool &extSync) {
+		volatile bool &extSync,
+		volatile uint8_t &pleaseCommit,
+		int &currentCalStep,
+		const int version) {
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -187,7 +191,8 @@ int videoOut(const uint8_t pin_base,
 
 	unsigned int menuIndex = 0;;
 	int itemIndex = 0;;
-	bool redraw = true;//start off true
+	uint8_t redraw = 1;//start off with a normal redraw
+	bool changeMade = false;
 
 	while (true) {
 		//tight_loop_contents();
@@ -197,11 +202,27 @@ int videoOut(const uint8_t pin_base,
 		extSync = true;
 		_startSync = false;
 
-		navigateMenu(_bitmap, menuIndex, itemIndex, redraw, hardware, config);
-		if(redraw) {
-			redraw = false;
+		if(pleaseCommit == 255) {
+			//this is a signal from the other side to redraw after variables have changed
+			redraw = 1;
+			pleaseCommit = 0;
+		}
+
+		gpio_put(0, !gpio_get_out_level(0));
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, hardware, config);
+		gpio_put(0, !gpio_get_out_level(0));
+
+		if(redraw == 2) { //fast redraw
+			redraw = 0;
+			gpio_put(0, !gpio_get_out_level(0));
+			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, hardware, raw, config, aStick, cStick);
+			gpio_put(0, !gpio_get_out_level(0));
+		} else if(redraw == 1) { //slow redraw
+			redraw = 0;
+			gpio_put(0, !gpio_get_out_level(0));
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, btn, raw, config, aStick, cStick);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick);
+			gpio_put(0, !gpio_get_out_level(0));
 		}
 
 		/*
@@ -245,7 +266,7 @@ int videoOut(const uint8_t pin_base,
 // The DMA interrupt handler
 // This is triggered by DMA_IRQ_0
 
-void __time_critical_func(cvideo_dma_handler)(void) {
+void __no_inline_not_in_flash_func(cvideo_dma_handler)(void) {
 
 	if ( ++vline <= VERT_scanlines ) {
 	} else {
@@ -260,7 +281,11 @@ void __time_critical_func(cvideo_dma_handler)(void) {
 			switch(vline) {
 				case 0:
 					// for some reason interlace fails unless there's a 30usec delay here:
-					busy_wait_us(HORIZ_usec/2);
+					//busy_wait_us(HORIZ_usec/2);
+					//busy_wait_us(HORIZ_usec/4);
+					//actually, for phobvision it seems to work best with no delay
+					//with the delay, the adc reads make it twitch for some reason
+					//interlacing works fine without it too, if not better without
 					if ( !field ) {
 						// odd field - blank, full line
 						dma_channel_set_read_addr(dma_channel, vsync_bb, true);

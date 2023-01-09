@@ -6,6 +6,9 @@
 #ifndef VWIDTH
 #define VWIDTH 512
 #endif
+#ifndef VWIDTHBYTE
+#define VWIDTHBYTE 256
+#endif
 #ifndef VHEIGHT
 #define VHEIGHT 384
 #endif
@@ -25,7 +28,10 @@ int videoOut(const uint8_t pin_base,
 		ControlConfig &config,
 		StickParams &aStick,
 		StickParams &cStick,
-		volatile bool &extSync);
+		volatile bool &extSync,
+		volatile uint8_t &pleaseCommit,
+		int &currentCalStep,
+		const int version);
 
 uint16_t getImageWidth(const unsigned char image[]);
 uint16_t getImageHeight(const unsigned char image[]);
@@ -74,6 +80,8 @@ void graphStickmap(unsigned char bitmap[],
 // Only does something if it's at least largestPower+2, which should only show whole numbers and the negative sign
 // largestPower+3 makes it stop after writing the decimal point.
 //0123456789
+//-x.y for largestPower 0
+//-xx.y for largestPower 1
 //-xxx.y for largestPower 2
 void drawFloat(unsigned char bitmap[],
                const uint16_t x0,
@@ -102,20 +110,45 @@ void drawInt2x(unsigned char bitmap[],
                const uint8_t largestPower,
                const int number);
 
+void drawMenuFast(unsigned char bitmap[],
+                  const unsigned int menu,
+                  const int itemIndex,
+			      const bool changeMade,
+                  const int currentCalStep,
+                  const Buttons btn,
+                  const Buttons hardware,
+                  const RawStick raw,
+                  const ControlConfig &controls,
+			      const StickParams &aStick,
+			      const StickParams &cStick);
+
 void drawMenu(unsigned char bitmap[],
               const unsigned int menu,
               const int itemIndex,
+			  const bool changeMade,
+			  const int currentCalStep,
+			  const int version,
               const Buttons btn,
               const RawStick raw,
               const ControlConfig &controls,
 			  const StickParams &aStick,
 			  const StickParams &cStick);
 
-void navigateMenu(unsigned char bitmap[],
-                  unsigned int &menu,
-                  int &itemIndex,
-                  bool &redraw,
-                  Buttons &hardware,
-                  ControlConfig &controls);
+void handleMenuButtons(unsigned char bitmap[],
+                       unsigned int &menu,
+                       int &itemIndex,
+                       uint8_t &redraw,
+				       bool &changeMade,
+                       const int currentCalStep,
+				       volatile uint8_t &pleaseCommit,//for asking the other core to commit settings
+                       const Buttons &hardware,
+                       ControlConfig &controls);
+
+void eraseCharLine(unsigned char bitmap[],
+                    uint16_t y0);
+
+void eraseRows(unsigned char bitmap[],
+               uint16_t y0,
+               uint16_t rows);
 
 #endif //CVIDEO_H
