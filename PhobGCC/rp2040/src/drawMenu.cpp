@@ -966,25 +966,25 @@ void drawInputviewFast(unsigned char bitmap[],
 	eraseCharLine(bitmap, 340);
 	eraseCharLine(bitmap, 360);
 	//left stick
-	drawInt(bitmap,     40, 340, 15, 2, btn.Ax-127);
-	drawInt(bitmap,     40, 360, 15, 2, btn.Ay-127);
+	drawInt(bitmap,     20, 340, 15, 2, btn.Ax-127);
+	drawInt(bitmap,     20, 360, 15, 2, btn.Ay-127);
 	const int axCoord = btn.Ax - 127;
 	const int ayCoord = btn.Ay - 127;
 	float axMelee;
 	float ayMelee;
 	meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
-	drawFloat(bitmap,  140, 340, 15, 0, 7, axMelee);
-	drawFloat(bitmap,  140, 360, 15, 0, 7, ayMelee);
+	drawFloat(bitmap,  120, 340, 15, 0, 7, axMelee);
+	drawFloat(bitmap,  120, 360, 15, 0, 7, ayMelee);
 	//c-stick
-	drawInt(bitmap,     40, 340, 15, 2, btn.Cx-127);
-	drawInt(bitmap,     40, 360, 15, 2, btn.Cy-127);
+	drawInt(bitmap,    280, 340, 15, 2, btn.Cx-127);
+	drawInt(bitmap,    280, 360, 15, 2, btn.Cy-127);
 	const int cxCoord = btn.Cx - 127;
 	const int cyCoord = btn.Cy - 127;
 	float cxMelee;
 	float cyMelee;
 	meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
-	drawFloat(bitmap,  400, 340, 15, 0, 7, cxMelee);
-	drawFloat(bitmap,  400, 360, 15, 0, 7, cyMelee);
+	drawFloat(bitmap,  380, 340, 15, 0, 7, cxMelee);
+	drawFloat(bitmap,  380, 360, 15, 0, 7, cyMelee);
 }
 
 void drawMenuFast(unsigned char bitmap[],
