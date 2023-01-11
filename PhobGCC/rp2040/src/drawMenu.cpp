@@ -881,8 +881,10 @@ void drawInputview(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	drawString(bitmap, 280,  50, 15, "Hardware Inputs:");
-	drawString(bitmap, 280, 160, 15, "Controller Outputs:");
+	drawString(bitmap, 280,  50, 15, inputview1);
+	drawString(bitmap, 280, 160, 15, inputview2);
+	drawString(bitmap,  30, 300, 15, inputview3);
+	drawString(bitmap,  30, 320, 15, inputview4);
 }
 
 void drawInputviewFast(unsigned char bitmap[],
@@ -959,6 +961,30 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127-1, 15);
 	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+0, 15);
 	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127+1, 15);
+
+	//stick coordinates
+	eraseCharLine(bitmap, 340);
+	eraseCharLine(bitmap, 360);
+	//left stick
+	drawInt(bitmap,     40, 340, 15, 2, btn.Ax-127);
+	drawInt(bitmap,     40, 360, 15, 2, btn.Ay-127);
+	const int axCoord = btn.Ax - 127;
+	const int ayCoord = btn.Ay - 127;
+	float axMelee;
+	float ayMelee;
+	meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
+	drawFloat(bitmap,  140, 340, 15, 0, 7, axMelee);
+	drawFloat(bitmap,  140, 360, 15, 0, 7, ayMelee);
+	//c-stick
+	drawInt(bitmap,     40, 340, 15, 2, btn.Cx-127);
+	drawInt(bitmap,     40, 360, 15, 2, btn.Cy-127);
+	const int cxCoord = btn.Cx - 127;
+	const int cyCoord = btn.Cy - 127;
+	float cxMelee;
+	float cyMelee;
+	meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
+	drawFloat(bitmap,  400, 340, 15, 0, 7, cxMelee);
+	drawFloat(bitmap,  400, 360, 15, 0, 7, cyMelee);
 }
 
 void drawMenuFast(unsigned char bitmap[],
