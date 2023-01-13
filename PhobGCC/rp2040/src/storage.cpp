@@ -44,6 +44,10 @@ void getStoragePage() {
 			_storage.settings.rExtras[i].intValue = temp.settings.rExtras[i].intValue;
 		}
 		_storage.settings.schema = temp.settings.schema;
+		_storage.settings.AstickCardinalSnapping = temp.settings.AstickCardinalSnapping;
+		_storage.settings.CstickCardinalSnapping = temp.settings.CstickCardinalSnapping;
+		_storage.settings.AstickAnalogScaler = temp.settings.AstickAnalogScaler;
+		_storage.settings.CstickAnalogScaler = temp.settings.CstickAnalogScaler;
 		fresh = true;
 	}
 }
@@ -222,6 +226,42 @@ void setWaveshapingSetting(const int waveshaping, const WhichStick whichStick, c
 	}
 }
 
+int getCardinalSnappingSetting(const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		return _storage.settings.AstickCardinalSnapping;
+	} else {
+		return _storage.settings.CstickCardinalSnapping;
+	}
+}
+
+void setCardinalSnappingSetting(const int cardinalSnapping, const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		_storage.settings.AstickCardinalSnapping; = cardinalSnapping;
+	} else {
+		_storage.settings.CstickCardinalSnapping; = cardinalSnapping;
+	}
+}
+
+int getAnalogScalerSetting(const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		return _storage.settings.AstickAnalogScaler;
+	} else {
+		return _storage.settings.CstickAnalogScaler;
+	}
+}
+
+int setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		_storage.settings.AstickAnalogScaler = analogScaler;
+	} else {
+		_storage.settings.CstickAnalogScaler = analogScaler;
+	}
+}
+
 void getPointsSetting(float points[32], const WhichStick whichStick, const WhichAxis whichAxis) {
 	getStoragePage();
 	for(int i=0; i<32; i++) {
@@ -372,4 +412,3 @@ void setSchemaSetting(const int s) {
 	getStoragePage();
 	_storage.settings.schema = s;
 }
-

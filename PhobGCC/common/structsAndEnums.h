@@ -211,6 +211,14 @@ struct ControlConfig{
 	const float waveshapingFactoryAY;
 	const float waveshapingFactoryCX;
 	const float waveshapingFactoryCY;
+	int AstickCardinalSnapping;
+	int CstickCardinalSnapping;
+	int cardinalSnappingMin;
+	int cardinalSnappingMax;
+	int AstickAnalogScaler;
+	int CstickAnalogScaler;
+	int analogScalerMin;
+	int analogScalerMax;
 	ExtrasConfig extras[EXTRAS_SIZE];
 };
 

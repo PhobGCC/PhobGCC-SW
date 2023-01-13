@@ -42,7 +42,11 @@ namespace Eeprom {
 	const int _eepromExtrasLeft = _eepromExtrasDown+_bytesPerFloat*4;
 	const int _eepromExtrasRight = _eepromExtrasLeft+_bytesPerFloat*4;
 	const int _eepromSchema = _eepromExtrasRight+_bytesPerFloat*4;
-	//const int _nextSetting = _eepromSchema+bytesPerFloat;
+	const int _eepromAstickCardinalSnapping = _eepromSchema+_bytesPerFloat;
+	const int _eepromCstickCardinalSnapping = _eepromAstickCardinalSnapping+_bytesPerFloat;
+	const int _eepromAstickAnalogScaler = _eepromCstickCardinalSnapping+_bytesPerFloat;
+	const int _eepromCstickAnalogScaler =_eepromAstickAnalogScaler+_bytesPerFloat;
+	//const int _nextSetting = _eepromCstickAnalogScaler+bytesPerFloat;
 };
 
 JumpConfig getJumpSetting() {
@@ -226,6 +230,42 @@ void setWaveshapingSetting(const int waveshaping, const WhichStick whichStick, c
 		} else {
 			EEPROM.put(Eeprom::_eepromCyWaveshaping, waveshaping);
 		}
+	}
+}
+
+int getCardinalSnappingSetting(const WhichStick whichStick) {
+	int output;
+	if(whichStick == ASTICK) {
+		EEPROM.get(Eeprom::_eepromAstickCardinalSnapping, output);
+	} else {
+		EEPROM.get(Eeprom::_eepromCstickCardinalSnapping, output);
+	}
+	return output;
+}
+
+void setCardinalSnappingSetting(const int cardinalSnapping, const WhichStick whichStick) {
+	if(whichStick == ASTICK) {
+		EEPROM.put(Eeprom::_eepromAstickCardinalSnapping, cardinalSnapping);
+	} else {
+		EEPROM.put(Eeprom::_eepromCstickCardinalSnapping, cardinalSnapping);
+	}
+}
+
+int getAnalogScalerSetting(const WhichStick whichStick) {
+	int output;
+	if(whichStick == ASTICK) {
+		EEPROM.get(Eeprom::_eepromAstickAnalogScaler, output);
+	} else {
+		EEPROM.get(Eeprom::_eepromCstickAnalogScaler, output);
+	}
+	return output;
+}
+
+int setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
+	if(whichStick == ASTICK) {
+		EEPROM.put(Eeprom::_eepromAstickAnalogScaler, analogScaler);
+	} else {
+		EEPROM.put(Eeprom::_eepromCstickAnalogScaler, analogScaler);
 	}
 }
 
