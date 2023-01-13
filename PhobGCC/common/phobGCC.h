@@ -615,9 +615,13 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 
 	setLOffsetSetting(controls.lTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
+	/* don't commit right away because it's obnoxious on phob 2
+	 * every time you commit it disconnects and it makes it really slow
+	 * and makes smashscope flash
 #ifdef BATCHSETTINGS
 	commitSettings();
 #endif //BATCHSETTINGS
+	*/
 
 	btn.La = (uint8_t) controls.lTriggerOffset;
 	btn.Ra = (uint8_t) controls.rTriggerOffset;
@@ -1806,6 +1810,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	static bool advanceCal = false;
 
+#ifdef BATCHSETTINGS
+	//This will count up as we request settings changes continuously
+	//If we enter the following if else block with a nonzero counter but no commands are used,
+	// then that means we are done changing (for now) and can commit.
+	//Primarily meant for the trigger offset setting, which has a lot of changes.
+	static int settingChangeCount = 0;
+#endif //BATCHSETTINGS
+
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
 		static float hardResetAccumulator = 0.0;
@@ -1931,12 +1943,24 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.A && hardware.B && hardware.R) { //Toggle Analog R
 			nextTriggerState(RTRIGGER, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Du) { //Increase L-Trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif
 			adjustTriggerOffset(LTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Dd) { //Decrease L-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif
 			adjustTriggerOffset(LTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Du) { //Increase R-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif
 			adjustTriggerOffset(RTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
 			setJumpConfig(SWAP_XZ, controls);
@@ -1972,6 +1996,15 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			configExtra(EXTRAS_LEFT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, true)) {
 			configExtra(EXTRAS_RIGHT, btn, hardware, controls);
+#ifdef BATCHSETTINGS
+		} else {
+			//If the buttons were released after changing an applicable setting
+			if(settingChangeCount > 0) {
+				settingChangeCount = 0;
+				//request a commit
+				commitSettings();
+			}
+#endif //BATCHSETTINGS
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
