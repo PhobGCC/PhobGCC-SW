@@ -238,9 +238,9 @@ int getCardinalSnappingSetting(const WhichStick whichStick) {
 void setCardinalSnappingSetting(const int cardinalSnapping, const WhichStick whichStick) {
 	getStoragePage();
 	if(whichStick == ASTICK) {
-		_storage.settings.AstickCardinalSnapping; = cardinalSnapping;
+		_storage.settings.AstickCardinalSnapping = cardinalSnapping;
 	} else {
-		_storage.settings.CstickCardinalSnapping; = cardinalSnapping;
+		_storage.settings.CstickCardinalSnapping = cardinalSnapping;
 	}
 }
 
@@ -253,7 +253,7 @@ int getAnalogScalerSetting(const WhichStick whichStick) {
 	}
 }
 
-int setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
+void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
 	getStoragePage();
 	if(whichStick == ASTICK) {
 		_storage.settings.AstickAnalogScaler = analogScaler;

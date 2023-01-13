@@ -261,7 +261,7 @@ int getAnalogScalerSetting(const WhichStick whichStick) {
 	return output;
 }
 
-int setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
+void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
 	if(whichStick == ASTICK) {
 		EEPROM.put(Eeprom::_eepromAstickAnalogScaler, analogScaler);
 	} else {

@@ -1056,7 +1056,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.AstickCardinalSnapping > controls.cardinalSnappingMax) {
 		controls.AstickCardinalSnapping = 6;
 		numberOfNaN++;
-	} else (controls.AstickCardinalSnapping < controls.cardinalSnappingMin) {
+	} else if (controls.AstickCardinalSnapping < controls.cardinalSnappingMin) {
 		controls.AstickCardinalSnapping = 6;
 		numberOfNaN++;
 	}
@@ -1066,7 +1066,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.CstickCardinalSnapping > controls.cardinalSnappingMax) {
 		controls.CstickCardinalSnapping = 6;
 		numberOfNaN++;
-	} else (controls.CstickCardinalSnapping < controls.cardinalSnappingMin) {
+	} else if (controls.CstickCardinalSnapping < controls.cardinalSnappingMin) {
 		controls.CstickCardinalSnapping = 6;
 		numberOfNaN++;
 	}
@@ -1076,7 +1076,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.AstickAnalogScaler > controls.analogScalerMax) {
 		controls.AstickAnalogScaler = 100;
 		numberOfNaN++;
-	} else (controls.AstickAnalogScaler < controls.analogScalerMin) {
+	} else if (controls.AstickAnalogScaler < controls.analogScalerMin) {
 		controls.AstickAnalogScaler = 100;
 		numberOfNaN++;
 	}
@@ -1086,7 +1086,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.CstickAnalogScaler > controls.analogScalerMax) {
 		controls.CstickAnalogScaler = 100;
 		numberOfNaN++;
-	} else (controls.CstickAnalogScaler < controls.analogScalerMin) {
+	} else if (controls.CstickAnalogScaler < controls.analogScalerMin) {
 		controls.CstickAnalogScaler = 100;
 		numberOfNaN++;
 	}

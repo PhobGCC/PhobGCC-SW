@@ -40,6 +40,10 @@ struct Storage {
 		IntOrFloat dExtras[4];
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
+		int AstickCardinalSnapping;
+		int CstickCardinalSnapping;
+		int AstickAnalogScaler;
+		int CstickAnalogScaler;
 		int schema;
 	} settings;
 };
@@ -98,6 +102,12 @@ void setAutoInitSetting(const int);
 int  getWaveshapingSetting(const WhichStick, const WhichAxis);
 void setWaveshapingSetting(const int, const WhichStick, const WhichAxis);
 
+int getCardinalSnappingSetting(const WhichStick);
+void setCardinalSnappingSetting(const int, const WhichStick);
+
+int getAnalogScalerSetting(const WhichStick);
+void setAnalogScalerSetting(const int, const WhichStick);
+
 void getPointsSetting(float [32], const WhichStick, const WhichAxis);
 void setPointsSetting(const float [32], const WhichStick, const WhichAxis);
 
@@ -113,4 +123,3 @@ int getSchemaSetting();
 void setSchemaSetting(const int);
 
 #endif //STORAGE_H
-
