@@ -2037,7 +2037,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Y && hardware.Dd) { //Decrease Analog Scaler
 			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.S && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle)
+		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
@@ -2071,7 +2071,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Y && hardware.Dd) { //Decrease C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.S && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle)
+		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
