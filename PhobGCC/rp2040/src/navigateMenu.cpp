@@ -549,6 +549,8 @@ void navigateMenu(unsigned char bitmap[],
 					controls.rumble = fmax(controls.rumbleMin, controls.rumble-1);
 					changeMade = controls.rumble != tempInt1;
 					redraw = 1;
+				} else if(presses & ZPRESS) {
+					pleaseCommit = 8;//request rumble
 				} else if((presses & BSAVE) && changeMade) {
 					setRumbleSetting(controls.rumble);
 					tempInt1 = controls.rumble;
@@ -657,6 +659,27 @@ void navigateMenu(unsigned char bitmap[],
 						pleaseCommit = 3;
 					}
 				}
+				return;
+			case MENU_VISION:
+				if(!changeMade) {
+					tempInt1 = controls.interlaceOffset;
+				}
+				if(presses & DUPRESS) {
+					controls.interlaceOffset = fmin(150, controls.interlaceOffset+increment);
+					changeMade = controls.interlaceOffset != tempInt1;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					controls.interlaceOffset = fmax(-150, controls.interlaceOffset-increment);
+					changeMade = controls.interlaceOffset != tempInt1;
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setInterlaceOffsetSetting(controls.interlaceOffset);
+					tempInt1 = controls.interlaceOffset;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
 			default:
 				//do nothing
 				return;

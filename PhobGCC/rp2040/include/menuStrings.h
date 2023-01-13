@@ -126,6 +126,7 @@ const char rumble1[]         = "This controls the strength of rumble feedback.";
 const char rumble2[]         = "0 is off, the max is 11, and the default is 9.";
 const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
+const char rumble5[]         = "Press Z to test rumble.";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char trigger1[]        = "L Mode:";
@@ -180,5 +181,10 @@ const char inputview1[]      = "Hardware Inputs:";
 const char inputview2[]      = "Controller Outputs:";
 const char inputview3[]      = "Left      Left Melee      Right     Right Melee";
 const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char vision1[]         = "This controls the alignment of the interlacing.";
+const char vision2[]         = "Adjust it to make the diagonal lines less jaggy.";
+const char vision3[]         = "Interlacing offset:";
 
 #endif //MENUSTRINGS_H

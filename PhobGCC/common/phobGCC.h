@@ -17,8 +17,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -84,7 +84,10 @@ ControlConfig _controls{
 	.waveshapingFactoryAX = 0,
 	.waveshapingFactoryAY = 0,
 	.waveshapingFactoryCX = 0,
-	.waveshapingFactoryCY = 0
+	.waveshapingFactoryCY = 0,
+#ifdef PICO_RP2040
+	.interlaceOffset = 0,
+#endif //PICO_RP2040
 };
 
 FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequenc
@@ -235,9 +238,6 @@ void showRumble(const int time, Buttons &btn, Buttons &hardware, ControlConfig &
 	clearButtons(time, btn, hardware);
 
 	setRumbleSetting(controls.rumble);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void changeRumble(const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
@@ -274,9 +274,6 @@ void changeAutoInit(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	freezeSticksToggleIndicator(2000, btn, hardware, (controls.autoInit == 1));
 
 	setAutoInitSetting(controls.autoInit);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
@@ -326,9 +323,6 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 
 	setXSnapbackSetting(controls.xSnapback);
 	setYSnapbackSetting(controls.ySnapback);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -372,9 +366,6 @@ void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const 
 		btn.Cx = (uint8_t) (controls.cxWaveshaping + _floatOrigin);
 		btn.Cy = (uint8_t) (controls.cyWaveshaping + _floatOrigin);
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	clearButtons(750, btn, hardware);
 }
@@ -428,9 +419,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		Serial.println(controls.aySmoothing);
 #endif //ARDUINO
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -506,9 +494,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		Serial.println(controls.cySmoothing);
 #endif //ARDUINO
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -564,9 +549,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		Serial.println(controls.cYOffset);
 #endif //ARDUINO
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
@@ -615,13 +597,6 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 
 	setLOffsetSetting(controls.lTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
-	/* don't commit right away because it's obnoxious on phob 2
-	 * every time you commit it disconnects and it makes it really slow
-	 * and makes smashscope flash
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
-	*/
 
 	btn.La = (uint8_t) controls.lTriggerOffset;
 	btn.Ra = (uint8_t) controls.rTriggerOffset;
@@ -712,9 +687,6 @@ void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 #endif //ARDUINO
 	}
 	setJumpSetting(controls.jumpConfig);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -809,9 +781,6 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, Con
 	}
 	setLSetting(controls.lConfig);
 	setRSetting(controls.rConfig);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
 	//(user-facing mode 5)
@@ -1249,6 +1218,18 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
+#ifdef PICO_RP2040
+	_controls.interlaceOffset = getInterlaceOffsetSetting();
+	if(controls.interlaceOffset < -150) {
+		controls.interlaceOffset = 0;
+		numberOfNaN++;
+	}
+	if(controls.interlaceOffset > 150) {
+		controls.interlaceOffset = 0;
+		numberOfNaN++;
+	}
+#endif //PICO_RP2040
+
 	//Migration
 	const int schema = getSchemaSetting();
 #ifdef ARDUINO
@@ -1384,6 +1365,11 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		}
 	}
 
+#ifdef PICO_RP2040
+	_controls.interlaceOffset = 0;
+	setInterlaceOffsetSetting(0);
+#endif //PICO_RP2040
+
 	if(reset == HARD || reset == FACTORY){
 		float notchAngles[_noOfNotches];
 		for(int i = 0; i < _noOfNotches; i++){
@@ -1430,6 +1416,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 #endif //ARDUINO
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 	}
+
 #ifdef BATCHSETTINGS
 	commitSettings(noLock);
 #endif //BATCHSETTINGS
@@ -1847,10 +1834,16 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset
-			//actually do nothing, this is just to prevent othing things from happening
+			//actually do nothing, this is just to prevent other things from happening
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			changeAutoInit(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			changeRumble(INCREASE, btn, hardware, controls);
 #else // RUMBLE
@@ -1858,6 +1851,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.A && hardware.B && hardware.Dd) { //Decrease Rumble
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			changeRumble(DECREASE, btn, hardware, controls);
 #else // RUMBLE
@@ -1865,6 +1861,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.A && hardware.B && hardware.S) { //Show current rumble setting
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			showRumble(2000, btn, hardware, controls);
 #else // RUMBLE
@@ -1887,114 +1886,234 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Dd) { //Decrease Analog X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && !hardware.Z && hardware.Du) { //Increase Analog Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Dd) { //Decrease Analog X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Du) { //Increase Analog Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Du) { //Increase X-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Dd) { //Decrease X-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Du) { //Increase Y-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
 		} else if(hardware.A && hardware.B && hardware.R) { //Toggle Analog R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			nextTriggerState(RTRIGGER, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Du) { //Increase L-Trigger Offset
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
-#endif
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(LTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Dd) { //Decrease L-trigger Offset
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
-#endif
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(LTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Du) { //Increase R-trigger Offset
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
-#endif
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(RTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
-#endif
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.X && hardware.L && hardware.S) { //Swap X and L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XL, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.L && hardware.S) { //Swap Y and L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YL, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.X && hardware.R && hardware.S) { //Swap X and R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XR, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.R && hardware.S) { //Swap Y and R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YR, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_DOWN, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_LEFT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_RIGHT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, true)) { // Configure Extras
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_UP, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_DOWN, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_LEFT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_RIGHT, btn, hardware, controls);
 #ifdef BATCHSETTINGS
 		} else {

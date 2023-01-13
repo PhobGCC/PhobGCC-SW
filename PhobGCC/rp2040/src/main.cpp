@@ -101,6 +101,19 @@ void second_core() {
 				//skip cal (might not actually get used?)
 				_pleaseCommit = 255;
 				calibrationSkipMeasurement(_currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+			} else if(_pleaseCommit == 8) {
+				_pleaseCommit = 0;
+				_rumblePower = calcRumblePower(_controls.rumble);
+				//rumble for 0.3 seconds
+				pwm_set_gpio_level(_pinBrake, 0);
+				pwm_set_gpio_level(_pinRumble, _rumblePower);
+				int startTime = millis();
+				int delta = 0;
+				while(delta < 300) {
+					delta = millis() - startTime;
+				}
+				pwm_set_gpio_level(_pinRumble, 0);
+				pwm_set_gpio_level(_pinBrake, 255);
 			}
 		}
 

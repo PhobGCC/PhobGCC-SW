@@ -41,6 +41,7 @@ struct Storage {
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
 		int schema;
+		int interlaceOffset;
 	} settings;
 };
 
@@ -111,6 +112,9 @@ void  setExtrasSettingFloat(const ExtrasSlot, const int, const float);
 
 int getSchemaSetting();
 void setSchemaSetting(const int);
+
+int getInterlaceOffsetSetting();
+void setInterlaceOffsetSetting(const int);
 
 #endif //STORAGE_H
 

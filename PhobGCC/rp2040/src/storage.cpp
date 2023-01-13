@@ -44,6 +44,7 @@ void getStoragePage() {
 			_storage.settings.rExtras[i].intValue = temp.settings.rExtras[i].intValue;
 		}
 		_storage.settings.schema = temp.settings.schema;
+		_storage.settings.interlaceOffset = temp.settings.interlaceOffset;
 		fresh = true;
 	}
 }
@@ -371,5 +372,14 @@ int getSchemaSetting() {
 void setSchemaSetting(const int s) {
 	getStoragePage();
 	_storage.settings.schema = s;
+}
+
+int getInterlaceOffsetSetting() {
+	getStoragePage();
+	return _storage.settings.interlaceOffset;
+}
+void setInterlaceOffsetSetting(const int o) {
+	getStoragePage();
+	_storage.settings.interlaceOffset = o;
 }
 

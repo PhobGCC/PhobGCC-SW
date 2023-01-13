@@ -75,12 +75,12 @@ const float VIDEO_h_EP_usec = 2.3;	// equalizing pulse
 /*------------------Horizontal Derived-------------------------------*/
 /*-------------------------------------------------------------------*/
 
-const int   HORIZ_visible_dots = VIDEO_frame_lines_visible * VIDEO_aspect_ratio;	// full frame width
+const int   HORIZ_visible_dots = VIDEO_frame_lines_visible * VIDEO_aspect_ratio;	// full frame width; 480
 const float HORIZ_usec = 1000000.0 / VIDEO_horizontal_freq;
 const float HORIZ_usec_dot = (HORIZ_usec - VIDEO_h_FP_usec - VIDEO_h_SYNC_usec - VIDEO_h_BP_usec) / HORIZ_visible_dots;
-const int   HORIZ_dots = HORIZ_usec / HORIZ_usec_dot;
+const int   HORIZ_dots = HORIZ_usec / HORIZ_usec_dot; // 644
 
-const int   HORIZ_bytes = HORIZ_dots / 2; // two dots per byte
+const int   HORIZ_bytes = HORIZ_dots / 2; // two dots per byte; 322
 const int   HORIZ_FP_bytes = VIDEO_h_FP_usec / HORIZ_usec_dot / 2;
 const int   HORIZ_SYNC_bytes = VIDEO_h_SYNC_usec / HORIZ_usec_dot / 2;
 const int   HORIZ_BP_bytes = VIDEO_h_BP_usec / HORIZ_usec_dot / 2;
@@ -129,6 +129,8 @@ volatile bool _changeBitmap = false;
 volatile bool _startSync = false;
 volatile int _frameCount = 0;
 
+volatile int _interlaceOffset = 0;
+
 /*-------------------------------------------------------------------*/
 int videoOut(const uint8_t pin_base,
 		Buttons &btn,
@@ -141,6 +143,8 @@ int videoOut(const uint8_t pin_base,
 		volatile uint8_t &pleaseCommit,
 		int &currentCalStep,
 		const int version) {
+
+	_interlaceOffset = config.interlaceOffset;
 
 	memset(_bitmap, BLACK2, BUFFERLEN);
 
@@ -158,8 +162,8 @@ int videoOut(const uint8_t pin_base,
 	memset(vsync_bb, BLANK2, HORIZ_bytes);				// vertical blanking
 	memset(vsync_bb, SYNC, HORIZ_SYNC_bytes);
 
-	vsync_ssb = (unsigned char *)malloc(HORIZ_bytes+(HORIZ_bytes>>1));
-	memset(vsync_ssb, BLANK2, HORIZ_bytes + (HORIZ_bytes>>1));		// vertical equalizing/blanking
+	vsync_ssb = (unsigned char *)malloc(HORIZ_bytes+HORIZ_bytes);
+	memset(vsync_ssb, BLANK2, HORIZ_bytes + HORIZ_bytes);		// vertical equalizing/blanking
 	memset(vsync_ssb, SYNC, HORIZ_EP_bytes);
 	memset(vsync_ssb + (HORIZ_bytes>>1), SYNC, HORIZ_EP_bytes);
 
@@ -220,6 +224,8 @@ int videoOut(const uint8_t pin_base,
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
 			gpio_put(0, !gpio_get_out_level(0));
+			//write interlace offset
+			_interlaceOffset = config.interlaceOffset;
 			memset(_bitmap, BLACK2, BUFFERLEN);
 			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick);
 			gpio_put(0, !gpio_get_out_level(0));
@@ -291,7 +297,7 @@ void __no_inline_not_in_flash_func(cvideo_dma_handler)(void) {
 						dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			        } else {
 						// even field - blank, half line
-						dma_channel_set_trans_count(dma_channel, HORIZ_bytes/2, false);
+						dma_channel_set_trans_count(dma_channel, HORIZ_bytes/2 + _interlaceOffset, false);
 						dma_channel_set_read_addr(dma_channel, vsync_bb, true);
 			        }
 					break;
@@ -315,7 +321,7 @@ void __no_inline_not_in_flash_func(cvideo_dma_handler)(void) {
 						dma_channel_set_read_addr(dma_channel, vsync_ss, true);
 					} else {
 						//even field - equalizing pulse, line and a half
-						dma_channel_set_trans_count(dma_channel, HORIZ_bytes + HORIZ_bytes/2, false);
+						dma_channel_set_trans_count(dma_channel, HORIZ_bytes + HORIZ_bytes/2 - _interlaceOffset, false);
 						dma_channel_set_read_addr(dma_channel, vsync_ssb, true);
 					}
 					break;

@@ -612,8 +612,9 @@ void drawRumble(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, rumble2);
 	drawString(bitmap,  30, 110, 15, rumble3);
 	drawString(bitmap,  30, 130, 15, rumble4);
-	drawString(bitmap,  30, 160, 15, currentSetting);
-	drawInt(   bitmap, 190, 160, 15, 0, controls.rumble);
+	drawString(bitmap,  30, 150, 15, rumble5);
+	drawString(bitmap,  30, 180, 15, currentSetting);
+	drawInt(   bitmap, 190, 180, 15, 0, controls.rumble);
 }
 
 void drawTrigger(unsigned char bitmap[],
@@ -987,6 +988,29 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawFloat(bitmap,  380, 360, 15, 0, 7, cyMelee);
 }
 
+void drawVision(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, vision1);
+	drawString(bitmap,  30,  70, 15, vision2);
+	drawString(bitmap,  30, 100, 15, vision3);
+	drawInt(bitmap,    220, 100, 15, 2, controls.interlaceOffset);
+	drawLine(bitmap, 500, 1, 1, 101, 15);
+	drawLine(bitmap, 500, 101, 1, 201, 15);
+	drawLine(bitmap, 500, 201, 1, 301, 15);
+	drawLine(bitmap, 500, 301, 1, 380, 15);
+}
+
 void drawMenuFast(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -1119,6 +1143,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_INPUTVIEW:
 			drawInputview(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_VISION:
+			drawVision(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		default:
 			//placeholder for screens that don't have anything defined
