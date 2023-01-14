@@ -1273,7 +1273,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			controls.cstickAnalogScaler = controls.analogScalerDefault;
 			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+#ifdef PICO_RP2040
 			controls.interlaceOffset = 0;
+#endif //PICO_RP2040
 			//fallthrough
 		case 29:
 			//migrating = true;//uncomment when we do have it migrate

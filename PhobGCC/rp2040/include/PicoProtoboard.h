@@ -52,6 +52,7 @@ const int _pinCx = -1;
 const int _pinCy = -1;
 const int _pinRX = -1;
 
+#include "debug.h"
 #include "readHardware.h"
 
 #endif //BOARD_H
