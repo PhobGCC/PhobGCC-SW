@@ -139,7 +139,7 @@ void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus 
 	notchRemap
 	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
-void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep){
+void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep, const ControlConfig &controls){
 	//determine the angle between the x unit vector and the current position vector
 	float angle = atan2f(yIn,xIn);
 
@@ -165,11 +165,21 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*yOut = stickParams.affineCoeffs[region][2]*xIn + stickParams.affineCoeffs[region][3]*yIn;
 
 	if(currentCalStep == -1) {
-		if((abs(*xOut)<6) && (abs(*yOut)>80)){
-			*xOut = 0;
-		}
-		if((abs(*yOut)<6) && (abs(*xOut)>80)){
-			*yOut = 0;
+
+		if(controls.cardinalSnapping > 0) {
+			if((abs(*xOut)<controls.cardinalSnapping) && (abs(*yOut)>80)){
+				*xOut = 0;
+			}
+			if((abs(*yOut)<controls.cardinalSnapping) && (abs(*xOut)>80)){
+				*yOut = 0;
+			}
+		} else if(controls.cardinalSnapping == -1) {
+			if((abs(*xOut)<6) && (abs(*yOut)>80)){
+				*xOut = 7;
+			}
+			if((abs(*yOut)<6) && (abs(*xOut)>80)){
+				*yOut = 7;
+			}
 		}
 
 		if((abs(*xOut)<3) && (abs(*yOut)<3)) {

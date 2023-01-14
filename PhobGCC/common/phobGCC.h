@@ -1905,7 +1905,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease Y-Axis Smoothing:  RY+Du/Dd
 	* Show Analog Filtering Settings: L+Start
 	* Increase/Decrease Analog Scaler: LXY+Du/Dd
-	* Increase/Decrease Cardinal Snapping: LXYZ+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RXY+Du/Dd
 	*
 	* C-Stick Configuration
 	* Increase/Decrease X-Axis Snapback Filtering:  AXZ+Du/Dd
@@ -1915,7 +1915,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
-	* Increase/Decrease Analog Scaler: RXY+Du/Dd
+	* Increase/Decrease Analog Scaler: LXYZ+Du/Dd
 	* Increase/Decrease Cardinal Snapping: RXYZ+Du/Dd
 	*
 	* Swap X with Z:  XZ+Start
@@ -2029,9 +2029,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && hardware.Du) { //Increase Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && hardware.Dd) { //Decrease Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Y && hardware.Du) { //Increase Analog Scaler
 			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
@@ -2063,13 +2063,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && && hardware.Z hardware.Du) { //Increase C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && && hardware.Z hardware.Dd) { //Decrease C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Du) { //Increase C-stick Analog Scaler
+		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Dd) { //Decrease C-stick Analog Scaler
+		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
@@ -2324,10 +2324,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float remappedAyUnfiltered;
 	float remappedCxUnfiltered;
 	float remappedCyUnfiltered;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
-	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1);//no snapping
-	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1);//no snapping
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep, controls);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep, controls);
+	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1, controls);//no snapping
+	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1, controls);//no snapping
 
 	//Clamp values from -125 to +125
 	remappedAx = fmin(125, fmax(-125, remappedAx * (controls.AstickAnalogScaler / 100)));

@@ -40,11 +40,11 @@ struct Storage {
 		IntOrFloat dExtras[4];
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
+		int schema;
 		int AstickCardinalSnapping;
 		int CstickCardinalSnapping;
 		int AstickAnalogScaler;
 		int CstickAnalogScaler;
-		int schema;
 	} settings;
 };
 
