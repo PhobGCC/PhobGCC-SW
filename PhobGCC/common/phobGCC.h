@@ -2041,13 +2041,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && hardware.A && hardware.Du) { //Increase Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Du && !hardware.Z) { //Increase Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.A && hardware.Dd) { //Decrease Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.A && hardware.Du) { //Increase Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Du && !hardware.Z) { //Increase Analog Scaler
 			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.A && hardware.Dd) { //Decrease Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Analog Scaler
 			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
