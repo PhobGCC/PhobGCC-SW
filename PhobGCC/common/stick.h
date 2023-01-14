@@ -166,7 +166,7 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 
 	if(currentCalStep == -1) {
 
-		if(WhichStick == ASTICK) {
+		if(whichStick == ASTICK) {
 			if(controls.AstickCardinalSnapping > 0) {
 				if((abs(*xOut)<controls.AstickCardinalSnapping) && (abs(*yOut)>80)){
 					*xOut = 0;
@@ -212,13 +212,13 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
  * remaps the cleaned calibration points from raw measurements to output coordinates
  * This seems redundant but we're feeding it coordinates without non-diagonal notches
  */
-void transformCalPoints(const float xInput[], const float yInput[], float xOutput[], float yOutput[], const StickParams &stickParams){
+void transformCalPoints(const float xInput[], const float yInput[], float xOutput[], float yOutput[], const StickParams &stickParams, const ControlConfig &controls, const WhichStick whichStick){
 	for(int i=0; i < _noOfNotches+1; i++){
 		float xValue = linearize(xInput[i], stickParams.fitCoeffsX);
 		float yValue = linearize(yInput[i], stickParams.fitCoeffsY);
 		float outX;
 		float outY;
-		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0);
+		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0, controls, whichStick);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
 	}

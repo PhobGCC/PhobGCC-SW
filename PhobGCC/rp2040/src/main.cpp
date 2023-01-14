@@ -100,7 +100,7 @@ void second_core() {
 			} else if(_pleaseCommit == 7) {
 				//skip cal (might not actually get used?)
 				_pleaseCommit = 255;
-				calibrationSkipMeasurement(_currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+				calibrationSkipMeasurement(_currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams, _controls);
 			}
 		}
 
@@ -275,7 +275,7 @@ int main() {
 
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
-		//Don't 
+		//Don't
 		//_vsyncSensors = true;
 #ifdef BUILD_DEV
 		const int version = -SW_VERSION;

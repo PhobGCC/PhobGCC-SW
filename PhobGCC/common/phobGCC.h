@@ -939,7 +939,7 @@ void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startU
 }
 
 //Take tempCalPoints and use it to generate new stick cal parameters to be used
-void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams) {
+void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams, const ControlConfig &controls) {
 	//recall previous notch angles
 	getNotchAnglesSetting(notchAngles, whichStick);
 	//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
@@ -958,7 +958,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	float transformedX[_noOfNotches+1];
 	float transformedY[_noOfNotches+1];
-	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams);
+	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams, controls, whichStick);
 	//compute the angles for those notches into measuredNotchAngles, using the default angles for the diagonals
 	computeStickAngles(transformedX, transformedY, measuredNotchAngles);
 	//clean full cal points again, feeding those angles in
@@ -1575,19 +1575,19 @@ void copyButtons(const Buttons &src, Buttons &dest) {
 	dest.Ra = src.Ra;
 }
 
-void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams) {
+void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams, const ControlConfig &controls) {
 	currentCalStep = _noOfCalibrationPoints;
 	//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 	if(whichStick == CSTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 	} else if(whichStick == ASTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 	}
 }
 
@@ -1643,7 +1643,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -1709,7 +1709,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -2063,9 +2063,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && && hardware.Z hardware.Du) { //Increase C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && && hardware.Z hardware.Dd) { //Decrease C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
@@ -2139,7 +2139,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
-		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams);
+		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams, controls);
 	}
 
 	//Undo Calibration using Z-button
