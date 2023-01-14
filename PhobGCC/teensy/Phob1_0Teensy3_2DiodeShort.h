@@ -3,6 +3,7 @@
 
 #include <ADC.h>
 #include <VREF.h>
+#include "debug.h"
 #include "settings.h"
 
 //Hardware-specific code for PhobGCC board revision 1.0 with a Teensy 3.2
@@ -49,7 +50,7 @@ void ADCSetup(ADC * adc,
     adc->adc0->setResolution(12);
     adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
     adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED);
-    
+
     adc->adc1->setAveraging(32);
     adc->adc1->setResolution(16);
     adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
