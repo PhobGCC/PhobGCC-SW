@@ -12,7 +12,6 @@
 //------------------------------------------------------
 
 #ifdef EXTRAS_ESS
-#include "debug.h"
 #include "ess.h"
 #endif
 

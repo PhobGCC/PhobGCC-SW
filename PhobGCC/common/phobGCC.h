@@ -22,7 +22,6 @@ using std::max;
 
 #include "structsAndEnums.h"
 #include "variables.h"
-#include "debug.h"
 #include "filter.h"
 #include "stick.h"
 #include "../extras/extras.h"

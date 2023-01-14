@@ -5,7 +5,6 @@
 
 #include "curveFitting.h"
 #include "structsAndEnums.h"
-#include "debug.h"
 #include "filter.h"
 
 //TODO: either put these const globals in varables.h or make them #defines
