@@ -207,10 +207,25 @@ struct ControlConfig{
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
-	const float waveshapingFactoryAX;
-	const float waveshapingFactoryAY;
-	const float waveshapingFactoryCX;
-	const float waveshapingFactoryCY;
+	const int waveshapingFactoryAX;
+	const int waveshapingFactoryAY;
+	const int waveshapingFactoryCX;
+	const int waveshapingFactoryCY;
+	int astickCardinalSnapping;
+	int cstickCardinalSnapping;
+	const int cardinalSnappingMin;
+	const int cardinalSnappingMax;
+	const int cardinalSnappingDefault;
+	int astickAnalogScaler;
+	int cstickAnalogScaler;
+	const int analogScalerMin;
+	const int analogScalerMax;
+	const int analogScalerDefault;
+#ifdef PICO_RP2040
+	int interlaceOffset;
+	const int interlaceOffsetMin;
+	const int interlaceOffsetMax;
+#endif //PICO_RP2040
 	ExtrasConfig extras[EXTRAS_SIZE];
 };
 

@@ -5,11 +5,11 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_SPLASH,		//0		|0
 	MENU_MAIN,			//1		| 1
 	MENU_CALIBRATE,		//2		|  2
-	MENU_ASTICKCAL,		//3		|   3
+	MENU_ASTICKCAL,		//3		|   3*
 	MENU_ANOTCHFIX,		//4		|   3
-	MENU_CSTICKCAL,		//5		|   3
+	MENU_CSTICKCAL,		//5		|   3*
 	MENU_CNOTCHFIX,		//6		|   3
-	MENU_AUTOINIT,		//7		|   3
+	MENU_AUTOINIT,		//7		|   3*
 	MENU_STICKDBG,		//8		|   3*
 	MENU_SETTINGS,		//9		|  2
 	MENU_SET_OVER,		//10	|   3*		Overview of all settings
@@ -22,18 +22,19 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_COFFSET,		//17	|    4*
 	MENU_REMAP,			//18	|   3*
 	MENU_RUMBLE,		//19	|   3*
-	MENU_TRIGGER,		//20	|   3		show current trigger settings and warn if illegal in melee
-	MENU_LTRIGGER,		//21	|    4
-	MENU_RTRIGGER,		//22	|    4
-	MENU_RESET,			//23	|   3
+	MENU_TRIGGER,		//20	|   3*		show current trigger settings and warn if illegal in melee
+	MENU_LTRIGGER,		//21	|    4*
+	MENU_RTRIGGER,		//22	|    4*
+	MENU_RESET,			//23	|   3*
 	MENU_SCOPE,			//24	|  2
-	MENU_INPUTVIEW,		//25	|   3		General
+	MENU_INPUTVIEW,		//25	|   3*		General
 	MENU_XYSCOPE,		//26	|   3		x vs y, plotted over time
 	MENU_TIMESCOPE,		//27	|   3		x/y/l/r vs time
 	MENU_PRESSTIME,		//28	|   3		timing practice for wavedashing, short hopping, etc
 	MENU_GAMES,			//29	|  2
 	MENU_SNEK,			//30	|   3
-	MENU_PING			//31	|   3
+	MENU_PING,			//31	|   3
+	MENU_VISION			//32	|  2		adjust offset for phobvision
 };
 
 //The menu index consists of:
@@ -41,10 +42,10 @@ enum ScreenNumber {//mark finished ones with asterisks
 //2. Number of child indices: 255 = leaf node, 0 = one child node but not visible
 //3. List of child indices (up to 6)
 
-const uint8_t MenuIndex[32][8] = {
+const uint8_t MenuIndex[33][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
-	{MENU_SPLASH,	4,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		255,			255},//main menu
+	{MENU_SPLASH,	5,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		MENU_VISION,	255},//main menu
 	{MENU_MAIN,		6,		MENU_ASTICKCAL,	MENU_ANOTCHFIX,	MENU_CSTICKCAL,	MENU_CNOTCHFIX,	MENU_AUTOINIT,	MENU_STICKDBG},//calibration menu
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//astickcal
 	{MENU_CALIBRATE,255,	255,			255,			255,			255,			255,			255},//anotchfix
@@ -74,13 +75,14 @@ const uint8_t MenuIndex[32][8] = {
 	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//button timings
 	{MENU_MAIN,		2,		MENU_SNEK,		MENU_PING,		255,			255,			255,			255},//games
 	{MENU_GAMES,	255,	255,			255,			255,			255,			255,			255},//snek
-	{MENU_GAMES,	255,	255,			255,			255,			255,			255,			255}//ping
+	{MENU_GAMES,	255,	255,			255,			255,			255,			255,			255},//ping
+	{MENU_MAIN,		255,	255,			255,			255,			255,			255,			255}//phobvision config
 };
 
 //The names consists of an array of null terminated c strings. Pad with spaces.
 //This is the heading of the menus and also the submenu entries.
 
-const char MenuNames[32][28] = {
+const char MenuNames[33][28] = {
 	"PhobVision                 ",
 	"Main Menu                  ",
 	"Stick Calibration          ",
@@ -112,7 +114,8 @@ const char MenuNames[32][28] = {
 	"Button Timing Viewer       ",
 	"Games                      ",
 	"Snek                       ",
-	"Ping                       "
+	"Ping                       ",
+	"PhobVision Configuration   "
 };
 
 #endif //MENU_H

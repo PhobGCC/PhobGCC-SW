@@ -30,11 +30,11 @@ const char stickCal11[]      = "stick in the indicated";
 const char stickCal12[]      = "notch and press X/Y to";
 const char stickCal13[]      = "move its output CW/CCW.";
 const char stickCal14[]      = "Press A/L/R to move on.";
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char stickCal15[]      = "Raw Values:      Stick Coords:    Melee Coords:";
 const char stickCal16[]      = "(0 to 1)         (-127 to 127)    (-1 to 1)";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char autoinit1[]       = "By default you have to press B to get the sticks";
 const char autoinit2[]       = " working, which is important for calibration on";
 const char autoinit3[]       = " Dolphin. Once it's calibrated you can turn this";
@@ -71,43 +71,43 @@ const char leftStickY[]      = "Left stick Y:";
 const char rightStickX[]     = "Right stick X:";
 const char rightStickY[]     = "Right stick Y:";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asnapback1[]      = "Set so that snapback < 23 for Melee.";
 const char asnapback2[]      = "0 disables the filter. >0 shortens rise time.";
 const char asnapback3[]      = "Higher makes the stick return to center slower.";
 const char asnapback4[]      = "Min: 0  Max: 10  Default: 4";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
 const char awave2[]          = "Higher values reduce the speed threshold.";
 const char awave3[]          = "It affects pivots, DBOOC, dashback, and more.";
 const char awave4[]          = "Min: 0  Max: 15  Default: 0";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asmooth1[]        = "This averages the stick position with the past.";
 const char asmooth2[]        = "It can be used to make one axis lag the other.";
 const char asmooth3[]        = "Use X=5 to make down-and-in ledgedashes work.";
 const char asmooth4[]        = "Min: 0  Max: 9  Default: 0";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char csmooth1[]        = "This averages the stick position with the past.";//same as asmooth1
 const char csmooth2[]        = "Make these 5 or 6 to reduce snapback.";
 const char csmooth3[]        = "Make one axis higher to make it less responsive.";
 const char csmooth4[]        = "Min: 0  Max: 9  Default: 0";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char cwave1[]          = "This makes the stick stop during fast inputs.";//same as awave
 //const char cwave2[]          = "Higher values reduce the speed threshold.";
 const char cwave3[]          = "We're not sure what it can be used for here.";
 //const char cwave4[]          = "Min: 0  Max: 15  Default: 0";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char coffset1[]        = "This changes the default origin of the C-Stick.";
 const char coffset2[]        = "This was for down-angled fsmash but it's better";
 const char coffset3[]        = " done by notch cal so this might be removed.";
 const char coffset4[]        = "Min: 127  Max: -127  Default: 0";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";
@@ -121,13 +121,14 @@ const char remapXR[]         = "Swap X and R";
 const char remapYR[]         = "Swap Y and R";
 const char remapBr[]         = "Broken Config";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char rumble1[]         = "This controls the strength of rumble feedback.";
 const char rumble2[]         = "0 is off, the max is 11, and the default is 9.";
 const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
+const char rumble5[]         = "Press Z to test rumble.";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char trigger1[]        = "L Mode:";
 const char trigger2[]        = "R Mode:";
 const char trigger3[]        = "L Offset:";
@@ -135,7 +136,7 @@ const char trigger4[]        = "R Offset:";
 const char trigger5[]        = "Mode 5 conflict; R will be inoperable";
 const char trigger6[]        = "Mode 5 conflict; L will be inoperable";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char ltrigger1[]       = "This changes the behavior of the L trigger.";
 const char rtrigger1[]       = "This changes the behavior of the R trigger.";
 const char l5conflict[]      = "Conflict with R Trigger Mode 5";
@@ -165,7 +166,7 @@ const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
 
-//Guide for 30 offset        =        100       200       300       400       500 //510 is the last char
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reset1[]          = "Press U/D to select which, and press A to reset.";
 const char reset2[]          = "This resets everything to defaults except for";
 const char reset3[]          = " stick calibration, which is untouched.";
@@ -174,5 +175,16 @@ const char reset5[]          = "You'll need to perform stick calibration again."
 const char reset6[]          = "Are you sure you want to reset? Cancel with B.";
 const char reset7[]          = "Soft Reset";
 const char reset8[]          = "Hard Reset";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char inputview1[]      = "Hardware Inputs:";
+const char inputview2[]      = "Controller Outputs:";
+const char inputview3[]      = "Left      Left Melee      Right     Right Melee";
+const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char vision1[]         = "This controls the alignment of the interlacing.";
+const char vision2[]         = "Adjust it to make the diagonal lines less jaggy.";
+const char vision3[]         = "Interlacing offset:";
 
 #endif //MENUSTRINGS_H

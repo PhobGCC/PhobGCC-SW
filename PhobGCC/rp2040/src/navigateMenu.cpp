@@ -25,7 +25,6 @@ void navigateMenu(unsigned char bitmap[],
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
-		const uint8_t increment,
 		ControlConfig &controls);
 
 void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
@@ -38,13 +37,13 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		const Buttons &hardware,
 		ControlConfig &controls) {
 	uint16_t presses = 0;
-	uint8_t changeIncrement = 1;
 
 	//b button needs to accumulate before acting
 	static uint8_t backAccumulator = 0;
 	//a and dpad are locked out after acting
 	const uint8_t buttonLockout = 10;// 1/6 of a second of ignoring button bounce
 	const uint8_t dpadLockout = 15;// 1/4 of a second of ignoring button bounce
+	const uint8_t dpadLockoutShort = 3;// 1/20 of a second of ignoring button bounce
 	static uint8_t aLockout = 0;
 	static uint8_t zLockout = 0;
 	static uint8_t sLockout = 0;
@@ -124,30 +123,28 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			ddCounter = 0;
 		} else if(hardware.Du && duLockout == 0) {
 			presses = presses | DUPRESS;
-			duLockout = dpadLockout;
-			ddLockout = 0;
-			//also lock out perpendicular directions to prevent misinputs
-			dlLockout = dpadLockout;
-			drLockout = dpadLockout;
-			//Go by 10 after 10 steps
+			//Go faster after 10 steps
 			if(duCounter <= 10) {
 				duCounter++;
 			}
 			ddCounter = 0;
-			changeIncrement = duCounter > 10 ? 10 : 1;
-		} else if(hardware.Dd && ddLockout == 0) {
-			presses = presses | DDPRESS;
-			ddLockout = dpadLockout;
-			duLockout = 0;
+			duLockout = duCounter > 10 ? dpadLockoutShort : dpadLockout;
+			ddLockout = 0;
 			//also lock out perpendicular directions to prevent misinputs
 			dlLockout = dpadLockout;
 			drLockout = dpadLockout;
-			//Go by 10 after 10 steps
+		} else if(hardware.Dd && ddLockout == 0) {
+			presses = presses | DDPRESS;
+			//Go faster after 10 steps
 			if(ddCounter <= 10) {
 				ddCounter++;
 			}
 			duCounter = 0;
-			changeIncrement = ddCounter > 10 ? 10 : 1;
+			ddLockout = ddCounter > 10 ? dpadLockoutShort : dpadLockout;
+			duLockout = 0;
+			//also lock out perpendicular directions to prevent misinputs
+			dlLockout = dpadLockout;
+			drLockout = dpadLockout;
 		} else {
 			//clear the repetition counters
 			if(duLockout == 0) {
@@ -175,7 +172,6 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				currentCalStep,
 				pleaseCommit,
 				presses,
-				changeIncrement,
 				controls);
 	}
 	//handle always-redrawing screens since we don't always call navigation
@@ -201,7 +197,6 @@ void navigateMenu(unsigned char bitmap[],
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
-		const uint8_t increment,
 		ControlConfig &controls) {
 	if(MenuIndex[menu][1] == 0) {
 		if(presses & APRESS) {
@@ -493,17 +488,17 @@ void navigateMenu(unsigned char bitmap[],
 					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
-						controls.cXOffset = fmin(controls.cMax, controls.cXOffset+increment);
+						controls.cXOffset = fmin(controls.cMax, controls.cXOffset+1);
 					} else {//itemIndex == 1
-						controls.cYOffset = fmin(controls.cMax, controls.cYOffset+increment);
+						controls.cYOffset = fmin(controls.cMax, controls.cYOffset+1);
 					}
 					changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
-						controls.cXOffset = fmax(controls.cMin, controls.cXOffset-increment);
+						controls.cXOffset = fmax(controls.cMin, controls.cXOffset-1);
 					} else {//itemIndex == 1
-						controls.cYOffset = fmax(controls.cMin, controls.cYOffset-increment);
+						controls.cYOffset = fmax(controls.cMin, controls.cYOffset-1);
 					}
 					changeMade = (controls.cXOffset != tempInt1) || (controls.cYOffset != tempInt2);
 					redraw = 1;
@@ -549,6 +544,8 @@ void navigateMenu(unsigned char bitmap[],
 					controls.rumble = fmax(controls.rumbleMin, controls.rumble-1);
 					changeMade = controls.rumble != tempInt1;
 					redraw = 1;
+				} else if(presses & ZPRESS) {
+					pleaseCommit = 8;//request rumble
 				} else if((presses & BSAVE) && changeMade) {
 					setRumbleSetting(controls.rumble);
 					tempInt1 = controls.rumble;
@@ -572,7 +569,7 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						controls.lConfig = fmin(controls.triggerConfigMax, controls.lConfig+1);
 					} else {//itemIndex == 1
-						controls.lTriggerOffset = fmin(controls.triggerMax, controls.lTriggerOffset+increment);
+						controls.lTriggerOffset = fmin(controls.triggerMax, controls.lTriggerOffset+1);
 					}
 					changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
 					redraw = 1;
@@ -580,7 +577,7 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						controls.lConfig = fmax(controls.triggerConfigMin, controls.lConfig-1);
 					} else {//itemIndex == 1
-						controls.lTriggerOffset = fmax(controls.triggerMin, controls.lTriggerOffset-increment);
+						controls.lTriggerOffset = fmax(controls.triggerMin, controls.lTriggerOffset-1);
 					}
 					changeMade = (controls.lConfig != tempInt1) || (controls.lTriggerOffset != tempInt2);
 					redraw = 1;
@@ -609,7 +606,7 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						controls.rConfig = fmin(controls.triggerConfigMax, controls.rConfig+1);
 					} else {//itemIndex == 1
-						controls.rTriggerOffset = fmin(controls.triggerMax, controls.rTriggerOffset+increment);
+						controls.rTriggerOffset = fmin(controls.triggerMax, controls.rTriggerOffset+1);
 					}
 					changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
 					redraw = 1;
@@ -617,7 +614,7 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						controls.rConfig = fmax(controls.triggerConfigMin, controls.rConfig-1);
 					} else {//itemIndex == 1
-						controls.rTriggerOffset = fmax(controls.triggerMin, controls.rTriggerOffset-increment);
+						controls.rTriggerOffset = fmax(controls.triggerMin, controls.rTriggerOffset-1);
 					}
 					changeMade = (controls.rConfig != tempInt1) || (controls.rTriggerOffset != tempInt2);
 					redraw = 1;
@@ -657,6 +654,27 @@ void navigateMenu(unsigned char bitmap[],
 						pleaseCommit = 3;
 					}
 				}
+				return;
+			case MENU_VISION:
+				if(!changeMade) {
+					tempInt1 = controls.interlaceOffset;
+				}
+				if(presses & DUPRESS) {
+					controls.interlaceOffset = fmin(controls.interlaceOffsetMax, controls.interlaceOffset+1);
+					changeMade = controls.interlaceOffset != tempInt1;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					controls.interlaceOffset = fmax(controls.interlaceOffsetMin, controls.interlaceOffset-1);
+					changeMade = controls.interlaceOffset != tempInt1;
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setInterlaceOffsetSetting(controls.interlaceOffset);
+					tempInt1 = controls.interlaceOffset;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
 			default:
 				//do nothing
 				return;

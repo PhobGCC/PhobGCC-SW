@@ -17,7 +17,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
 //#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
@@ -26,11 +26,11 @@ using std::max;
 #include "stick.h"
 #include "../extras/extras.h"
 
-#define BUILD_RELEASE
-//#define BUILD_DEV
+//#define BUILD_RELEASE
+#define BUILD_DEV
 
 //This is just an integer.
-#define SW_VERSION 28
+#define SW_VERSION 29
 
 ControlConfig _controls{
 	.jumpConfig = DEFAULTJUMP,
@@ -84,10 +84,25 @@ ControlConfig _controls{
 	.waveshapingFactoryAX = 0,
 	.waveshapingFactoryAY = 0,
 	.waveshapingFactoryCX = 0,
-	.waveshapingFactoryCY = 0
+	.waveshapingFactoryCY = 0,
+	.astickCardinalSnapping = 6,
+	.cstickCardinalSnapping = 6,
+	.cardinalSnappingMin = -1,
+	.cardinalSnappingMax = 6,
+	.cardinalSnappingDefault = 6,
+	.astickAnalogScaler = 100,
+	.cstickAnalogScaler = 100,
+	.analogScalerMin = 82,
+	.analogScalerMax = 125,
+	.analogScalerDefault = 100,
+#ifdef PICO_RP2040
+	.interlaceOffset = 0,
+	.interlaceOffsetMin = -150,
+	.interlaceOffsetMax = 150,
+#endif //PICO_RP2040
 };
 
-FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequenc
+FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequency (1000 Hz)
 	.maxStick = 100,
 	.xVelDecay = 0.1,
 	.yVelDecay = 0.1,
@@ -235,9 +250,6 @@ void showRumble(const int time, Buttons &btn, Buttons &hardware, ControlConfig &
 	clearButtons(time, btn, hardware);
 
 	setRumbleSetting(controls.rumble);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void changeRumble(const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
@@ -272,9 +284,6 @@ void changeAutoInit(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	freezeSticksToggleIndicator(2000, btn, hardware, (controls.autoInit == 1));
 
 	setAutoInitSetting(controls.autoInit);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
@@ -314,9 +323,6 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 
 	setXSnapbackSetting(controls.xSnapback);
 	setYSnapbackSetting(controls.ySnapback);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -358,9 +364,6 @@ void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const 
 		btn.Cx = (uint8_t) (controls.cxWaveshaping + _floatOrigin);
 		btn.Cy = (uint8_t) (controls.cyWaveshaping + _floatOrigin);
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	clearButtons(750, btn, hardware);
 }
@@ -404,9 +407,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		debug_print("Y Smoothing decreased to:");
 		debug_println(controls.aySmoothing);
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -472,9 +472,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		debug_print("C-Stick Y Smoothing decreased to:");
 		debug_println(controls.cySmoothing);
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//recompute the intermediate gains used directly by the kalman filter
 	recomputeGains(gains, normGains);
@@ -520,9 +517,6 @@ void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &
 		debug_print("Y offset decreased to:");
 		debug_println(controls.cYOffset);
 	}
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cXOffset);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
@@ -544,6 +538,79 @@ void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls
 	btn.Ra = (uint8_t) controls.cyWaveshaping;
 
 	clearButtons(2000, btn, hardware);
+}
+
+void adjustCardinalSnapping(const WhichStick whichStick, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(whichStick == ASTICK && increase == INCREASE) {
+		controls.astickCardinalSnapping++;
+		if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
+			controls.astickCardinalSnapping = controls.cardinalSnappingMax;
+		}
+		setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	} else if(whichStick == ASTICK && increase == DECREASE) {
+		controls.astickCardinalSnapping--;
+		if(controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
+			controls.astickCardinalSnapping = controls.cardinalSnappingMin;
+		}
+		setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	} else if(whichStick == CSTICK && increase == INCREASE) {
+		controls.cstickCardinalSnapping++;
+		if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
+			controls.cstickCardinalSnapping = controls.cardinalSnappingMax;
+		}
+		setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+	} else if(whichStick == CSTICK && increase == DECREASE) {
+		controls.cstickCardinalSnapping--;
+		if(controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
+			controls.cstickCardinalSnapping = controls.cardinalSnappingMin;
+		}
+		setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+	}
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.astickCardinalSnapping);
+	btn.Ay = (uint8_t) (_floatOrigin + controls.astickCardinalSnapping);
+
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cstickCardinalSnapping);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cstickCardinalSnapping);
+
+	clearButtons(750, btn, hardware);
+
+}
+
+void adjustAnalogScaler(const WhichStick whichStick, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(whichStick == ASTICK && increase == INCREASE) {
+		controls.astickAnalogScaler++;
+		if(controls.astickAnalogScaler > controls.analogScalerMax) {
+			controls.astickAnalogScaler = controls.analogScalerMax;
+		}
+		setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	} else if(whichStick == ASTICK && increase == DECREASE) {
+		controls.astickAnalogScaler--;
+		if(controls.astickAnalogScaler < controls.analogScalerMin) {
+			controls.astickAnalogScaler = controls.analogScalerMin;
+		}
+		setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	} else if(whichStick == CSTICK && increase == INCREASE) {
+		controls.cstickAnalogScaler++;
+		if(controls.cstickAnalogScaler > controls.analogScalerMax) {
+			controls.cstickAnalogScaler = controls.analogScalerMax;
+		}
+		setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+	} else if(whichStick == CSTICK && increase == DECREASE) {
+		controls.cstickAnalogScaler--;
+		if(controls.cstickAnalogScaler < controls.analogScalerMin) {
+			controls.cstickAnalogScaler = controls.analogScalerMin;
+		}
+		setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+	}
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.astickAnalogScaler);
+	btn.Ay = (uint8_t) (_floatOrigin + controls.astickAnalogScaler);
+
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cstickAnalogScaler);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cstickAnalogScaler);
+
+	clearButtons(750, btn, hardware);
 }
 
 void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
@@ -571,9 +638,6 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 
 	setLOffsetSetting(controls.lTriggerOffset);
 	setROffsetSetting(controls.rTriggerOffset);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	btn.La = (uint8_t) controls.lTriggerOffset;
 	btn.Ra = (uint8_t) controls.rTriggerOffset;
@@ -658,9 +722,6 @@ void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 		}
 	}
 	setJumpSetting(controls.jumpConfig);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 }
 
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -755,9 +816,6 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, Con
 	}
 	setLSetting(controls.lConfig);
 	setRSetting(controls.rConfig);
-#ifdef BATCHSETTINGS
-	commitSettings();
-#endif //BATCHSETTINGS
 
 	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
 	//(user-facing mode 5)
@@ -802,7 +860,7 @@ void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startU
 }
 
 //Take tempCalPoints and use it to generate new stick cal parameters to be used
-void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams) {
+void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams, const ControlConfig &controls) {
 	//recall previous notch angles
 	getNotchAnglesSetting(notchAngles, whichStick);
 	//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
@@ -821,7 +879,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	float transformedX[_noOfNotches+1];
 	float transformedY[_noOfNotches+1];
-	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams);
+	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams, controls, whichStick);
 	//compute the angles for those notches into measuredNotchAngles, using the default angles for the diagonals
 	computeStickAngles(transformedX, transformedY, measuredNotchAngles);
 	//clean full cal points again, feeding those angles in
@@ -1139,6 +1197,58 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
+	//get the A-stick cardinal snapping
+	controls.astickCardinalSnapping = getCardinalSnappingSetting(ASTICK);
+	if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
+		controls.astickCardinalSnapping = 6;
+		numberOfNaN++;
+	} else if (controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
+		controls.astickCardinalSnapping = 6;
+		numberOfNaN++;
+	}
+
+	//get the C-stick cardinal snapping
+	controls.cstickCardinalSnapping = getCardinalSnappingSetting(CSTICK);
+	if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
+		controls.cstickCardinalSnapping = 6;
+		numberOfNaN++;
+	} else if (controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
+		controls.cstickCardinalSnapping = 6;
+		numberOfNaN++;
+	}
+
+	//get the A-stick analog scaler
+	controls.astickAnalogScaler = getAnalogScalerSetting(ASTICK);
+	if(controls.astickAnalogScaler > controls.analogScalerMax) {
+		controls.astickAnalogScaler = 100;
+		numberOfNaN++;
+	} else if (controls.astickAnalogScaler < controls.analogScalerMin) {
+		controls.astickAnalogScaler = 100;
+		numberOfNaN++;
+	}
+
+	//get the C-stick analog scaler
+	controls.cstickAnalogScaler = getAnalogScalerSetting(CSTICK);
+	if(controls.cstickAnalogScaler > controls.analogScalerMax) {
+		controls.cstickAnalogScaler = 100;
+		numberOfNaN++;
+	} else if (controls.cstickAnalogScaler < controls.analogScalerMin) {
+		controls.cstickAnalogScaler = 100;
+		numberOfNaN++;
+	}
+
+#ifdef PICO_RP2040
+	_controls.interlaceOffset = getInterlaceOffsetSetting();
+	if(controls.interlaceOffset < controls.interlaceOffsetMin) {
+		controls.interlaceOffset = 0;
+		numberOfNaN++;
+	}
+	if(controls.interlaceOffset > controls.interlaceOffsetMax) {
+		controls.interlaceOffset = 0;
+		numberOfNaN++;
+	}
+#endif //PICO_RP2040
+
 	//Migration
 	const int schema = getSchemaSetting();
 	debug_print("Saved settings schema: ");
@@ -1157,6 +1267,15 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			debug_println(_rumblePower);
 			//I'd like it to change smoothing, but it's way too complicated
 		case 28:
+			//migrating = true;//uncomment when we do have it migrate
+			debug_println("Updating settings from 0.28");
+			controls.astickAnalogScaler = controls.analogScalerDefault;
+			controls.cstickAnalogScaler = controls.analogScalerDefault;
+			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			controls.interlaceOffset = 0;
+			//fallthrough
+		case 29:
 			//migrating = true;//uncomment when we do have it migrate
 			debug_println("Schema is now current");
 			//fallthrough
@@ -1255,6 +1374,23 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
 
+	//Cardinal snapping
+	controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+	controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+	setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+
+	//Analog scaling
+	controls.astickAnalogScaler = controls.analogScalerDefault;
+	controls.cstickAnalogScaler = controls.analogScalerDefault;
+	setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+
+#ifdef PICO_RP2040
+	_controls.interlaceOffset = 0;
+	setInterlaceOffsetSetting(0);
+#endif //PICO_RP2040
+
 	for(int extra=0; extra<EXTRAS_SIZE; extra++){
 		ExtrasSlot slot = (ExtrasSlot)extra;
 		for(int offset=0; offset<4; offset++){
@@ -1296,6 +1432,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		debug_println("C stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 	}
+
 #ifdef BATCHSETTINGS
 	commitSettings(noLock);
 #endif //BATCHSETTINGS
@@ -1318,19 +1455,19 @@ void copyButtons(const Buttons &src, Buttons &dest) {
 	dest.Ra = src.Ra;
 }
 
-void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams) {
+void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams, const ControlConfig &controls) {
 	currentCalStep = _noOfCalibrationPoints;
 	//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 	if(whichStick == CSTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 	} else if(whichStick == ASTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 	}
 }
 
@@ -1386,7 +1523,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -1442,7 +1579,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -1629,6 +1766,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Smoothing:  RX+Du/Dd
 	* Increase/Decrease Y-Axis Smoothing:  RY+Du/Dd
 	* Show Analog Filtering Settings: L+Start
+	* Increase/Decrease Analog Scaler: LA+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RA+Du/Dd
 	*
 	* C-Stick Configuration
 	* Increase/Decrease X-Axis Snapback Filtering:  AXZ+Du/Dd
@@ -1638,6 +1777,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
+	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
 	*
 	* Swap X with Z:  XZ+Start
 	* Swap Y with Z:  YZ+Start
@@ -1658,6 +1799,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	static bool advanceCal = false;
 
+#ifdef BATCHSETTINGS
+	//This will count up as we request settings changes continuously
+	//If we enter the following if else block with a nonzero counter but no commands are used,
+	// then that means we are done changing (for now) and can commit.
+	//Primarily meant for the trigger offset setting, which has a lot of changes.
+	static int settingChangeCount = 0;
+#endif //BATCHSETTINGS
+
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
 		static float hardResetAccumulator = 0.0;
@@ -1675,7 +1824,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
-		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y) { //display version number (ignore commands for c stick snapback)
+		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y && !hardware.L && !hardware.R) { //display version number (ignore commands for c stick snapback)
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
 			btn.Ax = (uint8_t) _floatOrigin;
@@ -1687,10 +1836,16 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			resetDefaults(SOFT, controls, gains, normGains, _aStickParams, _cStickParams);//don't reset sticks
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset
-			//actually do nothing, this is just to prevent othing things from happening
+			//actually do nothing, this is just to prevent other things from happening
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			changeAutoInit(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			changeRumble(INCREASE, btn, hardware, controls);
 #else // RUMBLE
@@ -1698,6 +1853,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.A && hardware.B && hardware.Dd) { //Decrease Rumble
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			changeRumble(DECREASE, btn, hardware, controls);
 #else // RUMBLE
@@ -1705,6 +1863,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.A && hardware.B && hardware.S) { //Show current rumble setting
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 #ifdef RUMBLE
 			showRumble(2000, btn, hardware, controls);
 #else // RUMBLE
@@ -1723,103 +1884,284 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Dd) { //Decrease Analog X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && !hardware.Z && hardware.Du) { //Increase Analog Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSnapback(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && !hardware.Z && hardware.Dd) { //Decrease Analog X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Du) { //Increase Analog Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Analog Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(ASTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Du) { //Increase X-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.X && !hardware.Z && hardware.Dd) { //Decrease X-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Du) { //Increase Y-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
+		} else if(hardware.R && hardware.A && hardware.Du && !hardware.Z) { //Increase Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(ASTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(ASTICK, DECREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Du && !hardware.Z) { //Increase Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(XAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(XAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.A && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Snapback Filtering
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Waveshaping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustWaveshaping(CSTICK, YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
 		} else if(hardware.A && hardware.B && hardware.R) { //Toggle Analog R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			nextTriggerState(RTRIGGER, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Du) { //Increase L-Trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(LTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.B && hardware.Dd) { //Decrease L-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(LTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Du) { //Increase R-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(RTRIGGER, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.X && hardware.L && hardware.S) { //Swap X and L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XL, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.L && hardware.S) { //Swap Y and L
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YL, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.X && hardware.R && hardware.S) { //Swap X and R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_XR, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.R && hardware.S) { //Swap Y and R
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			setJumpConfig(SWAP_YR, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_DOWN, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_LEFT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, false)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			toggleExtra(EXTRAS_RIGHT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, true)) { // Configure Extras
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_UP, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_DOWN, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_DOWN, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_LEFT, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_LEFT, btn, hardware, controls);
 		} else if(checkAdjustExtra(EXTRAS_RIGHT, btn, true)) {
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
 			configExtra(EXTRAS_RIGHT, btn, hardware, controls);
+#ifdef BATCHSETTINGS
+		} else {
+			//If the buttons were released after changing an applicable setting
+			if(settingChangeCount > 0) {
+				settingChangeCount = 0;
+				//request a commit
+				commitSettings();
+			}
+#endif //BATCHSETTINGS
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
@@ -1840,7 +2182,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
-		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams);
+		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams, controls);
 	}
 
 	//Undo Calibration using Z-button
@@ -2025,16 +2367,18 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float remappedAyUnfiltered;
 	float remappedCxUnfiltered;
 	float remappedCyUnfiltered;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
-	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1);//no snapping
-	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1);//no snapping
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep, controls, ASTICK);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep, controls, CSTICK);
+	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1, controls, ASTICK);//no snapping
+	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1, controls, CSTICK);//no snapping
 
+	float AScaler = (float) (controls.astickAnalogScaler) / 100.0f;
+	float CScaler = (float) (controls.cstickAnalogScaler) / 100.0f;
 	//Clamp values from -125 to +125
-	remappedAx = fmin(125, fmax(-125, remappedAx));
-	remappedAy = fmin(125, fmax(-125, remappedAy));
-	remappedCx = fmin(125, fmax(-125, remappedCx+controls.cXOffset));
-	remappedCy = fmin(125, fmax(-125, remappedCy+controls.cYOffset));
+	remappedAx = fmin(125, fmax(-125, remappedAx * AScaler));
+	remappedAy = fmin(125, fmax(-125, remappedAy * AScaler));
+	remappedCx = fmin(125, fmax(-125, (remappedCx * CScaler)+controls.cXOffset));
+	remappedCy = fmin(125, fmax(-125, (remappedCy * CScaler)+controls.cYOffset));
 	_raw.axUnfiltered = fmin(125, fmax(-125, remappedAxUnfiltered));
 	_raw.ayUnfiltered = fmin(125, fmax(-125, remappedAyUnfiltered));
 	_raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered+controls.cXOffset));

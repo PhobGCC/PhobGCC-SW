@@ -137,7 +137,7 @@ void cleanNotches(float notchAngles[], float measuredNotchAngles[], NotchStatus 
 	notchRemap
 	Remaps the stick position using affine transforms generated from the notch positions
 *******************/
-void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep){
+void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, const int regions, const StickParams &stickParams, int currentCalStep, const ControlConfig &controls, const WhichStick whichStick){
 	//determine the angle between the x unit vector and the current position vector
 	float angle = atan2f(yIn,xIn);
 
@@ -163,11 +163,39 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	*yOut = stickParams.affineCoeffs[region][2]*xIn + stickParams.affineCoeffs[region][3]*yIn;
 
 	if(currentCalStep == -1) {
-		if((abs(*xOut)<6) && (abs(*yOut)>80)){
-			*xOut = 0;
-		}
-		if((abs(*yOut)<6) && (abs(*xOut)>80)){
-			*yOut = 0;
+
+		if(whichStick == ASTICK) {
+			if(controls.astickCardinalSnapping > 0) {
+				if((abs(*xOut)<controls.astickCardinalSnapping) && (abs(*yOut)>80)){
+					*xOut = 0;
+				}
+				if((abs(*yOut)<controls.astickCardinalSnapping) && (abs(*xOut)>80)){
+					*yOut = 0;
+				}
+			} else if(controls.astickCardinalSnapping == -1) {
+				if((abs(*xOut)<6) && (abs(*yOut)>80)){
+					*xOut = 7;
+				}
+				if((abs(*yOut)<6) && (abs(*xOut)>80)){
+					*yOut = 7;
+				}
+			}
+		} else {
+			if(controls.cstickCardinalSnapping > 0) {
+				if((abs(*xOut)<controls.cstickCardinalSnapping) && (abs(*yOut)>80)){
+					*xOut = 0;
+				}
+				if((abs(*yOut)<controls.cstickCardinalSnapping) && (abs(*xOut)>80)){
+					*yOut = 0;
+				}
+			} else if(controls.cstickCardinalSnapping == -1) {
+				if((abs(*xOut)<6) && (abs(*yOut)>80)){
+					*xOut = 7;
+				}
+				if((abs(*yOut)<6) && (abs(*xOut)>80)){
+					*yOut = 7;
+				}
+			}
 		}
 
 		if((abs(*xOut)<3) && (abs(*yOut)<3)) {
@@ -182,13 +210,13 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
  * remaps the cleaned calibration points from raw measurements to output coordinates
  * This seems redundant but we're feeding it coordinates without non-diagonal notches
  */
-void transformCalPoints(const float xInput[], const float yInput[], float xOutput[], float yOutput[], const StickParams &stickParams){
+void transformCalPoints(const float xInput[], const float yInput[], float xOutput[], float yOutput[], const StickParams &stickParams, const ControlConfig &controls, const WhichStick whichStick){
 	for(int i=0; i < _noOfNotches+1; i++){
 		float xValue = linearize(xInput[i], stickParams.fitCoeffsX);
 		float yValue = linearize(yInput[i], stickParams.fitCoeffsY);
 		float outX;
 		float outY;
-		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0);
+		notchRemap(xValue, yValue, &outX, &outY, _noOfNotches, stickParams, 0, controls, whichStick);
 		xOutput[i] = outX;
 		yOutput[i] = outY;
 	}
