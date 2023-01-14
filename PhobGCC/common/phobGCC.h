@@ -16,12 +16,13 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
 //#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
+#include "debug.h"
 #include "filter.h"
 #include "stick.h"
 #include "../extras/extras.h"
@@ -241,9 +242,7 @@ void showRumble(const int time, Buttons &btn, Buttons &hardware, ControlConfig &
 }
 
 void changeRumble(const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
-#ifdef ARDUINO
-	Serial.println("changing rumble");
-#endif //ARDUINO
+	debug_println("changing rumble");
 	if(increase == INCREASE) {
 		controls.rumble += 1;
 	} else {
@@ -280,37 +279,27 @@ void changeAutoInit(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 }
 
 void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains){
-#ifdef ARDUINO
-	Serial.println("adjusting snapback filtering");
-#endif //ARDUINO
+	debug_println("adjusting snapback filtering");
 	if(axis == XAXIS && increase == INCREASE){
 		controls.xSnapback = min(controls.xSnapback+1, controls.snapbackMax);
-#ifdef ARDUINO
-		Serial.print("x snapback filtering increased to:");
-		Serial.println(controls.xSnapback);
-#endif //ARDUINO
+		debug_print("x snapback filtering increased to:");
+		debug_println(controls.xSnapback);
 	}
 	else if(axis == XAXIS && increase == DECREASE){
 		controls.xSnapback = max(controls.xSnapback-1, controls.snapbackMin);
-#ifdef ARDUINO
-		Serial.print("x snapback filtering decreased to:");
-		Serial.println(controls.xSnapback);
-#endif //ARDUINO
+		debug_print("x snapback filtering decreased to:");
+		debug_println(controls.xSnapback);
 	}
 
 	if(axis == YAXIS && increase == INCREASE){
 		controls.ySnapback = min(controls.ySnapback+1, controls.snapbackMax);
-#ifdef ARDUINO
-		Serial.print("y snapback filtering increased to:");
-		Serial.println(controls.ySnapback);
-#endif //ARDUINO
+		debug_print("y snapback filtering increased to:");
+		debug_println(controls.ySnapback);
 	}
 	else if(axis == YAXIS && increase == DECREASE){
 		controls.ySnapback = max(controls.ySnapback-1, controls.snapbackMin);
-#ifdef ARDUINO
-		Serial.print("y snapback filtering decreased to:");
-		Serial.println(controls.ySnapback);
-#endif //ARDUINO
+		debug_print("y snapback filtering decreased to:");
+		debug_println(controls.ySnapback);
 	}
 
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
@@ -332,9 +321,7 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 }
 
 void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls){
-#ifdef ARDUINO
-	Serial.println("adjusting waveshaping");
-#endif //ARDUINO
+	debug_println("adjusting waveshaping");
 	if(whichStick == ASTICK){
 		if(axis == XAXIS){
 			if(increase == INCREASE){
@@ -380,9 +367,7 @@ void adjustWaveshaping(const WhichStick whichStick, const WhichAxis axis, const 
 }
 
 void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
-#ifdef ARDUINO
-	Serial.println("Adjusting Smoothing");
-#endif //ARDUINO
+	debug_println("Adjusting Smoothing");
 	if (axis == XAXIS && increase == INCREASE) {
 		controls.axSmoothing++;
 		if(controls.axSmoothing > controls.smoothingMax) {
@@ -390,10 +375,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		}
 		gains.xSmoothing = controls.axSmoothing/10.0f;
 		setXSmoothingSetting(controls.axSmoothing);
-#ifdef ARDUINO
-		Serial.print("X Smoothing increased to:");
-		Serial.println(controls.axSmoothing);
-#endif //ARDUINO
+		debug_print("X Smoothing increased to:");
+		debug_println(controls.axSmoothing);
 	} else if(axis == XAXIS && increase == DECREASE) {
 		controls.axSmoothing--;
 		if(controls.axSmoothing < controls.smoothingMin) {
@@ -401,10 +384,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		}
 		gains.xSmoothing = controls.axSmoothing/10.0f;
 		setXSmoothingSetting(controls.axSmoothing);
-#ifdef ARDUINO
-		Serial.print("X Smoothing decreased to:");
-		Serial.println(controls.axSmoothing);
-#endif //ARDUINO
+		debug_print("X Smoothing decreased to:");
+		debug_println(controls.axSmoothing);
 	} else if(axis == YAXIS && increase == INCREASE) {
 		controls.aySmoothing++;
 		if (controls.aySmoothing > controls.smoothingMax) {
@@ -412,10 +393,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		}
 		gains.ySmoothing = controls.aySmoothing/10.0f;
 		setYSmoothingSetting(controls.aySmoothing);
-#ifdef ARDUINO
-		Serial.print("Y Smoothing increased to:");
-		Serial.println(controls.aySmoothing);
-#endif //ARDUINO
+		debug_print("Y Smoothing increased to:");
+		debug_println(controls.aySmoothing);
 	} else if(axis == YAXIS && increase == DECREASE) {
 		controls.aySmoothing--;
 		if (controls.aySmoothing < controls.smoothingMin) {
@@ -423,10 +402,8 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		}
 		gains.ySmoothing = controls.aySmoothing/10.0f;
 		setYSmoothingSetting(controls.aySmoothing);
-#ifdef ARDUINO
-		Serial.print("Y Smoothing decreased to:");
-		Serial.println(controls.aySmoothing);
-#endif //ARDUINO
+		debug_print("Y Smoothing decreased to:");
+		debug_println(controls.aySmoothing);
 	}
 #ifdef BATCHSETTINGS
 	commitSettings();
@@ -458,9 +435,7 @@ void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &co
 }
 
 void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains) {
-#ifdef ARDUINO
-	Serial.println("Adjusting C-Stick Smoothing");
-#endif //ARDUINO
+	debug_println("Adjusting C-Stick Smoothing");
 	if (axis == XAXIS && increase == INCREASE) {
 		controls.cxSmoothing++;
 		if(controls.cxSmoothing > controls.smoothingMax) {
@@ -468,10 +443,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		}
 		gains.cXSmoothing = controls.cxSmoothing/10.0f;
 		setCxSmoothingSetting(controls.cxSmoothing);
-#ifdef ARDUINO
-		Serial.print("C-Stick X Smoothing increased to:");
-		Serial.println(controls.cxSmoothing);
-#endif //ARDUINO
+		debug_print("C-Stick X Smoothing increased to:");
+		debug_println(controls.cxSmoothing);
 	} else if(axis == XAXIS && increase == DECREASE) {
 		controls.cxSmoothing--;
 		if(controls.cxSmoothing < controls.smoothingMin) {
@@ -479,10 +452,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		}
 		gains.cXSmoothing = controls.cxSmoothing/10.0f;
 		setCxSmoothingSetting(controls.cxSmoothing);
-#ifdef ARDUINO
-		Serial.print("C-Stick X Smoothing decreased to:");
-		Serial.println(controls.cxSmoothing);
-#endif //ARDUINO
+		debug_print("C-Stick X Smoothing decreased to:");
+		debug_println(controls.cxSmoothing);
 	} else if(axis == YAXIS && increase == INCREASE) {
 		controls.cySmoothing++;
 		if (controls.cySmoothing > controls.smoothingMax) {
@@ -490,10 +461,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		}
 		gains.cYSmoothing = controls.cySmoothing/10.0f;
 		setCySmoothingSetting(controls.cySmoothing);
-#ifdef ARDUINO
-		Serial.print("C-Stick Y Smoothing increased to:");
-		Serial.println(controls.cySmoothing);
-#endif //ARDUINO
+		debug_print("C-Stick Y Smoothing increased to:");
+		debug_println(controls.cySmoothing);
 	} else if(axis == YAXIS && increase == DECREASE) {
 		controls.cySmoothing--;
 		if (controls.cySmoothing < controls.smoothingMin) {
@@ -501,10 +470,8 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		}
 		gains.cYSmoothing = controls.cySmoothing/10.0f;
 		setCySmoothingSetting(controls.cySmoothing);
-#ifdef ARDUINO
-		Serial.print("C-Stick Y Smoothing decreased to:");
-		Serial.println(controls.cySmoothing);
-#endif //ARDUINO
+		debug_print("C-Stick Y Smoothing decreased to:");
+		debug_println(controls.cySmoothing);
 	}
 #ifdef BATCHSETTINGS
 	commitSettings();
@@ -520,49 +487,39 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 }
 
 void adjustCstickOffset(const WhichAxis axis, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
-#ifdef ARDUINO
-	Serial.println("Adjusting C-stick Offset");
-#endif //ARDUINO
+	debug_println("Adjusting C-stick Offset");
 	if(axis == XAXIS && increase == INCREASE) {
 		controls.cXOffset++;
 		if(controls.cXOffset > controls.cMax) {
 			controls.cXOffset = controls.cMax;
 		}
 		setCxOffsetSetting(controls.cXOffset);
-#ifdef ARDUINO
-		Serial.print("X offset increased to:");
-		Serial.println(controls.cXOffset);
-#endif //ARDUINO
+		debug_print("X offset increased to:");
+		debug_println(controls.cXOffset);
 	} else if(axis == XAXIS && increase == DECREASE) {
 		controls.cXOffset--;
 		if(controls.cXOffset < controls.cMin) {
 			controls.cXOffset = controls.cMin;
 		}
 		setCxOffsetSetting(controls.cXOffset);
-#ifdef ARDUINO
-		Serial.print("X offset decreased to:");
-		Serial.println(controls.cXOffset);
-#endif //ARDUINO
+		debug_print("X offset decreased to:");
+		debug_println(controls.cXOffset);
 	} else if(axis == YAXIS && increase == INCREASE) {
 		controls.cYOffset++;
 		if(controls.cYOffset > controls.cMax) {
 			controls.cYOffset = controls.cMax;
 		}
 		setCyOffsetSetting(controls.cYOffset);
-#ifdef ARDUINO
-		Serial.print("Y offset increased to:");
-		Serial.println(controls.cYOffset);
-#endif //ARDUINO
+		debug_print("Y offset increased to:");
+		debug_println(controls.cYOffset);
 	} else if(axis == YAXIS && increase == DECREASE) {
 		controls.cYOffset--;
 		if(controls.cYOffset < controls.cMin) {
 			controls.cYOffset = controls.cMin;
 		}
 		setCyOffsetSetting(controls.cYOffset);
-#ifdef ARDUINO
-		Serial.print("Y offset decreased to:");
-		Serial.println(controls.cYOffset);
-#endif //ARDUINO
+		debug_print("Y offset decreased to:");
+		debug_println(controls.cYOffset);
 	}
 #ifdef BATCHSETTINGS
 	commitSettings();
@@ -672,40 +629,34 @@ void applyJump(const ControlConfig &controls, const Buttons &hardware, Buttons &
 }
 
 void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
-#ifdef ARDUINO
-	Serial.print("setting jump to: ");
-#endif //ARDUINO
+	debug_print("setting jump to: ");
 	if (controls.jumpConfig == jumpConfig) {
 		controls.jumpConfig = DEFAULTJUMP;
-#ifdef ARDUINO
-		Serial.println("normal again");
-#endif //ARDUINO
+		debug_println("normal again");
 	} else {
 		controls.jumpConfig = jumpConfig;
-#ifdef ARDUINO
 		switch (jumpConfig) {
 			case SWAP_XZ:
-				Serial.println("X<->Z");
+				debug_println("X<->Z");
 				break;
 			case SWAP_YZ:
-				Serial.println("Y<->Z");
+				debug_println("Y<->Z");
 				break;
 			case SWAP_XL:
-				Serial.println("X<->L");
+				debug_println("X<->L");
 				break;
 			case SWAP_YL:
-				Serial.println("Y<->L");
+				debug_println("Y<->L");
 				break;
 			case SWAP_XR:
-				Serial.println("X<->R");
+				debug_println("X<->R");
 				break;
 			case SWAP_YR:
-				Serial.println("Y<->R");
+				debug_println("Y<->R");
 				break;
 			default:
-				Serial.println("normal");
+				debug_println("normal");
 		}
-#endif //ARDUINO
 	}
 	setJumpSetting(controls.jumpConfig);
 #ifdef BATCHSETTINGS
@@ -966,10 +917,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//get the x-axis snapback correction
 	controls.xSnapback = getXSnapbackSetting();
-#ifdef ARDUINO
-	Serial.print("the xSnapback value from eeprom is:");
-	Serial.println(controls.xSnapback);
-#endif //ARDUINO
+	debug_print("the xSnapback value from eeprom is:");
+	debug_println(controls.xSnapback);
 	if(controls.xSnapback < controls.snapbackMin) {
 		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
@@ -978,17 +927,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		numberOfNaN++;
 	}
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
-#ifdef ARDUINO
-	Serial.print("the xVelDamp value from eeprom is:");
-	Serial.println(gains.xVelDamp);
-#endif //ARDUINO
+	debug_print("the xVelDamp value from eeprom is:");
+	debug_println(gains.xVelDamp);
 
 	//get the y-ayis snapback correction
 	controls.ySnapback = getYSnapbackSetting();
-#ifdef ARDUINO
-	Serial.print("the ySnapback value from eeprom is:");
-	Serial.println(controls.ySnapback);
-#endif //ARDUINO
+	debug_print("the ySnapback value from eeprom is:");
+	debug_println(controls.ySnapback);
 	if(controls.ySnapback < controls.snapbackMin) {
 		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
@@ -997,109 +942,81 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		numberOfNaN++;
 	}
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
-#ifdef ARDUINO
-	Serial.print("the yVelDamp value from eeprom is:");
-	Serial.println(gains.yVelDamp);
-#endif //ARDUINO
+	debug_print("the yVelDamp value from eeprom is:");
+	debug_println(gains.yVelDamp);
 
 	//get the x-axis smoothing value
 	controls.axSmoothing = getXSmoothingSetting();
-#ifdef ARDUINO
-	Serial.print("the xSmoothing value from eeprom is:");
-	Serial.println(controls.axSmoothing);
-#endif //ARDUINO
+	debug_print("the xSmoothing value from eeprom is:");
+	debug_println(controls.axSmoothing);
 	if(controls.axSmoothing > controls.smoothingMax) {
 		controls.axSmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the xSmoothing value was adjusted to:");
-		Serial.println(controls.axSmoothing);
-#endif //ARDUINO
+		debug_print("the xSmoothing value was adjusted to:");
+		debug_println(controls.axSmoothing);
 	} else if(controls.axSmoothing < controls.smoothingMin) {
 		controls.axSmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the xSmoothing value was adjusted to:");
-		Serial.println(controls.axSmoothing);
-#endif //ARDUINO
+		debug_print("the xSmoothing value was adjusted to:");
+		debug_println(controls.axSmoothing);
 	}
 	gains.xSmoothing = controls.axSmoothing / 10.0f;
 
 	//get the y-axis smoothing value
 	controls.aySmoothing = getYSmoothingSetting();
-#ifdef ARDUINO
-	Serial.print("the ySmoothing value from eeprom is:");
-	Serial.println(controls.aySmoothing);
-#endif //ARDUINO
+	debug_print("the ySmoothing value from eeprom is:");
+	debug_println(controls.aySmoothing);
 	if(controls.aySmoothing > controls.smoothingMax) {
 		controls.aySmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the ySmoothing value was adjusted to:");
-		Serial.println(controls.aySmoothing);
-#endif //ARDUINO
+		debug_print("the ySmoothing value was adjusted to:");
+		debug_println(controls.aySmoothing);
 	} else if(controls.aySmoothing < controls.smoothingMin) {
 		controls.aySmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the ySmoothing value was adjusted to:");
-		Serial.println(controls.aySmoothing);
-#endif //ARDUINO
+		debug_print("the ySmoothing value was adjusted to:");
+		debug_println(controls.aySmoothing);
 	}
 	gains.ySmoothing = controls.aySmoothing / 10.0f;
 
 	//get the c-stick x-axis smoothing value
 	controls.cxSmoothing = getCxSmoothingSetting();
-#ifdef ARDUINO
-	Serial.print("the cXSmoothing value from eeprom is:");
-	Serial.println(controls.cxSmoothing);
-#endif //ARDUINO
+	debug_print("the cXSmoothing value from eeprom is:");
+	debug_println(controls.cxSmoothing);
 	if(controls.cxSmoothing > controls.smoothingMax) {
 		controls.cxSmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the cXSmoothing value was adjusted to:");
-		Serial.println(controls.cxSmoothing);
-#endif //ARDUINO
+		debug_print("the cXSmoothing value was adjusted to:");
+		debug_println(controls.cxSmoothing);
 	} else if(controls.cxSmoothing < controls.smoothingMin) {
 		controls.cxSmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the cXSmoothing value was adjusted to:");
-		Serial.println(controls.cxSmoothing);
-#endif //ARDUINO
+		debug_print("the cXSmoothing value was adjusted to:");
+		debug_println(controls.cxSmoothing);
 	}
 	gains.cXSmoothing = controls.cxSmoothing / 10.0f;
 
 	//get the c-stick y-axis smoothing value
 	controls.cySmoothing = getCySmoothingSetting();
-#ifdef ARDUINO
-	Serial.print("the cYSmoothing value from eeprom is:");
-	Serial.println(controls.cySmoothing);
-#endif //ARDUINO
+	debug_print("the cYSmoothing value from eeprom is:");
+	debug_println(controls.cySmoothing);
 	if(controls.cySmoothing > controls.smoothingMax) {
 		controls.cySmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the cYSmoothing value was adjusted to:");
-		Serial.println(controls.cySmoothing);
-#endif //ARDUINO
+		debug_print("the cYSmoothing value was adjusted to:");
+		debug_println(controls.cySmoothing);
 	} else if(controls.cySmoothing < controls.smoothingMin) {
 		controls.cySmoothing = controls.smoothingMin;
 		numberOfNaN++;
-#ifdef ARDUINO
-		Serial.print("the cYSmoothing value was adjusted to:");
-		Serial.println(controls.cySmoothing);
-#endif //ARDUINO
+		debug_print("the cYSmoothing value was adjusted to:");
+		debug_println(controls.cySmoothing);
 	}
 	gains.cYSmoothing = controls.cySmoothing/10.0f;
 
 	//get the a-stick x-axis waveshaping value
 	controls.axWaveshaping = getWaveshapingSetting(ASTICK, XAXIS);
-#ifdef ARDUINO
-	Serial.print("the axWaveshaping value from eeprom is:");
-	Serial.println(controls.axWaveshaping);
-#endif //ARDUINO
+	debug_print("the axWaveshaping value from eeprom is:");
+	debug_println(controls.axWaveshaping);
 	if(controls.axWaveshaping < controls.waveshapingMin) {
 		controls.axWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
@@ -1110,10 +1027,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//get the a-stick y-axis waveshaping value
 	controls.ayWaveshaping = getWaveshapingSetting(ASTICK, YAXIS);
-#ifdef ARDUINO
-	Serial.print("the ayWaveshaping value from eeprom is:");
-	Serial.println(controls.ayWaveshaping);
-#endif //ARDUINO
+	debug_print("the ayWaveshaping value from eeprom is:");
+	debug_println(controls.ayWaveshaping);
 	if(controls.ayWaveshaping < controls.waveshapingMin) {
 		controls.ayWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
@@ -1124,10 +1039,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//get the c-stick x-axis waveshaping value
 	controls.cxWaveshaping = getWaveshapingSetting(CSTICK, XAXIS);
-#ifdef ARDUINO
-	Serial.print("the cxWaveshaping value from eeprom is:");
-	Serial.println(controls.cxWaveshaping);
-#endif //ARDUINO
+	debug_print("the cxWaveshaping value from eeprom is:");
+	debug_println(controls.cxWaveshaping);
 	if(controls.cxWaveshaping < controls.waveshapingMin) {
 		controls.cxWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
@@ -1138,10 +1051,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//get the c-stick y-axis waveshaping value
 	controls.cyWaveshaping = getWaveshapingSetting(CSTICK, YAXIS);
-#ifdef ARDUINO
-	Serial.print("the cyWaveshaping value from eeprom is:");
-	Serial.println(controls.cyWaveshaping);
-#endif //ARDUINO
+	debug_print("the cyWaveshaping value from eeprom is:");
+	debug_println(controls.cyWaveshaping);
 	if(controls.cyWaveshaping < controls.waveshapingMin) {
 		controls.cyWaveshaping = controls.waveshapingMin;
 		numberOfNaN++;
@@ -1151,10 +1062,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	if(controls.axWaveshaping != 0){
-#ifdef ARDUINO
-		Serial.print("the axWaveshaping coefficient is: ");
-		Serial.println(1/calcWaveshapeMult(controls.axWaveshaping));
-#endif //ARDUINO
+		debug_print("the axWaveshaping coefficient is: ");
+		debug_println(1/calcWaveshapeMult(controls.axWaveshaping));
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
@@ -1162,10 +1071,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//Get the rumble value
 	controls.rumble = getRumbleSetting();
-#ifdef ARDUINO
-	Serial.print("Rumble value before fixing: ");
-	Serial.println(controls.rumble);
-#endif //ARDUINO
+	debug_print("Rumble value before fixing: ");
+	debug_println(controls.rumble);
 	if(std::isnan(controls.rumble)) {
 		controls.rumble = controls.rumbleDefault;
 		numberOfNaN++;
@@ -1177,12 +1084,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.rumble = controls.rumbleDefault;
 	}
 	_rumblePower = calcRumblePower(controls.rumble);
-#ifdef ARDUINO
-	Serial.print("Rumble value: ");
-	Serial.println(controls.rumble);
-	Serial.print("Rumble power: ");
-	Serial.println(_rumblePower);
-#endif //ARDUINO
+	debug_print("Rumble value: ");
+	debug_println(controls.rumble);
+	debug_print("Rumble power: ");
+	debug_println(_rumblePower);
 
 	//Get the autoinit value
 	controls.autoInit = getAutoInitSetting();
@@ -1194,10 +1099,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.autoInit = 0;
 		numberOfNaN++;
 	}
-#ifdef ARDUINO
-	Serial.print("Auto init: ");
-	Serial.println(controls.autoInit);
-#endif //ARDUINO
+	debug_print("Auto init: ");
+	debug_println(controls.autoInit);
 
 	//get the calibration points collected during the last A stick calibration
 	float tempCalPointsX[_noOfCalibrationPoints];
@@ -1214,13 +1117,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	NotchStatus notchStatus[_noOfNotches];
 
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-	Serial.println("calibration points cleaned");
-#endif //ARDUINO
+	debug_println("calibration points cleaned");
 	linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
-#ifdef ARDUINO
-	Serial.println("A stick linearized");
-#endif //ARDUINO
+	debug_println("A stick linearized");
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
 
 	//get the calibration points collected during the last A stick calibration
@@ -1228,13 +1127,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	getPointsSetting(tempCalPointsY, CSTICK, YAXIS);
 	getNotchAnglesSetting(notchAngles, CSTICK);
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-	Serial.println("calibration points cleaned");
-#endif //ARDUINO
+	debug_println("calibration points cleaned");
 	linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
-#ifdef ARDUINO
-	Serial.println("C stick linearized");
-#endif //ARDUINO
+	debug_println("C stick linearized");
 	notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 
 	//read in extras settings
@@ -1247,38 +1142,28 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//Migration
 	const int schema = getSchemaSetting();
-#ifdef ARDUINO
-	Serial.print("Saved settings schema: ");
-	Serial.println(schema);
-#endif //ARDUINO
+	debug_print("Saved settings schema: ");
+	debug_println(schema);
 	bool migrating = false;
 	switch(schema) {
 		case -1:
 			migrating = true;
-#ifdef ARDUINO
-			Serial.println("Updating settings from unitialized");
-#endif //ARDUINO
+			debug_println("Updating settings from unitialized");
 			controls.rumble = controls.rumble!=0 ? controls.rumble + 4 : 0;
 			_rumblePower = calcRumblePower(controls.rumble);
 			setRumbleSetting(controls.rumble);
-#ifdef ARDUINO
-			Serial.print("Rumble value changed to: ");
-			Serial.println(controls.rumble);
-			Serial.print("Rumble power now: ");
-			Serial.println(_rumblePower);
-#endif //ARDUINO
+			debug_print("Rumble value changed to: ");
+			debug_println(controls.rumble);
+			debug_print("Rumble power now: ");
+			debug_println(_rumblePower);
 			//I'd like it to change smoothing, but it's way too complicated
 		case 28:
 			//migrating = true;//uncomment when we do have it migrate
-#ifdef ARDUINO
-			Serial.println("Schema is now current");
-#endif //ARDUINO
+			debug_println("Schema is now current");
 			//fallthrough
 		default:
 			if(migrating) {
-#ifdef ARDUINO
-				Serial.println("Updating saved settings schema");
-#endif //ARDUINO
+				debug_println("Updating saved settings schema");
 				setSchemaSetting(SW_VERSION);
 #ifdef BATCHSETTINGS
 				commitSettings(noLock);
@@ -1289,9 +1174,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 }
 
 void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
-#ifdef ARDUINO
-	Serial.println("RESETTING ALL DEFAULTS");
-#endif //ARDUINO
+	debug_println("RESETTING ALL DEFAULTS");
 
 	controls.jumpConfig = DEFAULTJUMP;
 	setJumpSetting(controls.jumpConfig);
@@ -1390,9 +1273,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 		setPointsSetting(_defaultCalPointsX, ASTICK, XAXIS);
 		setPointsSetting(_defaultCalPointsY, ASTICK, YAXIS);
-#ifdef ARDUINO
-		Serial.println("A calibration points stored in EEPROM");
-#endif //ARDUINO
+		debug_println("A calibration points stored in EEPROM");
 
 		float cleanedPointsX[_noOfNotches+1];
 		float cleanedPointsY[_noOfNotches+1];
@@ -1401,29 +1282,19 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		NotchStatus notchStatus[_noOfNotches];
 
 		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-		Serial.println("A calibration points cleaned");
-#endif //ARDUINO
+		debug_println("A calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
-#ifdef ARDUINO
-		Serial.println("A stick linearized");
-#endif //ARDUINO
+		debug_println("A stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
 
 		setPointsSetting(_defaultCalPointsX, CSTICK, XAXIS);
 		setPointsSetting(_defaultCalPointsY, CSTICK, YAXIS);
-#ifdef ARDUINO
-		Serial.println("C calibration points stored in EEPROM");
-#endif //ARDUINO
+		debug_println("C calibration points stored in EEPROM");
 
 		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-		Serial.println("C calibration points cleaned");
-#endif //ARDUINO
+		debug_println("C calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
-#ifdef ARDUINO
-		Serial.println("C stick linearized");
-#endif //ARDUINO
+		debug_println("C stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 	}
 #ifdef BATCHSETTINGS
@@ -1526,9 +1397,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		}
 		if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
-#ifdef ARDUINO
-			Serial.println("finished adjusting notches for the C stick");
-#endif //ARDUINO
+			debug_println("finished adjusting notches for the C stick");
 			setPointsSetting(tempCalPointsX, whichStick, XAXIS);
 			setPointsSetting(tempCalPointsY, whichStick, YAXIS);
 			setNotchAnglesSetting(notchAngles, whichStick);
@@ -1537,30 +1406,22 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 #ifdef BATCHSETTINGS
 			commitSettings();
 #endif //BATCHSETTINGS
-#ifdef ARDUINO
-			Serial.println("calibration points stored in EEPROM");
-#endif //ARDUINO
+			debug_println("calibration points stored in EEPROM");
 			float cleanedPointsX[_noOfNotches+1];
 			float cleanedPointsY[_noOfNotches+1];
 			float notchPointsX[_noOfNotches+1];
 			float notchPointsY[_noOfNotches+1];
 			cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-			Serial.println("calibration points cleaned");
-#endif //ARDUINO
+			debug_println("calibration points cleaned");
 			linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
-#ifdef ARDUINO
-			Serial.println("C stick linearized");
-#endif //ARDUINO
+			debug_println("C stick linearized");
 			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
 			currentCalStep = -1;
 		}
 	}
 	else if (whichStick == ASTICK){
-#ifdef ARDUINO
-		Serial.println("Current step:");
-		Serial.println(currentCalStep);
-#endif //ARDUINO
+		debug_println("Current step:");
+		debug_println(currentCalStep);
 		if(currentCalStep < _noOfCalibrationPoints){//still collecting points
 			readADCScale(_ADCScale, _ADCScaleFactor);
 			float X = 0;
@@ -1592,9 +1453,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 			notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		}
 		if(currentCalStep >= _noOfCalibrationPoints + _noOfAdjNotches){//done adjusting notches
-#ifdef ARDUINO
-			Serial.println("finished adjusting notches for the A stick");
-#endif //ARDUINO
+			debug_println("finished adjusting notches for the A stick");
 			setPointsSetting(tempCalPointsX, whichStick, XAXIS);
 			setPointsSetting(tempCalPointsY, whichStick, YAXIS);
 			setNotchAnglesSetting(notchAngles, whichStick);
@@ -1603,21 +1462,15 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 #ifdef BATCHSETTINGS
 			commitSettings();
 #endif //BATCHSETTINGS
-#ifdef ARDUINO
-			Serial.println("calibration points stored in EEPROM");
-#endif //ARDUINO
+			debug_println("calibration points stored in EEPROM");
 			float cleanedPointsX[_noOfNotches+1];
 			float cleanedPointsY[_noOfNotches+1];
 			float notchPointsX[_noOfNotches+1];
 			float notchPointsY[_noOfNotches+1];
 			cleanCalPoints(tempCalPointsX, tempCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
-#ifdef ARDUINO
-			Serial.println("calibration points cleaned");
-#endif //ARDUINO
+			debug_println("calibration points cleaned");
 			linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
-#ifdef ARDUINO
-			Serial.println("A stick linearized");
-#endif //ARDUINO
+			debug_println("A stick linearized");
 			notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
 			currentCalStep = -1;
 		}
@@ -1859,17 +1712,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 #endif // RUMBLE
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
-#ifdef ARDUINO
-			Serial.println("Calibrating the A stick");
-#endif //ARDUINO
+			debug_println("Calibrating the A stick");
 			whichStick = ASTICK;
 			currentCalStep ++;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
-#ifdef ARDUINO
-			Serial.println("Calibrating the C stick");
-#endif //ARDUINO
+			debug_println("Calibrating the C stick");
 			whichStick = CSTICK;
 			currentCalStep ++;
 			advanceCal = true;
@@ -2068,7 +1917,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		afterMicros = micros();
 	}
 
-	//Serial.println(adcCount);
+	//debug_println(adcCount);
 	float aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
 	float aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
 	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
