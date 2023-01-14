@@ -1904,8 +1904,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Smoothing:  RX+Du/Dd
 	* Increase/Decrease Y-Axis Smoothing:  RY+Du/Dd
 	* Show Analog Filtering Settings: L+Start
-	* Increase/Decrease Analog Scaler: LXY+Du/Dd
-	* Increase/Decrease Cardinal Snapping: RXY+Du/Dd
+	* Increase/Decrease Analog Scaler: LA+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RA+Du/Dd
 	*
 	* C-Stick Configuration
 	* Increase/Decrease X-Axis Snapback Filtering:  AXZ+Du/Dd
@@ -1915,8 +1915,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
-	* Increase/Decrease Analog Scaler: LXYZ+Du/Dd
-	* Increase/Decrease Cardinal Snapping: RXYZ+Du/Dd
+	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
 	*
 	* Swap X with Z:  XZ+Start
 	* Swap Y with Z:  YZ+Start
@@ -2029,13 +2029,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustSmoothing(YAXIS, INCREASE, btn, hardware, controls, gains, normGains);
 		} else if(hardware.R && hardware.Y && !hardware.Z && hardware.Dd) { //Decrease Y-axis Delay
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Du) { //Increase Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Du) { //Increase Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Dd) { //Decrease Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Dd) { //Decrease Cardinal Snapping
 			adjustCardinalSnapping(ASTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Du) { //Increase Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Du) { //Increase Analog Scaler
 			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Dd) { //Decrease Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Dd) { //Decrease Analog Scaler
 			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
@@ -2063,13 +2063,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
 			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.X && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
 			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
