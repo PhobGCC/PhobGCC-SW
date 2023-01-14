@@ -1496,6 +1496,18 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	_rumblePower = calcRumblePower(controls.rumble);
 	setRumbleSetting(controls.rumble);
 
+	//Cardinal snapping
+	controls.AstickCardinalSnapping = controls.cardinalSnappingMax;
+	controls.CstickCardinalSnapping = controls.cardinalSnappingMax;
+	setCardinalSnappingSetting(controls.AstickCardinalSnapping, ASTICK);
+	setCardinalSnappingSetting(controls.CstickCardinalSnapping, CSTICK);
+
+	//Analog scaling
+	controls.AstickAnalogScaler = 100;
+	controls.CstickAnalogScaler = 100;
+	setAnalogScalerSetting(controls.AstickAnalogScaler, ASTICK);
+	setAnalogScalerSetting(controls.CstickAnalogScaler, CSTICK);
+
 	//always cancel auto init on reset, even if we don't reset the sticks
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
@@ -1954,7 +1966,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
-		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y) { //display version number (ignore commands for c stick snapback)
+		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y && !hardware.L && !hardware.R) { //display version number (ignore commands for c stick snapback)
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
 			btn.Ax = (uint8_t) _floatOrigin;
@@ -2329,11 +2341,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1, controls, ASTICK);//no snapping
 	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1, controls, CSTICK);//no snapping
 
+	float AScaler = (float) (controls.AstickAnalogScaler) / 100.0f;
+	float CScaler = (float) (controls.CstickAnalogScaler) / 100.0f;
 	//Clamp values from -125 to +125
-	remappedAx = fmin(125, fmax(-125, remappedAx * (controls.AstickAnalogScaler / 100)));
-	remappedAy = fmin(125, fmax(-125, remappedAy * (controls.AstickAnalogScaler / 100)));
-	remappedCx = fmin(125, fmax(-125, (remappedCx * (controls.CstickAnalogScaler / 100))+controls.cXOffset));
-	remappedCy = fmin(125, fmax(-125, (remappedCy * (controls.CstickAnalogScaler / 100))+controls.cYOffset));
+	remappedAx = fmin(125, fmax(-125, remappedAx * AScaler));
+	remappedAy = fmin(125, fmax(-125, remappedAy * AScaler));
+	remappedCx = fmin(125, fmax(-125, (remappedCx * CScaler)+controls.cXOffset));
+	remappedCy = fmin(125, fmax(-125, (remappedCy * CScaler)+controls.cYOffset));
 	_raw.axUnfiltered = fmin(125, fmax(-125, remappedAxUnfiltered));
 	_raw.ayUnfiltered = fmin(125, fmax(-125, remappedAyUnfiltered));
 	_raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered+controls.cXOffset));
