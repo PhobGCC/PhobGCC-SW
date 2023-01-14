@@ -660,11 +660,11 @@ void navigateMenu(unsigned char bitmap[],
 					tempInt1 = controls.interlaceOffset;
 				}
 				if(presses & DUPRESS) {
-					controls.interlaceOffset = fmin(150, controls.interlaceOffset+1);
+					controls.interlaceOffset = fmin(controls.interlaceOffsetMax, controls.interlaceOffset+1);
 					changeMade = controls.interlaceOffset != tempInt1;
 					redraw = 1;
 				} else if(presses & DDPRESS) {
-					controls.interlaceOffset = fmax(-150, controls.interlaceOffset-1);
+					controls.interlaceOffset = fmax(controls.interlaceOffsetMin, controls.interlaceOffset-1);
 					changeMade = controls.interlaceOffset != tempInt1;
 					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {

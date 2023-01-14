@@ -85,12 +85,24 @@ ControlConfig _controls{
 	.waveshapingFactoryAY = 0,
 	.waveshapingFactoryCX = 0,
 	.waveshapingFactoryCY = 0,
+	.astickCardinalSnapping = 6,
+	.cstickCardinalSnapping = 6,
+	.cardinalSnappingMin = -1,
+	.cardinalSnappingMax = 6,
+	.cardinalSnappingDefault = 6,
+	.astickAnalogScaler = 100,
+	.cstickAnalogScaler = 100,
+	.analogScalerMin = 82,
+	.analogScalerMax = 125,
+	.analogScalerDefault = 100,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
+	.interlaceOffsetMin = -150,
+	.interlaceOffsetMax = 150,
 #endif //PICO_RP2040
 };
 
-FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequenc
+FilterGains _gains {//these values are for 800 hz, recomputeGains converts them to what is needed for the actual frequency (1000 Hz)
 	.maxStick = 100,
 	.xVelDecay = 0.1,
 	.yVelDecay = 0.1,
@@ -572,6 +584,79 @@ void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls
 	clearButtons(2000, btn, hardware);
 }
 
+void adjustCardinalSnapping(const WhichStick whichStick, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(whichStick == ASTICK && increase == INCREASE) {
+		controls.astickCardinalSnapping++;
+		if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
+			controls.astickCardinalSnapping = controls.cardinalSnappingMax;
+		}
+		setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	} else if(whichStick == ASTICK && increase == DECREASE) {
+		controls.astickCardinalSnapping--;
+		if(controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
+			controls.astickCardinalSnapping = controls.cardinalSnappingMin;
+		}
+		setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	} else if(whichStick == CSTICK && increase == INCREASE) {
+		controls.cstickCardinalSnapping++;
+		if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
+			controls.cstickCardinalSnapping = controls.cardinalSnappingMax;
+		}
+		setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+	} else if(whichStick == CSTICK && increase == DECREASE) {
+		controls.cstickCardinalSnapping--;
+		if(controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
+			controls.cstickCardinalSnapping = controls.cardinalSnappingMin;
+		}
+		setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+	}
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.astickCardinalSnapping);
+	btn.Ay = (uint8_t) (_floatOrigin + controls.astickCardinalSnapping);
+
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cstickCardinalSnapping);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cstickCardinalSnapping);
+
+	clearButtons(750, btn, hardware);
+
+}
+
+void adjustAnalogScaler(const WhichStick whichStick, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(whichStick == ASTICK && increase == INCREASE) {
+		controls.astickAnalogScaler++;
+		if(controls.astickAnalogScaler > controls.analogScalerMax) {
+			controls.astickAnalogScaler = controls.analogScalerMax;
+		}
+		setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	} else if(whichStick == ASTICK && increase == DECREASE) {
+		controls.astickAnalogScaler--;
+		if(controls.astickAnalogScaler < controls.analogScalerMin) {
+			controls.astickAnalogScaler = controls.analogScalerMin;
+		}
+		setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	} else if(whichStick == CSTICK && increase == INCREASE) {
+		controls.cstickAnalogScaler++;
+		if(controls.cstickAnalogScaler > controls.analogScalerMax) {
+			controls.cstickAnalogScaler = controls.analogScalerMax;
+		}
+		setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+	} else if(whichStick == CSTICK && increase == DECREASE) {
+		controls.cstickAnalogScaler--;
+		if(controls.cstickAnalogScaler < controls.analogScalerMin) {
+			controls.cstickAnalogScaler = controls.analogScalerMin;
+		}
+		setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+	}
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.astickAnalogScaler);
+	btn.Ay = (uint8_t) (_floatOrigin + controls.astickAnalogScaler);
+
+	btn.Cx = (uint8_t) (_floatOrigin + controls.cstickAnalogScaler);
+	btn.Cy = (uint8_t) (_floatOrigin + controls.cstickAnalogScaler);
+
+	clearButtons(750, btn, hardware);
+}
+
 void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER && increase == INCREASE) {
 		controls.lTriggerOffset++;
@@ -825,7 +910,7 @@ void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startU
 }
 
 //Take tempCalPoints and use it to generate new stick cal parameters to be used
-void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams) {
+void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const float tempCalPointsX[], const float tempCalPointsY[], NotchStatus notchStatus[], float measuredNotchAngles[], StickParams &stickParams, const ControlConfig &controls) {
 	//recall previous notch angles
 	getNotchAnglesSetting(notchAngles, whichStick);
 	//make temp temp cal points that are missing all tertiary notches so that we get a neutral grid
@@ -844,7 +929,7 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 	cleanCalPoints(tempCalPointsX, tempCalPointsY, _notchAngleDefaults, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 	float transformedX[_noOfNotches+1];
 	float transformedY[_noOfNotches+1];
-	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams);
+	transformCalPoints(cleanedPointsX, cleanedPointsY, transformedX, transformedY, stickParams, controls, whichStick);
 	//compute the angles for those notches into measuredNotchAngles, using the default angles for the diagonals
 	computeStickAngles(transformedX, transformedY, measuredNotchAngles);
 	//clean full cal points again, feeding those angles in
@@ -1218,13 +1303,53 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		}
 	}
 
+	//get the A-stick cardinal snapping
+	controls.astickCardinalSnapping = getCardinalSnappingSetting(ASTICK);
+	if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
+		controls.astickCardinalSnapping = 6;
+		numberOfNaN++;
+	} else if (controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
+		controls.astickCardinalSnapping = 6;
+		numberOfNaN++;
+	}
+
+	//get the C-stick cardinal snapping
+	controls.cstickCardinalSnapping = getCardinalSnappingSetting(CSTICK);
+	if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
+		controls.cstickCardinalSnapping = 6;
+		numberOfNaN++;
+	} else if (controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
+		controls.cstickCardinalSnapping = 6;
+		numberOfNaN++;
+	}
+
+	//get the A-stick analog scaler
+	controls.astickAnalogScaler = getAnalogScalerSetting(ASTICK);
+	if(controls.astickAnalogScaler > controls.analogScalerMax) {
+		controls.astickAnalogScaler = 100;
+		numberOfNaN++;
+	} else if (controls.astickAnalogScaler < controls.analogScalerMin) {
+		controls.astickAnalogScaler = 100;
+		numberOfNaN++;
+	}
+
+	//get the C-stick analog scaler
+	controls.cstickAnalogScaler = getAnalogScalerSetting(CSTICK);
+	if(controls.cstickAnalogScaler > controls.analogScalerMax) {
+		controls.cstickAnalogScaler = 100;
+		numberOfNaN++;
+	} else if (controls.cstickAnalogScaler < controls.analogScalerMin) {
+		controls.cstickAnalogScaler = 100;
+		numberOfNaN++;
+	}
+
 #ifdef PICO_RP2040
 	_controls.interlaceOffset = getInterlaceOffsetSetting();
-	if(controls.interlaceOffset < -150) {
+	if(controls.interlaceOffset < controls.interlaceOffsetMin) {
 		controls.interlaceOffset = 0;
 		numberOfNaN++;
 	}
-	if(controls.interlaceOffset > 150) {
+	if(controls.interlaceOffset > controls.interlaceOffsetMax) {
 		controls.interlaceOffset = 0;
 		numberOfNaN++;
 	}
@@ -1258,6 +1383,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 #ifdef ARDUINO
 			Serial.println("Updating settings from 0.28");
 #endif //ARDUINO
+			controls.astickAnalogScaler = controls.analogScalerDefault;
+			controls.cstickAnalogScaler = controls.analogScalerDefault;
+			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 			controls.interlaceOffset = 0;
 			//fallthrough
 		case 29:
@@ -1365,17 +1494,29 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.autoInit = 0;
 	setAutoInitSetting(controls.autoInit);
 
+	//Cardinal snapping
+	controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+	controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+	setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+	setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+
+	//Analog scaling
+	controls.astickAnalogScaler = controls.analogScalerDefault;
+	controls.cstickAnalogScaler = controls.analogScalerDefault;
+	setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+	setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+
+#ifdef PICO_RP2040
+	_controls.interlaceOffset = 0;
+	setInterlaceOffsetSetting(0);
+#endif //PICO_RP2040
+
 	for(int extra=0; extra<EXTRAS_SIZE; extra++){
 		ExtrasSlot slot = (ExtrasSlot)extra;
 		for(int offset=0; offset<4; offset++){
 			setExtrasSettingInt(slot, offset, 0);
 		}
 	}
-
-#ifdef PICO_RP2040
-	_controls.interlaceOffset = 0;
-	setInterlaceOffsetSetting(0);
-#endif //PICO_RP2040
 
 	if(reset == HARD || reset == FACTORY){
 		float notchAngles[_noOfNotches];
@@ -1446,19 +1587,19 @@ void copyButtons(const Buttons &src, Buttons &dest) {
 	dest.Ra = src.Ra;
 }
 
-void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams) {
+void calibrationSkipMeasurement(int &currentCalStep, const WhichStick whichStick, float tempCalPointsX[], float tempCalPointsY[], NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams, const ControlConfig &controls) {
 	currentCalStep = _noOfCalibrationPoints;
 	//Do the same thing we would have done at step 32 had we actually collected the points, but with stored tempCalPoints
 	if(whichStick == CSTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 	} else if(whichStick == ASTICK){
 		//get the calibration points collected during the last stick calibration
 		getPointsSetting(tempCalPointsX, whichStick, XAXIS);
 		getPointsSetting(tempCalPointsY, whichStick, YAXIS);
-		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+		applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 	}
 }
 
@@ -1514,7 +1655,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, cStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -1580,7 +1721,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 		if(currentCalStep == _noOfCalibrationPoints){//done collecting points
 			//bring all notches into a legal range; this helps recover from freakout situations
 			legalizeNotches(currentCalStep, measuredNotchAngles, notchAngles, notchStatus);
-			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams);
+			applyCalFromPoints(whichStick, notchAngles, tempCalPointsX, tempCalPointsY, notchStatus, measuredNotchAngles, aStickParams, controls);
 		}
 		int notchIndex = _notchAdjOrder[min(currentCalStep-_noOfCalibrationPoints, _noOfAdjNotches-1)];//limit this so it doesn't access outside the array bounds
 		while((currentCalStep >= _noOfCalibrationPoints) && (notchStatus[notchIndex] == TERT_INACTIVE) && (currentCalStep < _noOfCalibrationPoints + _noOfAdjNotches)){//this non-diagonal notch was not calibrated
@@ -1775,6 +1916,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Smoothing:  RX+Du/Dd
 	* Increase/Decrease Y-Axis Smoothing:  RY+Du/Dd
 	* Show Analog Filtering Settings: L+Start
+	* Increase/Decrease Analog Scaler: LA+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RA+Du/Dd
 	*
 	* C-Stick Configuration
 	* Increase/Decrease X-Axis Snapback Filtering:  AXZ+Du/Dd
@@ -1784,6 +1927,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
+	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
+	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
 	*
 	* Swap X with Z:  XZ+Start
 	* Swap Y with Z:  YZ+Start
@@ -1829,7 +1974,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
 			freezeSticks(4000, btn, hardware);
-		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y) { //display version number (ignore commands for c stick snapback)
+		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y && !hardware.L && !hardware.R) { //display version number (ignore commands for c stick snapback)
 			const int versionHundreds = floor(SW_VERSION/100.0);
 			const int versionOnes     = SW_VERSION-versionHundreds;
 			btn.Ax = (uint8_t) _floatOrigin;
@@ -1952,6 +2097,26 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			settingChangeCount++;
 #endif //BATCHSETTINGS
 			adjustSmoothing(YAXIS, DECREASE, btn, hardware, controls, gains, normGains);
+		} else if(hardware.R && hardware.A && hardware.Du && !hardware.Z) { //Increase Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(ASTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(ASTICK, DECREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Du && !hardware.Z) { //Increase Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(ASTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
@@ -2014,6 +2179,26 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			settingChangeCount++;
 #endif //BATCHSETTINGS
 			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.R && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Cardinal Snapping
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(CSTICK, INCREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
+#ifdef BATCHSETTINGS
+			settingChangeCount++;
+#endif //BATCHSETTINGS
+			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
@@ -2151,7 +2336,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
-		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams);
+		calibrationSkipMeasurement(currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, notchStatus, notchAngles, measuredNotchAngles, aStickParams, cStickParams, controls);
 	}
 
 	//Undo Calibration using Z-button
@@ -2336,16 +2521,18 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	float remappedAyUnfiltered;
 	float remappedCxUnfiltered;
 	float remappedCyUnfiltered;
-	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep);
-	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep);
-	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1);//no snapping
-	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1);//no snapping
+	notchRemap(posAx, posAy, &remappedAx, &remappedAy, _noOfNotches, aStickParams, currentCalStep, controls, ASTICK);
+	notchRemap(posCx, posCy, &remappedCx, &remappedCy, _noOfNotches, cStickParams, currentCalStep, controls, CSTICK);
+	notchRemap(_raw.axLinearized, _raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1, controls, ASTICK);//no snapping
+	notchRemap(_raw.cxLinearized, _raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1, controls, CSTICK);//no snapping
 
+	float AScaler = (float) (controls.astickAnalogScaler) / 100.0f;
+	float CScaler = (float) (controls.cstickAnalogScaler) / 100.0f;
 	//Clamp values from -125 to +125
-	remappedAx = fmin(125, fmax(-125, remappedAx));
-	remappedAy = fmin(125, fmax(-125, remappedAy));
-	remappedCx = fmin(125, fmax(-125, remappedCx+controls.cXOffset));
-	remappedCy = fmin(125, fmax(-125, remappedCy+controls.cYOffset));
+	remappedAx = fmin(125, fmax(-125, remappedAx * AScaler));
+	remappedAy = fmin(125, fmax(-125, remappedAy * AScaler));
+	remappedCx = fmin(125, fmax(-125, (remappedCx * CScaler)+controls.cXOffset));
+	remappedCy = fmin(125, fmax(-125, (remappedCy * CScaler)+controls.cYOffset));
 	_raw.axUnfiltered = fmin(125, fmax(-125, remappedAxUnfiltered));
 	_raw.ayUnfiltered = fmin(125, fmax(-125, remappedAyUnfiltered));
 	_raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered+controls.cXOffset));

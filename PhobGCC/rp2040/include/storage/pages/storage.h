@@ -41,6 +41,10 @@ struct Storage {
 		IntOrFloat lExtras[4];
 		IntOrFloat rExtras[4];
 		int schema;
+		int AstickCardinalSnapping;
+		int CstickCardinalSnapping;
+		int AstickAnalogScaler;
+		int CstickAnalogScaler;
 		int interlaceOffset;
 	} settings;
 };
@@ -110,11 +114,16 @@ void  setExtrasSettingInt(const ExtrasSlot, const int, const int);
 float getExtrasSettingFloat(const ExtrasSlot, const int);
 void  setExtrasSettingFloat(const ExtrasSlot, const int, const float);
 
-int getSchemaSetting();
+int  getSchemaSetting();
 void setSchemaSetting(const int);
+
+int  getCardinalSnappingSetting(const WhichStick);
+void setCardinalSnappingSetting(const int, const WhichStick);
+
+int  getAnalogScalerSetting(const WhichStick);
+void setAnalogScalerSetting(const int, const WhichStick);
 
 int getInterlaceOffsetSetting();
 void setInterlaceOffsetSetting(const int);
 
 #endif //STORAGE_H
-
