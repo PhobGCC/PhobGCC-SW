@@ -3,6 +3,7 @@
 
 #include <ADC.h>
 #include <VREF.h>
+#include "debug.h"
 #include "settings.h"
 
 //Hardware specific code for PhobGCC board revision 1.1 with a Teensy 3.2
