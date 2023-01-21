@@ -31,10 +31,11 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_XYSCOPE,		//26	|   3		x vs y, plotted over time
 	MENU_TIMESCOPE,		//27	|   3		x/y/l/r vs time
 	MENU_PRESSTIME,		//28	|   3		timing practice for wavedashing, short hopping, etc
-	MENU_GAMES,			//29	|  2
-	MENU_SNEK,			//30	|   3
-	MENU_PING,			//31	|   3
-	MENU_VISION			//32	|  2		adjust offset for phobvision
+	MENU_REACTION,		//29	|   3		reaction time test
+	MENU_GAMES,			//30	|  2
+	MENU_SNEK,			//31	|   3
+	MENU_PING,			//32	|   3
+	MENU_VISION			//33	|  2		adjust offset for phobvision
 };
 
 //The menu index consists of:
@@ -42,7 +43,7 @@ enum ScreenNumber {//mark finished ones with asterisks
 //2. Number of child indices: 255 = leaf node, 0 = one child node but not visible
 //3. List of child indices (up to 6)
 
-const uint8_t MenuIndex[33][8] = {
+const uint8_t MenuIndex[34][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
 	{MENU_SPLASH,	5,		MENU_CALIBRATE,	MENU_SETTINGS,	MENU_SCOPE,		MENU_GAMES,		MENU_VISION,	255},//main menu
@@ -68,11 +69,12 @@ const uint8_t MenuIndex[33][8] = {
 	{MENU_TRIGGER,	255,	255,			255,			255,			255,			255,			255},//L trigger
 	{MENU_TRIGGER,	255,	255,			255,			255,			255,			255,			255},//R trigger
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//reset
-	{MENU_MAIN,		4,		MENU_INPUTVIEW,	MENU_XYSCOPE,	MENU_TIMESCOPE,	MENU_PRESSTIME,	255,			255},//phobscope menu
+	{MENU_MAIN,		5,		MENU_INPUTVIEW,	MENU_XYSCOPE,	MENU_TIMESCOPE,	MENU_PRESSTIME,	MENU_REACTION,	255},//phobscope menu
 	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//input viewer
 	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//x/y plot
 	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//x/y/l/r vs time
 	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//button timings
+	{MENU_SCOPE,	255,	255,			255,			255,			255,			255,			255},//reaction time
 	{MENU_MAIN,		2,		MENU_SNEK,		MENU_PING,		255,			255,			255,			255},//games
 	{MENU_GAMES,	255,	255,			255,			255,			255,			255,			255},//snek
 	{MENU_GAMES,	255,	255,			255,			255,			255,			255,			255},//ping
@@ -82,7 +84,7 @@ const uint8_t MenuIndex[33][8] = {
 //The names consists of an array of null terminated c strings. Pad with spaces.
 //This is the heading of the menus and also the submenu entries.
 
-const char MenuNames[33][28] = {
+const char MenuNames[34][28] = {
 	"PhobVision                 ",
 	"Main Menu                  ",
 	"Stick Calibration          ",
@@ -112,6 +114,7 @@ const char MenuNames[33][28] = {
 	"Stickmap Plots             ",
 	"Value vs Time Plots        ",
 	"Button Timing Viewer       ",
+	"Reaction Time Test         ",
 	"Games                      ",
 	"Snek                       ",
 	"Ping                       ",

@@ -988,6 +988,41 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawFloat(bitmap,  380, 360, 15, 0, 7, cyMelee);
 }
 
+//You wait a random amount of time before actually calling this draw function
+//Then the draw function, as soon as it is done, initiates recording
+void drawReaction(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		DataCapture &capture) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap,  30,  50, 15, reaction1);
+	drawString(bitmap,  30,  70, 15, reaction2);
+	drawString(bitmap,  30,  90, 15, reaction3);
+	drawString(bitmap,  30, 120, 15, reaction4);
+	drawInt(   bitmap, 160, 120, 15, 0, capture.stickThresh);
+	drawString(bitmap, 280, 120, 15, reaction5);
+	drawInt(   bitmap, 410, 120, 15, 0, capture.triggerThresh);
+	if(itemIndex == 0) {
+		drawString(bitmap,  10, 120, 15, arrowPointer);
+	} else {
+		drawString(bitmap, 260, 120, 15, arrowPointer);
+	}
+	if(!capture.done) {
+		//draw white square
+		for(int i = 0; i < 50; i++) {
+			memset(bitmap + (180+i)*VWIDTHBYTE + 128 - 12, WHITE2, 25/*50 pixels wide*/);
+		}
+		//start capture
+		capture.mode = CM_REACTION;
+	} else {
+		//write the reaction time to the screen
+		drawString(bitmap,  30, 300, 15, reaction6);
+		drawInt(   bitmap,  60, 300, 15, 0, capture.delay);
+		drawString(bitmap, 280, 300, 15, reaction7);
+		drawFloat( bitmap, 350, 300, 15, 1, 5, capture.delay/16.667f);
+	}
+}
+
 void drawVision(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -1062,7 +1097,8 @@ void drawMenu(unsigned char bitmap[],
 		const RawStick raw,
 		const ControlConfig &controls,
 		const StickParams &aStick,
-		const StickParams &cStick) {
+		const StickParams &cStick,
+		DataCapture &capture) {
 	//Basic menus
 	if(MenuIndex[menu][1] == 0) {
 		drawImage(bitmap, Cute_Ghost, Cute_Ghost_Index, VWIDTH/2-112, 0);//224x300
@@ -1143,6 +1179,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_INPUTVIEW:
 			drawInputview(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_REACTION:
+			drawReaction(bitmap, menu, itemIndex, capture);
 			break;
 		case MENU_VISION:
 			drawVision(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);

@@ -274,4 +274,33 @@ struct StickParams{
 	float boundaryAngles[16]; //angles at the boundaries between regions of the stick (in the plane)
 };
 
+enum CaptureMode{
+	CM_NULL,//do nothing
+	CM_REACTION,//record immediately
+	CM_STICK_RISING,//starting when a stick coord exceeds a threshold distance from center
+	CM_STICK_FALLING,//starting when a stick coord falls below a threshold
+	CM_STICK_PIVOT,//starting when a stick coord falls below a threshold
+	CM_TRIG,//increasing threshold on triggers
+	CM_JUMP,//x, y, or melee tap jump threshold
+	CM_PRESS,//any button press
+};
+
+struct DataCapture{
+	//these are the params
+	CaptureMode mode;
+	WhichStick triggerStick;
+	WhichStick captureStick;
+	bool done;
+	uint32_t delay;
+	uint8_t stickThresh;
+	uint8_t triggerThresh;
+	uint8_t startIndex;
+	uint8_t endIndex;
+	uint8_t a1[100];//6 frames for analog
+	uint8_t a2[100];
+	uint8_t a1Unfilt[100];
+	uint8_t a2Unfilt[100];
+	uint8_t abxylrzs[200];//12 frames
+};
+
 #endif //ENUMS_H

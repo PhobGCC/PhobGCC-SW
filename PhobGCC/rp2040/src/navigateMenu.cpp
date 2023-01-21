@@ -1,5 +1,6 @@
 #include <cmath>
 #include "pico/platform.h"
+#include "hardware/timer.h"
 #include "cvideo.h"
 #include "menu.h"
 #include "storage/pages/storage.h"
@@ -25,7 +26,8 @@ void navigateMenu(unsigned char bitmap[],
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
-		ControlConfig &controls);
+		ControlConfig &controls,
+		DataCapture &capture);
 
 void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		unsigned int &menu,
@@ -35,7 +37,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &hardware,
-		ControlConfig &controls) {
+		ControlConfig &controls,
+		DataCapture &capture) {
 	uint16_t presses = 0;
 
 	//b button needs to accumulate before acting
@@ -172,7 +175,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				currentCalStep,
 				pleaseCommit,
 				presses,
-				controls);
+				controls,
+				capture);
 	}
 	//handle always-redrawing screens since we don't always call navigation
 	//redraw = 2 asks for a fast-path
@@ -197,7 +201,8 @@ void navigateMenu(unsigned char bitmap[],
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
 		uint16_t presses,
-		ControlConfig &controls) {
+		ControlConfig &controls,
+		DataCapture &capture) {
 	if(MenuIndex[menu][1] == 0) {
 		if(presses & APRESS) {
 			presses = 0;
@@ -653,6 +658,57 @@ void navigateMenu(unsigned char bitmap[],
 						//request a hard reset
 						pleaseCommit = 3;
 					}
+				}
+				return;
+			case MENU_REACTION:
+				if(!changeMade) {
+					tempInt1 = 23;//dash
+					capture.stickThresh = 23;
+					tempInt2 = 49;//lightshield
+					capture.triggerThresh = 49;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmin(100, capture.stickThresh+1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
+					}
+					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmax(10, capture.stickThresh-1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
+					}
+					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					redraw = 1;
+					/*
+					//no saving
+				} else if((presses & BSAVE) && changeMade) {
+					*/
+				} else if(presses & SPRESS) {
+					//set up for recording the delay
+					capture.delay = 0;
+					capture.done = false;
+					capture.mode = CM_NULL;
+					//wait a random amount of time
+					const uint32_t delay = rand() % 5'000'000 + 3'000'000; //3 to 8 seconds
+					const uint32_t lastMicros = time_us_64();
+					uint32_t thisMicros = lastMicros;
+					while((thisMicros-lastMicros) < delay) {
+						thisMicros = time_us_64();
+					}
+					//then trigger a redraw (which actually starts the recording)
+					//(we want the recording to be synced to the redraw)
+					pleaseCommit = 9;
+					redraw = 1;
 				}
 				return;
 			case MENU_VISION:

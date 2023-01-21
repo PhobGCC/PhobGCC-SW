@@ -128,11 +128,12 @@ const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
 const char rumble5[]         = "Press Z to test rumble.";
 
-//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+//Guide relative to offset   =  10  50   100  150
 const char trigger1[]        = "L Mode:";
 const char trigger2[]        = "R Mode:";
 const char trigger3[]        = "L Offset:";
 const char trigger4[]        = "R Offset:";
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char trigger5[]        = "Mode 5 conflict; R will be inoperable";
 const char trigger6[]        = "Mode 5 conflict; L will be inoperable";
 
@@ -142,6 +143,7 @@ const char rtrigger1[]       = "This changes the behavior of the R trigger.";
 const char l5conflict[]      = "Conflict with R Trigger Mode 5";
 const char r5conflict[]      = "Conflict with L Trigger Mode 5";
 const char lrultimate[]      = "Increase offset to enable shield in Ultimate.";
+//Guide relative to offset   =  10  50   100  150
 const char lrtrigger2[]      = "Mode:";
 const char lrtrigger3[]      = "Offset:";
 const char lrtrigger4[]      = "This is the default trigger behavior.";
@@ -162,6 +164,7 @@ const char lrtrigger18[]     = " you shield in Ultimate when the offset > 79.";
 const char lrtrigger19[]     = "This increases the sensitivity of the analog by";
 const char lrtrigger20[]     = " a multiplier that changes with the offset.";
 const char lrtrigger21[]     = "This makes it respond quicker in Ultimate.";
+//Guide relative to offset   =  10  50   100  150
 const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
@@ -181,6 +184,16 @@ const char inputview1[]      = "Hardware Inputs:";
 const char inputview2[]      = "Controller Outputs:";
 const char inputview3[]      = "Left      Left Melee      Right     Right Melee";
 const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char reaction1[]       = "Press start to begin the reaction test.";
+const char reaction2[]       = "You can press any button or move any stick.";
+const char reaction3[]       = "Set stick & trigger thresholds with the D-pad.";
+//Guide relative to offset   =  10  50   100  150
+const char reaction4[]       = "Stick:";
+const char reaction5[]       = "Trigger:";
+const char reaction6[]       = "ms:";
+const char reaction7[]       = "Frames:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char vision1[]         = "This controls the alignment of the interlacing.";

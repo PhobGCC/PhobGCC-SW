@@ -15,6 +15,7 @@ volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
+DataCapture _dataCapture;
 
 //This gets called by the comms library
 GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
@@ -114,6 +115,45 @@ void second_core() {
 				}
 				pwm_set_gpio_level(_pinRumble, 0);
 				pwm_set_gpio_level(_pinBrake, 255);
+			} else if(_pleaseCommit == 9) {
+				switch(_dataCapture.mode) {
+					case CM_REACTION:
+						//this expects that you initialize data capture by setting delay to 0
+						_dataCapture.delay++;
+						if(
+								//_btn.arr[0] & 0b11110000 ||//abxys
+								//_btn.arr[1] & 0b11111110 ||//dpad, lrz
+								_btn.arr[0] & 0b00001111 ||//abxys
+								_btn.arr[1] & 0b01111111 ||//dpad, lrz
+								max(max(abs(int(_btn.Ax)-127), abs(int(_btn.Ay)-127)),
+									max(abs(int(_btn.Cx)-127), abs(int(_btn.Cy)-127))) >= _dataCapture.stickThresh ||
+								max(_btn.La, _btn.Ra) >= _dataCapture.triggerThresh) {
+							_dataCapture.done = true;
+							_pleaseCommit = 255;//end capture and display
+						}
+						break;
+					case CM_STICK_RISING:
+						//
+						break;
+					case CM_STICK_FALLING:
+						//
+						break;
+					case CM_STICK_PIVOT:
+						//
+						break;
+					case CM_TRIG:
+						//
+						break;
+					case CM_JUMP:
+						//
+						break;
+					case CM_PRESS:
+						//
+						break;
+					default:
+						//nothing
+						break;
+				}
 			}
 		}
 
@@ -267,6 +307,16 @@ int main() {
 	_raw.cxUnfiltered = 0;
 	_raw.cyUnfiltered = 0;
 
+	_dataCapture.mode = CM_NULL;
+	_dataCapture.triggerStick = ASTICK;
+	_dataCapture.captureStick = ASTICK;
+	_dataCapture.done = true;
+	_dataCapture.delay = 0;
+	_dataCapture.stickThresh = 23;
+	_dataCapture.triggerThresh = 49;
+	_dataCapture.startIndex = 0;
+	_dataCapture.endIndex = 0;
+
 	//measure the trigger values for trigger tricking
 	initializeButtons(_pinList, _btn, _controls.lTrigInitial, _controls.rTrigInitial);
 
@@ -295,7 +345,7 @@ int main() {
 #else //BUILD_DEV
 		const int version = SW_VERSION;
 #endif //BUILD_DEV
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _sync, _pleaseCommit, _currentCalStep, version);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, version);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

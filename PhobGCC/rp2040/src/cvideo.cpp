@@ -139,6 +139,7 @@ int videoOut(const uint8_t pin_base,
 		ControlConfig &config,
 		StickParams &aStick,
 		StickParams &cStick,
+		DataCapture &capture,
 		volatile bool &extSync,
 		volatile uint8_t &pleaseCommit,
 		int &currentCalStep,
@@ -213,7 +214,7 @@ int videoOut(const uint8_t pin_base,
 		}
 
 		gpio_put(0, !gpio_get_out_level(0));
-		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, hardware, config);
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, hardware, config, capture);
 		gpio_put(0, !gpio_get_out_level(0));
 
 		if(redraw == 2) { //fast redraw
@@ -227,7 +228,7 @@ int videoOut(const uint8_t pin_base,
 			//write interlace offset
 			_interlaceOffset = config.interlaceOffset;
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick, capture);
 			gpio_put(0, !gpio_get_out_level(0));
 		}
 
