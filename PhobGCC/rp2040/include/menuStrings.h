@@ -194,6 +194,7 @@ const char reaction4[]       = "Stick:";
 const char reaction5[]       = "Trigger:";
 const char reaction6[]       = "ms:";
 const char reaction7[]       = "Frames:";
+const char reaction8[]       = "Wait...";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char vision1[]         = "This controls the alignment of the interlacing.";

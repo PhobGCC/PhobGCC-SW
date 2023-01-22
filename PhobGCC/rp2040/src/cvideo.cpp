@@ -55,7 +55,7 @@ void cvideo_dma_handler(void);
 #include "cvideo_variables.h"
 
 #include "images/cuteGhost.h"
-#include "images/quadrants.h"
+#include "images/stickmaps.h"
 
 /*-------------------------------------------------------------------*/
 /*------------------Video Standard-----------------------------------*/
@@ -214,7 +214,7 @@ int videoOut(const uint8_t pin_base,
 		}
 
 		gpio_put(0, !gpio_get_out_level(0));
-		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, hardware, config, capture);
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, btn, hardware, config, capture);
 		gpio_put(0, !gpio_get_out_level(0));
 
 		if(redraw == 2) { //fast redraw

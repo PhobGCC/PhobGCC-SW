@@ -3,6 +3,7 @@
 #include "hardware/timer.h"
 #include "cvideo.h"
 #include "menu.h"
+#include "menuStrings.h"
 #include "storage/pages/storage.h"
 
 #define APRESS  0b0000'0000'0000'0001
@@ -25,6 +26,7 @@ void navigateMenu(unsigned char bitmap[],
 		bool &changeMade,
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
+		const Buttons &btn,
 		uint16_t presses,
 		ControlConfig &controls,
 		DataCapture &capture);
@@ -36,6 +38,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		bool &changeMade,
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
+		const Buttons &btn,
 		const Buttons &hardware,
 		ControlConfig &controls,
 		DataCapture &capture) {
@@ -174,6 +177,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				changeMade,
 				currentCalStep,
 				pleaseCommit,
+				btn,
 				presses,
 				controls,
 				capture);
@@ -200,6 +204,7 @@ void navigateMenu(unsigned char bitmap[],
 		bool &changeMade,
 		const int currentCalStep,
 		volatile uint8_t &pleaseCommit,
+		const Buttons &btn,
 		uint16_t presses,
 		ControlConfig &controls,
 		DataCapture &capture) {
@@ -694,6 +699,8 @@ void navigateMenu(unsigned char bitmap[],
 				} else if((presses & BSAVE) && changeMade) {
 					*/
 				} else if(presses & SPRESS) {
+					//tell the user to get ready
+					drawString(bitmap, 30, 150, 15, reaction8);
 					//set up for recording the delay
 					capture.delay = 0;
 					capture.done = false;

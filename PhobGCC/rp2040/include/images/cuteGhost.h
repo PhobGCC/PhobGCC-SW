@@ -1,3 +1,5 @@
+#ifndef CUTEGHOST_H
+#define CUTEGHOST_H
 // 'Cute Ghost', 224x300px
 // indexes: [-1, 0, 4, 5, 6, 7, 8, 9]
 const unsigned char Cute_Ghost_Index[] = {0, 5, 9, 10, 11, 12, 13, 15};
@@ -215,3 +217,4 @@ const unsigned char Cute_Ghost[] = {
     0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9, 0xf9,
     0xf9, 0xf9, 0xa9
 };
+#endif //CUTEGHOST_H

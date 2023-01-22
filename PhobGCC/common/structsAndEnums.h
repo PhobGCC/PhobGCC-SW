@@ -301,6 +301,7 @@ struct DataCapture{
 	uint8_t a1Unfilt[100];
 	uint8_t a2Unfilt[100];
 	uint8_t abxylrzs[200];//12 frames
+	uint8_t dpadaxaycxcy[200];//12 frames
 };
 
 #endif //ENUMS_H

@@ -143,6 +143,7 @@ void handleMenuButtons(unsigned char bitmap[],
 				       bool &changeMade,
                        const int currentCalStep,
 				       volatile uint8_t &pleaseCommit,//for asking the other core to commit settings
+					   const Buttons &btn,
                        const Buttons &hardware,
                        ControlConfig &controls,
 					   DataCapture &capture);
