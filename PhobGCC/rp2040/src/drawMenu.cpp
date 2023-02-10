@@ -8,6 +8,7 @@
 #include "structsAndEnums.h"
 #include "menuStrings.h"
 #include "images/cuteGhost.h"
+#include "images/stickmaps.h"
 
 void meleeCoordClamp(const int xIn, const int yIn, float &xOut, float &yOut) {
 	const float magnitude = sqrt((float) xIn*xIn + yIn*yIn);
@@ -390,9 +391,9 @@ void drawAsnapback(unsigned char bitmap[],
 	drawString(bitmap, 280, 160, 15, leftStickY);
 	drawInt(   bitmap, 410, 160, 15, 1, controls.ySnapback);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowPointer);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowPointer);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -420,9 +421,9 @@ void drawAwave(unsigned char bitmap[],
 	drawString(bitmap, 280, 160, 15, leftStickY);
 	drawInt(   bitmap, 410, 160, 15, 1, controls.ayWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowPointer);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowPointer);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -450,9 +451,9 @@ void drawAsmooth(unsigned char bitmap[],
 	drawString(bitmap, 280, 160, 15, leftStickY);
 	drawInt(   bitmap, 410, 160, 15, 0, controls.aySmoothing);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowPointer);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowPointer);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -480,9 +481,9 @@ void drawCsnapback(unsigned char bitmap[],
 			drawString(bitmap, 280, 160, 15, rightStickY);
 			drawInt(   bitmap, 420, 160, 15, 0, controls.cySmoothing);
 			if(itemIndex == 0) {
-				drawString(bitmap,  10, 160, 15, arrowPointer);
+				drawString(bitmap,  10, 160, 15, arrowRight);
 			} else {
-				drawString(bitmap, 260, 160, 15, arrowPointer);
+				drawString(bitmap, 260, 160, 15, arrowRight);
 			}
 			//graph?
 }
@@ -510,9 +511,9 @@ void drawCwave(unsigned char bitmap[],
 	drawString(bitmap, 280, 160, 15, rightStickY);
 	drawInt(   bitmap, 420, 160, 15, 1, controls.cyWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowPointer);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowPointer);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -540,9 +541,9 @@ void drawCoffset(unsigned char bitmap[],
 	drawString(bitmap, 280, 160, 15, rightStickY);
 	drawInt(   bitmap, 420, 160, 15, 2, controls.cYOffset);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowPointer);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowPointer);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -713,9 +714,9 @@ void drawLtrigger(unsigned char bitmap[],
 	drawString(bitmap,  30, 250, 15, lrtrigger23);
 	drawString(bitmap,  30, 310, 15, lrtrigger24);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 100, 15, arrowPointer);
+		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 100, 15, arrowPointer);
+		drawString(bitmap, 260, 100, 15, arrowRight);
 	}
 	switch(controls.lConfig) {
 		case 0:
@@ -790,9 +791,9 @@ void drawRtrigger(unsigned char bitmap[],
 	drawString(bitmap,  30, 250, 15, lrtrigger23);
 	drawString(bitmap,  30, 310, 15, lrtrigger24);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 100, 15, arrowPointer);
+		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 100, 15, arrowPointer);
+		drawString(bitmap, 260, 100, 15, arrowRight);
 	}
 	switch(controls.rConfig) {
 		case 0:
@@ -861,11 +862,11 @@ void drawReset(unsigned char bitmap[],
 	if(itemIndex == 0 || itemIndex == 2) {//soft reset
 		drawString(bitmap,  30,  70, 15, reset2);
 		drawString(bitmap,  30,  90, 15, reset3);
-		drawString(bitmap,  10, 120, 15, arrowPointer);
+		drawString(bitmap,  10, 120, 15, arrowRight);
 	} else {
 		drawString(bitmap,  30,  70, 15, reset4);
 		drawString(bitmap,  30,  90, 15, reset5);
-		drawString(bitmap,  10, 150, 15, arrowPointer);
+		drawString(bitmap,  10, 150, 15, arrowRight);
 	}
 	if(itemIndex >= 2) {//confirm
 		drawString(bitmap,  30, 180, 15, reset6);
@@ -938,8 +939,8 @@ void drawInputviewFast(unsigned char bitmap[],
 		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+1/*256 pixels = 128 bytes*/);
 	}
 
-	int xCenter = 128;//starts at 1
-	int yCenter = 168;//starts at 40
+	const int xCenter = 128;//starts at 1
+	const int yCenter = 168;//starts at 40
 
 	//octagon
 	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter+74, yCenter-74, 10);
@@ -988,6 +989,129 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawFloat(bitmap,  380, 360, 15, 0, 7, cyMelee);
 }
 
+void drawXYScope(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		DataCapture &capture) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+
+	const int xCenter = 128;//starts at 1
+	const int yCenter = 168;//starts at 40
+	drawString(bitmap, 280, 50, 15, xyscope1);
+	if(itemIndex == 0) {
+		if(capture.stickmap != 0) {
+			drawString(bitmap, 280, 70, 15, arrowLeft);
+		}
+		if(capture.stickmap < 6) {
+			drawString(bitmap, 470, 70, 15, arrowRight);
+		}
+	}
+	switch(capture.stickmap) {
+		case 0:
+			drawString(bitmap, 300, 70, 15, stickmap0);
+			break;
+		case 1:
+			drawString(bitmap, 300, 70, 15, stickmap1);
+			drawImage(bitmap, deadzone_image, deadzone_indexes, 1, 40);
+			break;
+		case 2:
+			drawString(bitmap, 300, 70, 15, stickmap2);
+			drawImage(bitmap, await_image, await_indexes, 1, 40);
+			break;
+		case 3:
+			drawString(bitmap, 300, 70, 15, stickmap3);
+			drawImage(bitmap, movewait_image, movewait_indexes, 1, 40);
+			break;
+		case 4:
+			drawString(bitmap, 300, 70, 15, stickmap4);
+			drawImage(bitmap, crouch_image, crouch_indexes, 1, 40);
+			break;
+		case 5:
+			drawString(bitmap, 300, 70, 15, stickmap5);
+			drawImage(bitmap, ledgeL_image, ledgeL_indexes, 1, 40);
+			break;
+		case 6:
+			drawString(bitmap, 300, 70, 15, stickmap6);
+			drawImage(bitmap, ledgeR_image, ledgeR_indexes, 1, 40);
+			break;
+		default:
+			break;
+	}
+
+	drawString(bitmap, 280, 100, 15, xyscope2);
+	if(itemIndex == 1) {
+		if(capture.stickmap != 0) {
+			drawString(bitmap, 280, 120, 15, arrowLeft);
+		}
+		if(capture.stickmap < 6) {
+			drawString(bitmap, 450, 120, 15, arrowRight);
+		}
+	}
+	if(capture.captureStick == ASTICK) {
+		drawString(bitmap, 300, 120, 15, leftright0);
+	} else {
+		drawString(bitmap, 300, 120, 15, leftright1);
+	}
+
+	drawString(bitmap, 280, 150, 15, xyscope3);
+	if(itemIndex == 2) {
+		if(capture.abxyszrlShow != 0b0000'0001) {
+			drawString(bitmap, 280, 170, 15, arrowLeft);
+		}
+		if(capture.abxyszrlShow != 0b1000'0000) {
+			drawString(bitmap, 320, 170, 15, arrowRight);
+		}
+	}
+	switch(capture.abxyszrlShow) {
+		case 0b0000'0001:
+			drawString(bitmap, 300, 170, 15, "A");
+			break;
+		case 0b0000'0010:
+			drawString(bitmap, 300, 170, 15, "B");
+			break;
+		case 0b0000'0100:
+			drawString(bitmap, 300, 170, 15, "X");
+			break;
+		case 0b0000'1000:
+			drawString(bitmap, 300, 170, 15, "Y");
+			break;
+		case 0b0001'0000:
+			drawString(bitmap, 300, 170, 15, "S");
+			break;
+		case 0b0010'0000:
+			drawString(bitmap, 300, 170, 15, "Z");
+			break;
+		case 0b0100'0000:
+			drawString(bitmap, 300, 170, 15, "R");
+			break;
+		case 0b1000'0000:
+			drawString(bitmap, 300, 170, 15, "L");
+			break;
+		default:
+			drawString(bitmap, 300, 170, 15, "?");
+			break;
+	}
+
+	for (int i=0; i < 100; i++) {
+		const int index = (i + capture.startIndex) % 100;
+		const int x = capture.a1[index]-127;
+		const int y = capture.a2[index]-127;
+		const int ux = capture.a1Unfilt[index]-127;
+		const int uy = capture.a2Unfilt[index]-127;
+		//unfiltered
+		drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
+		//filtered
+		if(!(capture.abxyszrl[index] & capture.abxyszrlShow)) {
+			drawLine(bitmap, xCenter+x+0, yCenter-y+0, xCenter+x+0, yCenter-y-0, 15);
+		} else {
+			drawLine(bitmap, xCenter+x+3, yCenter-y+3, xCenter+x+3, yCenter-y-2, 15);
+			drawLine(bitmap, xCenter+x+3, yCenter-y-3, xCenter+x-2, yCenter-y-3, 15);
+			drawLine(bitmap, xCenter+x-3, yCenter-y-3, xCenter+x-3, yCenter-y+2, 15);
+			drawLine(bitmap, xCenter+x-3, yCenter-y+3, xCenter+x+2, yCenter-y+3, 15);
+		}
+	}
+}
+
 //You wait a random amount of time before actually calling this draw function
 //Then the draw function, as soon as it is done, initiates recording
 void drawReaction(unsigned char bitmap[],
@@ -1003,9 +1127,9 @@ void drawReaction(unsigned char bitmap[],
 	drawString(bitmap, 280, 120, 15, reaction5);
 	drawInt(   bitmap, 410, 120, 15, 0, capture.triggerThresh);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 120, 15, arrowPointer);
+		drawString(bitmap,  10, 120, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 120, 15, arrowPointer);
+		drawString(bitmap, 260, 120, 15, arrowRight);
 	}
 	if(!capture.done) {
 		//draw white square
@@ -1062,7 +1186,7 @@ void drawMenuFast(unsigned char bitmap[],
 		for(int i = 0; i < MenuIndex[menu][1]; i++) {
 			drawString(bitmap, 50, 80 + 30*i, 15, MenuNames[MenuIndex[menu][i+2]]);
 		}
-		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowPointer);
+		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowRight);
 	}
 	switch(menu) {
 		case MENU_ASTICKCAL:
@@ -1118,7 +1242,7 @@ void drawMenu(unsigned char bitmap[],
 		for(int i = 0; i < MenuIndex[menu][1]; i++) {
 			drawString(bitmap, 50, 80 + 30*i, 15, MenuNames[MenuIndex[menu][i+2]]);
 		}
-		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowPointer);
+		drawString(bitmap, 20, 80 + 30*itemIndex, 15, arrowRight);
 	} else {
 		//placeholder for other screens that don't need menu graphics drawn
 	}
@@ -1179,6 +1303,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_INPUTVIEW:
 			drawInputview(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_XYSCOPE:
+			drawXYScope(bitmap, menu, itemIndex, capture);
 			break;
 		case MENU_REACTION:
 			drawReaction(bitmap, menu, itemIndex, capture);

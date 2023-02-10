@@ -290,8 +290,11 @@ struct DataCapture{
 	CaptureMode mode;
 	WhichStick triggerStick;
 	WhichStick captureStick;
+	uint8_t abxyszrlShow;//a mask for highlighting button presses in stickmap graphs; not used in recording
+	uint8_t stickmap;//which stickmap to display
+	bool begin;
 	bool done;
-	uint32_t delay;
+	uint32_t delay;//for recording reaction time
 	uint8_t stickThresh;
 	uint8_t triggerThresh;
 	uint8_t startIndex;
@@ -300,7 +303,7 @@ struct DataCapture{
 	uint8_t a2[100];
 	uint8_t a1Unfilt[100];
 	uint8_t a2Unfilt[100];
-	uint8_t abxylrzs[200];//12 frames
+	uint8_t abxyszrl[200];//12 frames
 	uint8_t dpadaxaycxcy[200];//12 frames
 };
 

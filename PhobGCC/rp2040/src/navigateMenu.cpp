@@ -251,6 +251,7 @@ void navigateMenu(unsigned char bitmap[],
 		//Big switch case for controls for all the bottom level items
 		static int tempInt1 = 0;
 		static int tempInt2 = 0;
+		static int tempInt3 = 0;
 		switch(menu) {
 			case MENU_ASTICKCAL:
 				if(presses & (APRESS | LRPRESS)) {
@@ -716,6 +717,57 @@ void navigateMenu(unsigned char bitmap[],
 					//(we want the recording to be synced to the redraw)
 					pleaseCommit = 9;
 					redraw = 1;
+				}
+				return;
+			case MENU_XYSCOPE://stickmap plot
+				if(!changeMade) {
+					capture.stickThresh = 10;//fixed threshold for triggering
+					tempInt1 = 0;//which stickmap to display
+					capture.stickmap = 0;
+					tempInt2 = 0;//left stick 0, c-stick 1
+					capture.captureStick = ASTICK;
+					tempInt3 = 1;//0 through 7 for abxylrzs for highlighting
+					capture.abxyszrlShow = 1;
+				}
+				if(presses & DUPRESS) {
+					if(itemIndex != 0) {
+						itemIndex--;
+						redraw = 1;
+					}
+				} else if(presses & DDPRESS) {
+					if(itemIndex < 2) {
+						itemIndex++;
+						redraw = 1;
+					}
+				} else if(presses & DLPRESS) {
+					if(itemIndex == 0) {
+						capture.stickmap = (capture.stickmap == 0) ? 0 : capture.stickmap-1;
+					} else if(itemIndex == 1) {
+						capture.captureStick = ASTICK;
+					} else {
+						capture.abxyszrlShow = fmax(0b0000'0001, capture.abxyszrlShow >> 1);
+					}
+					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					if(itemIndex == 0) {
+						capture.stickmap = fmin(6, capture.stickmap+1);
+					} else if(itemIndex == 1) {
+						capture.triggerThresh = CSTICK;
+					} else {
+						capture.abxyszrlShow = fmin(0b1000'0000, capture.abxyszrlShow << 1);
+					}
+					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					redraw = 1;
+				} else if(presses & SPRESS && capture.done == true) {
+					//tell the user it's recording
+					drawString(bitmap, 30, 350, 15, reaction8);//TODO: change position and string
+					//set up recording
+					capture.begin = false;
+					capture.done = false;
+					capture.mode = CM_STICK_RISING;
+					//then trigger the recording
+					pleaseCommit = 9;
 				}
 				return;
 			case MENU_VISION:

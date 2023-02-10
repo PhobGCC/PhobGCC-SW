@@ -1,7 +1,8 @@
 #ifndef MENUSTRINGS_H
 #define MENUSTRINGS_H
 
-const char arrowPointer[] = ">";
+const char arrowRight[] = ">";
+const char arrowLeft[] = "<";
 const char bToSave[] = "Press B to save";
 const char ud_only[] = "Dpad U/D changes setting.";
 const char lr_ud[] = "Dpad L/R selects setting, U/D changes setting.";
@@ -184,6 +185,20 @@ const char inputview1[]      = "Hardware Inputs:";
 const char inputview2[]      = "Controller Outputs:";
 const char inputview3[]      = "Left      Left Melee      Right     Right Melee";
 const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char xyscope1[]        = "Stickmap:";
+const char stickmap0[]       = "None";
+const char stickmap1[]       = "Deadzones";
+const char stickmap2[]       = "Wait Attacks";
+const char stickmap3[]       = "Wait Movement";
+const char stickmap4[]       = "Crouch";
+const char stickmap5[]       = "Left Ledge";
+const char stickmap6[]       = "Right Ledge";
+const char xyscope2[]        = "Which Stick:";
+const char leftright0[]      = "Left Stick";
+const char leftright1[]      = "Right Stick";
+const char xyscope3[]        = "Button to Highlight:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reaction1[]       = "Press start to begin the reaction test.";

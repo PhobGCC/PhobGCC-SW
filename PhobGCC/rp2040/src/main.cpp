@@ -11,7 +11,6 @@
 
 volatile bool _videoOut = false;
 //Variables used by PhobVision to communicate with the event loop core
-volatile bool _vsyncSensors = false;
 volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
@@ -121,9 +120,9 @@ void second_core() {
 						//this expects that you initialize data capture by setting delay to 0
 						_dataCapture.delay++;
 						if(
-								//_btn.arr[0] & 0b11110000 ||//abxys
+								//_btn.arr[0] & 0b11110000 ||//abxy
 								//_btn.arr[1] & 0b11111110 ||//dpad, lrz
-								_btn.arr[0] & 0b00001111 ||//abxys
+								_btn.arr[0] & 0b00001111 ||//abxy
 								_btn.arr[1] & 0b01111111 ||//dpad, lrz
 								max(max(abs(int(_btn.Ax)-127), abs(int(_btn.Ay)-127)),
 									max(abs(int(_btn.Cx)-127), abs(int(_btn.Cy)-127))) >= _dataCapture.stickThresh ||
@@ -133,7 +132,90 @@ void second_core() {
 						}
 						break;
 					case CM_STICK_RISING:
-						//
+						//this begins capturing data immediately in a rolling buffer,
+						//and on detecting a rising edge it sets the start point 20 ms in the past
+						//this records the starting point only the first time, then it sets begin
+						static int x0;
+						static int y0;
+						if(!_dataCapture.begin && !_dataCapture.done) {
+							_dataCapture.begin = true;
+							_dataCapture.done = false;
+							_dataCapture.startIndex = 0;
+							_dataCapture.endIndex = 255;//when it triggers, we freeze startIndex and start counting up here
+							if(_dataCapture.captureStick == ASTICK) {
+								x0 = _btn.Ax;
+								y0 = _btn.Ay;
+								_dataCapture.a1[_dataCapture.startIndex] = _btn.Ax;
+								_dataCapture.a2[_dataCapture.startIndex] = _btn.Ay;
+								_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+								_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+							} else {
+								x0 = _btn.Cx;
+								y0 = _btn.Cy;
+								_dataCapture.a1[_dataCapture.startIndex] = _btn.Cx;
+								_dataCapture.a2[_dataCapture.startIndex] = _btn.Cy;
+								_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+								_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+							}
+							//                                                                   syxba                       lrz
+							_dataCapture.abxyszrl[_dataCapture.startIndex] = (_btn.arr[0] & 0b00011111) | ((_btn.arr[1] & 0b01110000) << 1);
+						} else {
+							if(_dataCapture.endIndex == 255) {
+								//not triggered yet
+								//increment startIndex
+								_dataCapture.startIndex = (_dataCapture.startIndex+1) % 100;
+								//record
+								if(_dataCapture.captureStick == ASTICK) {
+									_dataCapture.a1[_dataCapture.startIndex] = _btn.Ax;
+									_dataCapture.a2[_dataCapture.startIndex] = _btn.Ay;
+									_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+									_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+									//if it's not triggered, do nothing further
+									//if it's triggered, set endIndex to startIndex+1
+									int diffX = abs(int(_btn.Ax) - x0);
+									int diffY = abs(int(_btn.Ay) - y0);
+									if(diffX > _dataCapture.stickThresh || diffY > _dataCapture.stickThresh) {
+										_dataCapture.endIndex = (_dataCapture.startIndex+1) % 100;
+									}
+								} else {
+									_dataCapture.a1[_dataCapture.startIndex] = _btn.Cx;
+									_dataCapture.a2[_dataCapture.startIndex] = _btn.Cy;
+									_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+									_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+									//if it's not triggered, do nothing further
+									//if it's triggered, set endIndex to startIndex+1
+									int diffX = abs(int(_btn.Cx) - x0);
+									int diffY = abs(int(_btn.Cy) - y0);
+									if(diffX > _dataCapture.stickThresh || diffY > _dataCapture.stickThresh) {
+										_dataCapture.endIndex = (_dataCapture.startIndex+1) % 100;
+									}
+								}
+								//                                                                   syxba                       lrz
+								_dataCapture.abxyszrl[_dataCapture.startIndex] = (_btn.arr[0] & 0b00011111) | ((_btn.arr[1] & 0b01110000) << 1);
+							} else if(_dataCapture.endIndex != _dataCapture.startIndex) {
+								//triggered
+								//record
+								if(_dataCapture.captureStick == ASTICK) {
+									_dataCapture.a1[_dataCapture.endIndex] = _btn.Ax;
+									_dataCapture.a2[_dataCapture.endIndex] = _btn.Ay;
+									_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+									_dataCapture.a2Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+								} else {
+									_dataCapture.a1[_dataCapture.endIndex] = _btn.Cx;
+									_dataCapture.a2[_dataCapture.endIndex] = _btn.Cy;
+									_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+									_dataCapture.a2Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+								}
+								//                                                                 syxba                       lrz
+								_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00011111) | ((_btn.arr[1] & 0b01110000) << 1);
+								//increment endIndex
+								_dataCapture.endIndex = (_dataCapture.endIndex+1) % 100;
+							} else {
+								//done
+								_dataCapture.done = true;
+								_pleaseCommit = 255;//end capture and display
+							}
+						}
 						break;
 					case CM_STICK_FALLING:
 						//
@@ -159,15 +241,6 @@ void second_core() {
 
 		//gpio_put(_pinSpare0, !gpio_get_out_level(_pinSpare0));
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
-
-		//limit speed if video is running
-		if(_vsyncSensors) {
-			while(!_sync) {
-				tight_loop_contents();
-			}
-			_sync = false;
-		}
-
 
 		static bool running = false;
 
@@ -201,7 +274,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -221,12 +294,12 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _vsyncSensors);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
 		}
 
 		//read the controller's buttons
@@ -310,6 +383,8 @@ int main() {
 	_dataCapture.mode = CM_NULL;
 	_dataCapture.triggerStick = ASTICK;
 	_dataCapture.captureStick = ASTICK;
+	_dataCapture.abxyszrlShow = 0;
+	_dataCapture.begin = false;
 	_dataCapture.done = true;
 	_dataCapture.delay = 0;
 	_dataCapture.stickThresh = 23;
@@ -338,8 +413,6 @@ int main() {
 
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
-		//Don't
-		//_vsyncSensors = true;
 #ifdef BUILD_DEV
 		const int version = -SW_VERSION;
 #else //BUILD_DEV
