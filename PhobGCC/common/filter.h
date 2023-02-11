@@ -44,7 +44,21 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
 #endif
 }
 
-void recomputeGains(const FilterGains &gains, FilterGains &normGains){
+float velDampFromSnapback(const int snapback) {
+	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
+}
+
+void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGains &normGains) {
+	//Adjust the snapback and smoothing gains according to the controls config
+	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
+
+	gains.xSmoothing = controls.axSmoothing/10.0f;
+	gains.ySmoothing = controls.aySmoothing/10.0f;
+
+	gains.cXSmoothing = controls.cxSmoothing/10.0f;
+	gains.cYSmoothing = controls.cySmoothing/10.0f;
+
 	//Recompute the intermediate gains used directly by the kalman filter
 	//This happens according to the time between loop iterations.
 	//Before, this happened every iteration of runKalman, but now

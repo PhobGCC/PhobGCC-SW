@@ -47,7 +47,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	//b button needs to accumulate before acting
 	static uint8_t backAccumulator = 0;
 	//a and dpad are locked out after acting
-	const uint8_t buttonLockout = 10;// 1/6 of a second of ignoring button bounce
+	const uint8_t buttonLockout = 6;// 1/10 of a second of ignoring button bounce
 	const uint8_t dpadLockout = 15;// 1/4 of a second of ignoring button bounce
 	const uint8_t dpadLockoutShort = 3;// 1/20 of a second of ignoring button bounce
 	static uint8_t aLockout = 0;
@@ -80,6 +80,8 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 
 	static uint8_t duCounter = 0;//for controls that go faster when you hold them
 	static uint8_t ddCounter = 0;//for controls that go faster when you hold them
+	static uint8_t dlCounter = 0;//for controls that go faster when you hold them
+	static uint8_t drCounter = 0;//for controls that go faster when you hold them
 
 	if(hardware.B) {
 		backAccumulator++;
@@ -109,22 +111,31 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			lrLockout = buttonLockout;
 		} else if(hardware.Dl && dlLockout == 0) {
 			presses = presses | DLPRESS;
-			dlLockout = dpadLockout;
+			//Go faster after 10 steps
+			if(dlCounter <= 10) {
+				dlCounter++;
+			}
+			drCounter = 0;
+			dlLockout = dlCounter > 10 ? dpadLockoutShort : dpadLockout;
 			drLockout = 0;
 			//also lock out perpendicular directions to prevent misinputs
 			ddLockout = dpadLockout;
 			duLockout = dpadLockout;
-			//clear the repetition counters
+			//clear the perpendicular repetition counters
 			duCounter = 0;
 			ddCounter = 0;
 		} else if(hardware.Dr && drLockout == 0) {
 			presses = presses | DRPRESS;
-			drLockout = dpadLockout;
+			//Go faster after 10 steps
+			if(drCounter <= 10) {
+				drCounter++;
+			}
+			drLockout = drCounter > 10 ? dpadLockoutShort : dpadLockout;
 			dlLockout = 0;
 			//also lock out perpendicular directions to prevent misinputs
 			ddLockout = dpadLockout;
 			duLockout = dpadLockout;
-			//clear the repetition counters
+			//clear the perpendicular repetition counters
 			duCounter = 0;
 			ddCounter = 0;
 		} else if(hardware.Du && duLockout == 0) {
@@ -139,6 +150,9 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			//also lock out perpendicular directions to prevent misinputs
 			dlLockout = dpadLockout;
 			drLockout = dpadLockout;
+			//clear the perpendicular repetition counters
+			dlCounter = 0;
+			drCounter = 0;
 		} else if(hardware.Dd && ddLockout == 0) {
 			presses = presses | DDPRESS;
 			//Go faster after 10 steps
@@ -151,6 +165,9 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			//also lock out perpendicular directions to prevent misinputs
 			dlLockout = dpadLockout;
 			drLockout = dpadLockout;
+			//clear the perpendicular repetition counters
+			dlCounter = 0;
+			drCounter = 0;
 		} else {
 			//clear the repetition counters
 			if(duLockout == 0) {
@@ -158,6 +175,12 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			}
 			if(ddLockout == 0) {
 				ddCounter = 0;
+			}
+			if(dlLockout == 0) {
+				dlCounter = 0;
+			}
+			if(drLockout == 0) {
+				drCounter = 0;
 			}
 		}
 		//Other presses that don't get locked out, not for navigation
@@ -726,8 +749,8 @@ void navigateMenu(unsigned char bitmap[],
 					capture.stickmap = 0;
 					tempInt2 = 0;//left stick 0, c-stick 1
 					capture.captureStick = ASTICK;
-					tempInt3 = 1;//0 through 7 for abxylrzs for highlighting
-					capture.abxyszrlShow = 1;
+					tempInt3 = 0;//0 through 99
+					capture.viewIndex = 0;
 				}
 				if(presses & DUPRESS) {
 					if(itemIndex != 0) {
@@ -745,7 +768,7 @@ void navigateMenu(unsigned char bitmap[],
 					} else if(itemIndex == 1) {
 						capture.captureStick = ASTICK;
 					} else {
-						capture.abxyszrlShow = fmax(0b0000'0001, capture.abxyszrlShow >> 1);
+						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
 					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
 					redraw = 1;
@@ -753,15 +776,15 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						capture.stickmap = fmin(6, capture.stickmap+1);
 					} else if(itemIndex == 1) {
-						capture.triggerThresh = CSTICK;
+						capture.captureStick = CSTICK;
 					} else {
-						capture.abxyszrlShow = fmin(0b1000'0000, capture.abxyszrlShow << 1);
+						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
 					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
 					redraw = 1;
 				} else if(presses & SPRESS && capture.done == true) {
 					//tell the user it's recording
-					drawString(bitmap, 30, 350, 15, reaction8);//TODO: change position and string
+					drawString(bitmap, 300, 250, 15, xyscope0);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;

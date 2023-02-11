@@ -17,8 +17,8 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
-#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+//#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -148,10 +148,6 @@ int calcRumblePower(const int rumble){
 	} else {
 		return 0;
 	}
-}
-
-float velDampFromSnapback(const int snapback){
-	return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 }
 
 void freezeSticks(const int time, Buttons &btn, Buttons &hardware) {
@@ -310,11 +306,8 @@ void adjustSnapback(const WhichAxis axis, const Increase increase, Buttons &btn,
 		debug_println(controls.ySnapback);
 	}
 
-	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
-	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
-
     //recompute the intermediate gains used directly by the kalman filter
-    recomputeGains(gains, normGains);
+    recomputeGains(controls, gains, normGains);
 
 	btn.Cx = (uint8_t) (controls.xSnapback + _floatOrigin);
 	btn.Cy = (uint8_t) (controls.ySnapback + _floatOrigin);
@@ -375,7 +368,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(controls.axSmoothing > controls.smoothingMax) {
 			controls.axSmoothing = controls.smoothingMax;
 		}
-		gains.xSmoothing = controls.axSmoothing/10.0f;
 		setXSmoothingSetting(controls.axSmoothing);
 		debug_print("X Smoothing increased to:");
 		debug_println(controls.axSmoothing);
@@ -384,7 +376,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if(controls.axSmoothing < controls.smoothingMin) {
 			controls.axSmoothing = controls.smoothingMin;
 		}
-		gains.xSmoothing = controls.axSmoothing/10.0f;
 		setXSmoothingSetting(controls.axSmoothing);
 		debug_print("X Smoothing decreased to:");
 		debug_println(controls.axSmoothing);
@@ -393,7 +384,6 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (controls.aySmoothing > controls.smoothingMax) {
 			controls.aySmoothing = controls.smoothingMax;
 		}
-		gains.ySmoothing = controls.aySmoothing/10.0f;
 		setYSmoothingSetting(controls.aySmoothing);
 		debug_print("Y Smoothing increased to:");
 		debug_println(controls.aySmoothing);
@@ -402,14 +392,13 @@ void adjustSmoothing(const WhichAxis axis, const Increase increase, Buttons &btn
 		if (controls.aySmoothing < controls.smoothingMin) {
 			controls.aySmoothing = controls.smoothingMin;
 		}
-		gains.ySmoothing = controls.aySmoothing/10.0f;
 		setYSmoothingSetting(controls.aySmoothing);
 		debug_print("Y Smoothing decreased to:");
 		debug_println(controls.aySmoothing);
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
-	recomputeGains(gains, normGains);
+	recomputeGains(controls, gains, normGains);
 
 	btn.Cx = (uint8_t) (_floatOrigin + controls.axSmoothing);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.aySmoothing);
@@ -440,7 +429,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(controls.cxSmoothing > controls.smoothingMax) {
 			controls.cxSmoothing = controls.smoothingMax;
 		}
-		gains.cXSmoothing = controls.cxSmoothing/10.0f;
 		setCxSmoothingSetting(controls.cxSmoothing);
 		debug_print("C-Stick X Smoothing increased to:");
 		debug_println(controls.cxSmoothing);
@@ -449,7 +437,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if(controls.cxSmoothing < controls.smoothingMin) {
 			controls.cxSmoothing = controls.smoothingMin;
 		}
-		gains.cXSmoothing = controls.cxSmoothing/10.0f;
 		setCxSmoothingSetting(controls.cxSmoothing);
 		debug_print("C-Stick X Smoothing decreased to:");
 		debug_println(controls.cxSmoothing);
@@ -458,7 +445,6 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (controls.cySmoothing > controls.smoothingMax) {
 			controls.cySmoothing = controls.smoothingMax;
 		}
-		gains.cYSmoothing = controls.cySmoothing/10.0f;
 		setCySmoothingSetting(controls.cySmoothing);
 		debug_print("C-Stick Y Smoothing increased to:");
 		debug_println(controls.cySmoothing);
@@ -467,14 +453,13 @@ void adjustCstickSmoothing(const WhichAxis axis, const Increase increase, Button
 		if (controls.cySmoothing < controls.smoothingMin) {
 			controls.cySmoothing = controls.smoothingMin;
 		}
-		gains.cYSmoothing = controls.cySmoothing/10.0f;
 		setCySmoothingSetting(controls.cySmoothing);
 		debug_print("C-Stick Y Smoothing decreased to:");
 		debug_println(controls.cySmoothing);
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
-	recomputeGains(gains, normGains);
+	recomputeGains(controls, gains, normGains);
 
 	btn.Cx = (uint8_t) (_floatOrigin + controls.cxSmoothing);
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cySmoothing);
@@ -983,9 +968,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	}
-	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
-	debug_print("the xVelDamp value from eeprom is:");
-	debug_println(gains.xVelDamp);
 
 	//get the y-ayis snapback correction
 	controls.ySnapback = getYSnapbackSetting();
@@ -998,9 +980,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
 	}
-	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
-	debug_print("the yVelDamp value from eeprom is:");
-	debug_println(gains.yVelDamp);
 
 	//get the x-axis smoothing value
 	controls.axSmoothing = getXSmoothingSetting();
@@ -1017,7 +996,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		debug_print("the xSmoothing value was adjusted to:");
 		debug_println(controls.axSmoothing);
 	}
-	gains.xSmoothing = controls.axSmoothing / 10.0f;
 
 	//get the y-axis smoothing value
 	controls.aySmoothing = getYSmoothingSetting();
@@ -1034,7 +1012,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		debug_print("the ySmoothing value was adjusted to:");
 		debug_println(controls.aySmoothing);
 	}
-	gains.ySmoothing = controls.aySmoothing / 10.0f;
 
 	//get the c-stick x-axis smoothing value
 	controls.cxSmoothing = getCxSmoothingSetting();
@@ -1051,7 +1028,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		debug_print("the cXSmoothing value was adjusted to:");
 		debug_println(controls.cxSmoothing);
 	}
-	gains.cXSmoothing = controls.cxSmoothing / 10.0f;
 
 	//get the c-stick y-axis smoothing value
 	controls.cySmoothing = getCySmoothingSetting();
@@ -1068,7 +1044,6 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		debug_print("the cYSmoothing value was adjusted to:");
 		debug_println(controls.cySmoothing);
 	}
-	gains.cYSmoothing = controls.cySmoothing/10.0f;
 
 	//get the a-stick x-axis waveshaping value
 	controls.axWaveshaping = getWaveshapingSetting(ASTICK, XAXIS);
@@ -1124,7 +1099,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//recompute the intermediate gains used directly by the kalman filter
-	recomputeGains(gains, normGains);
+	recomputeGains(controls, gains, normGains);
 
 	//Get the rumble value
 	controls.rumble = getRumbleSetting();
@@ -1317,9 +1292,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		controls.ySnapback = controls.snapbackDefault;
 	}
 	setXSnapbackSetting(controls.xSnapback);
-	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	setYSnapbackSetting(controls.ySnapback);
-	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
 	if(reset == FACTORY){
 		controls.axSmoothing = controls.smoothingFactoryAX;
@@ -1332,16 +1305,12 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		controls.cxSmoothing = controls.smoothingMin;
 		controls.cySmoothing = controls.smoothingMin;
 	}
-	gains.xSmoothing  = controls.axSmoothing / 10.0f;
-	gains.ySmoothing  = controls.aySmoothing / 10.0f;
-	gains.cXSmoothing = controls.cxSmoothing / 10.0f;
-	gains.cYSmoothing = controls.cySmoothing / 10.0f;
 	setXSmoothingSetting(controls.axSmoothing);
 	setYSmoothingSetting(controls.aySmoothing);
 	setCxSmoothingSetting(controls.cxSmoothing);
 	setCySmoothingSetting(controls.cySmoothing);
 	//recompute the intermediate gains used directly by the kalman filter
-	recomputeGains(gains, normGains);
+	recomputeGains(controls, gains, normGains);
 
 	if(reset == FACTORY){
 		controls.axWaveshaping = controls.waveshapingFactoryAX;

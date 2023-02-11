@@ -70,6 +70,7 @@ void second_core() {
 		if(_pleaseCommit != 0) {
 			if(_pleaseCommit == 1) {
 				_pleaseCommit = 0;
+				recomputeGains(_controls, _gains, _normGains);
 				commitSettings();
 			} else if(_pleaseCommit == 2) {
 				_pleaseCommit = 0;
@@ -383,7 +384,6 @@ int main() {
 	_dataCapture.mode = CM_NULL;
 	_dataCapture.triggerStick = ASTICK;
 	_dataCapture.captureStick = ASTICK;
-	_dataCapture.abxyszrlShow = 0;
 	_dataCapture.begin = false;
 	_dataCapture.done = true;
 	_dataCapture.delay = 0;
@@ -391,6 +391,7 @@ int main() {
 	_dataCapture.triggerThresh = 49;
 	_dataCapture.startIndex = 0;
 	_dataCapture.endIndex = 0;
+	_dataCapture.viewIndex = 0;
 
 	//measure the trigger values for trigger tricking
 	initializeButtons(_pinList, _btn, _controls.lTrigInitial, _controls.rTrigInitial);

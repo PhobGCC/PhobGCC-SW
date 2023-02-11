@@ -994,6 +994,7 @@ void drawXYScope(unsigned char bitmap[],
 		const int itemIndex,
 		DataCapture &capture) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap, 240,  20, 15, xyscope5);
 
 	const int xCenter = 128;//starts at 1
 	const int yCenter = 168;//starts at 40
@@ -1040,11 +1041,10 @@ void drawXYScope(unsigned char bitmap[],
 
 	drawString(bitmap, 280, 100, 15, xyscope2);
 	if(itemIndex == 1) {
-		if(capture.stickmap != 0) {
+		if(capture.captureStick == CSTICK) {
 			drawString(bitmap, 280, 120, 15, arrowLeft);
-		}
-		if(capture.stickmap < 6) {
-			drawString(bitmap, 450, 120, 15, arrowRight);
+		} else {
+			drawString(bitmap, 410, 120, 15, arrowRight);
 		}
 	}
 	if(capture.captureStick == ASTICK) {
@@ -1054,42 +1054,40 @@ void drawXYScope(unsigned char bitmap[],
 	}
 
 	drawString(bitmap, 280, 150, 15, xyscope3);
+	drawInt(bitmap, 290, 170, 15, 1, capture.viewIndex);
 	if(itemIndex == 2) {
-		if(capture.abxyszrlShow != 0b0000'0001) {
+		if(capture.viewIndex != 0) {
 			drawString(bitmap, 280, 170, 15, arrowLeft);
 		}
-		if(capture.abxyszrlShow != 0b1000'0000) {
-			drawString(bitmap, 320, 170, 15, arrowRight);
+		if(capture.viewIndex < 99) {
+			drawString(bitmap, 330, 170, 15, arrowRight);
 		}
 	}
-	switch(capture.abxyszrlShow) {
-		case 0b0000'0001:
-			drawString(bitmap, 300, 170, 15, "A");
-			break;
-		case 0b0000'0010:
-			drawString(bitmap, 300, 170, 15, "B");
-			break;
-		case 0b0000'0100:
-			drawString(bitmap, 300, 170, 15, "X");
-			break;
-		case 0b0000'1000:
-			drawString(bitmap, 300, 170, 15, "Y");
-			break;
-		case 0b0001'0000:
-			drawString(bitmap, 300, 170, 15, "S");
-			break;
-		case 0b0010'0000:
-			drawString(bitmap, 300, 170, 15, "Z");
-			break;
-		case 0b0100'0000:
-			drawString(bitmap, 300, 170, 15, "R");
-			break;
-		case 0b1000'0000:
-			drawString(bitmap, 300, 170, 15, "L");
-			break;
-		default:
-			drawString(bitmap, 300, 170, 15, "?");
-			break;
+
+	drawString(bitmap, 280, 200, 15, xyscope4);
+	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0001) {
+		drawString(bitmap, 280, 220, 15, "A");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0010) {
+		drawString(bitmap, 300, 220, 15, "B");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0100) {
+		drawString(bitmap, 320, 220, 15, "X");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0000'1000) {
+		drawString(bitmap, 340, 220, 15, "Y");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0001'0000) {
+		drawString(bitmap, 420, 220, 15, "S");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0010'0000) {
+		drawString(bitmap, 400, 220, 15, "Z");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b0100'0000) {
+		drawString(bitmap, 380, 220, 15, "R");
+	}
+	if(capture.abxyszrl[capture.viewIndex] & 0b1000'0000) {
+		drawString(bitmap, 360, 220, 15, "L");
 	}
 
 	for (int i=0; i < 100; i++) {
@@ -1098,18 +1096,51 @@ void drawXYScope(unsigned char bitmap[],
 		const int y = capture.a2[index]-127;
 		const int ux = capture.a1Unfilt[index]-127;
 		const int uy = capture.a2Unfilt[index]-127;
-		//unfiltered
-		drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
-		//filtered
-		if(!(capture.abxyszrl[index] & capture.abxyszrlShow)) {
+		if(i != capture.viewIndex) {
+			//unfiltered
+			drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
+			//filtered
 			drawLine(bitmap, xCenter+x+0, yCenter-y+0, xCenter+x+0, yCenter-y-0, 15);
 		} else {
-			drawLine(bitmap, xCenter+x+3, yCenter-y+3, xCenter+x+3, yCenter-y-2, 15);
-			drawLine(bitmap, xCenter+x+3, yCenter-y-3, xCenter+x-2, yCenter-y-3, 15);
-			drawLine(bitmap, xCenter+x-3, yCenter-y-3, xCenter+x-3, yCenter-y+2, 15);
-			drawLine(bitmap, xCenter+x-3, yCenter-y+3, xCenter+x+2, yCenter-y+3, 15);
+			//unfiltered
+			drawLine(bitmap, xCenter+ux+1, yCenter-uy+1, xCenter+ux+1, yCenter-uy-(1-1), 13);
+			drawLine(bitmap, xCenter+ux+1, yCenter-uy-1, xCenter+ux-(1-1), yCenter-uy-1, 13);
+			drawLine(bitmap, xCenter+ux-1, yCenter-uy-1, xCenter+ux-1, yCenter-uy+(1-1), 13);
+			drawLine(bitmap, xCenter+ux-1, yCenter-uy+1, xCenter+ux+(1-1), yCenter-uy+1, 13);
+			//filtered
+			drawLine(bitmap, xCenter+x+2, yCenter-y+2, xCenter+x+2, yCenter-y-(2-1), 15);
+			drawLine(bitmap, xCenter+x+2, yCenter-y-2, xCenter+x-(2-1), yCenter-y-2, 15);
+			drawLine(bitmap, xCenter+x-2, yCenter-y-2, xCenter+x-2, yCenter-y+(2-1), 15);
+			drawLine(bitmap, xCenter+x-2, yCenter-y+2, xCenter+x+(2-1), yCenter-y+2, 15);
 		}
 	}
+
+	//coordinate view
+	drawString(bitmap,  30, 300, 15, xyscope6);
+	drawString(bitmap,  30, 320, 15, inputview4);//reused
+
+	//get values at the view index
+	const int index = (capture.viewIndex + capture.startIndex) % 100;
+	const int x = capture.a1[index]-127;
+	const int y = capture.a2[index]-127;
+	const int ux = capture.a1Unfilt[index]-127;
+	const int uy = capture.a2Unfilt[index]-127;
+	//unfiltered
+	drawInt(bitmap,     20, 340, 15, 2, ux);
+	drawInt(bitmap,     20, 360, 15, 2, uy);
+	float uxMelee;
+	float uyMelee;
+	meleeCoordClamp(ux, uy, uxMelee, uyMelee);
+	drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
+	drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
+	//filtered
+	drawInt(bitmap,    280, 340, 15, 2, x);
+	drawInt(bitmap,    280, 360, 15, 2, y);
+	float xMelee;
+	float yMelee;
+	meleeCoordClamp(x, y, xMelee, yMelee);
+	drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
+	drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
 }
 
 //You wait a random amount of time before actually calling this draw function

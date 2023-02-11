@@ -187,6 +187,7 @@ const char inputview3[]      = "Left      Left Melee      Right     Right Melee"
 const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char xyscope0[]        = "Waiting...";
 const char xyscope1[]        = "Stickmap:";
 const char stickmap0[]       = "None";
 const char stickmap1[]       = "Deadzones";
@@ -198,7 +199,13 @@ const char stickmap6[]       = "Right Ledge";
 const char xyscope2[]        = "Which Stick:";
 const char leftright0[]      = "Left Stick";
 const char leftright1[]      = "Right Stick";
-const char xyscope3[]        = "Button to Highlight:";
+const char xyscope3[]        = "Highlight Sample #:";
+const char xyscope4[]        = "Pressed Buttons:";
+const char xyscope5[]        = "Press Start to Record";
+const char xyscope6[]        = "Unfilt    Melee           Filtered  Melee";
+/*
+const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
+*/
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reaction1[]       = "Press start to begin the reaction test.";

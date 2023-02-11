@@ -290,7 +290,6 @@ struct DataCapture{
 	CaptureMode mode;
 	WhichStick triggerStick;
 	WhichStick captureStick;
-	uint8_t abxyszrlShow;//a mask for highlighting button presses in stickmap graphs; not used in recording
 	uint8_t stickmap;//which stickmap to display
 	bool begin;
 	bool done;
@@ -299,6 +298,7 @@ struct DataCapture{
 	uint8_t triggerThresh;
 	uint8_t startIndex;
 	uint8_t endIndex;
+	uint8_t viewIndex;//for stepping through manually and looking at coordinates and button presses
 	uint8_t a1[100];//6 frames for analog
 	uint8_t a2[100];
 	uint8_t a1Unfilt[100];
