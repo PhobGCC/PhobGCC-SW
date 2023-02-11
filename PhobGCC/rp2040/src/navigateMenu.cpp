@@ -782,9 +782,9 @@ void navigateMenu(unsigned char bitmap[],
 					}
 					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
 					redraw = 1;
-				} else if(presses & SPRESS && capture.done == true) {
+				} else if(presses & APRESS && capture.done == true) {
 					//tell the user it's recording
-					drawString(bitmap, 300, 250, 15, xyscope0);
+					drawString(bitmap, 280, 250, 15, xyscope0);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
