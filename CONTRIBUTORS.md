@@ -34,3 +34,5 @@ Obstruse - pico-composite8 - 2022-10-30 - GPLv3 - Modified
 https://github.com/obstruse/pico-composite8
 
 Rowan Easter-Robinson - CurveFitting - 2021-12-28 - Public Domain - Verbatim
+
+https://registry.platformio.org/libraries/rotario/CurveFitting
