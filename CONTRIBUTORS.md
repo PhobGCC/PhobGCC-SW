@@ -9,11 +9,11 @@ FrostSSBM - Developer
 
 CarVac - Developer
 
-Wav - Developer
+wav - Developer
 
 Savestate - Developer
 
-Bjartkular1 - Developer
+bjartskular1 - Developer
 
 NiceMitch - Developer
 
