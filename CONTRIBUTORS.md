@@ -4,14 +4,21 @@ If you believe someone is missing, please let Frost or CarVac know!
 # Contributors
 
 Phobos132 - Developer
+
 FrostSSBM - Developer
-Carvac - Developer
+
+CarVac - Developer
+
 Wav - Developer
+
 Savestate - Developer
+
 Bjartkular1 - Developer
+
 NiceMitch - Developer
 
 ArteSSBM - Debugging
+
 JonnyHaystack - Debugging
 
 
