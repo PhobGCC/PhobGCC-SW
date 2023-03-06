@@ -2135,6 +2135,25 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 #endif //BATCHSETTINGS
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
+
+		//it'll be unlocked after it hits zero
+		static uint8_t safeModeLockout = 1000;
+		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
+			if(safeModeLockout > 0) { //Not held long enough
+				safeModeLockout--;
+			} else if(safeModeLockout = 0) { //Held long enough
+				safeModeLockout = 1000;
+				if(!running) { //wake it up if not already running
+					running = true;
+				}
+				controls.safeMode = false;
+				freezeSticks(2000, btn, hardware);
+			}
+		} else if(safeModeLockout < 1000) {
+			safeModeLockout++;
+		}
+	}
+/*	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 		static float safeModeAccumulator = 0.0;
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
@@ -2149,7 +2168,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			controls.safeMode = false;
 			freezeSticks(2000, btn, hardware);
 		}
-	}
+	}*/
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
