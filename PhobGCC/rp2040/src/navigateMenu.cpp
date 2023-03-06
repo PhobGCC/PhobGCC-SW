@@ -689,59 +689,6 @@ void navigateMenu(unsigned char bitmap[],
 					}
 				}
 				return;
-			case MENU_REACTION:
-				if(!changeMade) {
-					tempInt1 = 23;//dash
-					capture.stickThresh = 23;
-					tempInt2 = 49;//lightshield
-					capture.triggerThresh = 49;
-				}
-				if(presses & DLPRESS) {
-					itemIndex = 0;
-					redraw = 1;
-				} else if(presses & DRPRESS) {
-					itemIndex = 1;
-					redraw = 1;
-				} else if(presses & DUPRESS) {
-					if(itemIndex == 0) {
-						capture.stickThresh = fmin(100, capture.stickThresh+1);
-					} else {//itemIndex == 1
-						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
-					}
-					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
-					redraw = 1;
-				} else if(presses & DDPRESS) {
-					if(itemIndex == 0) {
-						capture.stickThresh = fmax(10, capture.stickThresh-1);
-					} else {//itemIndex == 1
-						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
-					}
-					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
-					redraw = 1;
-					/*
-					//no saving
-				} else if((presses & BSAVE) && changeMade) {
-					*/
-				} else if(presses & SPRESS) {
-					//tell the user to get ready
-					drawString(bitmap, 30, 150, 15, reaction8);
-					//set up for recording the delay
-					capture.delay = 0;
-					capture.done = false;
-					capture.mode = CM_NULL;
-					//wait a random amount of time
-					const uint32_t delay = rand() % 5'000'000 + 3'000'000; //3 to 8 seconds
-					const uint32_t lastMicros = time_us_64();
-					uint32_t thisMicros = lastMicros;
-					while((thisMicros-lastMicros) < delay) {
-						thisMicros = time_us_64();
-					}
-					//then trigger a redraw (which actually starts the recording)
-					//(we want the recording to be synced to the redraw)
-					pleaseCommit = 9;
-					redraw = 1;
-				}
-				return;
 			case MENU_XYSCOPE://stickmap plot
 				if(!changeMade) {
 					capture.stickThresh = 10;//fixed threshold for triggering
@@ -751,6 +698,7 @@ void navigateMenu(unsigned char bitmap[],
 					capture.captureStick = ASTICK;
 					tempInt3 = 0;//0 through 99
 					capture.viewIndex = 0;
+					capture.done = false;
 				}
 				if(presses & DUPRESS) {
 					if(itemIndex != 0) {
@@ -770,7 +718,7 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
-					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					changeMade = true;
 					redraw = 1;
 				} else if(presses & DRPRESS) {
 					if(itemIndex == 0) {
@@ -780,7 +728,7 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
-					changeMade = (capture.stickThresh != tempInt1) || (capture.triggerThresh != tempInt2);
+					changeMade = true;
 					redraw = 1;
 				} else if(presses & APRESS && capture.done == true) {
 					//tell the user it's recording
@@ -791,6 +739,95 @@ void navigateMenu(unsigned char bitmap[],
 					capture.mode = CM_STICK_RISING;
 					//then trigger the recording
 					pleaseCommit = 9;
+				}
+				return;
+			case MENU_PRESSTIME:
+				if(!changeMade) {
+					tempInt1 = 23;//dash
+					capture.stickThresh = 23;
+					tempInt2 = 255;//no lightshield threshold
+					capture.triggerThresh = 255;
+					capture.done = false;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmin(100, capture.stickThresh+1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
+					}
+					changeMade = true;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmax(10, capture.stickThresh-1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
+					}
+					changeMade = true;
+					redraw = 1;
+				} else if(presses & SPRESS) {
+					//tell the user to press ABXYLRZ or move a stick to begin
+					//drawString(bitmap, ??????)
+					//set up recording
+					capture.begin = false;
+					capture.done = false;
+					capture.mode = CM_PRESS;
+					//then trigger the recording
+					pleaseCommit = 9;
+				}
+			case MENU_REACTION:
+				if(!changeMade) {
+					tempInt1 = 23;//dash
+					capture.stickThresh = 23;
+					tempInt2 = 49;//lightshield
+					capture.triggerThresh = 49;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmin(100, capture.stickThresh+1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
+					}
+					changeMade = true;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						capture.stickThresh = fmax(10, capture.stickThresh-1);
+					} else {//itemIndex == 1
+						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
+					}
+					changeMade = true;
+					redraw = 1;
+				} else if(presses & SPRESS) {
+					//tell the user to get ready
+					drawString(bitmap, 30, 150, 15, reaction8);
+					//set up for recording the delay
+					capture.delay = 0;
+					capture.done = false;
+					capture.mode = CM_NULL;
+					//wait a random amount of time
+					const uint32_t delay = rand() % 5'000'000 + 3'000'000; //3 to 8 seconds
+					const uint32_t lastMicros = time_us_64();
+					uint32_t thisMicros = lastMicros;
+					while((thisMicros-lastMicros) < delay) {
+						thisMicros = time_us_64();
+					}
+					//then trigger a redraw (which actually starts the recording)
+					//(we want the recording to be synced to the redraw)
+					pleaseCommit = 9;
+					redraw = 1;
 				}
 				return;
 			case MENU_VISION:

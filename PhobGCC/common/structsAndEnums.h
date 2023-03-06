@@ -285,12 +285,24 @@ enum CaptureMode{
 	CM_PRESS,//any button press
 };
 
+enum GraphVar{
+	GV_AX,//a-stick x-axis filtered & unfiltered
+	GV_AY,
+	GV_AXY,//a-stick x and y, only filtered
+	GV_CX,
+	GV_CY,
+	GV_CXY,
+	GV_L,
+	GV_R,
+};
+
 struct DataCapture{
 	//these are the params
 	CaptureMode mode;
 	WhichStick triggerStick;
 	WhichStick captureStick;
 	uint8_t stickmap;//which stickmap to display
+	GraphVar graphVar;//which variable to graph
 	bool begin;
 	bool done;
 	uint32_t delay;//for recording reaction time
@@ -304,7 +316,7 @@ struct DataCapture{
 	uint8_t a1Unfilt[100];
 	uint8_t a2Unfilt[100];
 	uint8_t abxyszrl[200];//12 frames
-	uint8_t dpadaxaycxcy[200];//12 frames
+	uint8_t axaycxcyrl[200];//12 frames
 };
 
 #endif //ENUMS_H

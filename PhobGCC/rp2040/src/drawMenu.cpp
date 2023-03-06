@@ -1064,83 +1064,122 @@ void drawXYScope(unsigned char bitmap[],
 		}
 	}
 
-	drawString(bitmap, 280, 200, 15, xyscope4);
-	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0001) {
-		drawString(bitmap, 280, 220, 15, "A");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0010) {
-		drawString(bitmap, 300, 220, 15, "B");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0000'0100) {
-		drawString(bitmap, 320, 220, 15, "X");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0000'1000) {
-		drawString(bitmap, 340, 220, 15, "Y");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0001'0000) {
-		drawString(bitmap, 420, 220, 15, "S");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0010'0000) {
-		drawString(bitmap, 400, 220, 15, "Z");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b0100'0000) {
-		drawString(bitmap, 380, 220, 15, "R");
-	}
-	if(capture.abxyszrl[capture.viewIndex] & 0b1000'0000) {
-		drawString(bitmap, 360, 220, 15, "L");
-	}
+	if(capture.done) {
+		drawString(bitmap, 280, 200, 15, xyscope4);
+		if(capture.abxyszrl[capture.viewIndex] & 0b0000'0001) {
+			drawString(bitmap, 280, 220, 15, "A");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0000'0010) {
+			drawString(bitmap, 300, 220, 15, "B");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0000'0100) {
+			drawString(bitmap, 320, 220, 15, "X");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0000'1000) {
+			drawString(bitmap, 340, 220, 15, "Y");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0001'0000) {
+			drawString(bitmap, 420, 220, 15, "S");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0010'0000) {
+			drawString(bitmap, 400, 220, 15, "Z");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b0100'0000) {
+			drawString(bitmap, 380, 220, 15, "R");
+		}
+		if(capture.abxyszrl[capture.viewIndex] & 0b1000'0000) {
+			drawString(bitmap, 360, 220, 15, "L");
+		}
 
-	for (int i=0; i < 100; i++) {
-		const int index = (i + capture.startIndex) % 100;
+		for (int i=0; i < 100; i++) {
+			const int index = (i + capture.startIndex) % 100;
+			const int x = capture.a1[index]-127;
+			const int y = capture.a2[index]-127;
+			const int ux = capture.a1Unfilt[index]-127;
+			const int uy = capture.a2Unfilt[index]-127;
+			if(i != capture.viewIndex) {
+				//unfiltered
+				drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
+				//filtered
+				drawLine(bitmap, xCenter+x+0, yCenter-y+0, xCenter+x+0, yCenter-y-0, 15);
+			} else {
+				//unfiltered
+				drawLine(bitmap, xCenter+ux+1, yCenter-uy+1, xCenter+ux+1, yCenter-uy-(1-1), 13);
+				drawLine(bitmap, xCenter+ux+1, yCenter-uy-1, xCenter+ux-(1-1), yCenter-uy-1, 13);
+				drawLine(bitmap, xCenter+ux-1, yCenter-uy-1, xCenter+ux-1, yCenter-uy+(1-1), 13);
+				drawLine(bitmap, xCenter+ux-1, yCenter-uy+1, xCenter+ux+(1-1), yCenter-uy+1, 13);
+				//filtered
+				drawLine(bitmap, xCenter+x+2, yCenter-y+2, xCenter+x+2, yCenter-y-(2-1), 15);
+				drawLine(bitmap, xCenter+x+2, yCenter-y-2, xCenter+x-(2-1), yCenter-y-2, 15);
+				drawLine(bitmap, xCenter+x-2, yCenter-y-2, xCenter+x-2, yCenter-y+(2-1), 15);
+				drawLine(bitmap, xCenter+x-2, yCenter-y+2, xCenter+x+(2-1), yCenter-y+2, 15);
+			}
+		}
+
+		//coordinate view
+		drawString(bitmap,  30, 300, 15, xyscope6);
+		drawString(bitmap,  30, 320, 15, inputview4);//reused
+
+		//get values at the view index
+		const int index = (capture.viewIndex + capture.startIndex) % 100;
 		const int x = capture.a1[index]-127;
 		const int y = capture.a2[index]-127;
 		const int ux = capture.a1Unfilt[index]-127;
 		const int uy = capture.a2Unfilt[index]-127;
-		if(i != capture.viewIndex) {
-			//unfiltered
-			drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
-			//filtered
-			drawLine(bitmap, xCenter+x+0, yCenter-y+0, xCenter+x+0, yCenter-y-0, 15);
-		} else {
-			//unfiltered
-			drawLine(bitmap, xCenter+ux+1, yCenter-uy+1, xCenter+ux+1, yCenter-uy-(1-1), 13);
-			drawLine(bitmap, xCenter+ux+1, yCenter-uy-1, xCenter+ux-(1-1), yCenter-uy-1, 13);
-			drawLine(bitmap, xCenter+ux-1, yCenter-uy-1, xCenter+ux-1, yCenter-uy+(1-1), 13);
-			drawLine(bitmap, xCenter+ux-1, yCenter-uy+1, xCenter+ux+(1-1), yCenter-uy+1, 13);
-			//filtered
-			drawLine(bitmap, xCenter+x+2, yCenter-y+2, xCenter+x+2, yCenter-y-(2-1), 15);
-			drawLine(bitmap, xCenter+x+2, yCenter-y-2, xCenter+x-(2-1), yCenter-y-2, 15);
-			drawLine(bitmap, xCenter+x-2, yCenter-y-2, xCenter+x-2, yCenter-y+(2-1), 15);
-			drawLine(bitmap, xCenter+x-2, yCenter-y+2, xCenter+x+(2-1), yCenter-y+2, 15);
-		}
+		//unfiltered
+		drawInt(bitmap,     20, 340, 15, 2, ux);
+		drawInt(bitmap,     20, 360, 15, 2, uy);
+		float uxMelee;
+		float uyMelee;
+		meleeCoordClamp(ux, uy, uxMelee, uyMelee);
+		drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
+		drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
+		//filtered
+		drawInt(bitmap,    280, 340, 15, 2, x);
+		drawInt(bitmap,    280, 360, 15, 2, y);
+		float xMelee;
+		float yMelee;
+		meleeCoordClamp(x, y, xMelee, yMelee);
+		drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
+		drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
 	}
+}
 
-	//coordinate view
-	drawString(bitmap,  30, 300, 15, xyscope6);
-	drawString(bitmap,  30, 320, 15, inputview4);//reused
-
-	//get values at the view index
-	const int index = (capture.viewIndex + capture.startIndex) % 100;
-	const int x = capture.a1[index]-127;
-	const int y = capture.a2[index]-127;
-	const int ux = capture.a1Unfilt[index]-127;
-	const int uy = capture.a2Unfilt[index]-127;
-	//unfiltered
-	drawInt(bitmap,     20, 340, 15, 2, ux);
-	drawInt(bitmap,     20, 360, 15, 2, uy);
-	float uxMelee;
-	float uyMelee;
-	meleeCoordClamp(ux, uy, uxMelee, uyMelee);
-	drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
-	drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
-	//filtered
-	drawInt(bitmap,    280, 340, 15, 2, x);
-	drawInt(bitmap,    280, 360, 15, 2, y);
-	float xMelee;
-	float yMelee;
-	meleeCoordClamp(x, y, xMelee, yMelee);
-	drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
-	drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
+//You wait a random amount of time before actually calling this draw function
+//Then the draw function, as soon as it is done, initiates recording
+void drawPresstime(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		DataCapture &capture) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap,  30,  50, 15, presstime1);
+	drawString(bitmap,  30,  70, 15, presstime2);
+	drawString(bitmap,  30,  90, 15, reaction3);
+	drawString(bitmap,  30, 120, 15, reaction4);
+	drawInt(   bitmap, 160, 120, 15, 0, capture.stickThresh);
+	drawString(bitmap, 280, 120, 15, reaction5);
+	drawInt(   bitmap, 410, 120, 15, 0, capture.triggerThresh);
+	if(itemIndex == 0) {
+		drawString(bitmap,  10, 120, 15, arrowRight);
+	} else {
+		drawString(bitmap, 260, 120, 15, arrowRight);
+	}
+	if(!capture.done) {
+	} else {
+		drawString(bitmap,  30, 150, 15, "A");
+		drawString(bitmap,  50, 165, 15, "B");
+		drawString(bitmap,  30, 180, 15, "X");
+		drawString(bitmap,  50, 195, 15, "Y");
+		drawString(bitmap,  30, 210, 15, "Z");
+		drawString(bitmap,  50, 225, 15, "L");
+		drawString(bitmap,  30, 240, 15, "La");
+		drawString(bitmap,  50, 255, 15, "R");
+		drawString(bitmap,  30, 270, 15, "Ra");
+		drawString(bitmap,  50, 285, 15, "AX");
+		drawString(bitmap,  30, 300, 15, "AY");
+		drawString(bitmap,  50, 315, 15, "CX");
+		drawString(bitmap,  30, 330, 15, "CY");
+	}
 }
 
 //You wait a random amount of time before actually calling this draw function
