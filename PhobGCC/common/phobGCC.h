@@ -2135,19 +2135,22 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 #endif //BATCHSETTINGS
 		}
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
-		static float safeModeAccumulator = 0.0;
-		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
-			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
-		} else {
-			safeModeAccumulator = 0.99*safeModeAccumulator;
-		}
-		if(safeModeAccumulator > 0.99){
-			safeModeAccumulator = 0;
-			if (!running) {//wake it up if not already running
-				running = true;
+
+		//it'll be unlocked after it hits zero
+		static int safeModeLockout = 1000;
+		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
+			if(safeModeLockout > 0) { //Not held long enough
+				safeModeLockout--;
+			} else if(safeModeLockout == 0) { //Held long enough
+				safeModeLockout = 1000;
+				if(!running) { //wake it up if not already running
+					running = true;
+				}
+				controls.safeMode = false;
+				freezeSticks(2000, btn, hardware);
 			}
-			controls.safeMode = false;
-			freezeSticks(2000, btn, hardware);
+		} else if(safeModeLockout < 1000) {
+			safeModeLockout++;
 		}
 	}
 
@@ -2166,22 +2169,22 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		undoCalPressed = false;
 	}
 
-	//Advance Calibration Using L or R triggers
-	static float advanceCalAccumulator = 0.0;
-	if((hardware.A || hardware.L || hardware.R) && advanceCal){
-		advanceCalAccumulator = 0.96*advanceCalAccumulator + 0.04;
-	} else {
-		advanceCalAccumulator = 0.96*advanceCalAccumulator;
-	}
-
+	//Advance Calibration Using L or R triggers or A button
+	static int calibLockout = 50;
 	static bool advanceCalPressed = false;
-	if(advanceCalAccumulator > 0.75 && !advanceCalPressed){
-		advanceCalPressed = true;
-		calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
-		if(currentCalStep == -1) {
-			advanceCal = false;
+	if((hardware.A || hardware.L || hardware.R) && advanceCal){
+		if(calibLockout > 0) {
+			calibLockout--;
+		} else if(calibLockout == 0 && !advanceCalPressed) {
+			calibLockout = 50;
+			advanceCalPressed = true;
+			calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
+			if(currentCalStep == -1) {
+				advanceCal = false;
+			}
 		}
-	} else if(advanceCalAccumulator <= 0.25) {
+	} else if(calibLockout < 50) {
+		calibLockout++;
 		advanceCalPressed = false;
 	}
 }
