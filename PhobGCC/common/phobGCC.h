@@ -96,6 +96,8 @@ ControlConfig _controls{
 	.analogScalerMax = 125,
 	.analogScalerDefault = 100,
 	.safeModeLockout = 1000,
+	.calibLockout = 50,
+	.advanceCalPressed = false,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
 	.interlaceOffsetMin = -150,
@@ -2153,22 +2155,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			controls.safeModeLockout++;
 		}
 	}
-/*	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
-		static float safeModeAccumulator = 0.0;
-		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
-			safeModeAccumulator = 0.99*safeModeAccumulator + 0.01;
-		} else {
-			safeModeAccumulator = 0.99*safeModeAccumulator;
-		}
-		if(safeModeAccumulator > 0.99){
-			safeModeAccumulator = 0;
-			if (!running) {//wake it up if not already running
-				running = true;
-			}
-			controls.safeMode = false;
-			freezeSticks(2000, btn, hardware);
-		}
-	}*/
 
 	//Skip stick measurement and go to notch adjust using the start button while calibrating
 	if(hardware.S && (currentCalStep >= 0 && currentCalStep < 32)){
@@ -2185,23 +2171,21 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		undoCalPressed = false;
 	}
 
-	//Advance Calibration Using L or R triggers
-	static float advanceCalAccumulator = 0.0;
+	//Advance Calibration Using L or R triggers or A button
 	if((hardware.A || hardware.L || hardware.R) && advanceCal){
-		advanceCalAccumulator = 0.96*advanceCalAccumulator + 0.04;
-	} else {
-		advanceCalAccumulator = 0.96*advanceCalAccumulator;
-	}
-
-	static bool advanceCalPressed = false;
-	if(advanceCalAccumulator > 0.75 && !advanceCalPressed){
-		advanceCalPressed = true;
-		calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
-		if(currentCalStep == -1) {
-			advanceCal = false;
+		if(controls.calibLockout > 0) {
+			controls.calibLockout--;
+		} else if(controls.calibLockout == 0 && !controls.advanceCalPressed) {
+			controls.calibLockout = 50;
+			controls.advanceCalPressed = true;
+			calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
+			if(currentCalStep == -1) {
+				advanceCal = false;
+			}
 		}
-	} else if(advanceCalAccumulator <= 0.25) {
-		advanceCalPressed = false;
+	} else if(controls.calibLockout < 50) {
+		controls.calibLockout++;
+		controls.advanceCalPressed = false;
 	}
 }
 
