@@ -2141,7 +2141,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
 			if(controls.safeModeLockout > 0) { //Not held long enough
 				controls.safeModeLockout--;
-			} else if(controls.safeModeLockout = 0) { //Held long enough
+			} else if(controls.safeModeLockout == 0) { //Held long enough
 				controls.safeModeLockout = 1000;
 				if(!running) { //wake it up if not already running
 					running = true;
