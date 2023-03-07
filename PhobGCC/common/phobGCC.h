@@ -95,9 +95,6 @@ ControlConfig _controls{
 	.analogScalerMin = 82,
 	.analogScalerMax = 125,
 	.analogScalerDefault = 100,
-	.safeModeLockout = 1000,
-	.calibLockout = 50,
-	.advanceCalPressed = false,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
 	.interlaceOffsetMin = -150,
@@ -2140,19 +2137,20 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 
 		//it'll be unlocked after it hits zero
+		static int safeModeLockout = 1000;
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
-			if(controls.safeModeLockout > 0) { //Not held long enough
-				controls.safeModeLockout--;
-			} else if(controls.safeModeLockout == 0) { //Held long enough
-				controls.safeModeLockout = 1000;
+			if(safeModeLockout > 0) { //Not held long enough
+				safeModeLockout--;
+			} else if(safeModeLockout == 0) { //Held long enough
+				safeModeLockout = 1000;
 				if(!running) { //wake it up if not already running
 					running = true;
 				}
 				controls.safeMode = false;
 				freezeSticks(2000, btn, hardware);
 			}
-		} else if(controls.safeModeLockout < 1000) {
-			controls.safeModeLockout++;
+		} else if(safeModeLockout < 1000) {
+			safeModeLockout++;
 		}
 	}
 
@@ -2172,20 +2170,22 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 
 	//Advance Calibration Using L or R triggers or A button
+	static int calibLockout = 50;
+	static bool advanceCalPressed = false;
 	if((hardware.A || hardware.L || hardware.R) && advanceCal){
-		if(controls.calibLockout > 0) {
-			controls.calibLockout--;
-		} else if(controls.calibLockout == 0 && !controls.advanceCalPressed) {
-			controls.calibLockout = 50;
-			controls.advanceCalPressed = true;
+		if(calibLockout > 0) {
+			calibLockout--;
+		} else if(calibLockout == 0 && !advanceCalPressed) {
+			calibLockout = 50;
+			advanceCalPressed = true;
 			calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
 			if(currentCalStep == -1) {
 				advanceCal = false;
 			}
 		}
-	} else if(controls.calibLockout < 50) {
-		controls.calibLockout++;
-		controls.advanceCalPressed = false;
+	} else if(calibLockout < 50) {
+		calibLockout++;
+		advanceCalPressed = false;
 	}
 }
 

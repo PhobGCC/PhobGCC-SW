@@ -221,9 +221,6 @@ struct ControlConfig{
 	const int analogScalerMin;
 	const int analogScalerMax;
 	const int analogScalerDefault;
-	int safeModeLockout;
-	int calibLockout;
-	bool advanceCalPressed;
 #ifdef PICO_RP2040
 	int interlaceOffset;
 	const int interlaceOffsetMin;
