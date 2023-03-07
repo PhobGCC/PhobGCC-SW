@@ -95,6 +95,7 @@ ControlConfig _controls{
 	.analogScalerMin = 82,
 	.analogScalerMax = 125,
 	.analogScalerDefault = 100,
+	.safeModeLockout = 1000,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
 	.interlaceOffsetMin = -150,
@@ -2137,20 +2138,19 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 
 		//it'll be unlocked after it hits zero
-		static uint8_t safeModeLockout = 1000;
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
-			if(safeModeLockout > 0) { //Not held long enough
-				safeModeLockout--;
-			} else if(safeModeLockout = 0) { //Held long enough
-				safeModeLockout = 1000;
+			if(controls.safeModeLockout > 0) { //Not held long enough
+				controls.safeModeLockout--;
+			} else if(controls.safeModeLockout = 0) { //Held long enough
+				controls.safeModeLockout = 1000;
 				if(!running) { //wake it up if not already running
 					running = true;
 				}
 				controls.safeMode = false;
 				freezeSticks(2000, btn, hardware);
 			}
-		} else if(safeModeLockout < 1000) {
-			safeModeLockout++;
+		} else if(controls.safeModeLockout < 1000) {
+			controls.safeModeLockout++;
 		}
 	}
 /*	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
