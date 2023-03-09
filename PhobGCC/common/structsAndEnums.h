@@ -221,6 +221,7 @@ struct ControlConfig{
 	const int analogScalerMin;
 	const int analogScalerMax;
 	const int analogScalerDefault;
+	int tournamentToggle;
 #ifdef PICO_RP2040
 	int interlaceOffset;
 	const int interlaceOffsetMin;

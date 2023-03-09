@@ -49,6 +49,7 @@ void getStoragePage() {
 		_storage.settings.AstickAnalogScaler = temp.settings.AstickAnalogScaler;
 		_storage.settings.CstickAnalogScaler = temp.settings.CstickAnalogScaler;
 		_storage.settings.interlaceOffset = temp.settings.interlaceOffset;
+		_storage.settings.tournamentToggle = temp.settings.tournamentToggle;
 		fresh = true;
 	}
 }
@@ -425,3 +426,12 @@ void setInterlaceOffsetSetting(const int o) {
 	_storage.settings.interlaceOffset = o;
 }
 
+int getTournamentToggle() {
+	getStoragePage();
+	return _storage.settings.tournamentToggle;
+}
+
+void setTournamentToggle(const int tournamentToggle) {
+	getStoragePage();
+	_storage.settings.tournamentToggle = tournamentToggle;
+}

@@ -95,6 +95,7 @@ ControlConfig _controls{
 	.analogScalerMin = 82,
 	.analogScalerMax = 125,
 	.analogScalerDefault = 100,
+	.tournamentToggle = 0,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
 	.interlaceOffsetMin = -150,
@@ -641,6 +642,16 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	}
 
 	clearButtons(100, btn, hardware);
+}
+
+void changeTournamentToggle(ControlConfig &controls) {
+	if(controls.tournamentToggle == 0) {
+		controls.tournamentToggle = 1;
+	} else {
+		controls.tournamentToggle = 0;
+	}
+
+	setTournamentToggle(controls.tournamentToggle);
 }
 
 //apply digital button swaps for L, R, or Z jumping
@@ -1212,6 +1223,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		numberOfNaN++;
 	}
 
+	//get the tournament toggle setting
+	controls.tournamentToggle = getTournamentToggle();
+	if((controls.tournamentToggle > 1) || (controls.tournamentToggle < 0)) {
+		controls.tournamentToggle = 0;
+		numberOfNaN++;
+	}
+
 #ifdef PICO_RP2040
 	_controls.interlaceOffset = getInterlaceOffsetSetting();
 	if(controls.interlaceOffset < controls.interlaceOffsetMin) {
@@ -1697,6 +1715,11 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Apply any further button remapping to tempBtn here
 
+	//Disabling D-pad up for tournament toggle
+	if(controls.tournamentToggle == 1) {
+		tempBtn.Du = (uint8_t) (0);
+	}
+
 	//Here we make sure LRAS actually operate.
 	if(hardware.L && hardware.R && hardware.A && hardware.S) {
 		tempBtn.L = (uint8_t) (1);
@@ -1716,6 +1739,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
 	* Auto-Initialize: AXY+Z
+	* Tournament Toggle:  TODO
 	*
 	* Increase/Decrease Rumble: AB+Du/Dd
 	* Show Current Rumble Setting: AB+Start

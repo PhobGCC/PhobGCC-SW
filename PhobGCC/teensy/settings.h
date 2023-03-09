@@ -46,6 +46,7 @@ namespace Eeprom {
 	const int _eepromCstickCardinalSnapping = _eepromAstickCardinalSnapping+_bytesPerFloat;
 	const int _eepromAstickAnalogScaler = _eepromCstickCardinalSnapping+_bytesPerFloat;
 	const int _eepromCstickAnalogScaler =_eepromAstickAnalogScaler+_bytesPerFloat;
+	const int _eepromTournamentToggle = _eepromCstickAnalogScaler+_bytesPerFloat;
 	//const int _nextSetting = _eepromCstickAnalogScaler+bytesPerFloat;
 };
 
@@ -267,6 +268,16 @@ void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick)
 	} else {
 		EEPROM.put(Eeprom::_eepromCstickAnalogScaler, analogScaler);
 	}
+}
+
+int getTournamentToggle() {
+	int output;
+	EEPROM.get(Eeprom::_eepromTournamentToggle, output);
+	return output;
+}
+
+void setTournamentToggle(const int tournamentToggle) {
+	EEPROM.put(Eeprom::_eepromTournamentToggle, tournamentToggle);
 }
 
 //pulls 32 points from eeprom
