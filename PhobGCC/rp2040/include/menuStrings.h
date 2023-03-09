@@ -76,7 +76,7 @@ const char rightStickY[]     = "Right stick Y:";
 const char asnapback1[]      = "Set so that snapback < 23 for Melee.";
 const char asnapback2[]      = "0 disables the filter. >0 shortens rise time.";
 const char asnapback3[]      = "Higher makes the stick return to center slower.";
-const char asnapback4[]      = "Min: 0  Max: 10  Default: 4";
+const char asnapback4[]      = "Min: -10  Max: 10  Default: 4";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";

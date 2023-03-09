@@ -60,7 +60,7 @@ ControlConfig _controls{
 	.rTrigInitial = 0,
 	.xSnapback = 4,
 	.ySnapback = 4,
-	.snapbackMin = 0,
+	.snapbackMin = -10,
 	.snapbackMax = 10,
 	.snapbackDefault = 4,
 	.snapbackFactoryAX = 4,
