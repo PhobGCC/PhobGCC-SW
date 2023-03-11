@@ -698,7 +698,7 @@ void navigateMenu(unsigned char bitmap[],
 					capture.captureStick = ASTICK;
 					tempInt3 = 0;//0 through 99
 					capture.viewIndex = 0;
-					capture.done = false;
+					//capture.done = false;
 				}
 				if(presses & DUPRESS) {
 					if(itemIndex != 0) {
