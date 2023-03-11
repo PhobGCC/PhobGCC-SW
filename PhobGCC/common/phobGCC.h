@@ -1242,19 +1242,21 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			debug_println(_rumblePower);
 			//I'd like it to change smoothing, but it's way too complicated
 		case 28:
-			//migrating = true;//uncomment when we do have it migrate
-			debug_println("Updating settings from 0.28");
-			controls.astickAnalogScaler = controls.analogScalerDefault;
-			controls.cstickAnalogScaler = controls.analogScalerDefault;
-			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
-			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			//uncomment these when we do have it migrate
+			//migrating = true;
+			//debug_println("Updating settings from 0.28");
 #ifdef PICO_RP2040
-			controls.interlaceOffset = 0;
+			//controls.interlaceOffset = 0;
 #endif //PICO_RP2040
+			//controls.astickAnalogScaler = controls.analogScalerDefault;
+			//controls.cstickAnalogScaler = controls.analogScalerDefault;
+			//controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			//controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 			//fallthrough
 		case 29:
-			//migrating = true;//uncomment when we do have it migrate
-			debug_println("Schema is now current");
+			//uncomment these when we do have it migrate
+			//migrating = true;
+			//debug_println("Schema is now current");
 			//fallthrough
 		default:
 			if(migrating) {
