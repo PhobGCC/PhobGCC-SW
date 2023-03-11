@@ -45,7 +45,6 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
 }
 
 float velDampFromSnapback(const int snapback) {
-	//return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 	if(snapback >= 0) {
 		return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
 	} else {
@@ -83,7 +82,7 @@ void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGain
 		normGains.xVelDamp *= timeDivisor;
 	}
 	normGains.yVelDamp      = gains.yVelDamp;
-	if(controls.xSnapback >= 0) {
+	if(controls.ySnapback >= 0) {
 		normGains.yVelDamp *= timeDivisor;
 	}
 	normGains.velThresh     = 1/(gains.velThresh   * timeFactor);//slight optimization by using the inverse
@@ -194,7 +193,7 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	} else if(controls.ySnapback < 0) {
 		const float yLPF = oldYPosFilt*normGains.yVelDamp + yPos*(1-normGains.yVelDamp);
 
-		const float yPosWeightVelAcc = 1 - fmin(1, 2*(yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh));
+		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
 		const float yPosWeight1 = fmax(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
