@@ -1778,16 +1778,19 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
-		static float hardResetAccumulator = 0.0;
-		if (hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset pressed
-			hardResetAccumulator = 0.99*hardResetAccumulator + 0.01;
-		} else {
-			hardResetAccumulator = 0.99*hardResetAccumulator;
-		}
-		if(hardResetAccumulator > 0.99) {
-			hardResetAccumulator = 0;
-			resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
-			freezeSticks(2000, btn, hardware);
+		//it'll be unlocked after it hits zero
+		const int hardResetLockoutDuration = 800;
+		static int hardResetLockout = hardResetLockoutDuration;
+		if(hardware.A && hardware.B && hardware.Z && hardware.Dd) { //Hard Reset pressed
+			if(hardResetLockout > 0) { //Not held long enough
+				hardResetLockout--;
+			} else if(hardResetLockout == 0) { //Held long enough
+				hardResetLockout = hardResetLockoutDuration;
+				resetDefaults(HARD, controls, gains, normGains, _aStickParams, _cStickParams);//do reset sticks
+				freezeSticks(2000, btn, hardware);
+			}
+		} else if(hardResetLockout < hardResetLockoutDuration) {
+			hardResetLockout++;
 		}
 
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
