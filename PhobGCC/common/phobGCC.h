@@ -2022,19 +2022,20 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 
 		//it'll be unlocked after it hits zero
-		static int safeModeLockout = 1000;
+		const int safeModeLockoutDuration = 800;
+		static int safeModeLockout = safeModeLockoutDuration;
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode toggle
 			if(safeModeLockout > 0) { //Not held long enough
 				safeModeLockout--;
 			} else if(safeModeLockout == 0) { //Held long enough
-				safeModeLockout = 1000;
+				safeModeLockout = safeModeLockoutDuration;
 				if(!running) { //wake it up if not already running
 					running = true;
 				}
 				controls.safeMode = false;
 				freezeSticks(2000, btn, hardware);
 			}
-		} else if(safeModeLockout < 1000) {
+		} else if(safeModeLockout < safeModeLockoutDuration) {
 			safeModeLockout++;
 		}
 	}
