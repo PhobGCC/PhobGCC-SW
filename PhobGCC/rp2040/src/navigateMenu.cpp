@@ -698,7 +698,9 @@ void navigateMenu(unsigned char bitmap[],
 					capture.captureStick = ASTICK;
 					tempInt3 = 0;//0 through 99
 					capture.viewIndex = 0;
+					//try this (commenting out the capture.done and always marking it with changemade
 					//capture.done = false;
+					changeMade = true;
 				}
 				if(presses & DUPRESS) {
 					if(itemIndex != 0) {
@@ -718,7 +720,7 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
-					changeMade = true;
+					//changeMade = true;
 					redraw = 1;
 				} else if(presses & DRPRESS) {
 					if(itemIndex == 0) {
@@ -728,7 +730,7 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
-					changeMade = true;
+					//changeMade = true;
 					redraw = 1;
 				} else if(presses & APRESS && capture.done == true) {
 					//tell the user it's recording
