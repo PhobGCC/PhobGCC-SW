@@ -210,6 +210,7 @@ const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";
 const char presstime2[]      = "starting when you press ABXYLRZ or move a stick.";
+const char presstime3[]      = "Waiting for input...";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reaction1[]       = "Press start to begin the reaction test.";

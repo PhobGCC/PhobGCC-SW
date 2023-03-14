@@ -1145,6 +1145,73 @@ void drawXYScope(unsigned char bitmap[],
 	}
 }
 
+void drawPressSlice(unsigned char bitmap[],
+		const uint8_t frame,
+		DataCapture &capture) {
+	const int x0 = 60 + 2*frame;
+	const int x1 = x0 + 1;
+
+	//frame boundary lines
+	if(fmod(frame, 16.666667f) < 1) {
+		drawLine(bitmap, x0, 145, x0, 350, 10);
+		drawLine(bitmap, x1, 145, x1, 350, 10);
+	}
+
+	//button presses
+	if(capture.abxyszrl[frame] & 0b0000'0001) {//A
+		drawLine(bitmap, x0, 150 +  0*15, x0, 162 +  0*15, 15);
+		drawLine(bitmap, x1, 150 +  0*15, x1, 162 +  0*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b0000'0010) {//B
+		drawLine(bitmap, x0, 150 +  1*15, x0, 162 +  1*15, 15);
+		drawLine(bitmap, x1, 150 +  1*15, x1, 162 +  1*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b0000'0100) {//X
+		drawLine(bitmap, x0, 150 +  2*15, x0, 162 +  2*15, 15);
+		drawLine(bitmap, x1, 150 +  2*15, x1, 162 +  2*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b0000'1000) {//Y
+		drawLine(bitmap, x0, 150 +  3*15, x0, 162 +  3*15, 15);
+		drawLine(bitmap, x1, 150 +  3*15, x1, 162 +  3*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b1000'0000) {//L
+		drawLine(bitmap, x0, 150 +  4*15, x0, 162 +  4*15, 15);
+		drawLine(bitmap, x1, 150 +  4*15, x1, 162 +  4*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0010'0000) {//La
+		drawLine(bitmap, x0, 150 +  5*15, x0, 162 +  5*15, 15);
+		drawLine(bitmap, x1, 150 +  5*15, x1, 162 +  5*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b0100'0000) {//R
+		drawLine(bitmap, x0, 150 +  6*15, x0, 162 +  6*15, 15);
+		drawLine(bitmap, x1, 150 +  6*15, x1, 162 +  6*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0001'0000) {//Ra
+		drawLine(bitmap, x0, 150 +  7*15, x0, 162 +  7*15, 15);
+		drawLine(bitmap, x1, 150 +  7*15, x1, 162 +  7*15, 15);
+	}
+	if(capture.abxyszrl[frame] & 0b0010'0000) {//Z
+		drawLine(bitmap, x0, 150 +  8*15, x0, 162 +  8*15, 15);
+		drawLine(bitmap, x1, 150 +  8*15, x1, 162 +  8*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0000'0001) {//Ax
+		drawLine(bitmap, x0, 150 +  9*15, x0, 162 +  9*15, 15);
+		drawLine(bitmap, x1, 150 +  9*15, x1, 162 +  9*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0000'0010) {//Ay
+		drawLine(bitmap, x0, 150 + 10*15, x0, 162 + 10*15, 15);
+		drawLine(bitmap, x1, 150 + 10*15, x1, 162 + 10*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0000'0100) {//Cx
+		drawLine(bitmap, x0, 150 + 11*15, x0, 162 + 11*15, 15);
+		drawLine(bitmap, x1, 150 + 11*15, x1, 162 + 11*15, 15);
+	}
+	if(capture.axaycxcyrl[frame] & 0b0000'1000) {//Cy
+		drawLine(bitmap, x0, 150 + 12*15, x0, 162 + 12*15, 15);
+		drawLine(bitmap, x1, 150 + 12*15, x1, 162 + 12*15, 15);
+	}
+}
+
 //You wait a random amount of time before actually calling this draw function
 //Then the draw function, as soon as it is done, initiates recording
 void drawPresstime(unsigned char bitmap[],
@@ -1164,21 +1231,24 @@ void drawPresstime(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 260, 120, 15, arrowRight);
 	}
-	if(!capture.done) {
-	} else {
-		drawString(bitmap,  30, 150, 15, "A");
-		drawString(bitmap,  50, 165, 15, "B");
-		drawString(bitmap,  30, 180, 15, "X");
-		drawString(bitmap,  50, 195, 15, "Y");
-		drawString(bitmap,  30, 210, 15, "Z");
-		drawString(bitmap,  50, 225, 15, "L");
-		drawString(bitmap,  30, 240, 15, "La");
-		drawString(bitmap,  50, 255, 15, "R");
-		drawString(bitmap,  30, 270, 15, "Ra");
-		drawString(bitmap,  50, 285, 15, "AX");
-		drawString(bitmap,  30, 300, 15, "AY");
-		drawString(bitmap,  50, 315, 15, "CX");
-		drawString(bitmap,  30, 330, 15, "CY");
+	if(capture.done) {
+		drawString(bitmap,  30, 150 +  0*15, 15, "A");
+		drawString(bitmap,  30, 150 +  1*15, 15, "B");
+		drawString(bitmap,  30, 150 +  2*15, 15, "X");
+		drawString(bitmap,  30, 150 +  3*15, 15, "Y");
+		drawString(bitmap,  30, 150 +  4*15, 15, "L");
+		drawString(bitmap,  30, 150 +  5*15, 15, "La");
+		drawString(bitmap,  30, 150 +  6*15, 15, "R");
+		drawString(bitmap,  30, 150 +  7*15, 15, "Ra");
+		drawString(bitmap,  30, 150 +  8*15, 15, "Z");
+		drawString(bitmap,  30, 150 +  9*15, 15, "AX");
+		drawString(bitmap,  30, 150 + 10*15, 15, "AY");
+		drawString(bitmap,  30, 150 + 11*15, 15, "CX");
+		drawString(bitmap,  30, 150 + 12*15, 15, "CY");
+
+		for(int frame = 0; frame < 200; frame++) {
+			drawPressSlice(bitmap, frame, capture);
+		}
 	}
 }
 
@@ -1376,6 +1446,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_XYSCOPE:
 			drawXYScope(bitmap, menu, itemIndex, capture);
+			break;
+		case MENU_PRESSTIME:
+			drawPresstime(bitmap, menu, itemIndex, capture);
 			break;
 		case MENU_REACTION:
 			drawReaction(bitmap, menu, itemIndex, capture);

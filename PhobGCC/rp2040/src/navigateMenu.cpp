@@ -698,8 +698,6 @@ void navigateMenu(unsigned char bitmap[],
 					capture.captureStick = ASTICK;
 					tempInt3 = 0;//0 through 99
 					capture.viewIndex = 0;
-					//try this (commenting out the capture.done and always marking it with changemade
-					//capture.done = false;
 					changeMade = true;
 				}
 				if(presses & DUPRESS) {
@@ -720,7 +718,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
-					//changeMade = true;
 					redraw = 1;
 				} else if(presses & DRPRESS) {
 					if(itemIndex == 0) {
@@ -730,7 +727,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
-					//changeMade = true;
 					redraw = 1;
 				} else if(presses & APRESS && capture.done == true) {
 					//tell the user it's recording
@@ -749,7 +745,7 @@ void navigateMenu(unsigned char bitmap[],
 					capture.stickThresh = 23;
 					tempInt2 = 255;//no lightshield threshold
 					capture.triggerThresh = 255;
-					capture.done = false;
+					changeMade = true;
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
@@ -761,9 +757,8 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						capture.stickThresh = fmin(100, capture.stickThresh+1);
 					} else {//itemIndex == 1
-						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
+						capture.triggerThresh = fmin(255, capture.triggerThresh+1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
@@ -771,18 +766,19 @@ void navigateMenu(unsigned char bitmap[],
 					} else {//itemIndex == 1
 						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & SPRESS) {
 					//tell the user to press ABXYLRZ or move a stick to begin
-					//drawString(bitmap, ??????)
+					drawString(bitmap, 30, 350, 15, presstime3);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
+					capture.endIndex = 0;
 					capture.mode = CM_PRESS;
 					//then trigger the recording
 					pleaseCommit = 9;
 				}
+				return;
 			case MENU_REACTION:
 				if(!changeMade) {
 					tempInt1 = 23;//dash
