@@ -1148,13 +1148,13 @@ void drawXYScope(unsigned char bitmap[],
 void drawPressSlice(unsigned char bitmap[],
 		const uint8_t frame,
 		DataCapture &capture) {
-	const int x0 = 60 + 2*frame;
+	const int x0 = 40 + 2*frame;
 	const int x1 = x0 + 1;
 
 	//frame boundary lines
 	if(fmod(frame, 16.666667f) < 1) {
-		drawLine(bitmap, x0, 145, x0, 350, 10);
-		drawLine(bitmap, x1, 145, x1, 350, 10);
+		drawLine(bitmap, x0, 145, x0, 350, 9);
+		drawLine(bitmap, x1, 145, x1, 350, 9);
 	}
 
 	//button presses
@@ -1212,6 +1212,212 @@ void drawPressSlice(unsigned char bitmap[],
 	}
 }
 
+void drawPressFrames(unsigned char bitmap[],
+		DataCapture &capture) {
+	int8_t a  = 0;
+	int8_t b  = 0;
+	int8_t x  = 0;
+	int8_t y  = 0;
+	int8_t l  = 0;
+	int8_t la = 0;
+	int8_t r  = 0;
+	int8_t ra = 0;
+	int8_t z  = 0;
+	int8_t ax = 0;
+	int8_t ay = 0;
+	int8_t cx = 0;
+	int8_t cy = 0;
+
+	int frame = 16;
+
+	//was it pressed initially?
+	if(capture.abxyszrl[0] & 0b0000'0001) {//A
+		a = -1;
+	}
+	if(capture.abxyszrl[0] & 0b0000'0010) {//B
+		b = -1;
+	}
+	if(capture.abxyszrl[0] & 0b0000'0100) {//X
+		x = -1;
+	}
+	if(capture.abxyszrl[0] & 0b0000'1000) {//Y
+		y = -1;
+	}
+	if(capture.abxyszrl[0] & 0b1000'0000) {//L
+		l = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0010'0000) {//La
+		la = -1;
+	}
+	if(capture.abxyszrl[0] & 0b0100'0000) {//R
+		r = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0001'0000) {//Ra
+		ra = -1;
+	}
+	if(capture.abxyszrl[0] & 0b0010'0000) {//Z
+		z = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0000'0001) {//Ax
+		ax = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0000'0010) {//Ay
+		ay = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0000'0100) {//Cx
+		cx = -1;
+	}
+	if(capture.axaycxcyrl[0] & 0b0000'1000) {//Cy
+		cy = -1;
+	}
+
+	for(int frame = 1; frame < 200; frame++) {
+		if(capture.abxyszrl[frame] & 0b0000'0001) {//A
+			if(a == 0) {
+				a = 1;
+				drawFloat(bitmap, 440, 150 +  0*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(a == -1) {
+				a = 1;
+				drawFloat(bitmap, 440, 150 +  0*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b0000'0010) {//B
+			if(b == 0) {
+				b = 1;
+				drawFloat(bitmap, 440, 150 +  1*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(b == -1) {
+				b = 1;
+				drawFloat(bitmap, 440, 150 +  1*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b0000'0100) {//X
+			if(x == 0) {
+				x = 1;
+				drawFloat(bitmap, 440, 150 +  2*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(x == -1) {
+				x = 1;
+				drawFloat(bitmap, 440, 150 +  2*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b0000'1000) {//Y
+			if(y == 0) {
+				y = 1;
+				drawFloat(bitmap, 440, 150 +  3*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(y == -1) {
+				y = 1;
+				drawFloat(bitmap, 440, 150 +  3*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b1000'0000) {//L
+			if(l == 0) {
+				l = 1;
+				drawFloat(bitmap, 440, 150 +  4*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(l == -1) {
+				l = 1;
+				drawFloat(bitmap, 440, 150 +  4*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0010'0000) {//La
+			if(la == 0) {
+				la = 1;
+				drawFloat(bitmap, 440, 150 +  5*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(la == -1) {
+				la = 1;
+				drawFloat(bitmap, 440, 150 +  5*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b0100'0000) {//R
+			if(r == 0) {
+				r = 1;
+				drawFloat(bitmap, 440, 150 +  6*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(r == -1) {
+				r = 1;
+				drawFloat(bitmap, 440, 150 +  6*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0001'0000) {//Ra
+			if(ra == 0) {
+				ra = 1;
+				drawFloat(bitmap, 440, 150 +  7*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(ra == -1) {
+				ra = 1;
+				drawFloat(bitmap, 440, 150 +  7*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.abxyszrl[frame] & 0b0010'0000) {//Z
+			if(z == 0) {
+				z = 1;
+				drawFloat(bitmap, 440, 150 +  8*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(z == -1) {
+				z = 1;
+				drawFloat(bitmap, 440, 150 +  8*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0000'0001) {//Ax
+			if(ax == 0) {
+				ax = 1;
+				drawFloat(bitmap, 440, 150 +  9*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(ax == -1) {
+				ax = 1;
+				drawFloat(bitmap, 440, 150 +  9*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0000'0010) {//Ay
+			if(ay == 0) {
+				ay = 1;
+				drawFloat(bitmap, 440, 150 +  10*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(ay == -1) {
+				ay = 1;
+				drawFloat(bitmap, 440, 150 +  10*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0000'0100) {//Cx
+			if(cx == 0) {
+				cx = 1;
+				drawFloat(bitmap, 440, 150 +  11*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(cx == -1) {
+				cx = 1;
+				drawFloat(bitmap, 440, 150 +  11*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+		if(capture.axaycxcyrl[frame] & 0b0000'1000) {//Cy
+			if(cy == 0) {
+				cy = 1;
+				drawFloat(bitmap, 440, 150 +  12*15, 15, 1, 6, frame/16.666667);
+			}
+		} else {
+			if(cy == -1) {
+				cy = 1;
+				drawFloat(bitmap, 440, 150 +  12*15, 15, 1, 6, frame/16.666667);
+			}
+		}
+	}
+}
+
 //You wait a random amount of time before actually calling this draw function
 //Then the draw function, as soon as it is done, initiates recording
 void drawPresstime(unsigned char bitmap[],
@@ -1232,23 +1438,25 @@ void drawPresstime(unsigned char bitmap[],
 		drawString(bitmap, 260, 120, 15, arrowRight);
 	}
 	if(capture.done) {
-		drawString(bitmap,  30, 150 +  0*15, 15, "A");
-		drawString(bitmap,  30, 150 +  1*15, 15, "B");
-		drawString(bitmap,  30, 150 +  2*15, 15, "X");
-		drawString(bitmap,  30, 150 +  3*15, 15, "Y");
-		drawString(bitmap,  30, 150 +  4*15, 15, "L");
-		drawString(bitmap,  30, 150 +  5*15, 15, "La");
-		drawString(bitmap,  30, 150 +  6*15, 15, "R");
-		drawString(bitmap,  30, 150 +  7*15, 15, "Ra");
-		drawString(bitmap,  30, 150 +  8*15, 15, "Z");
-		drawString(bitmap,  30, 150 +  9*15, 15, "AX");
-		drawString(bitmap,  30, 150 + 10*15, 15, "AY");
-		drawString(bitmap,  30, 150 + 11*15, 15, "CX");
-		drawString(bitmap,  30, 150 + 12*15, 15, "CY");
+		drawString(bitmap,  10, 150 +  0*15, 15, "A");
+		drawString(bitmap,  10, 150 +  1*15, 15, "B");
+		drawString(bitmap,  10, 150 +  2*15, 15, "X");
+		drawString(bitmap,  10, 150 +  3*15, 15, "Y");
+		drawString(bitmap,  10, 150 +  4*15, 15, "L");
+		drawString(bitmap,  10, 150 +  5*15, 15, "La");
+		drawString(bitmap,  10, 150 +  6*15, 15, "R");
+		drawString(bitmap,  10, 150 +  7*15, 15, "Ra");
+		drawString(bitmap,  10, 150 +  8*15, 15, "Z");
+		drawString(bitmap,  10, 150 +  9*15, 15, "AX");
+		drawString(bitmap,  10, 150 + 10*15, 15, "AY");
+		drawString(bitmap,  10, 150 + 11*15, 15, "CX");
+		drawString(bitmap,  10, 150 + 12*15, 15, "CY");
 
 		for(int frame = 0; frame < 200; frame++) {
 			drawPressSlice(bitmap, frame, capture);
 		}
+
+		drawPressFrames(bitmap, capture);
 	}
 }
 
