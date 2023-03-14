@@ -769,7 +769,7 @@ void navigateMenu(unsigned char bitmap[],
 					redraw = 1;
 				} else if(presses & SPRESS) {
 					//tell the user to press ABXYLRZ or move a stick to begin
-					drawString(bitmap, 30, 350, 15, presstime3);
+					drawString(bitmap, 30, 360, 15, presstime3);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
