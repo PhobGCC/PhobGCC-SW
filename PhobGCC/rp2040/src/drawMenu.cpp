@@ -386,14 +386,15 @@ void drawAsnapback(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, asnapback2);
 	drawString(bitmap,  30, 110, 15, asnapback3);
 	drawString(bitmap,  30, 130, 15, asnapback4);
-	drawString(bitmap,  30, 160, 15, leftStickX);
-	drawInt(   bitmap, 160, 160, 15, 1, controls.xSnapback);
-	drawString(bitmap, 280, 160, 15, leftStickY);
-	drawInt(   bitmap, 410, 160, 15, 1, controls.ySnapback);
+	drawString(bitmap,  30, 150, 15, asnapback5);
+	drawString(bitmap,  30, 180, 15, leftStickX);
+	drawInt(   bitmap, 160, 180, 15, 1, controls.xSnapback);
+	drawString(bitmap, 280, 180, 15, leftStickY);
+	drawInt(   bitmap, 410, 180, 15, 1, controls.ySnapback);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 	//graph?
 }
