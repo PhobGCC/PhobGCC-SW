@@ -509,6 +509,7 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+				/*
 			case MENU_COFFSET:
 				if(!changeMade) {
 					tempInt1 = controls.cXOffset;
@@ -546,6 +547,7 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+				*/
 			case MENU_REMAP:
 				if(!changeMade) {
 					tempInt1 = controls.jumpConfig;

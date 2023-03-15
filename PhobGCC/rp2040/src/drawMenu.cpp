@@ -518,6 +518,7 @@ void drawCwave(unsigned char bitmap[],
 	//graph?
 }
 
+/*
 void drawCoffset(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -547,6 +548,7 @@ void drawCoffset(unsigned char bitmap[],
 	}
 	//graph?
 }
+*/
 
 void drawRemap(unsigned char bitmap[],
 		const unsigned int menu,
@@ -1628,9 +1630,11 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_CWAVE:
 			drawCwave(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
+			/*
 		case MENU_COFFSET:
 			drawCoffset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
+			*/
 		case MENU_REMAP:
 			drawRemap(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
