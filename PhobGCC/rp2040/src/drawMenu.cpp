@@ -287,87 +287,6 @@ void drawStickdbgFast(unsigned char bitmap[],
 	}
 }
 
-void drawSet_over(unsigned char bitmap[],
-		const unsigned int menu,
-		const int itemIndex,
-		const bool changeMade,
-		const Buttons btn,
-		const RawStick raw,
-		const ControlConfig &controls,
-		const StickParams &aStick,
-		const StickParams &cStick) {
-	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	drawString(bitmap,  30,  50, 15, "AX SB:");
-	drawString(bitmap,  30,  70, 15, "AY SB:");
-	drawString(bitmap,  30,  90, 15, "AX WS:");
-	drawString(bitmap,  30, 110, 15, "AY WS:");
-	drawString(bitmap,  30, 130, 15, "AX SM:");
-	drawString(bitmap,  30, 150, 15, "AY SM:");
-	drawInt(bitmap,     90,  50, 15, 2, controls.xSnapback);
-	drawInt(bitmap,     90,  70, 15, 2, controls.ySnapback);
-	drawInt(bitmap,     90,  90, 15, 2, controls.axWaveshaping);
-	drawInt(bitmap,     90, 110, 15, 2, controls.ayWaveshaping);
-	drawInt(bitmap,     90, 130, 15, 2, controls.axSmoothing);
-	drawInt(bitmap,     90, 150, 15, 2, controls.aySmoothing);
-	drawString(bitmap, 150,  50, 15, "CX SB:");
-	drawString(bitmap, 150,  70, 15, "CY SB:");
-	drawString(bitmap, 150,  90, 15, "CX WS:");
-	drawString(bitmap, 150, 110, 15, "CY WS:");
-	drawString(bitmap, 150, 130, 15, "CX OF:");
-	drawString(bitmap, 150, 150, 15, "CY OF:");
-	drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
-	drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
-	drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
-	drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
-	drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
-	drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
-	drawString(bitmap, 280,  50, 15, "L Mode:");
-	drawString(bitmap, 280,  70, 15, "R Mode:");
-	drawString(bitmap, 280,  90, 15, "L Val:");
-	drawString(bitmap, 280, 110, 15, "R Val:");
-	drawString(bitmap, 280, 130, 15, "L WS:");
-	drawString(bitmap, 280, 150, 15, "L WS:");
-	drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
-	drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
-	drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
-	drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
-	drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawString(bitmap,  30, 170, 15, "Rumble:");
-	drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
-	if(controls.autoInit) {
-		drawString(bitmap, 30, 190, 15, set_overAutoOn);
-	} else {
-		drawString(bitmap, 30, 190, 15, set_overAutoOff);
-	}
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 30, 210, 15, set_overJumpDf);
-			break;
-		case SWAP_XZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpXZ);
-			break;
-		case SWAP_YZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpYZ);
-			break;
-		case SWAP_XL:
-			drawString(bitmap, 30, 210, 15, set_overJumpXL);
-			break;
-		case SWAP_XR:
-			drawString(bitmap, 30, 210, 15, set_overJumpXR);
-			break;
-		case SWAP_YL:
-			drawString(bitmap, 30, 210, 15, set_overJumpYL);
-			break;
-		case SWAP_YR:
-			drawString(bitmap, 30, 210, 15, set_overJumpYR);
-			break;
-		default:
-			drawString(bitmap, 30, 210, 15, set_overJumpBr);
-			break;
-	}
-}
-
 void drawAsnapback(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -550,6 +469,112 @@ void drawCoffset(unsigned char bitmap[],
 	//graph?
 }
 */
+
+void drawCardinals(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const ControlConfig &controls) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, lr_ud);
+	drawString(bitmap,  30,  70, 15, cardinals1);
+	drawString(bitmap,  30,  90, 15, cardinals2);
+	drawString(bitmap,  30, 110, 15, cardinals3);
+	drawString(bitmap,  30, 130, 15, cardinals4);
+	drawString(bitmap,  30, 160, 15, leftStick);
+	drawInt(   bitmap, 150, 160, 15, 0, controls.astickCardinalSnapping);
+	drawString(bitmap, 280, 160, 15, rightStick);
+	drawInt(   bitmap, 410, 160, 15, 0, controls.cstickCardinalSnapping);
+	if(itemIndex == 0) {
+		drawString(bitmap,  10, 160, 15, arrowRight);
+	} else {
+		drawString(bitmap, 260, 160, 15, arrowRight);
+	}
+}
+
+void drawSet_over(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap,  30,  50, 15, "AX SB:");
+	drawString(bitmap,  30,  70, 15, "AY SB:");
+	drawString(bitmap,  30,  90, 15, "AX WS:");
+	drawString(bitmap,  30, 110, 15, "AY WS:");
+	drawString(bitmap,  30, 130, 15, "AX SM:");
+	drawString(bitmap,  30, 150, 15, "AY SM:");
+	drawInt(bitmap,     90,  50, 15, 2, controls.xSnapback);
+	drawInt(bitmap,     90,  70, 15, 2, controls.ySnapback);
+	drawInt(bitmap,     90,  90, 15, 2, controls.axWaveshaping);
+	drawInt(bitmap,     90, 110, 15, 2, controls.ayWaveshaping);
+	drawInt(bitmap,     90, 130, 15, 2, controls.axSmoothing);
+	drawInt(bitmap,     90, 150, 15, 2, controls.aySmoothing);
+	drawString(bitmap, 150,  50, 15, "CX SB:");
+	drawString(bitmap, 150,  70, 15, "CY SB:");
+	drawString(bitmap, 150,  90, 15, "CX WS:");
+	drawString(bitmap, 150, 110, 15, "CY WS:");
+	drawString(bitmap, 150, 130, 15, "CX OF:");
+	drawString(bitmap, 150, 150, 15, "CY OF:");
+	drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
+	drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
+	drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
+	drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
+	drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
+	drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
+	drawString(bitmap, 280,  50, 15, "L Mode:");
+	drawString(bitmap, 280,  70, 15, "R Mode:");
+	drawString(bitmap, 280,  90, 15, "L Val:");
+	drawString(bitmap, 280, 110, 15, "R Val:");
+	drawString(bitmap, 280, 130, 15, "L WS:");
+	drawString(bitmap, 280, 150, 15, "L WS:");
+	drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
+	drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
+	drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
+	drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
+	drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
+	drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
+	drawString(bitmap,  30, 170, 15, "Rumble:");
+	drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
+	if(controls.autoInit) {
+		drawString(bitmap, 30, 190, 15, set_overAutoOn);
+	} else {
+		drawString(bitmap, 30, 190, 15, set_overAutoOff);
+	}
+	switch(controls.jumpConfig) {
+		case DEFAULTJUMP:
+			drawString(bitmap, 30, 210, 15, set_overJumpDf);
+			break;
+		case SWAP_XZ:
+			drawString(bitmap, 30, 210, 15, set_overJumpXZ);
+			break;
+		case SWAP_YZ:
+			drawString(bitmap, 30, 210, 15, set_overJumpYZ);
+			break;
+		case SWAP_XL:
+			drawString(bitmap, 30, 210, 15, set_overJumpXL);
+			break;
+		case SWAP_XR:
+			drawString(bitmap, 30, 210, 15, set_overJumpXR);
+			break;
+		case SWAP_YL:
+			drawString(bitmap, 30, 210, 15, set_overJumpYL);
+			break;
+		case SWAP_YR:
+			drawString(bitmap, 30, 210, 15, set_overJumpYR);
+			break;
+		default:
+			drawString(bitmap, 30, 210, 15, set_overJumpBr);
+			break;
+	}
+}
 
 void drawRemap(unsigned char bitmap[],
 		const unsigned int menu,
@@ -1613,9 +1638,6 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_STICKDBG:
 			drawStickdbg(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
-		case MENU_SET_OVER:
-			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
-			break;
 		case MENU_ASNAPBACK:
 			drawAsnapback(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
@@ -1636,6 +1658,12 @@ void drawMenu(unsigned char bitmap[],
 			drawCoffset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 			*/
+		case MENU_CARDINALS:
+			drawCardinals(bitmap, menu, itemIndex, changeMade, controls);
+			break;
+		case MENU_SET_OVER:
+			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
 		case MENU_REMAP:
 			drawRemap(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;

@@ -548,6 +548,43 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				return;
 				*/
+			case MENU_CARDINALS:
+				if(!changeMade) {
+					tempInt1 = controls.astickCardinalSnapping;
+					tempInt2 = controls.cstickCardinalSnapping;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						controls.astickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.astickCardinalSnapping+1);
+					} else {//itemIndex == 1
+						controls.cstickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.cstickCardinalSnapping+1);
+					}
+					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						controls.astickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.astickCardinalSnapping-1);
+					} else {//itemIndex == 1
+						controls.cstickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.cstickCardinalSnapping-1);
+					}
+					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+					setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+					tempInt1 = controls.astickCardinalSnapping;
+					tempInt2 = controls.cstickCardinalSnapping;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
 			case MENU_REMAP:
 				if(!changeMade) {
 					tempInt1 = controls.jumpConfig;

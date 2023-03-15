@@ -67,6 +67,9 @@ const char set_overJumpYL[] = "Y L-jump";
 const char set_overJumpYR[] = "Y R-jump";
 const char set_overJumpBr[] = "Broken jump config";
 
+//Guide relative to offset   =  10  50   100  150
+const char leftStick[]       = "Left stick:";
+const char rightStick[]      = "Right stick:";
 const char leftStickX[]      = "Left stick X:";
 const char leftStickY[]      = "Left stick Y:";
 const char rightStickX[]     = "Right stick X:";
@@ -75,9 +78,9 @@ const char rightStickY[]     = "Right stick Y:";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asnapback1[]      = "Set so that snapback < 23 for Melee.";
 const char asnapback2[]      = "0 disables the filter. >0 shortens rise time.";
-const char asnapback2[]      = "<0 doesn't shorten rise time. Greater magnitude";
-const char asnapback3[]      = "makes the stick return to center slower.";
-const char asnapback4[]      = "Min: -10  Max: 10  Default: 4";
+const char asnapback3[]      = "<0 doesn't shorten rise time. Greater magnitude";
+const char asnapback4[]      = "makes the stick return to center slower.";
+const char asnapback5[]      = "Min: -10  Max: 10  Default: 4";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
@@ -110,6 +113,12 @@ const char coffset2[]        = "This was for down-angled fsmash but it's better"
 const char coffset3[]        = " done by notch cal so this might be removed.";
 const char coffset4[]        = "Min: 127  Max: -127  Default: 0";
 */
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char cardinals1[]      = "This sets how far the stick snaps to the";
+const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -1";
+const char cardinals3[]      = "disables 1.0 cardinals even on UCF 0.84+.";
+const char cardinals4[]      = "Min: -1  Max: 6  Default: 6";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
