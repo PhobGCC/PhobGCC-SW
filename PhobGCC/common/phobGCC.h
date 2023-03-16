@@ -2231,17 +2231,15 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	notchRemap(raw.axLinearized, raw.ayLinearized, &remappedAxUnfiltered, &remappedAyUnfiltered, _noOfNotches, aStickParams, 1, controls, ASTICK);//no snapping
 	notchRemap(raw.cxLinearized, raw.cyLinearized, &remappedCxUnfiltered, &remappedCyUnfiltered, _noOfNotches, cStickParams, 1, controls, CSTICK);//no snapping
 
-	float AScaler = (float) (controls.astickAnalogScaler) / 100.0f;
-	float CScaler = (float) (controls.cstickAnalogScaler) / 100.0f;
 	//Clamp values from -125 to +125
-	remappedAx = fmin(125, fmax(-125, remappedAx * AScaler));
-	remappedAy = fmin(125, fmax(-125, remappedAy * AScaler));
-	remappedCx = fmin(125, fmax(-125, (remappedCx * CScaler)+controls.cXOffset));
-	remappedCy = fmin(125, fmax(-125, (remappedCy * CScaler)+controls.cYOffset));
+	remappedAx = fmin(125, fmax(-125, remappedAx));
+	remappedAy = fmin(125, fmax(-125, remappedAy));
+	remappedCx = fmin(125, fmax(-125, remappedCx));
+	remappedCy = fmin(125, fmax(-125, remappedCy));
 	raw.axUnfiltered = fmin(125, fmax(-125, remappedAxUnfiltered));
 	raw.ayUnfiltered = fmin(125, fmax(-125, remappedAyUnfiltered));
-	raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered+controls.cXOffset));
-	raw.cyUnfiltered = fmin(125, fmax(-125, remappedCyUnfiltered+controls.cYOffset));
+	raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered));
+	raw.cyUnfiltered = fmin(125, fmax(-125, remappedCyUnfiltered));
 
 	bool skipAHyst = false;
 #ifdef EXTRAS_ESS
