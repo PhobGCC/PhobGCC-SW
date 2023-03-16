@@ -207,6 +207,12 @@ void drawStickdbg(unsigned char bitmap[],
 		drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
+		drawString(bitmap,  30, 260, 15, stickdbgAMap);
+		drawString(bitmap, 280, 260, 15, stickdbgCMap);
+		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
+		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
+		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
+		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
 	} else if(itemIndex == 1) {
 		//fit coefficients
 		drawString(bitmap,  30,  50, 15, stickdbgAXfit);
@@ -284,6 +290,12 @@ void drawStickdbgFast(unsigned char bitmap[],
 		eraseCharLine(bitmap, 230);
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
+		eraseCharLine(bitmap, 280);
+		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
+		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
+		eraseCharLine(bitmap, 300);
+		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
+		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
 	}
 }
 
