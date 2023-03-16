@@ -585,6 +585,43 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+			case MENU_RADIUS:
+				if(!changeMade) {
+					tempInt1 = controls.astickAnalogScaler;
+					tempInt2 = controls.cstickAnalogScaler;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						controls.astickAnalogScaler = fmin(controls.analogScalerMax, controls.astickAnalogScaler+1);
+					} else {//itemIndex == 1
+						controls.cstickAnalogScaler = fmin(controls.analogScalerMax, controls.cstickAnalogScaler+1);
+					}
+					changeMade = (controls.astickAnalogScaler != tempInt1) || (controls.cstickAnalogScaler != tempInt2);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						controls.astickAnalogScaler = fmax(controls.analogScalerMin, controls.astickAnalogScaler-1);
+					} else {//itemIndex == 1
+						controls.cstickAnalogScaler = fmax(controls.analogScalerMin, controls.cstickAnalogScaler-1);
+					}
+					changeMade = (controls.astickAnalogScaler != tempInt1) || (controls.cstickAnalogScaler != tempInt2);
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+					setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+					tempInt1 = controls.astickAnalogScaler;
+					tempInt2 = controls.cstickAnalogScaler;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
 			case MENU_REMAP:
 				if(!changeMade) {
 					tempInt1 = controls.jumpConfig;

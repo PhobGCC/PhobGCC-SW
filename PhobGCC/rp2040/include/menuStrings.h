@@ -121,6 +121,12 @@ const char cardinals3[]      = "disables 1.0 cardinals even on UCF 0.84+.";
 const char cardinals4[]      = "Min: -1  Max: 6  Default: 6";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char radius1[]         = "This sets how far from the center the stick can";
+const char radius2[]         = "reach. A normal GCC can get to roughly 100-103.";
+const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
+const char radius4[]         = "Min: 82  Max: 125  Default: 100";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";

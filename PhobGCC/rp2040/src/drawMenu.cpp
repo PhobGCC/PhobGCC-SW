@@ -495,6 +495,31 @@ void drawCardinals(unsigned char bitmap[],
 	}
 }
 
+void drawRadius(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const ControlConfig &controls) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, lr_ud);
+	drawString(bitmap,  30,  70, 15, radius1);
+	drawString(bitmap,  30,  90, 15, radius2);
+	drawString(bitmap,  30, 110, 15, radius3);
+	drawString(bitmap,  30, 130, 15, radius4);
+	drawString(bitmap,  30, 160, 15, leftStick);
+	drawInt(   bitmap, 140, 160, 15, 2, controls.astickAnalogScaler);
+	drawString(bitmap, 280, 160, 15, rightStick);
+	drawInt(   bitmap, 400, 160, 15, 2, controls.cstickAnalogScaler);
+	if(itemIndex == 0) {
+		drawString(bitmap,  10, 160, 15, arrowRight);
+	} else {
+		drawString(bitmap, 260, 160, 15, arrowRight);
+	}
+}
+
 void drawSet_over(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -1660,6 +1685,9 @@ void drawMenu(unsigned char bitmap[],
 			*/
 		case MENU_CARDINALS:
 			drawCardinals(bitmap, menu, itemIndex, changeMade, controls);
+			break;
+		case MENU_RADIUS:
+			drawRadius(bitmap, menu, itemIndex, changeMade, controls);
 			break;
 		case MENU_SET_OVER:
 			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
