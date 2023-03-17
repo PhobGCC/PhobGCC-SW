@@ -176,33 +176,33 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 
 		if(whichStick == ASTICK) {
 			if(controls.astickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.astickCardinalSnapping+0.5) && (abs(*yOut)>79.5)){
+				if((abs(*xOut)<controls.astickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.astickCardinalSnapping+0.5) && (abs(*xOut)>79.5)){
+				if((abs(*yOut)<controls.astickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
 			} else if(controls.astickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>79.5)){
+				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
 					*xOut = 7;
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>79.5)){
+				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
 					*yOut = 7;
 				}
 			}
 		} else {
 			if(controls.cstickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.cstickCardinalSnapping+0.5) && (abs(*yOut)>79.5)){
+				if((abs(*xOut)<controls.cstickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.cstickCardinalSnapping+0.5) && (abs(*xOut)>79.5)){
+				if((abs(*yOut)<controls.cstickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
 			} else if(controls.cstickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>79.5)){
+				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
 					*xOut = 7;
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>79.5)){
+				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
 					*yOut = 7;
 				}
 			}
