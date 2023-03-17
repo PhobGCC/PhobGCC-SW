@@ -509,6 +509,7 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+				/*
 			case MENU_COFFSET:
 				if(!changeMade) {
 					tempInt1 = controls.cXOffset;
@@ -541,6 +542,81 @@ void navigateMenu(unsigned char bitmap[],
 					setCyOffsetSetting(controls.cYOffset);
 					tempInt1 = controls.cXOffset;
 					tempInt2 = controls.cYOffset;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
+				*/
+			case MENU_CARDINALS:
+				if(!changeMade) {
+					tempInt1 = controls.astickCardinalSnapping;
+					tempInt2 = controls.cstickCardinalSnapping;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						controls.astickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.astickCardinalSnapping+1);
+					} else {//itemIndex == 1
+						controls.cstickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.cstickCardinalSnapping+1);
+					}
+					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						controls.astickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.astickCardinalSnapping-1);
+					} else {//itemIndex == 1
+						controls.cstickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.cstickCardinalSnapping-1);
+					}
+					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
+					setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+					tempInt1 = controls.astickCardinalSnapping;
+					tempInt2 = controls.cstickCardinalSnapping;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
+			case MENU_RADIUS:
+				if(!changeMade) {
+					tempInt1 = controls.astickAnalogScaler;
+					tempInt2 = controls.cstickAnalogScaler;
+				}
+				if(presses & DLPRESS) {
+					itemIndex = 0;
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					itemIndex = 1;
+					redraw = 1;
+				} else if(presses & DUPRESS) {
+					if(itemIndex == 0) {
+						controls.astickAnalogScaler = fmin(controls.analogScalerMax, controls.astickAnalogScaler+1);
+					} else {//itemIndex == 1
+						controls.cstickAnalogScaler = fmin(controls.analogScalerMax, controls.cstickAnalogScaler+1);
+					}
+					changeMade = (controls.astickAnalogScaler != tempInt1) || (controls.cstickAnalogScaler != tempInt2);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					if(itemIndex == 0) {
+						controls.astickAnalogScaler = fmax(controls.analogScalerMin, controls.astickAnalogScaler-1);
+					} else {//itemIndex == 1
+						controls.cstickAnalogScaler = fmax(controls.analogScalerMin, controls.cstickAnalogScaler-1);
+					}
+					changeMade = (controls.astickAnalogScaler != tempInt1) || (controls.cstickAnalogScaler != tempInt2);
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setAnalogScalerSetting(controls.astickAnalogScaler, ASTICK);
+					setAnalogScalerSetting(controls.cstickAnalogScaler, CSTICK);
+					tempInt1 = controls.astickAnalogScaler;
+					tempInt2 = controls.cstickAnalogScaler;
 					changeMade = false;
 					redraw = 1;
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
@@ -698,7 +774,7 @@ void navigateMenu(unsigned char bitmap[],
 					capture.captureStick = ASTICK;
 					tempInt3 = 0;//0 through 99
 					capture.viewIndex = 0;
-					capture.done = false;
+					changeMade = true;
 				}
 				if(presses & DUPRESS) {
 					if(itemIndex != 0) {
@@ -718,7 +794,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & DRPRESS) {
 					if(itemIndex == 0) {
@@ -728,7 +803,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {
 						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & APRESS && capture.done == true) {
 					//tell the user it's recording
@@ -747,7 +821,7 @@ void navigateMenu(unsigned char bitmap[],
 					capture.stickThresh = 23;
 					tempInt2 = 255;//no lightshield threshold
 					capture.triggerThresh = 255;
-					capture.done = false;
+					changeMade = true;
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
@@ -759,9 +833,8 @@ void navigateMenu(unsigned char bitmap[],
 					if(itemIndex == 0) {
 						capture.stickThresh = fmin(100, capture.stickThresh+1);
 					} else {//itemIndex == 1
-						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
+						capture.triggerThresh = fmin(255, capture.triggerThresh+1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
@@ -769,18 +842,19 @@ void navigateMenu(unsigned char bitmap[],
 					} else {//itemIndex == 1
 						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & SPRESS) {
 					//tell the user to press ABXYLRZ or move a stick to begin
-					//drawString(bitmap, ??????)
+					drawString(bitmap, 30, 360, 15, presstime3);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
+					capture.endIndex = 0;
 					capture.mode = CM_PRESS;
 					//then trigger the recording
 					pleaseCommit = 9;
 				}
+				return;
 			case MENU_REACTION:
 				if(!changeMade) {
 					tempInt1 = 23;//dash

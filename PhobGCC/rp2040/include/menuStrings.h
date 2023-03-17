@@ -47,6 +47,8 @@ const char stickdbgALin[] = "A linearized values";
 const char stickdbgCLin[] = "C linearized values";
 const char stickdbgAMap[] = "A remapped values";
 const char stickdbgCMap[] = "C remapped values";
+const char stickdbgARnd[] = "A rounded values";
+const char stickdbgCRnd[] = "C rounded values";
 const char stickdbgAXfit[] = "A fit coeffs X";
 const char stickdbgAYfit[] = "A fit coeffs Y";
 const char stickdbgCXfit[] = "C fit coeffs X";
@@ -67,6 +69,9 @@ const char set_overJumpYL[] = "Y L-jump";
 const char set_overJumpYR[] = "Y R-jump";
 const char set_overJumpBr[] = "Broken jump config";
 
+//Guide relative to offset   =  10  50   100  150
+const char leftStick[]       = "Left stick:";
+const char rightStick[]      = "Right stick:";
 const char leftStickX[]      = "Left stick X:";
 const char leftStickY[]      = "Left stick Y:";
 const char rightStickX[]     = "Right stick X:";
@@ -75,8 +80,9 @@ const char rightStickY[]     = "Right stick Y:";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asnapback1[]      = "Set so that snapback < 23 for Melee.";
 const char asnapback2[]      = "0 disables the filter. >0 shortens rise time.";
-const char asnapback3[]      = "Higher makes the stick return to center slower.";
-const char asnapback4[]      = "Min: 0  Max: 10  Default: 4";
+const char asnapback3[]      = "<0 doesn't shorten rise time. Greater magnitude";
+const char asnapback4[]      = "makes the stick return to center slower.";
+const char asnapback5[]      = "Min: -10  Max: 10  Default: 4";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
@@ -102,11 +108,25 @@ const char csmooth4[]        = "Min: 0  Max: 9  Default: 0";
 const char cwave3[]          = "We're not sure what it can be used for here.";
 //const char cwave4[]          = "Min: 0  Max: 15  Default: 0";
 
+/*
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char coffset1[]        = "This changes the default origin of the C-Stick.";
 const char coffset2[]        = "This was for down-angled fsmash but it's better";
 const char coffset3[]        = " done by notch cal so this might be removed.";
 const char coffset4[]        = "Min: 127  Max: -127  Default: 0";
+*/
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char cardinals1[]      = "This sets how far the stick snaps to the";
+const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -1";
+const char cardinals3[]      = "disables 1.0 cardinals even on UCF 0.84+.";
+const char cardinals4[]      = "Min: -1  Max: 6  Default: 6";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char radius1[]         = "This sets how far from the center the stick can";
+const char radius2[]         = "reach. A normal GCC can get to roughly 100-103.";
+const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
+const char radius4[]         = "Min: 82  Max: 125  Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
@@ -210,6 +230,7 @@ const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";
 const char presstime2[]      = "starting when you press ABXYLRZ or move a stick.";
+const char presstime3[]      = "Waiting for input...";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reaction1[]       = "Press start to begin the reaction test.";
