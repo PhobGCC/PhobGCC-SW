@@ -646,7 +646,7 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	clearButtons(100, btn, hardware);
 }
 
-void changeTournamentToggle(ControlConfig &controls) {
+void changeTournamentToggle(ControlConfig &controls, Buttons &btn) {
 	if(controls.tournamentToggle == controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
 	} else {
@@ -1875,7 +1875,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 #endif //BATCHSETTINGS
 			changeAutoInit(btn, hardware, controls);
 		} else if(hardware.Z && hardware.S && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
-			changeTournamentToggle(controls);
+			changeTournamentToggle(controls, btn);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
