@@ -738,6 +738,26 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+			case MENU_TOURNEY:
+				if(!changeMade) {
+					tempInt1 = controls.tournamentToggle;
+				}
+				if(presses & DUPRESS) {
+					controls.tournamentToggle = fmin(controls.tournamentToggleMax, controls.tournamentToggle+1);
+					changeMade = controls.tournamentToggle != tempInt1;
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					controls.tournamentToggle = fmax(controls.tournamentToggleMin, controls.tournamentToggle-1);
+					changeMade = controls.tournamentToggle != tempInt1;
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setTournamentToggleSetting(controls.tournamentToggle);
+					tempInt1 = controls.tournamentToggle;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
 			case MENU_RESET:
 				if(presses & DUPRESS) {
 					itemIndex = 0;

@@ -68,13 +68,6 @@ const char set_overJumpXR[] = "X R-jump";
 const char set_overJumpYL[] = "Y L-jump";
 const char set_overJumpYR[] = "Y R-jump";
 const char set_overJumpBr[] = "Broken jump config";
-const char set_overTourn0[] = "Tourney Mode Off";
-const char set_overTourn1[] = "Taunt Delayed";
-const char set_overTourn2[] = "Taunt Disabled";
-const char set_overTourn3[] = "Start Delayed";
-const char set_overTourn4[] = "Start and Taunt Delayed";
-const char set_overTourn5[] = "Start Delayed, Taunt Disabled";
-const char set_overTournBr[] = "Tourney Mode Off";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";
@@ -196,6 +189,19 @@ const char lrtrigger21[]     = "This makes it respond quicker in Ultimate.";
 const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char tourney1[]        = "This prevents misinputs during tournaments by";
+const char tourney2[]        = "delaying or disabling the start button, which";
+const char tourney3[]        = "pauses the match, and/or dpad-up, which taunts.";
+const char tourney4[]        = "You must hold delayed buttons for 1.5 seconds.";
+const char tourn0[]          = "Tourney Mode Off";
+const char tourn1[]          = "Taunt Delayed";
+const char tourn2[]          = "Taunt Disabled";
+const char tourn3[]          = "Start Delayed";
+const char tourn4[]          = "Start and Taunt Delayed";
+const char tourn5[]          = "Start Delayed, Taunt Disabled";
+const char tournBr[]         = "Broken Tourney Mode Config";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char reset1[]          = "Press U/D to select which, and press A to reset.";

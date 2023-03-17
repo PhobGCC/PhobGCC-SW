@@ -613,25 +613,25 @@ void drawSet_over(unsigned char bitmap[],
 	}
 	switch(controls.tournamentToggle) {
 		case 0:
-			drawString(bitmap, 30, 230, 15, set_overTourn0);
+			drawString(bitmap, 30, 230, 15, tourn0);
 			break;
 		case 1:
-			drawString(bitmap, 30, 230, 15, set_overTourn1);
+			drawString(bitmap, 30, 230, 15, tourn1);
 			break;
 		case 2:
-			drawString(bitmap, 30, 230, 15, set_overTourn2);
+			drawString(bitmap, 30, 230, 15, tourn2);
 			break;
 		case 3:
-			drawString(bitmap, 30, 230, 15, set_overTourn3);
+			drawString(bitmap, 30, 230, 15, tourn3);
 			break;
 		case 4:
-			drawString(bitmap, 30, 230, 15, set_overTourn4);
+			drawString(bitmap, 30, 230, 15, tourn4);
 			break;
 		case 5:
-			drawString(bitmap, 30, 230, 15, set_overTourn5);
+			drawString(bitmap, 30, 230, 15, tourn5);
 			break;
 		default:
-			drawString(bitmap, 30, 230, 15, set_overTournBr);
+			drawString(bitmap, 30, 230, 15, tournBr);
 			break;
 	}
 }
@@ -932,6 +932,45 @@ void drawRtrigger(unsigned char bitmap[],
 			break;
 	}
 	//graph?
+}
+
+void drawTourney(unsigned char bitmap[],
+		const unsigned int menu,
+		const bool changeMade,
+		const ControlConfig &controls) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, ud_only);
+	drawString(bitmap,  30,  70, 15, tourney1);
+	drawString(bitmap,  30,  90, 15, tourney2);
+	drawString(bitmap,  30, 110, 15, tourney3);
+	drawString(bitmap,  30, 130, 15, tourney4);
+	drawString(bitmap,  30, 160, 15, currentSetting);
+	switch(controls.tournamentToggle) {
+		case 0:
+			drawString(bitmap, 200, 160, 15, tourn0);
+			break;
+		case 1:
+			drawString(bitmap, 200, 160, 15, tourn1);
+			break;
+		case 2:
+			drawString(bitmap, 200, 160, 15, tourn2);
+			break;
+		case 3:
+			drawString(bitmap, 200, 160, 15, tourn3);
+			break;
+		case 4:
+			drawString(bitmap, 200, 160, 15, tourn4);
+			break;
+		case 5:
+			drawString(bitmap, 200, 160, 15, tourn5);
+			break;
+		default:
+			drawString(bitmap, 200, 160, 15, tournBr);
+			break;
+	}
 }
 
 void drawReset(unsigned char bitmap[],
@@ -1741,6 +1780,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_RTRIGGER:
 			drawRtrigger(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
+		case MENU_TOURNEY:
+			drawTourney(bitmap, menu, changeMade, controls);
 			break;
 		case MENU_RESET:
 			drawReset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
