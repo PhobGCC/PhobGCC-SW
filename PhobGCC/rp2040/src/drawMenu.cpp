@@ -207,12 +207,6 @@ void drawStickdbg(unsigned char bitmap[],
 		drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
-		drawString(bitmap,  30, 260, 15, stickdbgAMap);
-		drawString(bitmap, 280, 260, 15, stickdbgCMap);
-		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
-		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
-		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
-		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
 	} else if(itemIndex == 1) {
 		//fit coefficients
 		drawString(bitmap,  30,  50, 15, stickdbgAXfit);
@@ -290,12 +284,87 @@ void drawStickdbgFast(unsigned char bitmap[],
 		eraseCharLine(bitmap, 230);
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
-		eraseCharLine(bitmap, 280);
-		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
-		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
-		eraseCharLine(bitmap, 300);
-		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
-		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
+	}
+}
+
+void drawSet_over(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const Buttons btn,
+		const RawStick raw,
+		const ControlConfig &controls,
+		const StickParams &aStick,
+		const StickParams &cStick) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	drawString(bitmap,  30,  50, 15, "AX SB:");
+	drawString(bitmap,  30,  70, 15, "AY SB:");
+	drawString(bitmap,  30,  90, 15, "AX WS:");
+	drawString(bitmap,  30, 110, 15, "AY WS:");
+	drawString(bitmap,  30, 130, 15, "AX SM:");
+	drawString(bitmap,  30, 150, 15, "AY SM:");
+	drawInt(bitmap,     90,  50, 15, 2, controls.xSnapback);
+	drawInt(bitmap,     90,  70, 15, 2, controls.ySnapback);
+	drawInt(bitmap,     90,  90, 15, 2, controls.axWaveshaping);
+	drawInt(bitmap,     90, 110, 15, 2, controls.ayWaveshaping);
+	drawInt(bitmap,     90, 130, 15, 2, controls.axSmoothing);
+	drawInt(bitmap,     90, 150, 15, 2, controls.aySmoothing);
+	drawString(bitmap, 150,  50, 15, "CX SB:");
+	drawString(bitmap, 150,  70, 15, "CY SB:");
+	drawString(bitmap, 150,  90, 15, "CX WS:");
+	drawString(bitmap, 150, 110, 15, "CY WS:");
+	drawString(bitmap, 150, 130, 15, "CX OF:");
+	drawString(bitmap, 150, 150, 15, "CY OF:");
+	drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
+	drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
+	drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
+	drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
+	drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
+	drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
+	drawString(bitmap, 280,  50, 15, "L Mode:");
+	drawString(bitmap, 280,  70, 15, "R Mode:");
+	drawString(bitmap, 280,  90, 15, "L Val:");
+	drawString(bitmap, 280, 110, 15, "R Val:");
+	drawString(bitmap, 280, 130, 15, "L WS:");
+	drawString(bitmap, 280, 150, 15, "L WS:");
+	drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
+	drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
+	drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
+	drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
+	drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
+	drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
+	drawString(bitmap,  30, 170, 15, "Rumble:");
+	drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
+	if(controls.autoInit) {
+		drawString(bitmap, 30, 190, 15, set_overAutoOn);
+	} else {
+		drawString(bitmap, 30, 190, 15, set_overAutoOff);
+	}
+	switch(controls.jumpConfig) {
+		case DEFAULTJUMP:
+			drawString(bitmap, 30, 210, 15, set_overJumpDf);
+			break;
+		case SWAP_XZ:
+			drawString(bitmap, 30, 210, 15, set_overJumpXZ);
+			break;
+		case SWAP_YZ:
+			drawString(bitmap, 30, 210, 15, set_overJumpYZ);
+			break;
+		case SWAP_XL:
+			drawString(bitmap, 30, 210, 15, set_overJumpXL);
+			break;
+		case SWAP_XR:
+			drawString(bitmap, 30, 210, 15, set_overJumpXR);
+			break;
+		case SWAP_YL:
+			drawString(bitmap, 30, 210, 15, set_overJumpYL);
+			break;
+		case SWAP_YR:
+			drawString(bitmap, 30, 210, 15, set_overJumpYR);
+			break;
+		default:
+			drawString(bitmap, 30, 210, 15, set_overJumpBr);
+			break;
 	}
 }
 
@@ -317,15 +386,14 @@ void drawAsnapback(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, asnapback2);
 	drawString(bitmap,  30, 110, 15, asnapback3);
 	drawString(bitmap,  30, 130, 15, asnapback4);
-	drawString(bitmap,  30, 150, 15, asnapback5);
-	drawString(bitmap,  30, 180, 15, leftStickX);
-	drawInt(   bitmap, 160, 180, 15, 1, controls.xSnapback);
-	drawString(bitmap, 280, 180, 15, leftStickY);
-	drawInt(   bitmap, 410, 180, 15, 1, controls.ySnapback);
+	drawString(bitmap,  30, 160, 15, leftStickX);
+	drawInt(   bitmap, 160, 160, 15, 1, controls.xSnapback);
+	drawString(bitmap, 280, 160, 15, leftStickY);
+	drawInt(   bitmap, 410, 160, 15, 1, controls.ySnapback);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 180, 15, arrowRight);
+		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 180, 15, arrowRight);
+		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
 }
@@ -450,7 +518,6 @@ void drawCwave(unsigned char bitmap[],
 	//graph?
 }
 
-/*
 void drawCoffset(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -479,138 +546,6 @@ void drawCoffset(unsigned char bitmap[],
 		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 	//graph?
-}
-*/
-
-void drawCardinals(unsigned char bitmap[],
-		const unsigned int menu,
-		const int itemIndex,
-		const bool changeMade,
-		const ControlConfig &controls) {
-	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	if(changeMade) {
-		drawString(bitmap, 300, 20, 15, bToSave);
-	}
-	drawString(bitmap,  30,  50, 15, lr_ud);
-	drawString(bitmap,  30,  70, 15, cardinals1);
-	drawString(bitmap,  30,  90, 15, cardinals2);
-	drawString(bitmap,  30, 110, 15, cardinals3);
-	drawString(bitmap,  30, 130, 15, cardinals4);
-	drawString(bitmap,  30, 160, 15, leftStick);
-	drawInt(   bitmap, 150, 160, 15, 0, controls.astickCardinalSnapping);
-	drawString(bitmap, 280, 160, 15, rightStick);
-	drawInt(   bitmap, 410, 160, 15, 0, controls.cstickCardinalSnapping);
-	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
-	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
-	}
-}
-
-void drawRadius(unsigned char bitmap[],
-		const unsigned int menu,
-		const int itemIndex,
-		const bool changeMade,
-		const ControlConfig &controls) {
-	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	if(changeMade) {
-		drawString(bitmap, 300, 20, 15, bToSave);
-	}
-	drawString(bitmap,  30,  50, 15, lr_ud);
-	drawString(bitmap,  30,  70, 15, radius1);
-	drawString(bitmap,  30,  90, 15, radius2);
-	drawString(bitmap,  30, 110, 15, radius3);
-	drawString(bitmap,  30, 130, 15, radius4);
-	drawString(bitmap,  30, 160, 15, leftStick);
-	drawInt(   bitmap, 140, 160, 15, 2, controls.astickAnalogScaler);
-	drawString(bitmap, 280, 160, 15, rightStick);
-	drawInt(   bitmap, 400, 160, 15, 2, controls.cstickAnalogScaler);
-	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
-	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
-	}
-}
-
-void drawSet_over(unsigned char bitmap[],
-		const unsigned int menu,
-		const int itemIndex,
-		const bool changeMade,
-		const Buttons btn,
-		const RawStick raw,
-		const ControlConfig &controls,
-		const StickParams &aStick,
-		const StickParams &cStick) {
-	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	drawString(bitmap,  30,  50, 15, "AX SB:");
-	drawString(bitmap,  30,  70, 15, "AY SB:");
-	drawString(bitmap,  30,  90, 15, "AX WS:");
-	drawString(bitmap,  30, 110, 15, "AY WS:");
-	drawString(bitmap,  30, 130, 15, "AX SM:");
-	drawString(bitmap,  30, 150, 15, "AY SM:");
-	drawInt(bitmap,     90,  50, 15, 2, controls.xSnapback);
-	drawInt(bitmap,     90,  70, 15, 2, controls.ySnapback);
-	drawInt(bitmap,     90,  90, 15, 2, controls.axWaveshaping);
-	drawInt(bitmap,     90, 110, 15, 2, controls.ayWaveshaping);
-	drawInt(bitmap,     90, 130, 15, 2, controls.axSmoothing);
-	drawInt(bitmap,     90, 150, 15, 2, controls.aySmoothing);
-	drawString(bitmap, 150,  50, 15, "CX SB:");
-	drawString(bitmap, 150,  70, 15, "CY SB:");
-	drawString(bitmap, 150,  90, 15, "CX WS:");
-	drawString(bitmap, 150, 110, 15, "CY WS:");
-	drawString(bitmap, 150, 130, 15, "CX OF:");
-	drawString(bitmap, 150, 150, 15, "CY OF:");
-	drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
-	drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
-	drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
-	drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
-	drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
-	drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
-	drawString(bitmap, 280,  50, 15, "L Mode:");
-	drawString(bitmap, 280,  70, 15, "R Mode:");
-	drawString(bitmap, 280,  90, 15, "L Val:");
-	drawString(bitmap, 280, 110, 15, "R Val:");
-	drawString(bitmap, 280, 130, 15, "L WS:");
-	drawString(bitmap, 280, 150, 15, "L WS:");
-	drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
-	drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
-	drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
-	drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
-	drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawString(bitmap,  30, 170, 15, "Rumble:");
-	drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
-	if(controls.autoInit) {
-		drawString(bitmap, 30, 190, 15, set_overAutoOn);
-	} else {
-		drawString(bitmap, 30, 190, 15, set_overAutoOff);
-	}
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 30, 210, 15, set_overJumpDf);
-			break;
-		case SWAP_XZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpXZ);
-			break;
-		case SWAP_YZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpYZ);
-			break;
-		case SWAP_XL:
-			drawString(bitmap, 30, 210, 15, set_overJumpXL);
-			break;
-		case SWAP_XR:
-			drawString(bitmap, 30, 210, 15, set_overJumpXR);
-			break;
-		case SWAP_YL:
-			drawString(bitmap, 30, 210, 15, set_overJumpYL);
-			break;
-		case SWAP_YR:
-			drawString(bitmap, 30, 210, 15, set_overJumpYR);
-			break;
-		default:
-			drawString(bitmap, 30, 210, 15, set_overJumpBr);
-			break;
-	}
 }
 
 void drawRemap(unsigned char bitmap[],
@@ -1210,279 +1145,6 @@ void drawXYScope(unsigned char bitmap[],
 	}
 }
 
-void drawPressSlice(unsigned char bitmap[],
-		const uint8_t frame,
-		DataCapture &capture) {
-	const int x0 = 40 + 2*frame;
-	const int x1 = x0 + 1;
-
-	//frame boundary lines
-	if(fmod(frame, 16.666667f) < 1) {
-		drawLine(bitmap, x0, 145, x0, 350, 9);
-		drawLine(bitmap, x1, 145, x1, 350, 9);
-	}
-
-	//button presses
-	if(capture.abxyszrl[frame] & 0b0000'0001) {//A
-		drawLine(bitmap, x0, 150 +  0*15, x0, 162 +  0*15, 15);
-		drawLine(bitmap, x1, 150 +  0*15, x1, 162 +  0*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b0000'0010) {//B
-		drawLine(bitmap, x0, 150 +  1*15, x0, 162 +  1*15, 15);
-		drawLine(bitmap, x1, 150 +  1*15, x1, 162 +  1*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b0000'0100) {//X
-		drawLine(bitmap, x0, 150 +  2*15, x0, 162 +  2*15, 15);
-		drawLine(bitmap, x1, 150 +  2*15, x1, 162 +  2*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b0000'1000) {//Y
-		drawLine(bitmap, x0, 150 +  3*15, x0, 162 +  3*15, 15);
-		drawLine(bitmap, x1, 150 +  3*15, x1, 162 +  3*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b1000'0000) {//L
-		drawLine(bitmap, x0, 150 +  4*15, x0, 162 +  4*15, 15);
-		drawLine(bitmap, x1, 150 +  4*15, x1, 162 +  4*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0010'0000) {//La
-		drawLine(bitmap, x0, 150 +  5*15, x0, 162 +  5*15, 15);
-		drawLine(bitmap, x1, 150 +  5*15, x1, 162 +  5*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b0100'0000) {//R
-		drawLine(bitmap, x0, 150 +  6*15, x0, 162 +  6*15, 15);
-		drawLine(bitmap, x1, 150 +  6*15, x1, 162 +  6*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0001'0000) {//Ra
-		drawLine(bitmap, x0, 150 +  7*15, x0, 162 +  7*15, 15);
-		drawLine(bitmap, x1, 150 +  7*15, x1, 162 +  7*15, 15);
-	}
-	if(capture.abxyszrl[frame] & 0b0010'0000) {//Z
-		drawLine(bitmap, x0, 150 +  8*15, x0, 162 +  8*15, 15);
-		drawLine(bitmap, x1, 150 +  8*15, x1, 162 +  8*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0000'0001) {//Ax
-		drawLine(bitmap, x0, 150 +  9*15, x0, 162 +  9*15, 15);
-		drawLine(bitmap, x1, 150 +  9*15, x1, 162 +  9*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0000'0010) {//Ay
-		drawLine(bitmap, x0, 150 + 10*15, x0, 162 + 10*15, 15);
-		drawLine(bitmap, x1, 150 + 10*15, x1, 162 + 10*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0000'0100) {//Cx
-		drawLine(bitmap, x0, 150 + 11*15, x0, 162 + 11*15, 15);
-		drawLine(bitmap, x1, 150 + 11*15, x1, 162 + 11*15, 15);
-	}
-	if(capture.axaycxcyrl[frame] & 0b0000'1000) {//Cy
-		drawLine(bitmap, x0, 150 + 12*15, x0, 162 + 12*15, 15);
-		drawLine(bitmap, x1, 150 + 12*15, x1, 162 + 12*15, 15);
-	}
-}
-
-void drawPressFrames(unsigned char bitmap[],
-		DataCapture &capture) {
-	int8_t a  = 0;
-	int8_t b  = 0;
-	int8_t x  = 0;
-	int8_t y  = 0;
-	int8_t l  = 0;
-	int8_t la = 0;
-	int8_t r  = 0;
-	int8_t ra = 0;
-	int8_t z  = 0;
-	int8_t ax = 0;
-	int8_t ay = 0;
-	int8_t cx = 0;
-	int8_t cy = 0;
-
-	int frame = 16;
-
-	//was it pressed initially?
-	if(capture.abxyszrl[0] & 0b0000'0001) {//A
-		a = -1;
-	}
-	if(capture.abxyszrl[0] & 0b0000'0010) {//B
-		b = -1;
-	}
-	if(capture.abxyszrl[0] & 0b0000'0100) {//X
-		x = -1;
-	}
-	if(capture.abxyszrl[0] & 0b0000'1000) {//Y
-		y = -1;
-	}
-	if(capture.abxyszrl[0] & 0b1000'0000) {//L
-		l = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0010'0000) {//La
-		la = -1;
-	}
-	if(capture.abxyszrl[0] & 0b0100'0000) {//R
-		r = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0001'0000) {//Ra
-		ra = -1;
-	}
-	if(capture.abxyszrl[0] & 0b0010'0000) {//Z
-		z = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0000'0001) {//Ax
-		ax = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0000'0010) {//Ay
-		ay = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0000'0100) {//Cx
-		cx = -1;
-	}
-	if(capture.axaycxcyrl[0] & 0b0000'1000) {//Cy
-		cy = -1;
-	}
-
-	for(int frame = 1; frame < 200; frame++) {
-		if(capture.abxyszrl[frame] & 0b0000'0001) {//A
-			if(a == 0) {
-				a = 1;
-				drawFloat(bitmap, 440, 150 +  0*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(a == -1) {
-				a = 1;
-				drawFloat(bitmap, 440, 150 +  0*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b0000'0010) {//B
-			if(b == 0) {
-				b = 1;
-				drawFloat(bitmap, 440, 150 +  1*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(b == -1) {
-				b = 1;
-				drawFloat(bitmap, 440, 150 +  1*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b0000'0100) {//X
-			if(x == 0) {
-				x = 1;
-				drawFloat(bitmap, 440, 150 +  2*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(x == -1) {
-				x = 1;
-				drawFloat(bitmap, 440, 150 +  2*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b0000'1000) {//Y
-			if(y == 0) {
-				y = 1;
-				drawFloat(bitmap, 440, 150 +  3*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(y == -1) {
-				y = 1;
-				drawFloat(bitmap, 440, 150 +  3*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b1000'0000) {//L
-			if(l == 0) {
-				l = 1;
-				drawFloat(bitmap, 440, 150 +  4*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(l == -1) {
-				l = 1;
-				drawFloat(bitmap, 440, 150 +  4*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0010'0000) {//La
-			if(la == 0) {
-				la = 1;
-				drawFloat(bitmap, 440, 150 +  5*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(la == -1) {
-				la = 1;
-				drawFloat(bitmap, 440, 150 +  5*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b0100'0000) {//R
-			if(r == 0) {
-				r = 1;
-				drawFloat(bitmap, 440, 150 +  6*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(r == -1) {
-				r = 1;
-				drawFloat(bitmap, 440, 150 +  6*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0001'0000) {//Ra
-			if(ra == 0) {
-				ra = 1;
-				drawFloat(bitmap, 440, 150 +  7*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(ra == -1) {
-				ra = 1;
-				drawFloat(bitmap, 440, 150 +  7*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.abxyszrl[frame] & 0b0010'0000) {//Z
-			if(z == 0) {
-				z = 1;
-				drawFloat(bitmap, 440, 150 +  8*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(z == -1) {
-				z = 1;
-				drawFloat(bitmap, 440, 150 +  8*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0000'0001) {//Ax
-			if(ax == 0) {
-				ax = 1;
-				drawFloat(bitmap, 440, 150 +  9*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(ax == -1) {
-				ax = 1;
-				drawFloat(bitmap, 440, 150 +  9*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0000'0010) {//Ay
-			if(ay == 0) {
-				ay = 1;
-				drawFloat(bitmap, 440, 150 +  10*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(ay == -1) {
-				ay = 1;
-				drawFloat(bitmap, 440, 150 +  10*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0000'0100) {//Cx
-			if(cx == 0) {
-				cx = 1;
-				drawFloat(bitmap, 440, 150 +  11*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(cx == -1) {
-				cx = 1;
-				drawFloat(bitmap, 440, 150 +  11*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-		if(capture.axaycxcyrl[frame] & 0b0000'1000) {//Cy
-			if(cy == 0) {
-				cy = 1;
-				drawFloat(bitmap, 440, 150 +  12*15, 15, 1, 6, frame/16.666667);
-			}
-		} else {
-			if(cy == -1) {
-				cy = 1;
-				drawFloat(bitmap, 440, 150 +  12*15, 15, 1, 6, frame/16.666667);
-			}
-		}
-	}
-}
-
 //You wait a random amount of time before actually calling this draw function
 //Then the draw function, as soon as it is done, initiates recording
 void drawPresstime(unsigned char bitmap[],
@@ -1502,26 +1164,21 @@ void drawPresstime(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 260, 120, 15, arrowRight);
 	}
-	if(capture.done) {
-		drawString(bitmap,  10, 150 +  0*15, 15, "A");
-		drawString(bitmap,  10, 150 +  1*15, 15, "B");
-		drawString(bitmap,  10, 150 +  2*15, 15, "X");
-		drawString(bitmap,  10, 150 +  3*15, 15, "Y");
-		drawString(bitmap,  10, 150 +  4*15, 15, "L");
-		drawString(bitmap,  10, 150 +  5*15, 15, "La");
-		drawString(bitmap,  10, 150 +  6*15, 15, "R");
-		drawString(bitmap,  10, 150 +  7*15, 15, "Ra");
-		drawString(bitmap,  10, 150 +  8*15, 15, "Z");
-		drawString(bitmap,  10, 150 +  9*15, 15, "AX");
-		drawString(bitmap,  10, 150 + 10*15, 15, "AY");
-		drawString(bitmap,  10, 150 + 11*15, 15, "CX");
-		drawString(bitmap,  10, 150 + 12*15, 15, "CY");
-
-		for(int frame = 0; frame < 200; frame++) {
-			drawPressSlice(bitmap, frame, capture);
-		}
-
-		drawPressFrames(bitmap, capture);
+	if(!capture.done) {
+	} else {
+		drawString(bitmap,  30, 150, 15, "A");
+		drawString(bitmap,  50, 165, 15, "B");
+		drawString(bitmap,  30, 180, 15, "X");
+		drawString(bitmap,  50, 195, 15, "Y");
+		drawString(bitmap,  30, 210, 15, "Z");
+		drawString(bitmap,  50, 225, 15, "L");
+		drawString(bitmap,  30, 240, 15, "La");
+		drawString(bitmap,  50, 255, 15, "R");
+		drawString(bitmap,  30, 270, 15, "Ra");
+		drawString(bitmap,  50, 285, 15, "AX");
+		drawString(bitmap,  30, 300, 15, "AY");
+		drawString(bitmap,  50, 315, 15, "CX");
+		drawString(bitmap,  30, 330, 15, "CY");
 	}
 }
 
@@ -1675,6 +1332,9 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_STICKDBG:
 			drawStickdbg(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
+		case MENU_SET_OVER:
+			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			break;
 		case MENU_ASNAPBACK:
 			drawAsnapback(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
@@ -1690,19 +1350,8 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_CWAVE:
 			drawCwave(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
-			/*
 		case MENU_COFFSET:
 			drawCoffset(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
-			break;
-			*/
-		case MENU_CARDINALS:
-			drawCardinals(bitmap, menu, itemIndex, changeMade, controls);
-			break;
-		case MENU_RADIUS:
-			drawRadius(bitmap, menu, itemIndex, changeMade, controls);
-			break;
-		case MENU_SET_OVER:
-			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_REMAP:
 			drawRemap(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
@@ -1727,9 +1376,6 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_XYSCOPE:
 			drawXYScope(bitmap, menu, itemIndex, capture);
-			break;
-		case MENU_PRESSTIME:
-			drawPresstime(bitmap, menu, itemIndex, capture);
 			break;
 		case MENU_REACTION:
 			drawReaction(bitmap, menu, itemIndex, capture);

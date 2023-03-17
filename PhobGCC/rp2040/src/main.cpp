@@ -232,31 +232,29 @@ void second_core() {
 						break;
 					case CM_PRESS:
 						if(!_dataCapture.begin && !_dataCapture.done) {
-							//                     syxba                       lrz
-							if((_btn.arr[0] & 0b00001111) || (_btn.arr[1] & 0b01110000)) {
+							//                     syxba                      lrz
+							if((_btn.arr[0] & 0b00011111) || (_btn.arr[1] & 0b01110000)) {
 								_dataCapture.begin = true;
 							}
 							//stick thresholds
-							if(abs(int(_btn.Ax)-127) >= _dataCapture.stickThresh ||
-								abs(int(_btn.Ay)-127) >= _dataCapture.stickThresh ||
-								abs(int(_btn.Cx)-127) >= _dataCapture.stickThresh ||
-								abs(int(_btn.Cy)-127) >= _dataCapture.stickThresh ||
-								abs(int(_btn.Ra)) >= _dataCapture.triggerThresh ||
-								abs(int(_btn.La)) >= _dataCapture.triggerThresh) {
+							if(abs(int(_btn.Ax)-127) > _dataCapture.stickThresh ||
+								abs(int(_btn.Ay)-127) > _dataCapture.stickThresh ||
+								abs(int(_btn.Cx)-127) > _dataCapture.stickThresh ||
+								abs(int(_btn.Cy)-127) > _dataCapture.stickThresh) {
 								_dataCapture.begin = true;
 							}
-						}
-						if(_dataCapture.begin && !_dataCapture.done) {
+							_dataCapture.endIndex = 0;
+						} else if(!_dataCapture.done) {
 							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
 							_dataCapture.axaycxcyrl[_dataCapture.endIndex] =
-								(0b0000'0001 * (abs(int(_btn.Ax)-127) >= _dataCapture.stickThresh)) |
-								(0b0000'0010 * (abs(int(_btn.Ay)-127) >= _dataCapture.stickThresh)) |
-								(0b0000'0100 * (abs(int(_btn.Cx)-127) >= _dataCapture.stickThresh)) |
-								(0b0000'1000 * (abs(int(_btn.Cy)-127) >= _dataCapture.stickThresh)) |
-								(0b0001'0000 * (abs(int(_btn.Ra)) >= _dataCapture.triggerThresh)) |
-								(0b0010'0000 * (abs(int(_btn.La)) >= _dataCapture.triggerThresh));
+								(0b00000001 * (abs(int(_btn.Ax)-127) > _dataCapture.stickThresh)) |
+								(0b00000010 * (abs(int(_btn.Ay)-127) > _dataCapture.stickThresh)) |
+								(0b00000100 * (abs(int(_btn.Cx)-127) > _dataCapture.stickThresh)) |
+								(0b00001000 * (abs(int(_btn.Cy)-127) > _dataCapture.stickThresh)) |
+								(0b00010000 * (abs(int(_btn.Ra)) > _dataCapture.triggerThresh)) |
+								(0b00100000 * (abs(int(_btn.La)) > _dataCapture.triggerThresh));
 							_dataCapture.endIndex++;
-							if(_dataCapture.endIndex >= 200) {
+							if(_dataCapture.endIndex == 200) {
 								_dataCapture.done = true;
 								_pleaseCommit = 255;//end capture and display
 							}
