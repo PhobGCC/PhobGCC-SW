@@ -96,6 +96,8 @@ ControlConfig _controls{
 	.analogScalerMax = 125,
 	.analogScalerDefault = 100,
 	.tournamentToggle = 0,
+	.tournamentToggleMin = 0,
+	.tournamentToggleMax = 5,
 #ifdef PICO_RP2040
 	.interlaceOffset = 0,
 	.interlaceOffsetMin = -150,
@@ -645,10 +647,10 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 }
 
 void changeTournamentToggle(ControlConfig &controls) {
-	if(controls.tournamentToggle == 0) {
-		controls.tournamentToggle = 1;
-	} else {
+	if(controls.tournamentToggle == controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
+	} else {
+		controls.tournamentToggle++;
 	}
 
 	setTournamentToggle(controls.tournamentToggle);
@@ -1225,7 +1227,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 
 	//get the tournament toggle setting
 	controls.tournamentToggle = getTournamentToggle();
-	if((controls.tournamentToggle > 1) || (controls.tournamentToggle < 0)) {
+	if(controls.tournamentToggle > controls.tournamentToggleMax) {
+		controls.tournamentToggle = 0;
+		numberOfNaN++;
+	} else if(controls.tournamentToggle < controls.tournamentToggleMin) {
 		controls.tournamentToggle = 0;
 		numberOfNaN++;
 	}
@@ -1715,9 +1720,33 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//Apply any further button remapping to tempBtn here
 
-	//Disabling D-pad up for tournament toggle
-	if(controls.tournamentToggle == 1) {
+	//Tournament toggle
+	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
 		tempBtn.Du = (uint8_t) (0);
+	}
+	static int startLockout = 1500;
+	if(controls.tournamentToggle >= 3 && hardware.S) {
+		if(startLockout > 0) {
+			startLockout--;
+			tempBtn.S = (uint8_t) (0);
+		} else if(startLockout == 0) {
+			startLockout = 1500;
+			tempBtn.S = (uint8_t) (1);
+		}
+	} else if(startLockout < 1500) {
+		startLockout++;
+	}
+	static int duLockout = 1500;
+	if((controls.tournamentToggle == 1 || controls.tournamentToggle == 4) && hardware.Du) {
+		if(duLockout > 0) {
+			duLockout--;
+			tempBtn.Du = (uint8_t) (0);
+		} else if(duLockout == 0) {
+			duLockout = 1500;
+			tempBtn.Du = (uint8_t) (1);
+		}
+	} else if(duLockout < 1500) {
+		duLockout++
 	}
 
 	//Here we make sure LRAS actually operate.
@@ -1739,7 +1768,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
 	* Auto-Initialize: AXY+Z
-	* Tournament Toggle:  TODO
+	* Tournament Toggle:  Z+Start
 	*
 	* Increase/Decrease Rumble: AB+Du/Dd
 	* Show Current Rumble Setting: AB+Start
@@ -1837,6 +1866,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			settingChangeCount++;
 #endif //BATCHSETTINGS
 			changeAutoInit(btn, hardware, controls);
+		} else if(hardware.Z && hardware.S && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
+			changeTournamentToggle(controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
 #ifdef BATCHSETTINGS
 			settingChangeCount++;
