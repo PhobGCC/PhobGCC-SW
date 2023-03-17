@@ -323,6 +323,4 @@ struct DataCapture{
 	uint8_t axaycxcyrl[200];//12 frames
 };
 
-static_assert(DataCapture::a1
-
 #endif //ENUMS_H

@@ -68,6 +68,13 @@ const char set_overJumpXR[] = "X R-jump";
 const char set_overJumpYL[] = "Y L-jump";
 const char set_overJumpYR[] = "Y R-jump";
 const char set_overJumpBr[] = "Broken jump config";
+const char set_overTourn0[] = "Tourney Mode Off";
+const char set_overTourn1[] = "Taunt Delayed";
+const char set_overTourn2[] = "Taunt Disabled";
+const char set_overTourn3[] = "Start Delayed";
+const char set_overTourn4[] = "Start and Taunt Delayed";
+const char set_overTourn5[] = "Start Delayed, Taunt Disabled";
+const char set_overTournBr[] = "Tourney Mode Off";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";

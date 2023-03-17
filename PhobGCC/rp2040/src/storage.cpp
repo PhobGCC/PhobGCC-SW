@@ -426,12 +426,12 @@ void setInterlaceOffsetSetting(const int o) {
 	_storage.settings.interlaceOffset = o;
 }
 
-int getTournamentToggle() {
+int getTournamentToggleSetting() {
 	getStoragePage();
 	return _storage.settings.tournamentToggle;
 }
 
-void setTournamentToggle(const int tournamentToggle) {
+void setTournamentToggleSetting(const int tournamentToggle) {
 	getStoragePage();
 	_storage.settings.tournamentToggle = tournamentToggle;
 }

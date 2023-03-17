@@ -46,6 +46,7 @@ struct Storage {
 		int AstickAnalogScaler;
 		int CstickAnalogScaler;
 		int interlaceOffset;
+		int tournamentToggle;
 	} settings;
 };
 
@@ -125,5 +126,8 @@ void setAnalogScalerSetting(const int, const WhichStick);
 
 int getInterlaceOffsetSetting();
 void setInterlaceOffsetSetting(const int);
+
+int getTournamentToggleSetting();
+void setTournamentToggleSetting(const int);
 
 #endif //STORAGE_H

@@ -611,6 +611,29 @@ void drawSet_over(unsigned char bitmap[],
 			drawString(bitmap, 30, 210, 15, set_overJumpBr);
 			break;
 	}
+	switch(controls.tournamentToggle) {
+		case 0:
+			drawString(bitmap, 30, 230, 15, set_overTourn0);
+			break;
+		case 1:
+			drawString(bitmap, 30, 230, 15, set_overTourn1);
+			break;
+		case 2:
+			drawString(bitmap, 30, 230, 15, set_overTourn2);
+			break;
+		case 3:
+			drawString(bitmap, 30, 230, 15, set_overTourn3);
+			break;
+		case 4:
+			drawString(bitmap, 30, 230, 15, set_overTourn4);
+			break;
+		case 5:
+			drawString(bitmap, 30, 230, 15, set_overTourn5);
+			break;
+		default:
+			drawString(bitmap, 30, 230, 15, set_overTournBr);
+			break;
+	}
 }
 
 void drawRemap(unsigned char bitmap[],

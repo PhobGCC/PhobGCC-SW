@@ -270,13 +270,13 @@ void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick)
 	}
 }
 
-int getTournamentToggle() {
+int getTournamentToggleSetting() {
 	int output;
 	EEPROM.get(Eeprom::_eepromTournamentToggle, output);
 	return output;
 }
 
-void setTournamentToggle(const int tournamentToggle) {
+void setTournamentToggleSetting(const int tournamentToggle) {
 	EEPROM.put(Eeprom::_eepromTournamentToggle, tournamentToggle);
 }
 

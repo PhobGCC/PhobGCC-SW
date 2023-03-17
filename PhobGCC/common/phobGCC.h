@@ -16,9 +16,9 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -646,14 +646,22 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	clearButtons(100, btn, hardware);
 }
 
-void changeTournamentToggle(ControlConfig &controls) {
+void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(controls.tournamentToggle == controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
 	} else {
 		controls.tournamentToggle++;
 	}
 
-	setTournamentToggle(controls.tournamentToggle);
+	setTournamentToggleSetting(controls.tournamentToggle);
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.tournamentToggle);
+	btn.Ay = (uint8_t) (_floatOrigin);
+
+	btn.Cx = (uint8_t) (_floatOrigin);
+	btn.Cy = (uint8_t) (_floatOrigin);
+
+	clearButtons(750, btn, hardware);
 }
 
 //apply digital button swaps for L, R, or Z jumping
@@ -1226,7 +1234,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	}
 
 	//get the tournament toggle setting
-	controls.tournamentToggle = getTournamentToggle();
+	controls.tournamentToggle = getTournamentToggleSetting();
 	if(controls.tournamentToggle > controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
 		numberOfNaN++;
@@ -1275,6 +1283,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			//controls.cstickAnalogScaler = controls.analogScalerDefault;
 			//controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 			//controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			//controls.tournamentToggle = controls.tournamentToggleMin;
 			//fallthrough
 		case 29:
 			//uncomment these when we do have it migrate
@@ -1723,16 +1732,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//Apply any further button remapping to tempBtn here
 
 	//Tournament toggle
-	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
-		tempBtn.Du = (uint8_t) (0);
-	}
 	static int startLockout = 1500;
 	if(controls.tournamentToggle >= 3 && hardware.S) {
 		if(startLockout > 0) {
 			startLockout--;
 			tempBtn.S = (uint8_t) (0);
-		} else if(startLockout == 0) {
-			startLockout = 1500;
+		} else if(startLockout <= 0) {
 			tempBtn.S = (uint8_t) (1);
 		}
 	} else if(startLockout < 1500) {
@@ -1743,12 +1748,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		if(duLockout > 0) {
 			duLockout--;
 			tempBtn.Du = (uint8_t) (0);
-		} else if(duLockout == 0) {
-			duLockout = 1500;
+		} else if(duLockout <= 0) {
 			tempBtn.Du = (uint8_t) (1);
 		}
 	} else if(duLockout < 1500) {
-		duLockout++
+		duLockout++;
+	}
+	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
+		tempBtn.Du = (uint8_t) (0);
 	}
 
 	//Here we make sure LRAS actually operate.
@@ -1869,7 +1876,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			changeAutoInit(btn, hardware, controls);
 		} else if(hardware.Z && hardware.S && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
 			settingChangeCount++;
-			changeTournamentToggle(controls);
+			changeTournamentToggle(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
 			settingChangeCount++;
 #ifdef RUMBLE
