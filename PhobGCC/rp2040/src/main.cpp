@@ -138,6 +138,11 @@ void second_core() {
 						//this records the starting point only the first time, then it sets begin
 						static int x0;
 						static int y0;
+
+						//make sure that we can write 200 things in a1 (clobbering a2) for longer recording
+						static_assert(&_dataCapture.a1[100] == &_dataCapture.a2[0]);
+						static_assert(&_dataCapture.a1Unfilt[100] == &_dataCapture.a2Unfilt[0]);
+
 						if(!_dataCapture.begin && !_dataCapture.done) {
 							_dataCapture.begin = true;
 							_dataCapture.done = false;
@@ -219,13 +224,19 @@ void second_core() {
 						}
 						break;
 					case CM_STICK_FALLING:
-						//
+						//single-axis
+						//based on the raw unfiltered values falling from >70 to 0 in <30 ms
+						//it should record for 150 ms after detection (saving 50 from before detection)
 						break;
 					case CM_STICK_PIVOT:
-						//
+						//single-axis
+						//based on the raw unfiltered values going from 64 to the opposite 64 in <50 ms
+						//it should record for 150 ms after detection (saving 50 from before detection)
 						break;
 					case CM_TRIG:
-						//
+						//single trigger
+						//based on the raw unfiltered values rising past 15
+						//it should record for 150 ms after detection (saving 50 from before detection)
 						break;
 					case CM_JUMP:
 						//

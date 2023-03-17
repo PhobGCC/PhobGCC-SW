@@ -301,6 +301,7 @@ struct DataCapture{
 	CaptureMode mode;
 	WhichStick triggerStick;
 	WhichStick captureStick;
+	WhichAxis whichAxis;
 	uint8_t stickmap;//which stickmap to display
 	GraphVar graphVar;//which variable to graph
 	bool begin;
@@ -318,5 +319,7 @@ struct DataCapture{
 	uint8_t abxyszrl[200];//12 frames
 	uint8_t axaycxcyrl[200];//12 frames
 };
+
+static_assert(DataCapture::a1
 
 #endif //ENUMS_H
