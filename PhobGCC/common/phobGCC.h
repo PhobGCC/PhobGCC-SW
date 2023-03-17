@@ -654,6 +654,14 @@ void changeTournamentToggle(ControlConfig &controls) {
 	}
 
 	setTournamentToggle(controls.tournamentToggle);
+
+	btn.Ax = (uint8_t) (_floatOrigin + controls.tournamentToggle);
+	btn.Ay = (uint8_t) (_floatOrigin);
+
+	btn.Cx = (uint8_t) (_floatOrigin);
+	btn.Cy = (uint8_t) (_floatOrigin);
+
+	clearButtons(750, btn, hardware);
 }
 
 //apply digital button swaps for L, R, or Z jumping
