@@ -1732,7 +1732,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//Apply any further button remapping to tempBtn here
 
 	//Tournament toggle
-	static int startLockout = 1500;
+	static int startLockout = 1000;
 	if(controls.tournamentToggle >= 3 && hardware.S) {
 		if(startLockout > 0) {
 			startLockout--;
@@ -1740,10 +1740,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(startLockout <= 0) {
 			tempBtn.S = (uint8_t) (1);
 		}
-	} else if(startLockout < 1500) {
+	} else if(startLockout < 1000) {
 		startLockout++;
 	}
-	static int duLockout = 1500;
+	static int duLockout = 1000;
 	if((controls.tournamentToggle == 1 || controls.tournamentToggle == 4) && hardware.Du) {
 		if(duLockout > 0) {
 			duLockout--;
@@ -1751,7 +1751,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(duLockout <= 0) {
 			tempBtn.Du = (uint8_t) (1);
 		}
-	} else if(duLockout < 1500) {
+	} else if(duLockout < 1000) {
 		duLockout++;
 	}
 	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
