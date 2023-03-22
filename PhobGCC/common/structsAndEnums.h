@@ -309,6 +309,7 @@ struct DataCapture{
 	GraphVar graphVar;//which variable to graph
 	bool begin;
 	bool done;
+	bool autoRepeat;
 	uint32_t delay;//for recording reaction time
 	uint8_t stickThresh;
 	uint8_t triggerThresh;

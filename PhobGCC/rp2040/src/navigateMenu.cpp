@@ -92,6 +92,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			backAccumulator = 0;
 			aLockout = 0;//make A available immediately after backing out
 			presses = presses | BPRESS;
+			capture.autoRepeat = false;//cancel auto repeating if you back out
 		}
 	} else {
 		if(backAccumulator > 0) {
@@ -191,6 +192,19 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			presses = presses | YPRESS;
 		}
 	}
+
+	//handle autorepeat
+	if(capture.autoRepeat && capture.done) {
+		const uint8_t repeatTimerDuration = 30;
+		static uint8_t repeatTimer = repeatTimerDuration;
+		if(repeatTimer == 0) {
+			presses = SPRESS;//ignore other things, just make it press start
+			repeatTimer = repeatTimerDuration;
+		} else {
+			repeatTimer--;
+		}
+	}
+
 	//handle actual navigation and settings changes
 	if(presses) {
 		navigateMenu(bitmap,
@@ -837,30 +851,33 @@ void navigateMenu(unsigned char bitmap[],
 				return;
 			case MENU_PRESSTIME:
 				if(!changeMade) {
-					tempInt1 = 23;//dash
-					capture.stickThresh = 23;
-					tempInt2 = 255;//no lightshield threshold
-					capture.triggerThresh = 255;
+					capture.stickThresh = 23;//dash
+					capture.triggerThresh = 255;//no lightshield threshold by default
+					capture.autoRepeat = 0;//don't auto repeat by default
 					changeMade = true;
 				}
 				if(presses & DLPRESS) {
-					itemIndex = 0;
+					itemIndex = fmax(0, itemIndex-1);
 					redraw = 1;
 				} else if(presses & DRPRESS) {
-					itemIndex = 1;
+					itemIndex = fmin(2, itemIndex+1);
 					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						capture.stickThresh = fmin(100, capture.stickThresh+1);
-					} else {//itemIndex == 1
+					} else if(itemIndex == 1) {
 						capture.triggerThresh = fmin(255, capture.triggerThresh+1);
+					} else {//itemIndex == 2
+						capture.autoRepeat = 1;
 					}
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						capture.stickThresh = fmax(10, capture.stickThresh-1);
-					} else {//itemIndex == 1
+					} else if(itemIndex == 1) {
 						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
+					} else {//itemIndex == 2
+						capture.autoRepeat = 0;
 					}
 					redraw = 1;
 				} else if(presses & SPRESS) {
@@ -877,10 +894,9 @@ void navigateMenu(unsigned char bitmap[],
 				return;
 			case MENU_REACTION:
 				if(!changeMade) {
-					tempInt1 = 23;//dash
-					capture.stickThresh = 23;
-					tempInt2 = 49;//lightshield
-					capture.triggerThresh = 49;
+					capture.stickThresh = 23;//dash
+					capture.triggerThresh = 49;//lightshield
+					changeMade = true;
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
@@ -894,7 +910,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {//itemIndex == 1
 						capture.triggerThresh = fmin(200, capture.triggerThresh+1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
@@ -902,7 +917,6 @@ void navigateMenu(unsigned char bitmap[],
 					} else {//itemIndex == 1
 						capture.triggerThresh = fmax(10, capture.triggerThresh-1);
 					}
-					changeMade = true;
 					redraw = 1;
 				} else if(presses & SPRESS) {
 					//tell the user to get ready

@@ -1556,34 +1556,45 @@ void drawPresstime(unsigned char bitmap[],
 	drawString(bitmap,  30,  70, 15, presstime2);
 	drawString(bitmap,  30,  90, 15, reaction3);
 	drawString(bitmap,  30, 120, 15, reaction4);
-	drawInt(   bitmap, 160, 120, 15, 0, capture.stickThresh);
-	drawString(bitmap, 280, 120, 15, reaction5);
-	drawInt(   bitmap, 410, 120, 15, 0, capture.triggerThresh);
+	drawInt(   bitmap,  90, 120, 15, 2, capture.stickThresh);
+	drawString(bitmap, 170, 120, 15, reaction5);
+	drawInt(   bitmap, 250, 120, 15, 2, capture.triggerThresh);
+	drawString(bitmap, 330, 120, 15, presstime4);
+	if(capture.autoRepeat) {
+		drawString(bitmap, 460, 120, 15, presstime5);
+	} else {
+		drawString(bitmap, 460, 120, 15, presstime6);
+	}
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 120, 15, arrowRight);
+	} else if (itemIndex == 1) {
+		drawString(bitmap, 150, 120, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 120, 15, arrowRight);
+		drawString(bitmap, 310, 120, 15, arrowRight);
 	}
-	if(capture.done) {
-		drawString(bitmap,  10, 150 +  0*15, 15, "A");
-		drawString(bitmap,  10, 150 +  1*15, 15, "B");
-		drawString(bitmap,  10, 150 +  2*15, 15, "X");
-		drawString(bitmap,  10, 150 +  3*15, 15, "Y");
-		drawString(bitmap,  10, 150 +  4*15, 15, "L");
-		drawString(bitmap,  10, 150 +  5*15, 15, "La");
-		drawString(bitmap,  10, 150 +  6*15, 15, "R");
-		drawString(bitmap,  10, 150 +  7*15, 15, "Ra");
-		drawString(bitmap,  10, 150 +  8*15, 15, "Z");
-		drawString(bitmap,  10, 150 +  9*15, 15, "AX");
-		drawString(bitmap,  10, 150 + 10*15, 15, "AY");
-		drawString(bitmap,  10, 150 + 11*15, 15, "CX");
-		drawString(bitmap,  10, 150 + 12*15, 15, "CY");
 
-		for(int frame = 0; frame < 200; frame++) {
-			drawPressSlice(bitmap, frame, capture);
-		}
+	drawString(bitmap,  10, 150 +  0*15, 15, "A");
+	drawString(bitmap,  10, 150 +  1*15, 15, "B");
+	drawString(bitmap,  10, 150 +  2*15, 15, "X");
+	drawString(bitmap,  10, 150 +  3*15, 15, "Y");
+	drawString(bitmap,  10, 150 +  4*15, 15, "L");
+	drawString(bitmap,  10, 150 +  5*15, 15, "La");
+	drawString(bitmap,  10, 150 +  6*15, 15, "R");
+	drawString(bitmap,  10, 150 +  7*15, 15, "Ra");
+	drawString(bitmap,  10, 150 +  8*15, 15, "Z");
+	drawString(bitmap,  10, 150 +  9*15, 15, "AX");
+	drawString(bitmap,  10, 150 + 10*15, 15, "AY");
+	drawString(bitmap,  10, 150 + 11*15, 15, "CX");
+	drawString(bitmap,  10, 150 + 12*15, 15, "CY");
 
-		drawPressFrames(bitmap, capture);
+	for(int frame = 0; frame < 200; frame++) {
+		drawPressSlice(bitmap, frame, capture);
+	}
+
+	drawPressFrames(bitmap, capture);
+
+	if(capture.begin == false && capture.done == false) {
+		drawString(bitmap, 30, 360, 15, presstime3);
 	}
 }
 
