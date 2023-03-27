@@ -21,7 +21,7 @@ ArteSSBM - Debugging
 
 JonnyHaystack - Debugging
 
-Rienne - Testing
+Rienne - Testing and Design
 
 # Libraries
 
