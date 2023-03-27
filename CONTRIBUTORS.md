@@ -3,25 +3,29 @@ If you believe someone is missing, please let Frost or CarVac know!
 
 # Contributors
 
-Phobos132 - Developer
+Phobos132 - Main Developer
 
-FrostSSBM - Developer
+FrostSSBM - Firmware Developer
 
-CarVac - Developer
+CarVac - Firmware and Hardware Developer
 
-wav - Developer
+wav - Hardware Developer
 
-Savestate - Developer
+Savestate - Hardware Developer
 
-bjartskular1 - Developer
+bjartskular1 - Hardware Developer
 
-NiceMitch - Developer
+NiceMitch - Firmware and Hardware Developer
 
 ArteSSBM - Debugging
 
 JonnyHaystack - Debugging
 
 Rienne - Testing and Design
+
+Kadano - Testing
+
+Vurj - Hardware Design
 
 # Libraries
 
