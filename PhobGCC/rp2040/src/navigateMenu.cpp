@@ -195,7 +195,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 
 	//handle autorepeat
 	if(capture.autoRepeat && capture.done) {
-		const uint8_t repeatTimerDuration = 30;
+		const uint8_t repeatTimerDuration = 15;
 		static uint8_t repeatTimer = repeatTimerDuration;
 		if(repeatTimer == 0) {
 			presses = SPRESS;//ignore other things, just make it press start
