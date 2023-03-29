@@ -213,59 +213,18 @@ int videoOut(const uint8_t pin_base,
 			pleaseCommit = 0;
 		}
 
-		gpio_put(0, !gpio_get_out_level(0));
 		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, btn, hardware, config, capture);
-		gpio_put(0, !gpio_get_out_level(0));
 
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
-			gpio_put(0, !gpio_get_out_level(0));
 			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, hardware, raw, config, aStick, cStick);
-			gpio_put(0, !gpio_get_out_level(0));
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
-			gpio_put(0, !gpio_get_out_level(0));
 			//write interlace offset
 			_interlaceOffset = config.interlaceOffset;
 			memset(_bitmap, BLACK2, BUFFERLEN);
 			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick, capture);
-			gpio_put(0, !gpio_get_out_level(0));
 		}
-
-		/*
-		//drawImage(_bitmap, Quadrants, Quadrants_Index, center-80, center-80);
-		drawLine(_bitmap, center+  0, center-100, center+ 74, center- 74, 7);
-		drawLine(_bitmap, center+100, center+  0, center+ 74, center- 74, 7);
-		drawLine(_bitmap, center+100, center+  0, center+ 74, center+ 74, 7);
-		drawLine(_bitmap, center+  0, center+100, center+ 74, center+ 74, 7);
-		drawLine(_bitmap, center+  0, center+100, center- 74, center+ 74, 7);
-		drawLine(_bitmap, center-100, center+  0, center- 74, center+ 74, 7);
-		drawLine(_bitmap, center-100, center+  0, center- 74, center- 74, 7);
-		drawLine(_bitmap, center+  0, center-100, center- 74, center- 74, 7);
-
-		drawLine(_bitmap, btn.Cx+1, 256-btn.Cy, btn.Cx+1, 256-btn.Cy, 11);
-		drawLine(_bitmap, btn.Ax+1, 256-btn.Ay, btn.Ax+1, 256-btn.Ay, WHITE);
-		//int xList[6] = {0,   5,  23,  45,  60,  74};
-		//int yList[6] = {0,  -6, -30, -55, -65, -74};
-		//graphStickmap(_bitmap, 1, 1, xList, yList, 6, WHITE, POINTGRAPH);
-
-		//char ax[6] = {0, 0, 0, 0, 0, 0};
-		//char ay[6] = {0, 0, 0, 0, 0, 0};
-		//char cx[6] = {0, 0, 0, 0, 0, 0};
-		//char cy[6] = {0, 0, 0, 0, 0, 0};
-		//std::to_chars(ax, ax + 5, btn.Ax-127);
-		//std::to_chars(ay, ay + 5, btn.Ay-127);
-		//std::to_chars(cx, cx + 5, btn.Cx-127);
-		//std::to_chars(cy, cy + 5, btn.Cy-127);
-		drawFloat(_bitmap, 0, 20, 15, 0, raw.axRaw);
-		drawFloat(_bitmap, 0, 40, 15, 0, raw.ayRaw);
-		drawFloat(_bitmap, 140, 20, 15, 2, raw.axLinearized);
-		drawFloat(_bitmap, 140, 40, 15, 2, raw.ayLinearized);
-		drawInt(_bitmap, 280, 20, 15, 2, int(raw.axUnfiltered));
-		drawInt(_bitmap, 280, 40, 15, 2, int(raw.ayUnfiltered));
-
-		drawFloat(_bitmap, 0, 60, 15, 2, raw.axLinearized*180/M_PI);
-		*/
 	}
 }
 
