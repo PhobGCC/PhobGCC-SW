@@ -10,6 +10,8 @@
 #include "images/cuteGhost.h"
 #include "images/stickmaps.h"
 
+#define ORG 127
+
 void meleeCoordClamp(const int xIn, const int yIn, float &xOut, float &yOut) {
 	const float magnitude = sqrt((float) xIn*xIn + yIn*yIn);
 	const float scale = fmin(1.0f, 80.0f/magnitude);
@@ -101,9 +103,9 @@ void drawStickCalFast(unsigned char bitmap[],
 
 	//where to point the stick
 	if(whichStick == ASTICK && itemIndex > -1) {
-		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Cx-127, yCenter-btn.Cy+127, 12);
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Cx-ORG, yCenter-btn.Cy+ORG, 12);
 	} else if(whichStick == CSTICK && itemIndex > -1) {
-		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Ax-127, yCenter-btn.Ay+127, 12);
+		drawLine(bitmap, xCenter, yCenter, xCenter+btn.Ax-ORG, yCenter-btn.Ay+ORG, 12);
 	} else {
 		drawLine(bitmap, xCenter, yCenter, xCenter, yCenter, 15);
 	}
@@ -111,15 +113,15 @@ void drawStickCalFast(unsigned char bitmap[],
 	//current stick position, only if currently in notch adj
 	if(itemIndex >= 32 || itemIndex == -1) {
 		if(whichStick == ASTICK) {
-			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+1, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127+0, 15);
-			drawLine(bitmap, xCenter+btn.Ax-127+1, yCenter-btn.Ay+127-1, xCenter+btn.Ax-127+0, yCenter-btn.Ay+127-1, 15);
-			drawLine(bitmap, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127-1, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127+0, 15);
-			drawLine(bitmap, xCenter+btn.Ax-127-1, yCenter-btn.Ay+127+1, xCenter+btn.Ax-127+0, yCenter-btn.Ay+127+1, 15);
+			drawLine(bitmap, xCenter+btn.Ax-ORG+1, yCenter-btn.Ay+ORG+1, xCenter+btn.Ax-ORG+1, yCenter-btn.Ay+ORG+0, 15);
+			drawLine(bitmap, xCenter+btn.Ax-ORG+1, yCenter-btn.Ay+ORG-1, xCenter+btn.Ax-ORG+0, yCenter-btn.Ay+ORG-1, 15);
+			drawLine(bitmap, xCenter+btn.Ax-ORG-1, yCenter-btn.Ay+ORG-1, xCenter+btn.Ax-ORG-1, yCenter-btn.Ay+ORG+0, 15);
+			drawLine(bitmap, xCenter+btn.Ax-ORG-1, yCenter-btn.Ay+ORG+1, xCenter+btn.Ax-ORG+0, yCenter-btn.Ay+ORG+1, 15);
 		} else {
-			drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+0, 15);
-			drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127-1, 15);
-			drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+0, 15);
-			drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127+1, 15);
+			drawLine(bitmap, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG+1, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG+0, 15);
+			drawLine(bitmap, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG-1, xCenter+btn.Cx-ORG+0, yCenter-btn.Cy+ORG-1, 15);
+			drawLine(bitmap, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG-1, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG+0, 15);
+			drawLine(bitmap, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG+1, xCenter+btn.Cx-ORG+0, yCenter-btn.Cy+ORG+1, 15);
 		}
 	}
 
@@ -130,8 +132,8 @@ void drawStickCalFast(unsigned char bitmap[],
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.ayRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.axUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.ayUnfiltered);
-		const int xCoord = btn.Ax - 127;
-		const int yCoord = btn.Ay - 127;
+		const int xCoord = btn.Ax - ORG;
+		const int yCoord = btn.Ay - ORG;
 		float xMelee;
 		float yMelee;
 		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
@@ -142,8 +144,8 @@ void drawStickCalFast(unsigned char bitmap[],
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.cyRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.cyUnfiltered);
-		const int xCoord = btn.Cx - 127;
-		const int yCoord = btn.Cy - 127;
+		const int xCoord = btn.Cx - ORG;
+		const int yCoord = btn.Cy - ORG;
 		float xMelee;
 		float yMelee;
 		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
@@ -209,10 +211,10 @@ void drawStickdbg(unsigned char bitmap[],
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
 		drawString(bitmap,  30, 260, 15, stickdbgAMap);
 		drawString(bitmap, 280, 260, 15, stickdbgCMap);
-		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
-		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
-		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
-		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
+		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - ORG);
+		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - ORG);
+		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - ORG);
+		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - ORG);
 	} else if(itemIndex == 1) {
 		//fit coefficients
 		drawString(bitmap,  30,  50, 15, stickdbgAXfit);
@@ -291,11 +293,11 @@ void drawStickdbgFast(unsigned char bitmap[],
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
 		eraseCharLine(bitmap, 280);
-		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - 127);
-		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - 127);
+		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - ORG);
+		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - ORG);
 		eraseCharLine(bitmap, 300);
-		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - 127);
-		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - 127);
+		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - ORG);
+		drawInt(bitmap,    280, 300, 15, 2, btn.Cy - ORG);
 	}
 }
 
@@ -1080,35 +1082,35 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawLine(bitmap, xCenter+  0, yCenter-100, xCenter-74, yCenter-74, 10);
 
 	//current left stick position
-	drawLine(bitmap, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127+3, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127-2, 15);
-	drawLine(bitmap, xCenter+btn.Ax-127+3, yCenter-btn.Ay+127-3, xCenter+btn.Ax-127-2, yCenter-btn.Ay+127-3, 15);
-	drawLine(bitmap, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127-3, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127+2, 15);
-	drawLine(bitmap, xCenter+btn.Ax-127-3, yCenter-btn.Ay+127+3, xCenter+btn.Ax-127+2, yCenter-btn.Ay+127+3, 15);
+	drawLine(bitmap, xCenter+btn.Ax-ORG+3, yCenter-btn.Ay+ORG+3, xCenter+btn.Ax-ORG+3, yCenter-btn.Ay+ORG-2, 15);
+	drawLine(bitmap, xCenter+btn.Ax-ORG+3, yCenter-btn.Ay+ORG-3, xCenter+btn.Ax-ORG-2, yCenter-btn.Ay+ORG-3, 15);
+	drawLine(bitmap, xCenter+btn.Ax-ORG-3, yCenter-btn.Ay+ORG-3, xCenter+btn.Ax-ORG-3, yCenter-btn.Ay+ORG+2, 15);
+	drawLine(bitmap, xCenter+btn.Ax-ORG-3, yCenter-btn.Ay+ORG+3, xCenter+btn.Ax-ORG+2, yCenter-btn.Ay+ORG+3, 15);
 
 	//current c-stick position
-	drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127+0, 15);
-	drawLine(bitmap, xCenter+btn.Cx-127+1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127-1, 15);
-	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127-1, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+0, 15);
-	drawLine(bitmap, xCenter+btn.Cx-127-1, yCenter-btn.Cy+127+1, xCenter+btn.Cx-127+0, yCenter-btn.Cy+127+1, 15);
+	drawLine(bitmap, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG+1, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG+0, 15);
+	drawLine(bitmap, xCenter+btn.Cx-ORG+1, yCenter-btn.Cy+ORG-1, xCenter+btn.Cx-ORG+0, yCenter-btn.Cy+ORG-1, 15);
+	drawLine(bitmap, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG-1, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG+0, 15);
+	drawLine(bitmap, xCenter+btn.Cx-ORG-1, yCenter-btn.Cy+ORG+1, xCenter+btn.Cx-ORG+0, yCenter-btn.Cy+ORG+1, 15);
 
 	//stick coordinates
 	eraseCharLine(bitmap, 340);
 	eraseCharLine(bitmap, 360);
 	//left stick
-	drawInt(bitmap,     20, 340, 15, 2, btn.Ax-127);
-	drawInt(bitmap,     20, 360, 15, 2, btn.Ay-127);
-	const int axCoord = btn.Ax - 127;
-	const int ayCoord = btn.Ay - 127;
+	drawInt(bitmap,     20, 340, 15, 2, btn.Ax-ORG);
+	drawInt(bitmap,     20, 360, 15, 2, btn.Ay-ORG);
+	const int axCoord = btn.Ax - ORG;
+	const int ayCoord = btn.Ay - ORG;
 	float axMelee;
 	float ayMelee;
 	meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
 	drawFloat(bitmap,  120, 340, 15, 0, 7, axMelee);
 	drawFloat(bitmap,  120, 360, 15, 0, 7, ayMelee);
 	//c-stick
-	drawInt(bitmap,    280, 340, 15, 2, btn.Cx-127);
-	drawInt(bitmap,    280, 360, 15, 2, btn.Cy-127);
-	const int cxCoord = btn.Cx - 127;
-	const int cyCoord = btn.Cy - 127;
+	drawInt(bitmap,    280, 340, 15, 2, btn.Cx-ORG);
+	drawInt(bitmap,    280, 360, 15, 2, btn.Cy-ORG);
+	const int cxCoord = btn.Cx - ORG;
+	const int cyCoord = btn.Cy - ORG;
 	float cxMelee;
 	float cyMelee;
 	meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
@@ -1220,10 +1222,10 @@ void drawXYScope(unsigned char bitmap[],
 
 		for (int i=0; i < 100; i++) {
 			const int index = (i + capture.startIndex) % 100;
-			const int x = capture.a1[index]-127;
-			const int y = capture.a2[index]-127;
-			const int ux = capture.a1Unfilt[index]-127;
-			const int uy = capture.a2Unfilt[index]-127;
+			const int x = capture.a1[index]-ORG;
+			const int y = capture.a2[index]-ORG;
+			const int ux = capture.a1Unfilt[index]-ORG;
+			const int uy = capture.a2Unfilt[index]-ORG;
 			if(i != capture.viewIndex) {
 				//unfiltered
 				drawLine(bitmap, xCenter+ux+0, yCenter-uy+0, xCenter+ux+0, yCenter-uy-0, 13);
@@ -1249,10 +1251,10 @@ void drawXYScope(unsigned char bitmap[],
 
 		//get values at the view index
 		const int index = (capture.viewIndex + capture.startIndex) % 100;
-		const int x = capture.a1[index]-127;
-		const int y = capture.a2[index]-127;
-		const int ux = capture.a1Unfilt[index]-127;
-		const int uy = capture.a2Unfilt[index]-127;
+		const int x = capture.a1[index]-ORG;
+		const int y = capture.a2[index]-ORG;
+		const int ux = capture.a1Unfilt[index]-ORG;
+		const int uy = capture.a2Unfilt[index]-ORG;
 		//unfiltered
 		drawInt(bitmap,     20, 340, 15, 2, ux);
 		drawInt(bitmap,     20, 360, 15, 2, uy);

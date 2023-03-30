@@ -6,6 +6,7 @@
 #include "hardware/pio.h"
 #include "joybus.pio.h"
 
+#define ORG 127
 
 /* PIOs are separate state machines for handling IOs with high timing precision. You load a program into them and they do their stuff on their own with deterministic timing,
    communicating with the main cores via FIFOs (and interrupts, if you want).
@@ -100,7 +101,7 @@ void __time_critical_func(enterMode)(const int dataPin,
         }
         else if (buffer[0] == 0x41) { // Origin (NOT 0x81)
             gpio_put(25, 1);
-            uint8_t originResponse[10] = { 0x00, 0x80, 127, 127, 127, 127, 0, 0, 0, 0 };
+            uint8_t originResponse[10] = { 0x00, 0x80, ORG, ORG, ORG, ORG, 0, 0, 0, 0 };
             // TODO The origin response sends centered values in this code excerpt. Consider whether that makes sense for your project (digital controllers -> yes)
             uint32_t result[6];
             int resultLen;
