@@ -414,11 +414,22 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 		nextMeasAngle += 2*M_PI;
 	}
 
-	float lowerCompressLimit = prevAngle + 0.7*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
-	float lowerStretchLimit  = nextAngle - 1.3*(nextMeasAngle-thisMeasAngle);//how far we can stretch when reducing the angle
-	float upperCompressLimit = nextAngle - 0.7*(nextMeasAngle-thisMeasAngle);//how far we can squish when increasing the angle
-	float upperStretchLimit  = prevAngle + 1.3*(thisMeasAngle-prevMeasAngle);//how far we can stretch when increasing the angle
+	float cmpAmt;
+	float strAmt;
+	if(isDiagonal) {
+		cmpAmt = 0.769;
+		strAmt = 1.3;
+	} else {
+		cmpAmt = 0.4;
+		strAmt = 2.5;
+	}
 
+	float lowerCompressLimit = prevAngle + cmpAmt*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
+	float lowerStretchLimit  = nextAngle - strAmt*(nextMeasAngle-thisMeasAngle);//how far we can stretch when reducing the angle
+	float upperCompressLimit = nextAngle - cmpAmt*(nextMeasAngle-thisMeasAngle);//how far we can squish when increasing the angle
+	float upperStretchLimit  = prevAngle + strAmt*(thisMeasAngle-prevMeasAngle);//how far we can stretch when increasing the angle
+
+	/*
 	//Now, in order to apply stretch leniency to angles within the deadzone,
 	// we need to figure out whether the previous angle or next angle was a cardinal.
 	//If the previous one is a cardinal AND the angle is in the deadzone, we make the upperstretchlimit bigger, only if it can't reach 0.3000.
@@ -432,6 +443,7 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
 		lowerStretchLimit = nextAngle - fmax(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
 	}
+	*/
 
 	float lowerDistortLimit  = fmax(lowerCompressLimit, lowerStretchLimit);
 	float upperDistortLimit  = fmin(upperCompressLimit, upperStretchLimit);
