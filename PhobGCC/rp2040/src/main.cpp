@@ -149,15 +149,15 @@ void second_core() {
 							_dataCapture.startIndex = 0;
 							_dataCapture.endIndex = 255;//when it triggers, we freeze startIndex and start counting up here
 							if(_dataCapture.captureStick == ASTICK) {
-								x0 = _btn.Ax;
-								y0 = _btn.Ay;
+								x0 = _raw.axUnfiltered;
+								y0 = _raw.ayUnfiltered;
 								_dataCapture.a1[_dataCapture.startIndex] = _btn.Ax;
 								_dataCapture.a2[_dataCapture.startIndex] = _btn.Ay;
 								_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
 								_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
 							} else {
-								x0 = _btn.Cx;
-								y0 = _btn.Cy;
+								x0 = _raw.cxUnfiltered;
+								y0 = _raw.cyUnfiltered;
 								_dataCapture.a1[_dataCapture.startIndex] = _btn.Cx;
 								_dataCapture.a2[_dataCapture.startIndex] = _btn.Cy;
 								_dataCapture.a1Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
@@ -178,8 +178,8 @@ void second_core() {
 									_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
 									//if it's not triggered, do nothing further
 									//if it's triggered, set endIndex to startIndex+1
-									int diffX = abs(int(_btn.Ax) - x0);
-									int diffY = abs(int(_btn.Ay) - y0);
+									int diffX = abs(int(_raw.axUnfiltered) - x0);
+									int diffY = abs(int(_raw.ayUnfiltered) - y0);
 									if(diffX > _dataCapture.stickThresh || diffY > _dataCapture.stickThresh) {
 										_dataCapture.endIndex = (_dataCapture.startIndex+1) % 100;
 									}
@@ -190,8 +190,8 @@ void second_core() {
 									_dataCapture.a2Unfilt[_dataCapture.startIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
 									//if it's not triggered, do nothing further
 									//if it's triggered, set endIndex to startIndex+1
-									int diffX = abs(int(_btn.Cx) - x0);
-									int diffY = abs(int(_btn.Cy) - y0);
+									int diffX = abs(int(_raw.cxUnfiltered) - x0);
+									int diffY = abs(int(_raw.cyUnfiltered) - y0);
 									if(diffX > _dataCapture.stickThresh || diffY > _dataCapture.stickThresh) {
 										_dataCapture.endIndex = (_dataCapture.startIndex+1) % 100;
 									}
