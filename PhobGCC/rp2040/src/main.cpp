@@ -498,13 +498,11 @@ void second_core() {
 						if(_dataCapture.captureStick == ASTICK) {
 							_dataCapture.a1[_dataCapture.endIndex] = _btn.La;
 							_dataCapture.a1Unfilt[_dataCapture.endIndex] = _hardware.La;
-							//                                                                 syxba                       lrz
-							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
+							_dataCapture.abxyszrl[_dataCapture.endIndex] = _btn.L;
 						} else {//if(_dataCapture.captureStick == CSTICK) {
 							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ra;
 							_dataCapture.a1Unfilt[_dataCapture.endIndex] = _hardware.Ra;
-							//                                                                 syxba                       lrz
-							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
+							_dataCapture.abxyszrl[_dataCapture.endIndex] = _btn.R;
 						}
 
 						//check for trigger condition
@@ -527,6 +525,9 @@ void second_core() {
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}
+
+						//advance to next index to record
+						_dataCapture.endIndex = (_dataCapture.endIndex+1) % 200;
 						break;
 					case CM_JUMP:
 						//not really needed?

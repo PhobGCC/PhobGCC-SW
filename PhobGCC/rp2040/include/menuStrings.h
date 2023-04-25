@@ -250,6 +250,13 @@ const char timescope3[]      = "Snapback";
 const char timescope4[]      = "Dashback";
 const char timescope5[]      = "Pivots";
 const char timescope6[]      = "Trigger";
+const char timescope7[]      = "Snap-";
+const char timescope8[]      = "Dash-";
+const char timescope9[]      = "back %";
+const char timescope10[]     = "Pivot";
+const char timescope11[]     = "Success %";
+const char timescope12[]     = "Length %";
+const char timescope13[]     = "ADT %:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";

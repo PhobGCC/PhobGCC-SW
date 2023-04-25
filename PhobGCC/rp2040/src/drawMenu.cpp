@@ -1305,7 +1305,7 @@ void drawTimeScope(unsigned char bitmap[],
 		if(capture.captureStick == ASTICK) {
 			drawString(bitmap, 50, 320, 15, "L");
 		} else {
-			drawString(bitmap, 60, 320, 15, "R");
+			drawString(bitmap, 50, 320, 15, "R");
 		}
 	}
 	
@@ -1333,14 +1333,14 @@ void drawTimeScope(unsigned char bitmap[],
 
 	//which sample point to view info of
 	drawString(bitmap, 290, 300, 15, xyscope3);
-	drawInt(bitmap, 310, 320, 15, 1, capture.viewIndex);
+	drawInt(bitmap, 300, 320, 15, 2, capture.viewIndex);
 	if(itemIndex == 2) {
 		drawString(bitmap, 280, 320, 15, arrowRight);
 	}
 
 	//% chance of success readout (TODO)
 
-	const int xCenter = 56;
+	const int xCenter = 5;
 	const int yCenter = 168;//starts at 40
 
 	//draw axes for the graph
@@ -1371,19 +1371,21 @@ void drawTimeScope(unsigned char bitmap[],
 			break;
 	}
 
-	int oldY = capture.a1[capture.startIndex % 200] - ORG;
-	
+	int oldY = capture.a1[capture.startIndex+1 % 200] - ORG;
+
 	//draw the actual graph
 	for (int i=0; i < 200; i++) {
-		const int index = (i + capture.startIndex) % 200;
-		const int y = capture.a1[index]-ORG;
+		const int index = (i + capture.startIndex+1) % 200;
+		const int zeroY = capture.a1[index];
+		const int y = zeroY-ORG;
 		const int uy = capture.a1Unfilt[index]-ORG;
+
+		//highlight trigger
 		if(capture.mode == CM_TRIG) {
-			if(capture.captureStick == ASTICK) {//                                                                      L
-				drawLine(bitmap, xCenter+i*2-1+0, yCenter+ORG+10, xCenter+i*2+0, yCenter+ORG+10, 8+7*(capture.abxyszrl[i] & 0b1000'0000));
-			} else {//                                                                                                   R
-				drawLine(bitmap, xCenter+i*2-1+0, yCenter+ORG+10, xCenter+i*2+0, yCenter+ORG+10, 8+7*(capture.abxyszrl[i] & 0b0100'0000));
-			}
+			drawLine(bitmap, xCenter+i*2-1, yCenter+10, xCenter+i*2, yCenter+10, 5+10*capture.abxyszrl[index]);
+		}
+		if(capture.mode == CM_TRIG && (zeroY >= 43)) {
+			drawLine(bitmap, xCenter+i*2-1, yCenter+ORG-43, xCenter+i*2, yCenter+ORG-43, 15);
 		}
 
 		//unfiltered

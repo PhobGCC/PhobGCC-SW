@@ -872,6 +872,7 @@ void navigateMenu(unsigned char bitmap[],
 				if(presses & DLPRESS) {
 					if(itemIndex != 0) {
 						itemIndex--;
+						capture.autoRepeat = 1;
 						redraw = 1;
 					}
 				} else if(presses & DRPRESS) {
@@ -879,6 +880,8 @@ void navigateMenu(unsigned char bitmap[],
 						itemIndex++;
 						if(itemIndex == 2) {
 							capture.autoRepeat = 0;
+						} else {
+							capture.autoRepeat = 1;
 						}
 						redraw = 1;
 					}
@@ -1004,9 +1007,11 @@ void navigateMenu(unsigned char bitmap[],
 					redraw = 1;
 				} else if(presses & SPRESS) {//this will be triggered by autorepeat
 					//if we're framestepping, redraw the title
-					eraseCharLine(bitmap, 20);
-					drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-					drawString(bitmap, 240,  20, 15, xyscope0);
+					if(itemIndex == 2) {
+						eraseCharLine(bitmap, 20);
+						drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+						drawString(bitmap, 240,  20, 15, xyscope0);
+					}
 					//set up recording
 					capture.begin = false;
 					capture.triggered = false;
