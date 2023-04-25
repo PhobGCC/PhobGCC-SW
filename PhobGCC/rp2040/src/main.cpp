@@ -283,6 +283,18 @@ void second_core() {
 
 						//stop if done
 						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
+							//calculate the dashback chance
+							int counter = 0;
+							for(int i = 0; i < 200; i++) {
+								if(fabs(_dataCapture.a1[(i+_dataCapture.startIndex+1) % 200]-_intOrigin) >= 23) {
+									if(fabs(_dataCapture.a1[(i+_dataCapture.startIndex+1) % 200]-_intOrigin) >= 64) {
+										break;
+									}
+									counter++;
+								}
+							}
+							_dataCapture.percents[0] = fmax(0, (1 - (counter/16.666667f))*100);
+							//clean up
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}
@@ -369,6 +381,28 @@ void second_core() {
 
 						//stop if done
 						if(_dataCapture.triggered && _dataCapture.startIndex == _dataCapture.endIndex) {
+							//calculate the percent chance the last input was +
+							_dataCapture.percents[0] = 0.0f;
+							//try each poll offset
+							for(int offset = 0; offset < 17; offset++) {
+								bool positive = false;
+								//poll at roughly 60 hz
+								for(int i = offset; i < 200; i += 17) {
+									int index = (i + _dataCapture.startIndex+1) % 200;
+									int data = _dataCapture.a1[index] - _intOrigin;
+									//see if the data would exceed the deadzone in either direction
+									//the last excursion out counts as having turned that way
+									if(data >= 23) {
+										positive = true;
+									} else if(data <= -23) {
+										positive = false;
+									}
+								}
+								if(positive) {
+									_dataCapture.percents[0] += 100/17.0f;
+								}
+							}
+							//clean up
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}

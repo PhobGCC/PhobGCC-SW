@@ -1410,9 +1410,32 @@ void drawTimeScope(unsigned char bitmap[],
 		oldY = y;
 	}
 
+	//draw percent success rates
+	switch(capture.mode) {
+		case CM_STICK_FALL:
+			drawString(bitmap, 410,  80, 15, timescope9);
+			drawFloat(bitmap,  410, 110, 15, 2, 6, capture.percents[0]);
+			drawString(bitmap, 410, 210, 15, timescope10);
+			drawFloat(bitmap,  410, 240, 15, 2, 6, fmax(0, 100-capture.percents[0]));
+			break;
+		case CM_STICK_RISE:
+			drawString(bitmap, 410,  80, 15, timescope11);
+			drawString(bitmap, 410, 100, 15, timescope12);
+			drawFloat(bitmap,  410, 130, 15, 2, 4, capture.percents[0]);
+			break;
+		case CM_STICK_PIVOT:
+			//drawString(bitmap, 410,  50, 15, timescope5);
+			break;
+		case CM_TRIG:
+			//drawString(bitmap, 410,  50, 15, timescope6);
+			break;
+		default:
+			break;
+	}
+
 	//coordinate view
-	drawString(bitmap,  30, 350, 15, timescope14);
-	drawString(bitmap, 280, 350, 15, timescope15);
+	drawString(bitmap,  30, 350, 15, timescope7);
+	drawString(bitmap, 280, 350, 15, timescope8);
 
 	//get values at the view index
 	const int index = (capture.viewIndex + capture.startIndex+1) % 200;
