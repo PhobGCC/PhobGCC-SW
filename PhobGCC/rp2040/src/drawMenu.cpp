@@ -560,80 +560,80 @@ void drawSet_over(unsigned char bitmap[],
 	drawString(bitmap, 150,  70, 15, "CY SB:");
 	drawString(bitmap, 150,  90, 15, "CX WS:");
 	drawString(bitmap, 150, 110, 15, "CY WS:");
-	drawString(bitmap, 150, 130, 15, "CX OF:");
-	drawString(bitmap, 150, 150, 15, "CY OF:");
+	drawString(bitmap, 150, 130, 15, "A SNP:");
+	drawString(bitmap, 150, 150, 15, "A SCA:");
 	drawInt(bitmap,    210,  50, 15, 2, controls.cxSmoothing);
 	drawInt(bitmap,    210,  70, 15, 2, controls.cySmoothing);
 	drawInt(bitmap,    210,  90, 15, 2, controls.cxWaveshaping);
 	drawInt(bitmap,    210, 110, 15, 2, controls.cyWaveshaping);
-	drawInt(bitmap,    210, 130, 15, 2, controls.cXOffset);
-	drawInt(bitmap,    210, 150, 15, 2, controls.cYOffset);
+	drawInt(bitmap,    210, 130, 15, 2, controls.astickCardinalSnapping);
+	drawInt(bitmap,    210, 150, 15, 2, controls.astickAnalogScaler);
 	drawString(bitmap, 280,  50, 15, "L Mode:");
 	drawString(bitmap, 280,  70, 15, "R Mode:");
 	drawString(bitmap, 280,  90, 15, "L Val:");
 	drawString(bitmap, 280, 110, 15, "R Val:");
-	drawString(bitmap, 280, 130, 15, "L WS:");
-	drawString(bitmap, 280, 150, 15, "L WS:");
+	drawString(bitmap, 280, 130, 15, "C SNP:");
+	drawString(bitmap, 280, 150, 15, "C SCA:");
 	drawInt(bitmap,    350,  50, 15, 2, controls.lConfig+1);
 	drawInt(bitmap,    350,  70, 15, 2, controls.rConfig+1);
 	drawInt(bitmap,    350,  90, 15, 2, controls.lTriggerOffset);
 	drawInt(bitmap,    350, 110, 15, 2, controls.rTriggerOffset);
-	drawInt(bitmap,    350, 130, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawInt(bitmap,    350, 150, 15, 2, -1);//controls.rTriggerWaveshaping);
-	drawString(bitmap,  30, 170, 15, "Rumble:");
-	drawInt(bitmap,    110, 170, 15, 1, controls.rumble);
+	drawInt(bitmap,    350, 130, 15, 2, controls.cstickCardinalSnapping);
+	drawInt(bitmap,    350, 150, 15, 2, controls.cstickAnalogScaler);
+	drawString(bitmap,  30, 210, 15, "Rumble:");
+	drawInt(bitmap,    110, 210, 15, 1, controls.rumble);
 	if(controls.autoInit) {
-		drawString(bitmap, 30, 190, 15, set_overAutoOn);
+		drawString(bitmap, 30, 230, 15, set_overAutoOn);
 	} else {
-		drawString(bitmap, 30, 190, 15, set_overAutoOff);
+		drawString(bitmap, 30, 230, 15, set_overAutoOff);
 	}
 	switch(controls.jumpConfig) {
 		case DEFAULTJUMP:
-			drawString(bitmap, 30, 210, 15, set_overJumpDf);
+			drawString(bitmap, 30, 250, 15, set_overJumpDf);
 			break;
 		case SWAP_XZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpXZ);
+			drawString(bitmap, 30, 250, 15, set_overJumpXZ);
 			break;
 		case SWAP_YZ:
-			drawString(bitmap, 30, 210, 15, set_overJumpYZ);
+			drawString(bitmap, 30, 250, 15, set_overJumpYZ);
 			break;
 		case SWAP_XL:
-			drawString(bitmap, 30, 210, 15, set_overJumpXL);
+			drawString(bitmap, 30, 250, 15, set_overJumpXL);
 			break;
 		case SWAP_XR:
-			drawString(bitmap, 30, 210, 15, set_overJumpXR);
+			drawString(bitmap, 30, 250, 15, set_overJumpXR);
 			break;
 		case SWAP_YL:
-			drawString(bitmap, 30, 210, 15, set_overJumpYL);
+			drawString(bitmap, 30, 250, 15, set_overJumpYL);
 			break;
 		case SWAP_YR:
-			drawString(bitmap, 30, 210, 15, set_overJumpYR);
+			drawString(bitmap, 30, 250, 15, set_overJumpYR);
 			break;
 		default:
-			drawString(bitmap, 30, 210, 15, set_overJumpBr);
+			drawString(bitmap, 30, 250, 15, set_overJumpBr);
 			break;
 	}
 	switch(controls.tournamentToggle) {
 		case 0:
-			drawString(bitmap, 30, 230, 15, tourn0);
+			drawString(bitmap, 30, 270, 15, tourn0);
 			break;
 		case 1:
-			drawString(bitmap, 30, 230, 15, tourn1);
+			drawString(bitmap, 30, 270, 15, tourn1);
 			break;
 		case 2:
-			drawString(bitmap, 30, 230, 15, tourn2);
+			drawString(bitmap, 30, 270, 15, tourn2);
 			break;
 		case 3:
-			drawString(bitmap, 30, 230, 15, tourn3);
+			drawString(bitmap, 30, 270, 15, tourn3);
 			break;
 		case 4:
-			drawString(bitmap, 30, 230, 15, tourn4);
+			drawString(bitmap, 30, 270, 15, tourn4);
 			break;
 		case 5:
-			drawString(bitmap, 30, 230, 15, tourn5);
+			drawString(bitmap, 30, 270, 15, tourn5);
 			break;
 		default:
-			drawString(bitmap, 30, 230, 15, tournBr);
+			drawString(bitmap, 30, 270, 15, tournBr);
 			break;
 	}
 }
@@ -1415,26 +1415,38 @@ void drawTimeScope(unsigned char bitmap[],
 		case CM_STICK_FALL:
 			drawString(bitmap, 410,  80, 15, timescope9);
 			drawFloat(bitmap,  410, 110, 15, 2, 6, capture.percents[0]);
+			drawString(bitmap, 470, 110, 15, "%");
 			drawString(bitmap, 410, 210, 15, timescope10);
 			drawFloat(bitmap,  410, 240, 15, 2, 6, fmax(0, 100-capture.percents[0]));
+			drawString(bitmap, 470, 240, 15, "%");
 			break;
 		case CM_STICK_RISE:
 			drawString(bitmap, 410,  80, 15, timescope11);
-			drawString(bitmap, 410, 100, 15, timescope12);
-			drawFloat(bitmap,  410, 130, 15, 2, 4, capture.percents[0]);
+			drawFloat(bitmap,  410, 110, 15, 2, 4, capture.percents[0]);
+			drawString(bitmap, 450, 110, 15, "%");
 			break;
 		case CM_STICK_PIVOT:
-			drawString(bitmap, 410,  80, 15, timescope15);
+			drawString(bitmap, 410,  80, 15, timescope14);
 			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
-			drawString(bitmap, 410, 140, 15, timescope13);
-			drawString(bitmap, 410, 160, 15, timescope14);
+			drawString(bitmap, 450, 110, 15, "%");
+			drawString(bitmap, 410, 140, 15, timescope12);
+			drawString(bitmap, 410, 160, 15, timescope13);
 			drawFloat(bitmap,  410, 190, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 190, 15, "%");
 			drawString(bitmap, 410, 220, 15, timescope11);
-			drawString(bitmap, 410, 240, 15, timescope12);
-			drawFloat(bitmap,  410, 270, 15, 2, 4, round(capture.percents[2]));
+			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 250, 15, "%");
 			break;
 		case CM_TRIG:
-			//drawString(bitmap, 410,  80, 15, timescope6);
+			drawString(bitmap, 410,  80, 15, timescope15);
+			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 450, 110, 15, "%");
+			drawString(bitmap, 410, 150, 15, timescope16);
+			drawFloat(bitmap,  410, 180, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 180, 15, "%");
+			drawString(bitmap, 410, 220, 15, timescope17);
+			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 250, 15, "%");
 			break;
 		default:
 			break;

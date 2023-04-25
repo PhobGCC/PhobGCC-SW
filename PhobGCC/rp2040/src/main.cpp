@@ -294,6 +294,7 @@ void second_core() {
 								}
 							}
 							_dataCapture.percents[0] = fmax(0, (1 - (counter/16.666667f))*100);
+
 							//clean up
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
@@ -402,6 +403,7 @@ void second_core() {
 									_dataCapture.percents[0] += 100/17.0f;
 								}
 							}
+
 							//clean up
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
@@ -527,6 +529,8 @@ void second_core() {
 							_dataCapture.percents[1] = 100*fmax(0, fmin(2-frames, frames));
 							//turn
 							_dataCapture.percents[2] = 100*fmax(0, fmin(1, frames-1));
+
+							//clean up
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}
@@ -575,6 +579,26 @@ void second_core() {
 
 						//stop if done
 						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
+							//calculate pivot success rate
+							int counter = 0;
+							for(int i = 0; i < 200; i++) {
+								const int index = (i + _dataCapture.startIndex+1) % 200;
+								const int analog = _dataCapture.a1[index];
+								const int digital = _dataCapture.abxyszrl[index];
+								if(digital) {
+									break;//if digital is active on the same ms as analog or before, we're good
+								}
+								if(analog >= 43) {
+									counter++;
+								}
+							}
+							const float frames = counter/16.6666666667f;
+							//digital only powershield
+							_dataCapture.percents[0] = 100*fmax(0, 1-frames);
+							//adt powershield
+							_dataCapture.percents[1] = 100*fmax(0, fmin(2-frames, frames));
+							//no powershield
+							_dataCapture.percents[2] = 100*fmax(0, fmin(1, frames-1));
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}
