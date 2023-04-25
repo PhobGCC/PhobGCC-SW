@@ -414,10 +414,20 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 		nextMeasAngle += 2*M_PI;
 	}
 
-	float lowerCompressLimit = prevAngle + 0.7*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
-	float lowerStretchLimit  = nextAngle - 1.3*(nextMeasAngle-thisMeasAngle);//how far we can stretch when reducing the angle
-	float upperCompressLimit = nextAngle - 0.7*(nextMeasAngle-thisMeasAngle);//how far we can squish when increasing the angle
-	float upperStretchLimit  = prevAngle + 1.3*(thisMeasAngle-prevMeasAngle);//how far we can stretch when increasing the angle
+	float cmpAmt;
+	float strAmt;
+	if(isDiagonal) {//tighter bounds for diagonals
+		cmpAmt = 0.769;
+		strAmt = 1.3;
+	} else {//wider bounds for modder notches
+		cmpAmt = 0.666;
+		strAmt = 1.5;
+	}
+
+	float lowerCompressLimit = prevAngle + cmpAmt*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
+	float lowerStretchLimit  = nextAngle - strAmt*(nextMeasAngle-thisMeasAngle);//how far we can stretch when reducing the angle
+	float upperCompressLimit = nextAngle - cmpAmt*(nextMeasAngle-thisMeasAngle);//how far we can squish when increasing the angle
+	float upperStretchLimit  = prevAngle + strAmt*(thisMeasAngle-prevMeasAngle);//how far we can stretch when increasing the angle
 
 	//Now, in order to apply stretch leniency to angles within the deadzone,
 	// we need to figure out whether the previous angle or next angle was a cardinal.
@@ -426,11 +436,11 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
 	const float deadzonePlus  = 0.3000/0.9500;//radians; we want to make sure the adjustment can make it here
 	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
-		upperStretchLimit = prevAngle + fmax(1.3*(thisMeasAngle-prevMeasAngle), deadzonePlus);
+		upperStretchLimit = prevAngle + fmax(strAmt*(thisMeasAngle-prevMeasAngle), deadzonePlus);
 	}
 	//If the next one is a cardinal AND the angle is in the deadzone, we make the lowerstretchlimit smaller.
 	if(nextIndex % 4 == 0 && !isDiagonal && (nextMeasAngle-thisMeasAngle) > minThreshold && (nextMeasAngle-thisMeasAngle) < deadzoneLimit){
-		lowerStretchLimit = nextAngle - fmax(1.3*(nextMeasAngle-thisMeasAngle), deadzonePlus);
+		lowerStretchLimit = nextAngle - fmax(strAmt*(nextMeasAngle-thisMeasAngle), deadzonePlus);
 	}
 
 	float lowerDistortLimit  = fmax(lowerCompressLimit, lowerStretchLimit);
