@@ -388,8 +388,8 @@ void second_core() {
 								bool positive = false;
 								//poll at roughly 60 hz
 								for(int i = offset; i < 200; i += 17) {
-									int index = (i + _dataCapture.startIndex+1) % 200;
-									int data = _dataCapture.a1[index] - _intOrigin;
+									const int index = (i + _dataCapture.startIndex+1) % 200;
+									const int data = _dataCapture.a1[index] - _intOrigin;
 									//see if the data would exceed the deadzone in either direction
 									//the last excursion out counts as having turned that way
 									if(data >= 23) {
@@ -508,6 +508,25 @@ void second_core() {
 
 						//stop if done
 						if(_dataCapture.triggered && _dataCapture.startIndex == _dataCapture.endIndex) {
+							//calculate pivot success rate
+							int counter = 0;
+							for(int i = 0; i < 200; i++) {
+								const int index = (i + _dataCapture.startIndex+1) % 200;
+								const int data = (_dataCapture.a1[index] - _intOrigin) * (negativePivot ? -1 : 1);
+								if(data > 80) {
+									counter++;
+								}
+								if(counter > 0 && data < 80) {
+									break;
+								}
+							}
+							const float frames = counter/16.6666666667f;
+							//no turn
+							_dataCapture.percents[0] = 100*fmax(0, 1-frames);
+							//empty pivot
+							_dataCapture.percents[1] = 100*fmax(0, fmin(2-frames, frames));
+							//turn
+							_dataCapture.percents[2] = 100*fmax(0, fmin(1, frames-1));
 							_dataCapture.done = true;
 							_pleaseCommit = 255;//end capture and display
 						}

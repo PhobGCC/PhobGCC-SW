@@ -1424,10 +1424,17 @@ void drawTimeScope(unsigned char bitmap[],
 			drawFloat(bitmap,  410, 130, 15, 2, 4, capture.percents[0]);
 			break;
 		case CM_STICK_PIVOT:
-			//drawString(bitmap, 410,  50, 15, timescope5);
+			drawString(bitmap, 410,  80, 15, timescope15);
+			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 410, 140, 15, timescope13);
+			drawString(bitmap, 410, 160, 15, timescope14);
+			drawFloat(bitmap,  410, 190, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 410, 220, 15, timescope11);
+			drawString(bitmap, 410, 240, 15, timescope12);
+			drawFloat(bitmap,  410, 270, 15, 2, 4, round(capture.percents[2]));
 			break;
 		case CM_TRIG:
-			//drawString(bitmap, 410,  50, 15, timescope6);
+			//drawString(bitmap, 410,  80, 15, timescope6);
 			break;
 		default:
 			break;
