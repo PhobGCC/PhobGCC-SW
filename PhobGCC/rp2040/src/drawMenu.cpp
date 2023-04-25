@@ -1410,34 +1410,19 @@ void drawTimeScope(unsigned char bitmap[],
 		oldY = y;
 	}
 
-	/*
 	//coordinate view
-	drawString(bitmap,  30, 300, 15, xyscope6);
-	drawString(bitmap,  30, 320, 15, inputview4);//reused
+	drawString(bitmap,  30, 350, 15, timescope14);
+	drawString(bitmap, 280, 350, 15, timescope15);
 
 	//get values at the view index
-	const int index = (capture.viewIndex + capture.startIndex) % 100;
-	const int x = capture.a1[index]-ORG;
-	const int y = capture.a2[index]-ORG;
-	const int ux = capture.a1Unfilt[index]-ORG;
-	const int uy = capture.a2Unfilt[index]-ORG;
-	//unfiltered
-	drawInt(bitmap,     20, 340, 15, 2, ux);
-	drawInt(bitmap,     20, 360, 15, 2, uy);
-	float uxMelee;
-	float uyMelee;
-	meleeCoordClamp(ux, uy, uxMelee, uyMelee);
-	drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
-	drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
+	const int index = (capture.viewIndex + capture.startIndex+1) % 200;
+	const int origin = (capture.mode == CM_TRIG) ? 0 : ORG;
+	const int y = capture.a1[index]-origin;
+	const int uy = capture.a1Unfilt[index]-origin;
 	//filtered
-	drawInt(bitmap,    280, 340, 15, 2, x);
-	drawInt(bitmap,    280, 360, 15, 2, y);
-	float xMelee;
-	float yMelee;
-	meleeCoordClamp(x, y, xMelee, yMelee);
-	drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
-	drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
-	*/
+	drawInt(bitmap,    140, 350, 15, 2, y);
+	//unfiltered
+	drawInt(bitmap,    410, 350, 15, 2, uy);
 }
 
 void drawPressSlice(unsigned char bitmap[],
