@@ -117,6 +117,11 @@ void second_core() {
 				pwm_set_gpio_level(_pinBrake, 255);
 			} else if(_pleaseCommit == 9) {
 				switch(_dataCapture.mode) {
+					//make sure that we can write 200 things in a1 (clobbering a2) for longer recording
+					//this is used for single-axis recording
+					static_assert(&_dataCapture.a1[100] == &_dataCapture.a2[0]);
+					static_assert(&_dataCapture.a1Unfilt[100] == &_dataCapture.a2Unfilt[0]);
+
 					case CM_REACTION:
 						//this expects that you initialize data capture by setting delay to 0
 						_dataCapture.delay++;
@@ -132,16 +137,12 @@ void second_core() {
 							_pleaseCommit = 255;//end capture and display
 						}
 						break;
-					case CM_STICK_RISING:
+					case CM_STICK_RISE:
 						//this begins capturing data immediately in a rolling buffer,
-						//and on detecting a rising edge it sets the start point 20 ms in the past
+						//and on detecting a rising edge it begins recording
 						//this records the starting point only the first time, then it sets begin
 						static int x0;
 						static int y0;
-
-						//make sure that we can write 200 things in a1 (clobbering a2) for longer recording
-						static_assert(&_dataCapture.a1[100] == &_dataCapture.a2[0]);
-						static_assert(&_dataCapture.a1Unfilt[100] == &_dataCapture.a2Unfilt[0]);
 
 						if(!_dataCapture.begin && !_dataCapture.done) {
 							_dataCapture.begin = true;
@@ -223,23 +224,247 @@ void second_core() {
 							}
 						}
 						break;
-					case CM_STICK_FALLING:
+					case CM_STICK_FALL:
 						//single-axis
 						//based on the raw unfiltered values falling from >70 to 0 in <30 ms
 						//it should record for 150 ms after detection (saving 50 from before detection)
+
+						//prep
+						//expect data to be prepped already
+						//begin = false
+						//triggered = false
+						//done = false
+						//startIndex = 0
+						//endIndex = 0
+
+						//record data continuously if not done
+						//actually, if it's done, it should never reach this
+						if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ax;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ay;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cx;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+						} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cy;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+						}
+
+						//check for initial waiting state
+						//in this case, we want the stick's raw value to be >=80
+						if(!_dataCapture.begin && !_dataCapture.triggered && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.axUnfiltered) >= 80) {
+									_dataCapture.begin = true;
+								}
+							} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+								if(fabs(_raw.ayUnfiltered) >= 80) {
+									_dataCapture.begin = true;
+								}
+							} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.cxUnfiltered) >= 80) {
+									_dataCapture.begin = true;
+								}
+							} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+								if(fabs(_raw.cyUnfiltered) >= 80) {
+									_dataCapture.begin = true;
+								}
+							}
+						}
+
+						//check for secondary trigger state
+						//if the trigger has now dropped to less than 23 (in the deadzone)
+						if(_dataCapture.begin && !_dataCapture.triggered && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.axUnfiltered) < 23) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+								if(fabs(_raw.ayUnfiltered) < 23) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.cxUnfiltered) < 23) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+								if(fabs(_raw.cyUnfiltered) < 23) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							}
+						}
+
+						//stop if done
+						if(_dataCapture.triggered && _dataCapture.startIndex == _dataCapture.endIndex) {
+							_dataCapture.done = true;
+							_pleaseCommit = 255;//end capture and display
+						}
+
+						//advance to next index to record
+						_dataCapture.endIndex = (_dataCapture.endIndex+1) % 200;
 						break;
 					case CM_STICK_PIVOT:
 						//single-axis
-						//based on the raw unfiltered values going from 64 to the opposite 64 in <50 ms
+						//Begins waiting when you input >=64 in one direction.
+						//Starts recording when it detects >=64 in the other direction.
 						//it should record for 150 ms after detection (saving 50 from before detection)
+
+						//prep
+						//expect data to be prepped already
+						//begin = false
+						//triggered = false
+						//done = false
+						//startIndex = 0
+						//endIndex = 0
+						static bool negativePivot = false;
+
+						//record data continuously if not done
+						//actually, if it's done, it should never reach this
+						if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ax;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ay;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cx;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+						} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cy;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+						}
+
+						//check for initial waiting state
+						//in this case, we want the stick's raw value to be >=80 (dash threshold)
+						//also record which side
+						if(!_dataCapture.begin && !_dataCapture.triggered && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+								if(_btn.Ax - _intOrigin >= 80) {
+									_dataCapture.begin = true;
+									negativePivot = true;
+								} else if(_btn.Ax - _intOrigin <= -80) {
+									_dataCapture.begin = true;
+									negativePivot = false;
+								}
+							} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+								if(_btn.Ay - _intOrigin >= 80) {
+									_dataCapture.begin = true;
+									negativePivot = true;
+								} else if(_btn.Ay - _intOrigin <= -80) {
+									_dataCapture.begin = true;
+									negativePivot = false;
+								}
+							} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+								if(_btn.Cx - _intOrigin >= 80) {
+									_dataCapture.begin = true;
+									negativePivot = true;
+								} else if(_btn.Cx - _intOrigin <= -80) {
+									_dataCapture.begin = true;
+									negativePivot = false;
+								}
+							} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+								if(_btn.Cy - _intOrigin >= 80) {
+									_dataCapture.begin = true;
+									negativePivot = true;
+								} else if(_btn.Cy - _intOrigin <= -80) {
+									_dataCapture.begin = true;
+									negativePivot = false;
+								}
+							}
+						}
+
+						//check for secondary trigger state
+						//if the trigger has now crossed to the opposite dash threshold
+						if(_dataCapture.begin && !_dataCapture.triggered && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+								if((_btn.Ax - _intOrigin) * (negativePivot ? -1 : 1) >= 80) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+								if((_btn.Ay - _intOrigin) * (negativePivot ? -1 : 1) >= 80) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+								if((_btn.Cx - _intOrigin) * (negativePivot ? -1 : 1) >= 80) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+								if((_btn.Cy - _intOrigin) * (negativePivot ? -1 : 1) >= 80) {
+									_dataCapture.triggered = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							}
+						}
+
+						//stop if done
+						if(_dataCapture.triggered && _dataCapture.startIndex == _dataCapture.endIndex) {
+							_dataCapture.done = true;
+							_pleaseCommit = 255;//end capture and display
+						}
+
+						//advance to next index to record
+						_dataCapture.endIndex = (_dataCapture.endIndex+1) % 200;
 						break;
 					case CM_TRIG:
 						//single trigger
-						//based on the raw unfiltered values rising past 15
+						//based on the filtered values >=43, or digital being pressed
 						//it should record for 150 ms after detection (saving 50 from before detection)
+
+						//prep
+						//expect data to be prepped already
+						//begin = false
+						//done = false
+						//startIndex = 0
+						//endIndex = 0
+
+						//record data continuously if not done
+						//actually, if it's done, it should never reach this
+						if(_dataCapture.captureStick == ASTICK) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.La;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = _hardware.La;
+							//                                                                 syxba                       lrz
+							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
+						} else {//if(_dataCapture.captureStick == CSTICK) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ra;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = _hardware.Ra;
+							//                                                                 syxba                       lrz
+							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
+						}
+
+						//check for trigger condition
+						if(!_dataCapture.begin && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK) {
+								if(_btn.La >= 43 || _btn.L) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else { //if(_dataCapture.captureStick == CSTICK)
+								if(_btn.Ra >= 43 || _btn.R) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							}
+						}
+
+						//stop if done
+						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
+							_dataCapture.done = true;
+							_pleaseCommit = 255;//end capture and display
+						}
 						break;
 					case CM_JUMP:
-						//
+						//not really needed?
+						//button timing (CM_PRESS) takes care of it really
 						break;
 					case CM_PRESS:
 						if(!_dataCapture.begin && !_dataCapture.done) {
@@ -258,6 +483,7 @@ void second_core() {
 							}
 						}
 						if(_dataCapture.begin && !_dataCapture.done) {
+							//                                                                 syxba                       lrz
 							_dataCapture.abxyszrl[_dataCapture.endIndex] = (_btn.arr[0] & 0b00001111) | ((_btn.arr[1] & 0b01110000) << 1);
 							_dataCapture.axaycxcyrl[_dataCapture.endIndex] =
 								(0b0000'0001 * (abs(int(_btn.Ax)-127) >= _dataCapture.stickThresh)) |

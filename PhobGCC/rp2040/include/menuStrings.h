@@ -234,11 +234,21 @@ const char leftright0[]      = "Left Stick";
 const char leftright1[]      = "Right Stick";
 const char xyscope3[]        = "Highlight Sample #:";
 const char xyscope4[]        = "Pressed Buttons:";
-const char xyscope5[]        = "Press A to Record";
+const char xyscope5[]        = "Press Start to Record";
 const char xyscope6[]        = "Unfilt    Melee           Filtered  Melee";
 /*
 const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
 */
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char timescope0[]      = "Move stick or trigger to record.";
+//Guide relative to offset   =  10  50   100  150
+const char timescope1[]      = "Stick axis/trigger:";
+const char timescope2[]      = "What to measure:";
+const char timescope3[]      = "Snapback";
+const char timescope4[]      = "Dashback";
+const char timescope5[]      = "Pivots";
+const char timescope6[]      = "Trigger";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";

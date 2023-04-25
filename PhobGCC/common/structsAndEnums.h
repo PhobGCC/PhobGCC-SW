@@ -280,8 +280,8 @@ struct StickParams{
 enum CaptureMode{
 	CM_NULL,//do nothing
 	CM_REACTION,//record immediately
-	CM_STICK_RISING,//starting when a stick coord exceeds a threshold distance from center
-	CM_STICK_FALLING,//starting when a stick coord falls below a threshold
+	CM_STICK_RISE,//starting when a stick coord exceeds a threshold distance from center
+	CM_STICK_FALL,//starting when a stick coord falls below a threshold
 	CM_STICK_PIVOT,//starting when a stick coord falls below a threshold
 	CM_TRIG,//increasing threshold on triggers
 	CM_JUMP,//x, y, or melee tap jump threshold
@@ -308,6 +308,7 @@ struct DataCapture{
 	uint8_t stickmap;//which stickmap to display
 	GraphVar graphVar;//which variable to graph
 	bool begin;
+	bool triggered;
 	bool done;
 	bool autoRepeat;
 	uint32_t delay;//for recording reaction time

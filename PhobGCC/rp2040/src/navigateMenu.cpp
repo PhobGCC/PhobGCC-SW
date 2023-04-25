@@ -838,13 +838,165 @@ void navigateMenu(unsigned char bitmap[],
 						capture.viewIndex = fmin(99, capture.viewIndex+1);
 					}
 					redraw = 1;
-				} else if(presses & APRESS && capture.done == true) {
+				} else if(presses & SPRESS && capture.done == true) {
 					//tell the user it's recording
 					drawString(bitmap, 280, 250, 15, xyscope0);
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
-					capture.mode = CM_STICK_RISING;
+					capture.mode = CM_STICK_RISE;
+					//then trigger the recording
+					pleaseCommit = 9;
+				}
+				return;
+			case MENU_TIMESCOPE://value vs time plot
+				if(!changeMade) {
+					capture.captureStick = ASTICK;//if triggers, then ASTICK is L, CSTICK is R
+					capture.whichAxis = XAXIS;
+					tempInt1 = 0;//capture stick + axis together, or triggers
+					capture.mode = CM_STICK_FALL;//snapback (default)
+					tempInt2 = 0;//snapback/dashback/pivot (only available for sticks)
+					capture.viewIndex = 0;
+					changeMade = true;
+					capture.autoRepeat = 1;//this will always be retriggered automatically
+				}
+				if(presses & DUPRESS) {
+					if(itemIndex != 0) {
+						itemIndex--;
+						redraw = 1;
+					}
+				} else if(presses & DDPRESS) {
+					if(itemIndex < 2) {
+						itemIndex++;
+						redraw = 1;
+					}
+				} else if(presses & DLPRESS) {
+					if(itemIndex == 0) {
+						tempInt1 = (tempInt1 == 0) ? 0 : tempInt1-1;
+						switch(tempInt1) {
+							case 0:
+								capture.captureStick = ASTICK;
+								capture.whichAxis = XAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 1:
+								capture.captureStick = ASTICK;
+								capture.whichAxis = YAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 2:
+								capture.captureStick = CSTICK;
+								capture.whichAxis = XAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 3:
+								capture.captureStick = CSTICK;
+								capture.whichAxis = YAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 4:
+								capture.captureStick = ASTICK;
+								capture.mode = CM_TRIG;
+								break;
+							case 5:
+								capture.captureStick = CSTICK;
+								capture.mode = CM_TRIG;
+								break;
+						}
+						//every time we change capture params, we need to re-set-up recording just to be sure.
+						//set up recording
+						capture.begin = false;
+						capture.triggered = false;
+						capture.done = false;
+						capture.startIndex = 0;
+						capture.endIndex = 0;
+						//then trigger the recording
+						pleaseCommit = 9;
+					} else if(itemIndex == 1) {
+						if(tempInt1 < 4 && tempInt2 > 0) {//only applies when the sticks are selected
+							tempInt2--;
+							capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+						}
+						//every time we change capture params, we need to re-set-up recording just to be sure.
+						//set up recording
+						capture.begin = false;
+						capture.triggered = false;
+						capture.done = false;
+						capture.startIndex = 0;
+						capture.endIndex = 0;
+						//then trigger the recording
+						pleaseCommit = 9;
+					} else {
+						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
+					}
+					redraw = 1;
+				} else if(presses & DRPRESS) {
+					if(itemIndex == 0) {
+						tempInt1 = fmin(5, tempInt1+1);
+						switch(tempInt1) {
+							case 0:
+								capture.captureStick = ASTICK;
+								capture.whichAxis = XAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 1:
+								capture.captureStick = ASTICK;
+								capture.whichAxis = YAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 2:
+								capture.captureStick = CSTICK;
+								capture.whichAxis = XAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 3:
+								capture.captureStick = CSTICK;
+								capture.whichAxis = YAXIS;
+								capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+								break;
+							case 4:
+								capture.captureStick = ASTICK;
+								capture.mode = CM_TRIG;
+								break;
+							case 5:
+								capture.captureStick = CSTICK;
+								capture.mode = CM_TRIG;
+								break;
+						}
+						//every time we change capture params, we need to re-set-up recording just to be sure.
+						//set up recording
+						capture.begin = false;
+						capture.triggered = false;
+						capture.done = false;
+						capture.startIndex = 0;
+						capture.endIndex = 0;
+						//then trigger the recording
+						pleaseCommit = 9;
+					} else if(itemIndex == 1) {
+						if(tempInt1 < 4 && tempInt2 < 2) {//only applies when the sticks are selected
+							tempInt2++;
+							capture.mode = (tempInt2 == 0) ? CM_STICK_FALL : (tempInt2 == 1) ? CM_STICK_RISE : CM_STICK_PIVOT;
+						}
+						//every time we change capture params, we need to re-set-up recording just to be sure.
+						//set up recording
+						capture.begin = false;
+						capture.triggered = false;
+						capture.done = false;
+						capture.startIndex = 0;
+						capture.endIndex = 0;
+						//then trigger the recording
+						pleaseCommit = 9;
+					} else {
+						capture.viewIndex = fmin(199, capture.viewIndex+1);
+					}
+					redraw = 1;
+				} else if(presses & SPRESS) {//this will be triggered by autorepeat
+					//set up recording
+					capture.begin = false;
+					capture.triggered = false;
+					capture.done = false;
+					capture.startIndex = 0;
+					capture.endIndex = 0;
 					//then trigger the recording
 					pleaseCommit = 9;
 				}
@@ -880,7 +1032,7 @@ void navigateMenu(unsigned char bitmap[],
 						capture.autoRepeat = 0;
 					}
 					redraw = 1;
-				} else if(presses & SPRESS) {
+				} else if(presses & SPRESS) {//this will be triggered by autorepeat
 					//tell the user to press ABXYLRZ or move a stick to begin
 					drawString(bitmap, 30, 360, 15, presstime3);
 					//set up recording
