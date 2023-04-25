@@ -280,6 +280,7 @@ struct StickParams{
 enum CaptureMode{
 	CM_NULL,//do nothing
 	CM_REACTION,//record immediately
+	CM_STICK_RISE2,//starting when a stick coord exceeds a threshold distance from center; 100 pt 2-axis
 	CM_STICK_RISE,//starting when a stick coord exceeds a threshold distance from center
 	CM_STICK_FALL,//starting when a stick coord falls below a threshold
 	CM_STICK_PIVOT,//starting when a stick coord falls below a threshold

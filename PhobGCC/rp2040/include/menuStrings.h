@@ -241,10 +241,11 @@ const char inputview4[]      = "Coords:   Coords:         Coords:   Coords:";
 */
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
-const char timescope0[]      = "Move stick or trigger to record.";
+const char timescope0[]      = "Move Stick or Trigger";
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char timescope1[]      = "Input:";
 //Guide relative to offset   =  10  50   100  150
-const char timescope1[]      = "Stick axis/trigger:";
-const char timescope2[]      = "What to measure:";
+const char timescope2[]      = "Measurement:";
 const char timescope3[]      = "Snapback";
 const char timescope4[]      = "Dashback";
 const char timescope5[]      = "Pivots";

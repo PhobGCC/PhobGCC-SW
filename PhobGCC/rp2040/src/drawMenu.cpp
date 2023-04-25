@@ -1279,168 +1279,163 @@ void drawTimeScope(unsigned char bitmap[],
 		const int itemIndex,
 		DataCapture &capture) {
 	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
-	drawString(bitmap, 240,  20, 15, timescope0);
+	if(itemIndex != 2) {
+		drawString(bitmap, 240,  20, 15, timescope0);
+	} else {
+		drawString(bitmap, 240,  20, 15, xyscope5);
+	}
 
 	//which input to graph
-	drawString(bitmap, 280, 50, 15, timescope1);
+	drawString(bitmap, 30, 300, 15, timescope1);
 	if(itemIndex == 0) {
-		if(capture.captureStick != ASTICK || capture.mode == CM_TRIG) {
-			drawString(bitmap, 280, 70, 15, arrowLeft);
-		}
-		if(capture.captureStick != CSTICK || capture.mode != CM_TRIG) {
-			drawString(bitmap, 470, 70, 15, arrowRight);
-		}
+		drawString(bitmap, 20, 320, 15, arrowRight);
 	}
 	if(capture.mode != CM_TRIG) {
 		if(capture.captureStick == ASTICK) {
-			drawString(bitmap, 300, 70, 15, "A");
+			drawString(bitmap, 50, 320, 15, "A");
 		} else {
-			drawString(bitmap, 300, 70, 15, "C");
+			drawString(bitmap, 50, 320, 15, "C");
 		}
 		if(capture.whichAxis == XAXIS) {
-			drawString(bitmap, 310, 70, 15, "X");
+			drawString(bitmap, 60, 320, 15, "X");
 		} else {
-			drawString(bitmap, 310, 70, 15, "Y");
+			drawString(bitmap, 60, 320, 15, "Y");
 		}
 	} else {//if(capture.mode == CM_TRIG)
 		if(capture.captureStick == ASTICK) {
-			drawString(bitmap, 300, 70, 15, "L");
+			drawString(bitmap, 50, 320, 15, "L");
 		} else {
-			drawString(bitmap, 300, 70, 15, "R");
+			drawString(bitmap, 60, 320, 15, "R");
 		}
 	}
 	
 	//what to trigger upon
-	drawString(bitmap, 280, 100, 15, xyscope2);
+	drawString(bitmap, 140, 300, 15, timescope2);
 	if(itemIndex == 1) {
-		if(capture.mode == CM_TRIG) {
-			drawString(bitmap, 280, 120, 8, arrowLeft);
-			drawString(bitmap, 390, 120, 8, arrowRight);
-		} else {
-			if(capture.mode != CM_STICK_FALL) {
-				drawString(bitmap, 280, 120, 15, arrowLeft);
-			}
-			if(capture.mode != CM_STICK_PIVOT) {
-				drawString(bitmap, 390, 120, 15, arrowRight);
-			}
-		}
+		drawString(bitmap, 130, 320, 8+7*(capture.mode != CM_TRIG), arrowRight);
 	}
 	switch(capture.mode) {
 		case CM_STICK_FALL:
-			drawString(bitmap, 300, 120, 15, timescope3);
+			drawString(bitmap, 160, 320, 15, timescope3);
 			break;
 		case CM_STICK_RISE:
-			drawString(bitmap, 300, 120, 15, timescope4);
+			drawString(bitmap, 160, 320, 15, timescope4);
 			break;
 		case CM_STICK_PIVOT:
-			drawString(bitmap, 300, 120, 15, timescope5);
+			drawString(bitmap, 160, 320, 15, timescope5);
 			break;
 		case CM_TRIG:
-			drawString(bitmap, 300, 120, 15, timescope6);
+			drawString(bitmap, 160, 320, 15, timescope6);
 			break;
 		default:
 			break;
 	}
 
 	//which sample point to view info of
-	drawString(bitmap, 280, 150, 15, xyscope3);
-	drawInt(bitmap, 290, 170, 15, 1, capture.viewIndex);
+	drawString(bitmap, 290, 300, 15, xyscope3);
+	drawInt(bitmap, 310, 320, 15, 1, capture.viewIndex);
 	if(itemIndex == 2) {
-		if(capture.viewIndex != 0) {
-			drawString(bitmap, 280, 170, 15, arrowLeft);
-		}
-		if(capture.viewIndex < 199) {
-			drawString(bitmap, 340, 170, 15, arrowRight);
-		}
+		drawString(bitmap, 280, 320, 15, arrowRight);
 	}
 
 	//% chance of success readout (TODO)
 
-	const int xCenter = 2;//starts at 2
+	const int xCenter = 56;
 	const int yCenter = 168;//starts at 40
 
 	//draw axes for the graph
-	drawLine(bitmap, xCenter-1, yCenter+ORG, xCenter-1, yCenter-ORG, 15);//y-axis
+	drawLine(bitmap, xCenter-1, yCenter+ORG, xCenter-1, yCenter-ORG, 9);//y-axis
 	switch(capture.mode) {
 		case CM_STICK_FALL:
-			drawLine(bitmap, xCenter, yCenter, xCenter+199, yCenter, 15);//x-axis
-			drawLine(bitmap, xCenter, yCenter+23, xCenter+199, yCenter+23, 8);//deadzone -
-			drawLine(bitmap, xCenter, yCenter-23, xCenter+199, yCenter-23, 8);//deadzone +
+			drawLine(bitmap, xCenter, yCenter, xCenter+399, yCenter, 9);//x-axis
+			drawLine(bitmap, xCenter, yCenter+23, xCenter+399, yCenter+23, 8);//deadzone -
+			drawLine(bitmap, xCenter, yCenter-23, xCenter+399, yCenter-23, 8);//deadzone +
 			break;
 		case CM_STICK_RISE:
-			drawLine(bitmap, xCenter, yCenter, xCenter+199, yCenter, 15);//x-axis
-			drawLine(bitmap, xCenter, yCenter+23, xCenter+199, yCenter+23, 8);//deadzone -
-			drawLine(bitmap, xCenter, yCenter-23, xCenter+199, yCenter-23, 8);//deadzone +
-			drawLine(bitmap, xCenter, yCenter+64, xCenter+199, yCenter+64, 8);//dash -
-			drawLine(bitmap, xCenter, yCenter-64, xCenter+199, yCenter-64, 8);//dash +
+			drawLine(bitmap, xCenter, yCenter, xCenter+399, yCenter, 9);//x-axis
+			drawLine(bitmap, xCenter, yCenter+23, xCenter+399, yCenter+23, 8);//deadzone -
+			drawLine(bitmap, xCenter, yCenter-23, xCenter+399, yCenter-23, 8);//deadzone +
+			drawLine(bitmap, xCenter, yCenter+64, xCenter+399, yCenter+64, 8);//dash -
+			drawLine(bitmap, xCenter, yCenter-64, xCenter+399, yCenter-64, 8);//dash +
 			break;
 		case CM_STICK_PIVOT:
-			drawLine(bitmap, xCenter, yCenter, xCenter+199, yCenter, 15);//x-axis
-			drawLine(bitmap, xCenter, yCenter+64, xCenter+199, yCenter+64, 8);//dash -
-			drawLine(bitmap, xCenter, yCenter-64, xCenter+199, yCenter-64, 8);//dash +
+			drawLine(bitmap, xCenter, yCenter, xCenter+399, yCenter, 9);//x-axis
+			drawLine(bitmap, xCenter, yCenter+64, xCenter+399, yCenter+64, 8);//dash -
+			drawLine(bitmap, xCenter, yCenter-64, xCenter+399, yCenter-64, 8);//dash +
 			break;
 		case CM_TRIG:
-			drawLine(bitmap, xCenter, yCenter+ORG, xCenter+199, yCenter+ORG, 15);//x-axis
-			drawLine(bitmap, xCenter, yCenter+ORG-43, xCenter+199, yCenter+ORG-43, 8);//lightshield
+			drawLine(bitmap, xCenter, yCenter+ORG, xCenter+399, yCenter+ORG, 9);//x-axis
+			drawLine(bitmap, xCenter, yCenter+ORG-43, xCenter+399, yCenter+ORG-43, 8);//lightshield
 			break;
 		default:
 			break;
 	}
 
+	int oldY = capture.a1[capture.startIndex % 200] - ORG;
+	
 	//draw the actual graph
-	if(capture.done) {
-		for (int i=0; i < 200; i++) {
-			const int index = (i + capture.startIndex) % 200;
-			const int y = capture.a1[index]-ORG;
-			const int uy = capture.a1Unfilt[index]-ORG;
-			if(i != capture.viewIndex) {
-				//unfiltered
-				drawLine(bitmap, xCenter+i+0, yCenter-uy+0, xCenter+i+0, yCenter-uy-0, 11);
-				//filtered
-				drawLine(bitmap, xCenter+i+0, yCenter-y+0, xCenter+i+0, yCenter-y-0, 15);
-			} else {
-				//unfiltered
-				drawLine(bitmap, xCenter+i+1, yCenter-uy+1, xCenter+i+1, yCenter-uy-(1-1), 11);
-				drawLine(bitmap, xCenter+i+1, yCenter-uy-1, xCenter+i-(1-1), yCenter-uy-1, 11);
-				drawLine(bitmap, xCenter+i-1, yCenter-uy-1, xCenter+i-1, yCenter-uy+(1-1), 11);
-				drawLine(bitmap, xCenter+i-1, yCenter-uy+1, xCenter+i+(1-1), yCenter-uy+1, 11);
-				//filtered
-				drawLine(bitmap, xCenter+i+2, yCenter-y+2, xCenter+i+2, yCenter-y-(2-1), 15);
-				drawLine(bitmap, xCenter+i+2, yCenter-y-2, xCenter+i-(2-1), yCenter-y-2, 15);
-				drawLine(bitmap, xCenter+i-2, yCenter-y-2, xCenter+i-2, yCenter-y+(2-1), 15);
-				drawLine(bitmap, xCenter+i-2, yCenter-y+2, xCenter+i+(2-1), yCenter-y+2, 15);
+	for (int i=0; i < 200; i++) {
+		const int index = (i + capture.startIndex) % 200;
+		const int y = capture.a1[index]-ORG;
+		const int uy = capture.a1Unfilt[index]-ORG;
+		if(capture.mode == CM_TRIG) {
+			if(capture.captureStick == ASTICK) {//                                                                      L
+				drawLine(bitmap, xCenter+i*2-1+0, yCenter+ORG+10, xCenter+i*2+0, yCenter+ORG+10, 8+7*(capture.abxyszrl[i] & 0b1000'0000));
+			} else {//                                                                                                   R
+				drawLine(bitmap, xCenter+i*2-1+0, yCenter+ORG+10, xCenter+i*2+0, yCenter+ORG+10, 8+7*(capture.abxyszrl[i] & 0b0100'0000));
 			}
 		}
 
-		/*
-		//coordinate view
-		drawString(bitmap,  30, 300, 15, xyscope6);
-		drawString(bitmap,  30, 320, 15, inputview4);//reused
-
-		//get values at the view index
-		const int index = (capture.viewIndex + capture.startIndex) % 100;
-		const int x = capture.a1[index]-ORG;
-		const int y = capture.a2[index]-ORG;
-		const int ux = capture.a1Unfilt[index]-ORG;
-		const int uy = capture.a2Unfilt[index]-ORG;
 		//unfiltered
-		drawInt(bitmap,     20, 340, 15, 2, ux);
-		drawInt(bitmap,     20, 360, 15, 2, uy);
-		float uxMelee;
-		float uyMelee;
-		meleeCoordClamp(ux, uy, uxMelee, uyMelee);
-		drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
-		drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
+		drawLine(bitmap, xCenter+i*2+0, yCenter-uy+0, xCenter+i*2+0, yCenter-uy-0, 11);
 		//filtered
-		drawInt(bitmap,    280, 340, 15, 2, x);
-		drawInt(bitmap,    280, 360, 15, 2, y);
-		float xMelee;
-		float yMelee;
-		meleeCoordClamp(x, y, xMelee, yMelee);
-		drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
-		drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
-		*/
+		drawLine(bitmap, xCenter+i*2-1+0, yCenter-oldY+0, xCenter+i*2+0, yCenter-y-0, 15);
+
+		//highlight
+		if(i == capture.viewIndex) {
+			//unfiltered
+			drawLine(bitmap, xCenter+i*2+1, yCenter-uy+1, xCenter+i*2+1, yCenter-uy-(1-1), 11);
+			drawLine(bitmap, xCenter+i*2+1, yCenter-uy-1, xCenter+i*2-(1-1), yCenter-uy-1, 11);
+			drawLine(bitmap, xCenter+i*2-1, yCenter-uy-1, xCenter+i*2-1, yCenter-uy+(1-1), 11);
+			drawLine(bitmap, xCenter+i*2-1, yCenter-uy+1, xCenter+i*2+(1-1), yCenter-uy+1, 11);
+			//filtered
+			drawLine(bitmap, xCenter+i*2+2, yCenter-y+2, xCenter+i*2+2, yCenter-y-(2-1), 15);
+			drawLine(bitmap, xCenter+i*2+2, yCenter-y-2, xCenter+i*2-(2-1), yCenter-y-2, 15);
+			drawLine(bitmap, xCenter+i*2-2, yCenter-y-2, xCenter+i*2-2, yCenter-y+(2-1), 15);
+			drawLine(bitmap, xCenter+i*2-2, yCenter-y+2, xCenter+i*2+(2-1), yCenter-y+2, 15);
+		}
+
+		oldY = y;
 	}
+
+	/*
+	//coordinate view
+	drawString(bitmap,  30, 300, 15, xyscope6);
+	drawString(bitmap,  30, 320, 15, inputview4);//reused
+
+	//get values at the view index
+	const int index = (capture.viewIndex + capture.startIndex) % 100;
+	const int x = capture.a1[index]-ORG;
+	const int y = capture.a2[index]-ORG;
+	const int ux = capture.a1Unfilt[index]-ORG;
+	const int uy = capture.a2Unfilt[index]-ORG;
+	//unfiltered
+	drawInt(bitmap,     20, 340, 15, 2, ux);
+	drawInt(bitmap,     20, 360, 15, 2, uy);
+	float uxMelee;
+	float uyMelee;
+	meleeCoordClamp(ux, uy, uxMelee, uyMelee);
+	drawFloat(bitmap,  120, 340, 15, 0, 7, uxMelee);
+	drawFloat(bitmap,  120, 360, 15, 0, 7, uyMelee);
+	//filtered
+	drawInt(bitmap,    280, 340, 15, 2, x);
+	drawInt(bitmap,    280, 360, 15, 2, y);
+	float xMelee;
+	float yMelee;
+	meleeCoordClamp(x, y, xMelee, yMelee);
+	drawFloat(bitmap,  380, 340, 15, 0, 7, xMelee);
+	drawFloat(bitmap,  380, 360, 15, 0, 7, yMelee);
+	*/
 }
 
 void drawPressSlice(unsigned char bitmap[],

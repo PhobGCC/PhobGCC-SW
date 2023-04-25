@@ -844,7 +844,7 @@ void navigateMenu(unsigned char bitmap[],
 					//set up recording
 					capture.begin = false;
 					capture.done = false;
-					capture.mode = CM_STICK_RISE;
+					capture.mode = CM_STICK_RISE2;
 					//then trigger the recording
 					pleaseCommit = 9;
 				}
@@ -857,20 +857,32 @@ void navigateMenu(unsigned char bitmap[],
 					capture.mode = CM_STICK_FALL;//snapback (default)
 					tempInt2 = 0;//snapback/dashback/pivot (only available for sticks)
 					capture.viewIndex = 0;
+					capture.autoRepeat = 1;//trigger automatically (except when itemIndex == 2)
+					//clear data
+					for(int i = 0; i<99; i++) {
+						capture.a1[i] = (uint8_t) 0;
+						capture.a2[i] = (uint8_t) 0;
+						capture.a1Unfilt[i] = (uint8_t) 0;
+						capture.a2Unfilt[i] = (uint8_t) 0;
+						capture.abxyszrl[i] = (uint8_t) 0;
+						capture.abxyszrl[i+100] = (uint8_t) 0;
+					}
 					changeMade = true;
-					capture.autoRepeat = 1;//this will always be retriggered automatically
 				}
-				if(presses & DUPRESS) {
+				if(presses & DLPRESS) {
 					if(itemIndex != 0) {
 						itemIndex--;
 						redraw = 1;
 					}
-				} else if(presses & DDPRESS) {
+				} else if(presses & DRPRESS) {
 					if(itemIndex < 2) {
 						itemIndex++;
+						if(itemIndex == 2) {
+							capture.autoRepeat = 0;
+						}
 						redraw = 1;
 					}
-				} else if(presses & DLPRESS) {
+				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						tempInt1 = (tempInt1 == 0) ? 0 : tempInt1-1;
 						switch(tempInt1) {
@@ -930,7 +942,7 @@ void navigateMenu(unsigned char bitmap[],
 						capture.viewIndex = (capture.viewIndex == 0) ? 0 : capture.viewIndex-1;
 					}
 					redraw = 1;
-				} else if(presses & DRPRESS) {
+				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						tempInt1 = fmin(5, tempInt1+1);
 						switch(tempInt1) {
@@ -991,6 +1003,10 @@ void navigateMenu(unsigned char bitmap[],
 					}
 					redraw = 1;
 				} else if(presses & SPRESS) {//this will be triggered by autorepeat
+					//if we're framestepping, redraw the title
+					eraseCharLine(bitmap, 20);
+					drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+					drawString(bitmap, 240,  20, 15, xyscope0);
 					//set up recording
 					capture.begin = false;
 					capture.triggered = false;

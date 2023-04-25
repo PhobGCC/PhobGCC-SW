@@ -137,7 +137,8 @@ void second_core() {
 							_pleaseCommit = 255;//end capture and display
 						}
 						break;
-					case CM_STICK_RISE:
+					case CM_STICK_RISE2:
+						//100 points of 2-axis data
 						//this begins capturing data immediately in a rolling buffer,
 						//and on detecting a rising edge it begins recording
 						//this records the starting point only the first time, then it sets begin
@@ -223,6 +224,71 @@ void second_core() {
 								_pleaseCommit = 255;//end capture and display
 							}
 						}
+						break;
+					case CM_STICK_RISE:
+						//200 points of single-axis data
+						//based on the raw unfiltered values hitting >= 23
+						//it should record for 150 ms after detection (saving 50 from before detection)
+
+						//prep
+						//expect data to be prepped already
+						//begin = false
+						//triggered = false
+						//done = false
+						//startIndex = 0
+						//endIndex = 0
+
+						//record data continuously if not done
+						//actually, if it's done, it should never reach this
+						if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ax;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.axUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Ay;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.ayUnfiltered+_floatOrigin);
+						} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cx;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cxUnfiltered+_floatOrigin);
+						} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+							_dataCapture.a1[_dataCapture.endIndex] = _btn.Cy;
+							_dataCapture.a1Unfilt[_dataCapture.endIndex] = (uint8_t) (_raw.cyUnfiltered+_floatOrigin);
+						}
+
+						//check for initial waiting state
+						//in this case, we want the stick's raw value to be out of the deadzone
+						if(!_dataCapture.begin && !_dataCapture.done) {
+							if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.axUnfiltered) >= 23) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == ASTICK && _dataCapture.whichAxis == YAXIS) {
+								if(fabs(_raw.ayUnfiltered) >= 23) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == XAXIS) {
+								if(fabs(_raw.cxUnfiltered) >= 23) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							} else {//if(_dataCapture.captureStick == CSTICK && _dataCapture.whichAxis == YAXIS)
+								if(fabs(_raw.cyUnfiltered) >= 23) {
+									_dataCapture.begin = true;
+									_dataCapture.startIndex = (_dataCapture.endIndex+150) % 200;
+								}
+							}
+						}
+
+
+						//stop if done
+						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
+							_dataCapture.done = true;
+							_pleaseCommit = 255;//end capture and display
+						}
+
+						//advance to next index to record
+						_dataCapture.endIndex = (_dataCapture.endIndex+1) % 200;
 						break;
 					case CM_STICK_FALL:
 						//single-axis
