@@ -209,8 +209,8 @@ void drawStickdbg(unsigned char bitmap[],
 		drawFloat(bitmap,  280, 210, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,   30, 230, 15, 2, 6, raw.ayUnfiltered);
 		drawFloat(bitmap,  280, 230, 15, 2, 6, raw.cyUnfiltered);
-		drawString(bitmap,  30, 260, 15, stickdbgAMap);
-		drawString(bitmap, 280, 260, 15, stickdbgCMap);
+		drawString(bitmap,  30, 260, 15, stickdbgARnd);
+		drawString(bitmap, 280, 260, 15, stickdbgCRnd);
 		drawInt(bitmap,     30, 280, 15, 2, btn.Ax - ORG);
 		drawInt(bitmap,    280, 280, 15, 2, btn.Cx - ORG);
 		drawInt(bitmap,     30, 300, 15, 2, btn.Ay - ORG);
