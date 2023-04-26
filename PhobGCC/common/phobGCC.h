@@ -1271,19 +1271,19 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			debug_println(controls.rumble);
 			debug_print("Rumble power now: ");
 			debug_println(_rumblePower);
-			//I'd like it to change smoothing, but it's way too complicated
+			//fallthrough
 		case 28:
 			//uncomment these when we do have it migrate
-			//migrating = true;
-			//debug_println("Updating settings from 0.28");
+			migrating = true;
+			debug_println("Updating settings from 0.28");
 #ifdef PICO_RP2040
-			//controls.interlaceOffset = 0;
+			controls.interlaceOffset = 0;
 #endif //PICO_RP2040
-			//controls.astickAnalogScaler = controls.analogScalerDefault;
-			//controls.cstickAnalogScaler = controls.analogScalerDefault;
-			//controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
-			//controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
-			//controls.tournamentToggle = controls.tournamentToggleMin;
+			controls.astickAnalogScaler = controls.analogScalerDefault;
+			controls.cstickAnalogScaler = controls.analogScalerDefault;
+			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			controls.tournamentToggle = controls.tournamentToggleMin;
 			//fallthrough
 		case 29:
 			//uncomment these when we do have it migrate
