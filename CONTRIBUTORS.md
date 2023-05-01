@@ -27,6 +27,10 @@ Kadano - Testing
 
 Vurj - Hardware Design
 
+Altimor - Stickmap visualizer
+
+venus23gg - Stickmaps
+
 # Libraries
 
 DogeSSBM - DogeBawx - 2021-12-18 - GPLv3 - Modified
