@@ -655,10 +655,10 @@ void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &cont
 
 	setTournamentToggleSetting(controls.tournamentToggle);
 
-	btn.Ax = (uint8_t) (_floatOrigin + controls.tournamentToggle);
+	btn.Ax = (uint8_t) (_floatOrigin);
 	btn.Ay = (uint8_t) (_floatOrigin);
 
-	btn.Cx = (uint8_t) (_floatOrigin);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.tournamentToggle);
 	btn.Cy = (uint8_t) (_floatOrigin);
 
 	clearButtons(750, btn, hardware);
