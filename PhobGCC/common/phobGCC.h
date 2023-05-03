@@ -1196,40 +1196,40 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	//get the A-stick cardinal snapping
 	controls.astickCardinalSnapping = getCardinalSnappingSetting(ASTICK);
 	if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
-		controls.astickCardinalSnapping = 6;
+		controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
 	} else if (controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
-		controls.astickCardinalSnapping = 6;
+		controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
 	}
 
 	//get the C-stick cardinal snapping
 	controls.cstickCardinalSnapping = getCardinalSnappingSetting(CSTICK);
 	if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
-		controls.cstickCardinalSnapping = 6;
+		controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
 	} else if (controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
-		controls.cstickCardinalSnapping = 6;
+		controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
 	}
 
 	//get the A-stick analog scaler
 	controls.astickAnalogScaler = getAnalogScalerSetting(ASTICK);
 	if(controls.astickAnalogScaler > controls.analogScalerMax) {
-		controls.astickAnalogScaler = 100;
+		controls.astickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
 	} else if (controls.astickAnalogScaler < controls.analogScalerMin) {
-		controls.astickAnalogScaler = 100;
+		controls.astickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
 	}
 
 	//get the C-stick analog scaler
 	controls.cstickAnalogScaler = getAnalogScalerSetting(CSTICK);
 	if(controls.cstickAnalogScaler > controls.analogScalerMax) {
-		controls.cstickAnalogScaler = 100;
+		controls.cstickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
 	} else if (controls.cstickAnalogScaler < controls.analogScalerMin) {
-		controls.cstickAnalogScaler = 100;
+		controls.cstickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
 	}
 
