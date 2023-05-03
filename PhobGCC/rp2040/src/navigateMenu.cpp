@@ -93,6 +93,10 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 			aLockout = 0;//make A available immediately after backing out
 			presses = presses | BPRESS;
 			capture.autoRepeat = false;//cancel auto repeating if you back out
+			capture.begin = false;
+			capture.triggered = false;
+			capture.done = true;
+			pleaseCommit = 0;
 		}
 	} else {
 		if(backAccumulator > 0) {
