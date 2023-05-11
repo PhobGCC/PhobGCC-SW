@@ -434,7 +434,7 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 	//If the previous one is a cardinal AND the angle is in the deadzone, we make the upperstretchlimit bigger, only if it can't reach 0.3000.
 	const float minThreshold  = 0.1500/0.9750;//radians; we don't want to fix things smaller than this
 	const float deadzoneLimit = 0.2875/0.9500;//radians; or things larger than this
-	const float deadzonePlus  = 0.3125/0.9375;//radians; we want to make sure the adjustment can make it here
+	const float deadzonePlus  = 0.3250/0.9375;//radians; we want to make sure the adjustment can make it here
 	if(prevIndex % 4 == 0 && !isDiagonal && (thisMeasAngle-prevMeasAngle) > minThreshold && (thisMeasAngle-prevMeasAngle) < deadzoneLimit){
 		upperStretchLimit = prevAngle + fmax(strAmt*(thisMeasAngle-prevMeasAngle), deadzonePlus);
 	}
