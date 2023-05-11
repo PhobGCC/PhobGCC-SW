@@ -44,6 +44,12 @@ void getStoragePage() {
 			_storage.settings.rExtras[i].intValue = temp.settings.rExtras[i].intValue;
 		}
 		_storage.settings.schema = temp.settings.schema;
+		_storage.settings.AstickCardinalSnapping = temp.settings.AstickCardinalSnapping;
+		_storage.settings.CstickCardinalSnapping = temp.settings.CstickCardinalSnapping;
+		_storage.settings.AstickAnalogScaler = temp.settings.AstickAnalogScaler;
+		_storage.settings.CstickAnalogScaler = temp.settings.CstickAnalogScaler;
+		_storage.settings.interlaceOffset = temp.settings.interlaceOffset;
+		_storage.settings.tournamentToggle = temp.settings.tournamentToggle;
 		fresh = true;
 	}
 }
@@ -368,8 +374,64 @@ int getSchemaSetting() {
 	getStoragePage();
 	return _storage.settings.schema;
 }
+
 void setSchemaSetting(const int s) {
 	getStoragePage();
 	_storage.settings.schema = s;
 }
 
+int getCardinalSnappingSetting(const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		return _storage.settings.AstickCardinalSnapping;
+	} else {
+		return _storage.settings.CstickCardinalSnapping;
+	}
+}
+
+void setCardinalSnappingSetting(const int cardinalSnapping, const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		_storage.settings.AstickCardinalSnapping = cardinalSnapping;
+	} else {
+		_storage.settings.CstickCardinalSnapping = cardinalSnapping;
+	}
+}
+
+int getAnalogScalerSetting(const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		return _storage.settings.AstickAnalogScaler;
+	} else {
+		return _storage.settings.CstickAnalogScaler;
+	}
+}
+
+void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick) {
+	getStoragePage();
+	if(whichStick == ASTICK) {
+		_storage.settings.AstickAnalogScaler = analogScaler;
+	} else {
+		_storage.settings.CstickAnalogScaler = analogScaler;
+	}
+}
+
+int getInterlaceOffsetSetting() {
+	getStoragePage();
+	return _storage.settings.interlaceOffset;
+}
+
+void setInterlaceOffsetSetting(const int o) {
+	getStoragePage();
+	_storage.settings.interlaceOffset = o;
+}
+
+int getTournamentToggleSetting() {
+	getStoragePage();
+	return _storage.settings.tournamentToggle;
+}
+
+void setTournamentToggleSetting(const int tournamentToggle) {
+	getStoragePage();
+	_storage.settings.tournamentToggle = tournamentToggle;
+}

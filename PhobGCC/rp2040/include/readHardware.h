@@ -57,11 +57,23 @@ void setPinModes() {
 	gpio_init(_pinTx);
 	gpio_set_dir(_pinTx, GPIO_IN);
 	gpio_pull_up(_pinTx);
-	gpio_init(_pinRumble);
-	gpio_set_dir(_pinRumble, GPIO_OUT);
-	gpio_init(_pinBrake);
-	gpio_set_dir(_pinBrake, GPIO_OUT);
 	*/
+
+	//Rumble
+    gpio_init(_pinRumble);
+    gpio_init(_pinBrake);
+    gpio_set_dir(_pinRumble, GPIO_OUT);
+    gpio_set_dir(_pinBrake, GPIO_OUT);
+    gpio_set_function(_pinRumble, GPIO_FUNC_PWM);
+    gpio_set_function(_pinBrake,  GPIO_FUNC_PWM);
+    const uint rumbleSlice_num = pwm_gpio_to_slice_num(_pinRumble);
+    const uint brakeSlice_num  = pwm_gpio_to_slice_num(_pinBrake);
+    pwm_set_wrap(rumbleSlice_num, 255);
+    pwm_set_wrap(brakeSlice_num,  255);
+    pwm_set_chan_level(rumbleSlice_num, PWM_CHAN_B, 0);//B for odd pins
+    pwm_set_chan_level(brakeSlice_num,  PWM_CHAN_B, 255);//B for odd pins
+    pwm_set_enabled(rumbleSlice_num, true);
+    pwm_set_enabled(brakeSlice_num,  true);
 
 	//initialize SPI at 1 MHz
 	//initialize SPI at 3 MHz just to test

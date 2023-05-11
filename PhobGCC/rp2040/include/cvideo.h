@@ -28,6 +28,7 @@ int videoOut(const uint8_t pin_base,
 		ControlConfig &config,
 		StickParams &aStick,
 		StickParams &cStick,
+		DataCapture &capture,
 		volatile bool &extSync,
 		volatile uint8_t &pleaseCommit,
 		int &currentCalStep,
@@ -132,7 +133,8 @@ void drawMenu(unsigned char bitmap[],
               const RawStick raw,
               const ControlConfig &controls,
 			  const StickParams &aStick,
-			  const StickParams &cStick);
+			  const StickParams &cStick,
+              DataCapture &capture);
 
 void handleMenuButtons(unsigned char bitmap[],
                        unsigned int &menu,
@@ -141,8 +143,10 @@ void handleMenuButtons(unsigned char bitmap[],
 				       bool &changeMade,
                        const int currentCalStep,
 				       volatile uint8_t &pleaseCommit,//for asking the other core to commit settings
+					   const Buttons &btn,
                        const Buttons &hardware,
-                       ControlConfig &controls);
+                       ControlConfig &controls,
+					   DataCapture &capture);
 
 void eraseCharLine(unsigned char bitmap[],
                     uint16_t y0);

@@ -44,7 +44,25 @@ void runMedian(float &val, float valArray[MEDIANLEN], unsigned int &medianIndex)
 #endif
 }
 
-void recomputeGains(const FilterGains &gains, FilterGains &normGains){
+float velDampFromSnapback(const int snapback) {
+	if(snapback >= 0) {
+		return 0.125 * pow(2, (snapback-4)/3.0);//4 should yield 0.125, 10 should yield 0.5, don't care about 0
+	} else {
+		return 1 - 0.25 * pow(2, (snapback+4)/3.0);//-1 should yield 0.5, -10 should yield 0.938, don't care about 0
+	}
+}
+
+void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGains &normGains) {
+	//Adjust the snapback and smoothing gains according to the controls config
+	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
+	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
+
+	gains.xSmoothing = controls.axSmoothing/10.0f;
+	gains.ySmoothing = controls.aySmoothing/10.0f;
+
+	gains.cXSmoothing = controls.cxSmoothing/10.0f;
+	gains.cYSmoothing = controls.cySmoothing/10.0f;
+
 	//Recompute the intermediate gains used directly by the kalman filter
 	//This happens according to the time between loop iterations.
 	//Before, this happened every iteration of runKalman, but now
@@ -59,8 +77,14 @@ void recomputeGains(const FilterGains &gains, FilterGains &normGains){
 	normGains.yVelDecay     = gains.yVelDecay      * timeFactor;
 	normGains.xVelPosFactor = gains.xVelPosFactor  * timeFactor;
 	normGains.yVelPosFactor = gains.yVelPosFactor  * timeFactor;
-	normGains.xVelDamp      = gains.xVelDamp       * timeDivisor;
-	normGains.yVelDamp      = gains.yVelDamp       * timeDivisor;
+	normGains.xVelDamp      = gains.xVelDamp;
+	if(controls.xSnapback >= 0) {
+		normGains.xVelDamp *= timeDivisor;
+	}
+	normGains.yVelDamp      = gains.yVelDamp;
+	if(controls.ySnapback >= 0) {
+		normGains.yVelDamp *= timeDivisor;
+	}
 	normGains.velThresh     = 1/(gains.velThresh   * timeFactor);//slight optimization by using the inverse
 	normGains.accelThresh   = 1/(gains.accelThresh * timeFactor);
 	normGains.velThresh     = normGains.velThresh*normGains.velThresh;//square it because it's used squared
@@ -136,7 +160,7 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	//term 3: the integral error correction term
 
 	//But if we xSnapback or ySnapback is zero, we skip the calculation
-	if(controls.xSnapback != 0){
+	if(controls.xSnapback > 0){
 		xVelFilt = velWeight1*xVel + (1-normGains.xVelDecay)*velWeight2*oldXVelFilt + normGains.xVelPosFactor*oldXPosDiff;
 
 		const float xPosWeightVelAcc = 1 - fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
@@ -145,11 +169,19 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 
 		xPosFilt = xPosWeight1*xPos +
 				   xPosWeight2*(oldXPosFilt + (1-normGains.xVelDamp)*xVelFilt);
+	} else if(controls.xSnapback < 0) {
+		const float xLPF = oldXPosFilt*normGains.xVelDamp + xPos*(1-normGains.xVelDamp);
+
+		const float xPosWeightVelAcc = 1 - fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
+		const float xPosWeight1 = fmax(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeight2 = 1-xPosWeight1;
+
+		xPosFilt = xPosWeight1*xPos + xPosWeight2*xLPF;
 	} else {
 		xPosFilt = xPos;
 	}
 
-	if(controls.ySnapback != 0){
+	if(controls.ySnapback > 0){
 		yVelFilt = velWeight1*yVel + (1-normGains.yVelDecay)*velWeight2*oldYVelFilt + normGains.yVelPosFactor*oldYPosDiff;
 
 		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
@@ -158,6 +190,14 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 
 		yPosFilt = yPosWeight1*yPos +
 				   yPosWeight2*(oldYPosFilt + (1-normGains.yVelDamp)*yVelFilt);
+	} else if(controls.ySnapback < 0) {
+		const float yLPF = oldYPosFilt*normGains.yVelDamp + yPos*(1-normGains.yVelDamp);
+
+		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
+		const float yPosWeight1 = fmax(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeight2 = 1-yPosWeight1;
+
+		yPosFilt = yPosWeight1*yPos + yPosWeight2*yLPF;
 	} else {
 		yPosFilt = yPos;
 	}

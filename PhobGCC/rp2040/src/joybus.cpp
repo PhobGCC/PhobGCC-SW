@@ -6,6 +6,7 @@
 #include "hardware/pio.h"
 #include "joybus.pio.h"
 
+#define ORG 127
 
 /* PIOs are separate state machines for handling IOs with high timing precision. You load a program into them and they do their stuff on their own with deterministic timing,
    communicating with the main cores via FIFOs (and interrupts, if you want).
@@ -64,21 +65,6 @@ void __time_critical_func(enterMode)(const int dataPin,
     gpio_set_dir(dataPin, GPIO_IN);
     gpio_pull_up(dataPin);
 
-    gpio_init(rumblePin);
-    gpio_init(brakePin);
-    gpio_set_dir(rumblePin, GPIO_OUT);
-    gpio_set_dir(brakePin, GPIO_OUT);
-    gpio_set_function(rumblePin, GPIO_FUNC_PWM);
-    gpio_set_function(brakePin,  GPIO_FUNC_PWM);
-    const uint rumbleSlice_num = pwm_gpio_to_slice_num(rumblePin);
-    const uint brakeSlice_num  = pwm_gpio_to_slice_num(brakePin);
-    pwm_set_wrap(rumbleSlice_num, 255);
-    pwm_set_wrap(brakeSlice_num,  255);
-    pwm_set_chan_level(rumbleSlice_num, PWM_CHAN_B, 0);//B for odd pins
-    pwm_set_chan_level(brakeSlice_num,  PWM_CHAN_B, 255);//B for odd pins
-    pwm_set_enabled(rumbleSlice_num, true);
-    pwm_set_enabled(brakeSlice_num,  true);
-
     sleep_us(100); // Stabilize voltages
 
     PIO pio = pio0;
@@ -115,7 +101,7 @@ void __time_critical_func(enterMode)(const int dataPin,
         }
         else if (buffer[0] == 0x41) { // Origin (NOT 0x81)
             gpio_put(25, 1);
-            uint8_t originResponse[10] = { 0x00, 0x80, 127, 127, 127, 127, 0, 0, 0, 0 };
+            uint8_t originResponse[10] = { 0x00, 0x80, ORG, ORG, ORG, ORG, 0, 0, 0, 0 };
             // TODO The origin response sends centered values in this code excerpt. Consider whether that makes sense for your project (digital controllers -> yes)
             uint32_t result[6];
             int resultLen;

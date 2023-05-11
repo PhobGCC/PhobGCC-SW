@@ -207,10 +207,28 @@ struct ControlConfig{
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
-	const float waveshapingFactoryAX;
-	const float waveshapingFactoryAY;
-	const float waveshapingFactoryCX;
-	const float waveshapingFactoryCY;
+	const int waveshapingFactoryAX;
+	const int waveshapingFactoryAY;
+	const int waveshapingFactoryCX;
+	const int waveshapingFactoryCY;
+	int astickCardinalSnapping;
+	int cstickCardinalSnapping;
+	const int cardinalSnappingMin;
+	const int cardinalSnappingMax;
+	const int cardinalSnappingDefault;
+	int astickAnalogScaler;
+	int cstickAnalogScaler;
+	const int analogScalerMin;
+	const int analogScalerMax;
+	const int analogScalerDefault;
+	int tournamentToggle;
+	const int tournamentToggleMin;
+	const int tournamentToggleMax;
+#ifdef PICO_RP2040
+	int interlaceOffset;
+	const int interlaceOffsetMin;
+	const int interlaceOffsetMax;
+#endif //PICO_RP2040
 	ExtrasConfig extras[EXTRAS_SIZE];
 };
 
@@ -257,6 +275,56 @@ struct StickParams{
 	//these are the notch remap parameters
 	float affineCoeffs[16][4]; //affine transformation coefficients for all regions of the stick
 	float boundaryAngles[16]; //angles at the boundaries between regions of the stick (in the plane)
+};
+
+enum CaptureMode{
+	CM_NULL,//do nothing
+	CM_REACTION,//record immediately
+	CM_STICK_RISE2,//starting when a stick coord exceeds a threshold distance from center; 100 pt 2-axis
+	CM_STICK_RISE,//starting when a stick coord exceeds a threshold distance from center
+	CM_STICK_FALL,//starting when a stick coord falls below a threshold
+	CM_STICK_PIVOT,//starting when a stick coord falls below a threshold
+	CM_TRIG,//increasing threshold on triggers
+	CM_JUMP,//x, y, or melee tap jump threshold
+	CM_PRESS,//any button press
+};
+
+enum GraphVar{
+	GV_AX,//a-stick x-axis filtered & unfiltered
+	GV_AY,
+	GV_AXY,//a-stick x and y, only filtered
+	GV_CX,
+	GV_CY,
+	GV_CXY,
+	GV_L,
+	GV_R,
+};
+
+struct DataCapture{
+	//these are the params
+	CaptureMode mode;
+	WhichStick triggerStick;
+	WhichStick captureStick;
+	WhichAxis whichAxis;
+	uint8_t stickmap;//which stickmap to display
+	GraphVar graphVar;//which variable to graph
+	bool begin;
+	bool triggered;
+	bool done;
+	bool autoRepeat;
+	uint32_t delay;//for recording reaction time
+	uint8_t stickThresh;
+	uint8_t triggerThresh;
+	uint8_t startIndex;
+	uint8_t endIndex;
+	uint8_t viewIndex;//for stepping through manually and looking at coordinates and button presses
+	uint8_t a1[100];//6 frames for analog
+	uint8_t a2[100];
+	uint8_t a1Unfilt[100];
+	uint8_t a2Unfilt[100];
+	uint8_t abxyszrl[200];//12 frames
+	uint8_t axaycxcyrl[200];//12 frames
+	float percents[3];
 };
 
 #endif //ENUMS_H
