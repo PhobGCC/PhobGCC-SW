@@ -1264,6 +1264,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		case -1:
 			migrating = true;
 			debug_println("Updating settings from unitialized");
+
+			//write to controls AND write to settings
 			controls.rumble = controls.rumble!=0 ? controls.rumble + 4 : 0;
 			_rumblePower = calcRumblePower(controls.rumble);
 			setRumbleSetting(controls.rumble);
@@ -1273,22 +1275,31 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			debug_println(_rumblePower);
 			//fallthrough
 		case 28:
-			//uncomment these when we do have it migrate
 			migrating = true;
 			debug_println("Updating settings from 0.28");
+
+			//write to controls AND write to settings
 #ifdef PICO_RP2040
 			controls.interlaceOffset = 0;
+			setInterlaceOffsetSetting(0);
 #endif //PICO_RP2040
 			controls.astickAnalogScaler = controls.analogScalerDefault;
+			setAnalogScalerSetting(controls.analogScalerDefault, ASTICK);
 			controls.cstickAnalogScaler = controls.analogScalerDefault;
+			setAnalogScalerSetting(controls.analogScalerDefault, CSTICK);
 			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, ASTICK);
 			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, CSTICK);
 			controls.tournamentToggle = controls.tournamentToggleMin;
+			setTournamentToggleSetting(controls.tournamentToggleMin);
 			//fallthrough
 		case 29:
 			//uncomment these when we do have it migrate
 			//migrating = true;
-			//debug_println("Schema is now current");
+			//debug_println("Updating settings from 0.29");
+
+			//write to controls AND write to settings
 			//fallthrough
 		default:
 			if(migrating) {
