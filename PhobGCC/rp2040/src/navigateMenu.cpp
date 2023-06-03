@@ -1030,7 +1030,7 @@ void navigateMenu(unsigned char bitmap[],
 				if(!changeMade) {
 					capture.stickThresh = 23;//dash
 					capture.triggerThresh = 255;//no lightshield threshold by default
-					capture.autoRepeat = 0;//don't auto repeat by default
+					capture.autoRepeat = 1;//auto repeat by default
 					changeMade = true;
 				}
 				if(presses & DLPRESS) {
