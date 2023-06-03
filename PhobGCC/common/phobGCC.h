@@ -1296,11 +1296,24 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			//fallthrough
 		case 29:
 			//uncomment these when we do have it migrate
-			//migrating = true;
-			//debug_println("Updating settings from 0.29");
+			migrating = true;
+			debug_println("Updating settings from 0.29");
+
+			//write to controls AND write to settings
+			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, ASTICK);
+			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, CSTICK);
+			//fallthrough
+			/*
+		case 30:
+			//uncomment these when we do have it migrate
+			migrating = true;
+			debug_println("Updating settings from 0.30");
 
 			//write to controls AND write to settings
 			//fallthrough
+			*/
 		default:
 			if(migrating) {
 				debug_println("Updating saved settings schema");
