@@ -18,7 +18,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -2137,20 +2137,25 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//Advance Calibration Using L or R triggers or A button
 	static int calibLockout = 50;
 	static bool advanceCalPressed = false;
-	if((hardware.A || hardware.L || hardware.R) && advanceCal){
-		if(calibLockout > 0) {
-			calibLockout--;
-		} else if(calibLockout == 0 && !advanceCalPressed) {
-			calibLockout = 50;
+	if(advanceCal) {
+		if(hardware.A || hardware.L || hardware.R) {
+			if(calibLockout >= 50) {
+				calibLockout = 0;
+			} else {
+				calibLockout = max(0, calibLockout - 1);
+			}
+		} else {
+			calibLockout = min(50, calibLockout + 1);
+		}
+		if(calibLockout < 50 && !advanceCalPressed) {
 			advanceCalPressed = true;
 			calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
 			if(currentCalStep == -1) {
 				advanceCal = false;
 			}
+		} else if (calibLockout >= 50) {
+			advanceCalPressed = false;
 		}
-	} else if(calibLockout < 50) {
-		calibLockout++;
-		advanceCalPressed = false;
 	}
 }
 
