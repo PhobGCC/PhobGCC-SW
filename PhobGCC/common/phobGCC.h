@@ -1788,7 +1788,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
 	* Auto-Initialize: AXY+Z
-	* Tournament Toggle:  Z+Start
+	* Tournament Toggle:  Z+Start+Du
 	*
 	* Increase/Decrease Rumble: AB+Du/Dd
 	* Show Current Rumble Setting: AB+Start
@@ -1885,7 +1885,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
 			settingChangeCount++;
 			changeAutoInit(btn, hardware, controls);
-		} else if(hardware.Z && hardware.S && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
+		} else if(hardware.Z && hardware.S && hardware.Du && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
 			settingChangeCount++;
 			changeTournamentToggle(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
