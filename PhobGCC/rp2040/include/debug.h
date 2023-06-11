@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define DEBUG_ENABLED 1
+//#define DEBUG_ENABLED 1
 
 inline void debug_print(const char* str) {
 #if (DEBUG_ENABLED)
