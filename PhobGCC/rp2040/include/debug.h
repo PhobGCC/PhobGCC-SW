@@ -1,62 +1,69 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#define DEBUG_ENABLED 0
+#include <stdio.h>
+
+#define DEBUG_ENABLED 1
 
 inline void debug_print(const char* str) {
 #if (DEBUG_ENABLED)
-  //print(str);
+  printf(str);
 #endif
 }
 inline void debug_print(char c) {
 #if (DEBUG_ENABLED)
-  //print(c);
+  printf(&c);
 #endif
 }
 inline void debug_print(int i, int x = 0) {
 #if (DEBUG_ENABLED)
-  //print(i, x);
+  printf("%d", i);
 #endif
 }
 inline void debug_print(long l, int x = 0) {
 #if (DEBUG_ENABLED)
-  //print(l, x);
+  printf("%ld", l);
 #endif
 }
 inline void debug_print(double d, int x = 0) {
 #if (DEBUG_ENABLED)
-  //print(d, x);
+  printf("%f", d);
 #endif
 }
 
 inline void debug_println(const char* str) {
 #if (DEBUG_ENABLED)
-  //println(str);
+  printf(str);
+  printf("\n");
 #endif
 }
 inline void debug_println(char c) {
 #if (DEBUG_ENABLED)
-  //println(c);
+  printf(&c);
+  printf("\n");
 #endif
 }
 inline void debug_println(int i, int x = 0) {
 #if (DEBUG_ENABLED)
-  //println(i, x);
+  printf("%d", i);
+  printf("\n");
 #endif
 }
 inline void debug_println(long l, int x = 0) {
 #if (DEBUG_ENABLED)
-  //println(l, x);
+  printf("%ld", l);
+  printf("\n");
 #endif
 }
 inline void debug_println(double d, int x = 0) {
 #if (DEBUG_ENABLED)
-  //println(d, x);
+  printf("%f", d);
+  printf("\n");
 #endif
 }
 inline void debug_println() {
 #if (DEBUG_ENABLED)
-  //println();
+  printf("\n");
 #endif
 }
 

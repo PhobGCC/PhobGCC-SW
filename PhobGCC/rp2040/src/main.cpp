@@ -725,6 +725,11 @@ int main() {
 	//it's actually the default so we don't need to
 	//set_sys_clock_khz(1000*_us, true);
 
+	//debug stuff
+#if (DEBUG_ENABLED)
+	stdio_init_all();
+#endif
+
 	//Read settings; true = don't lock out the core because running it on core 1 will freeze
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
 	if(numberOfNaN > 10){//by default it seems 16 end up unitialized on pico
