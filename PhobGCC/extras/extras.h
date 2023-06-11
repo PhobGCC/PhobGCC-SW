@@ -8,7 +8,7 @@
  *
  */
 //------------------------------------------------------
-#define EXTRAS_ESS
+//#define EXTRAS_ESS
 //------------------------------------------------------
 
 #ifdef EXTRAS_ESS
@@ -66,7 +66,7 @@ void extrasInit() {
 	 */
 #ifdef EXTRAS_ESS
 	//-----------------------------------------
-	ess::extrasEssConfigSlot = EXTRAS_RIGHT;
+	ess::extrasEssConfigSlot = EXTRAS_UNSET;
 	//-----------------------------------------
 	debug_println("Extra: Enabling ESS functionality...");
 	extrasConfigAssign(ess::extrasEssConfigSlot, ess::toggle, NULL);
