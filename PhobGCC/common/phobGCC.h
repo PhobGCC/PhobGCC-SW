@@ -1654,7 +1654,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 			break;
 		case 1: //Digital Only Trigger state
-			tempBtn.La = (uint8_t) 0;
+			tempBtn.L = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa > 10 ? 1 : 0;
 			break;
 		case 2: //Analog Only Trigger state
 			tempBtn.L  = (uint8_t) 0;
@@ -1694,7 +1694,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			break;
 		case 1: //Digital Only Trigger state
-			tempBtn.Ra = (uint8_t) 0;
+			tempBtn.R = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa > 10 ? 1 : 0;
 			break;
 		case 2: //Analog Only Trigger state
 			tempBtn.R  = (uint8_t) 0;

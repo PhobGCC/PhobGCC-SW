@@ -25,3 +25,5 @@ fp-info-cache
 *.vimrc
 # cmake build stuff
 *build*/
+# vscode
+.vscode
