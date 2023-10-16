@@ -39,7 +39,7 @@ ControlConfig _controls{
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 6,
+	.triggerConfigMax = 7,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
@@ -808,17 +808,9 @@ bool checkAdjustExtra(ExtrasSlot slot, Buttons &btn, bool checkConfig){
 
 void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER) {
-		if(controls.lConfig >= controls.triggerConfigMax) {
-			controls.lConfig = 0;
-		} else {
-			controls.lConfig = controls.lConfig + 1;
-		}
+		controls.lConfig = (controls.lConfig + 1) % controls.triggerConfigMax;
 	} else {
-		if(controls.rConfig >= controls.triggerConfigMax) {
-			controls.rConfig = 0;
-		} else {
-			controls.rConfig = controls.rConfig + 1;
-		}
+		controls.rConfig = (controls.rConfig + 1) % controls.triggerConfigMax;
 	}
 	setLSetting(controls.lConfig);
 	setRSetting(controls.rConfig);
@@ -828,10 +820,10 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, Con
 	int lConfig = controls.lConfig;
 	int rConfig = controls.rConfig;
 	int triggerConflict = 0;
-	if(rConfig == 4 && (lConfig == 0 || lConfig == 2 || lConfig == 3)) {
+	if(rConfig == 5 && (lConfig == 0 || lConfig == 2 || lConfig == 3)) {
 		triggerConflict = -100;
 	}
-	if(lConfig == 4 && (rConfig == 0 || rConfig == 2 || rConfig == 3)) {
+	if(lConfig == 5 && (rConfig == 0 || rConfig == 2 || rConfig == 3)) {
 		triggerConflict = -100;
 	}
 	//We want to one-index the modes for the users, so we add 1 here
@@ -1638,8 +1630,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//when a trigger is in lockout due to the other being mode 5,
 	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
 	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
-	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
+	const bool lockoutL = controls.rConfig == 5 && (controls.lConfig != 1 && controls.lConfig != 5 && controls.lConfig != 6);
+	const bool lockoutR = controls.lConfig == 5 && (controls.rConfig != 1 && controls.rConfig != 5 && controls.rConfig != 6);
 
 	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
 	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
@@ -1663,7 +1655,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 3: //Trigger Plug Emulation state
 			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
 			break;
-		case 4: //Digital => Analog Value state
+		case 4: // Digital threshold state
+			tempBtn.L = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa > 30 ? 1 : 0;
+			break;
+		case 5: //Digital => Analog Value state
 			if(tempBtn.L) {
 				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
 			} else {
@@ -1671,14 +1666,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			}
 			tempBtn.L = (uint8_t) 0;
 			break;
-		case 5: //Digital => Analog Value + Digital state
+		case 6: //Digital => Analog Value + Digital state
 			if(tempBtn.L) {
 				tempBtn.La = (uint8_t) min(controls.lTriggerOffset, 255);
 			} else {
 				tempBtn.La = (uint8_t) 0;
 			}
 			break;
-		case 6: //Scales Analog Trigger Values
+		case 7: //Scales Analog Trigger Values
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 			break;
 		default:
@@ -1703,7 +1698,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 3: //Trigger Plug Emulation state
 			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
 			break;
-		case 4: //Digital => Analog Value state
+		case 4: // Digital threshold state
+			tempBtn.R = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa > 30 ? 1 : 0;
+			break;
+		case 5: //Digital => Analog Value state
 			if(tempBtn.R) {
 				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
 			} else {
@@ -1711,14 +1709,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			}
 			tempBtn.R = (uint8_t) 0;
 			break;
-		case 5: //Digital => Analog Value + Digital state
+		case 6: //Digital => Analog Value + Digital state
 			if(tempBtn.R) {
 				tempBtn.Ra = (uint8_t) min(controls.rTriggerOffset, 255);
 			} else {
 				tempBtn.Ra = (uint8_t) 0;
 			}
 			break;
-		case 6: //Scales Analog Trigger Values
+		case 7: //Scales Analog Trigger Values
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 			break;
 		default:

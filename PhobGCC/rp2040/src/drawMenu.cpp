@@ -726,12 +726,12 @@ void drawTrigger(unsigned char bitmap[],
 	drawInt(   bitmap, 120, 210, 15, 0, controls.lTriggerOffset);
 	drawString(bitmap, 280, 210, 15, trigger4);
 	drawInt(   bitmap, 370, 210, 15, 0, controls.rTriggerOffset);
-	if(controls.lConfig == 4) {
-		if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
+	if(controls.lConfig == 5) {
+		if(controls.rConfig != 1 && controls.rConfig != 5 && controls.rConfig != 6) {
 			drawString(bitmap, 30, 230, 15, trigger5);
 		}
-	} else if(controls.rConfig == 4) {
-		if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
+	} else if(controls.rConfig == 5) {
+		if(controls.lConfig != 1 && controls.lConfig != 5 && controls.lConfig != 6) {
 			drawString(bitmap, 30, 230, 15, trigger6);
 		}
 	}
@@ -811,7 +811,7 @@ void drawLtrigger(unsigned char bitmap[],
 	switch(controls.lConfig) {
 		case 0:
 			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 150, 15, l5conflict);}
+			if(controls.rConfig == 5) {drawString(bitmap, 30, 150, 15, l5conflict);}
 			break;
 		case 1:
 			drawString(bitmap,  30, 130, 15, lrtrigger5);
@@ -820,7 +820,7 @@ void drawLtrigger(unsigned char bitmap[],
 		case 2:
 			drawString(bitmap,  30, 130, 15, lrtrigger7);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 170, 15, l5conflict);}
+			if(controls.rConfig == 5) {drawString(bitmap, 30, 170, 15, l5conflict);}
 			break;
 		case 3:
 			drawString(bitmap,  30, 130, 15, lrtrigger9);
@@ -828,7 +828,7 @@ void drawLtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 150, 15, lrtrigger10);
 			drawString(bitmap,  30, 170, 15, lrtrigger11);
 			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
+			if(controls.rConfig == 5) {drawString(bitmap, 30, 210, 15, l5conflict);}
 			break;
 		case 4:
 			drawString(bitmap,  30, 130, 15, lrtrigger12);
@@ -853,7 +853,7 @@ void drawLtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 170, 15, lrtrigger21);
 			drawString(bitmap,  30, 190, 15, lrtrigger22);
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.lTriggerOffset) + 0.4494f);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
+			if(controls.rConfig == 5) {drawString(bitmap, 30, 210, 15, l5conflict);}
 			break;
 	}
 	//graph?
@@ -888,7 +888,7 @@ void drawRtrigger(unsigned char bitmap[],
 	switch(controls.rConfig) {
 		case 0:
 			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 150, 15, r5conflict);}
+			if(controls.lConfig == 5) {drawString(bitmap, 30, 150, 15, r5conflict);}
 			break;
 		case 1:
 			drawString(bitmap,  30, 130, 15, lrtrigger5);
@@ -897,7 +897,7 @@ void drawRtrigger(unsigned char bitmap[],
 		case 2:
 			drawString(bitmap,  30, 130, 15, lrtrigger7);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 170, 15, r5conflict);}
+			if(controls.lConfig == 5) {drawString(bitmap, 30, 170, 15, r5conflict);}
 			break;
 		case 3:
 			drawString(bitmap,  30, 130, 15, lrtrigger9);
@@ -905,7 +905,7 @@ void drawRtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 150, 15, lrtrigger10);
 			drawString(bitmap,  30, 170, 15, lrtrigger11);
 			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
+			if(controls.lConfig == 5) {drawString(bitmap, 30, 210, 15, r5conflict);}
 			break;
 		case 4:
 			drawString(bitmap,  30, 130, 15, lrtrigger12);
@@ -930,7 +930,7 @@ void drawRtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 170, 15, lrtrigger21);
 			drawString(bitmap,  30, 190, 15, lrtrigger22);
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.rTriggerOffset) + 0.4494f);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
+			if(controls.lConfig == 5) {drawString(bitmap, 30, 210, 15, r5conflict);}
 			break;
 	}
 	//graph?
