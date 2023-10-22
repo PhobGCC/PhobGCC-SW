@@ -39,7 +39,7 @@ ControlConfig _controls{
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 6,
+	.triggerConfigMax = 7,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
@@ -1681,6 +1681,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 6: //Scales Analog Trigger Values
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 			break;
+		case 7: // Analog => Digital Value state
+			tempBtn.La = (uint8_t) 0;
+			if ((readLa(pin, controls.lTrigInitial, 1) * shutoffLa) > controls.lTriggerOffset) { // Arbitrary deadzone for digital press.
+				tempBtn.L = (uint8_t) 1;
+			}
+			break;
 		default:
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 	}
@@ -1720,6 +1726,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			break;
 		case 6: //Scales Analog Trigger Values
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
+			break;
+		case 7: // Analog => Digital Value state
+			tempBtn.Ra = (uint8_t) 0;
+			if ((readRa(pin, controls.rTrigInitial, 1) * shutoffRa) > controls.rTriggerOffset) { // Arbitrary deadzone for digital press.
+				tempBtn.R = (uint8_t) 1;
+			}
 			break;
 		default:
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
