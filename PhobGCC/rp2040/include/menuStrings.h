@@ -86,9 +86,10 @@ const char asnapback5[]      = "Min: -10  Max: 10  Default: 4";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
-const char awave2[]          = "Higher values reduce the speed threshold.";
-const char awave3[]          = "It affects pivots, DBOOC, dashback, and more.";
-const char awave4[]          = "Min: 0  Max: 15  Default: 0";
+const char awave2[]          = "Greater magnitudes reduce the speed threshold.";
+const char awave3[]          = "<0 lets you mimic a high pode potentiometer.";
+const char awave4[]          = "It affects pivots, DBOOC, dashback, and more.";
+const char awave5[]          = "Min: -24  Max: 24  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asmooth1[]        = "This averages the stick position with the past.";
@@ -105,8 +106,9 @@ const char csmooth4[]        = "Min: 0  Max: 9  Default: 0";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char cwave1[]          = "This makes the stick stop during fast inputs.";//same as awave
 //const char cwave2[]          = "Higher values reduce the speed threshold.";
-const char cwave3[]          = "We're not sure what it can be used for here.";
-//const char cwave4[]          = "Min: 0  Max: 15  Default: 0";
+//const char cwave3[]          = "<0 lets you mimic a high pode potentiometer.";
+const char cwave4[]          = "This can help C-Stick ledge drop consistency.";
+//const char cwave5[]          = "Min: 24  Max: 24  Default: 0";
 
 /*
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char

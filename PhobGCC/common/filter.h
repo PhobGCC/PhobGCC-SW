@@ -210,6 +210,8 @@ float calcWaveshapeMult(const int setting){
 		return 1.0/(440 - 40*setting);
 	} else if (setting > 5 && setting <= 15) {
 		return 1.0/(340 - 20*setting);
+	} else if (setting > 15 && setting <= 24) {
+		return 1.0/(100 - 4*setting);
 	} else {
 		return 0;
 	}

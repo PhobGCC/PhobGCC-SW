@@ -350,14 +350,15 @@ void drawAwave(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, awave2);
 	drawString(bitmap,  30, 110, 15, awave3);
 	drawString(bitmap,  30, 130, 15, awave4);
-	drawString(bitmap,  30, 160, 15, leftStickX);
-	drawInt(   bitmap, 160, 160, 15, 1, controls.axWaveshaping);
-	drawString(bitmap, 280, 160, 15, leftStickY);
-	drawInt(   bitmap, 410, 160, 15, 1, controls.ayWaveshaping);
+	drawString(bitmap,  30, 150, 15, awave5);
+	drawString(bitmap,  30, 180, 15, leftStickX);
+	drawInt(   bitmap, 160, 180, 15, 1, controls.axWaveshaping);
+	drawString(bitmap, 280, 180, 15, leftStickY);
+	drawInt(   bitmap, 410, 180, 15, 1, controls.ayWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 	//graph?
 }
@@ -438,16 +439,17 @@ void drawCwave(unsigned char bitmap[],
 	drawString(bitmap,  30,  50, 15, lr_ud);
 	drawString(bitmap,  30,  70, 15, awave1);
 	drawString(bitmap,  30,  90, 15, awave2);
-	drawString(bitmap,  30, 110, 15, cwave3);
-	drawString(bitmap,  30, 130, 15, awave4);
-	drawString(bitmap,  30, 160, 15, rightStickX);
-	drawInt(   bitmap, 170, 160, 15, 1, controls.cxWaveshaping);
-	drawString(bitmap, 280, 160, 15, rightStickY);
-	drawInt(   bitmap, 420, 160, 15, 1, controls.cyWaveshaping);
+	drawString(bitmap,  30, 110, 15, awave2);
+	drawString(bitmap,  30, 130, 15, cwave4);
+	drawString(bitmap,  30, 150, 15, awave5);
+	drawString(bitmap,  30, 180, 15, rightStickX);
+	drawInt(   bitmap, 170, 180, 15, 1, controls.cxWaveshaping);
+	drawString(bitmap, 280, 180, 15, rightStickY);
+	drawInt(   bitmap, 420, 180, 15, 1, controls.cyWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 	//graph?
 }
