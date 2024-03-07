@@ -234,6 +234,8 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float yVel = yPos - oldYPos;
 	const float xVelSmooth = 0.5*(xVel + oldXVel);
 	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xAccel = xVel - oldXVel;
+	const float yAccel = yVel - oldYVel;
 
 	//The lower this value, the stronger the effect.
 	//Per Rienne's experimentation:
@@ -245,12 +247,15 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(controls.axWaveshaping);
-	const float yFactor = calcWaveshapeMult(controls.ayWaveshaping);
+	const float xFactor = calcWaveshapeMult(abs(controls.axWaveshaping));
+	const float yFactor = calcWaveshapeMult(abs(controls.ayWaveshaping));
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const bool highPodeX = controls.axWaveshaping < 0;
+	const bool highPodeY = controls.ayWaveshaping < 0;
+
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
@@ -278,6 +283,8 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float yVel = yPos - oldYPos;
 	const float xVelSmooth = 0.5*(xVel + oldXVel);
 	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xAccel = xVel - oldXVel;
+	const float yAccel = yVel - oldYVel;
 
 	//The lower this value, the stronger the effect.
 	//Per Rienne's experimentation:
@@ -289,12 +296,15 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(controls.cxWaveshaping);
-	const float yFactor = calcWaveshapeMult(controls.cyWaveshaping);
+	const float xFactor = calcWaveshapeMult(abs(controls.cxWaveshaping));
+	const float yFactor = calcWaveshapeMult(abs(controls.cyWaveshaping));
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const bool highPodeX = controls.cxWaveshaping < 0;
+	const bool highPodeY = controls.cyWaveshaping < 0;
+
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
