@@ -50,7 +50,7 @@ ControlConfig _controls{
 	.cMax = 127,
 	.cMin = -127,
 	.rumble = 9,
-	.rumbleMin = 0,
+	.rumbleMin = -11,
 	.rumbleMax = 11,
 	.rumbleDefault = 9,//5 is the max for 3v cell rumble, 9 is for oem-feeling normal rumble motors
 	.rumbleFactory = 9,
@@ -148,6 +148,8 @@ Pins _pinList {
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
 		return pow(2.0, 7+((rumble-3)/8.0)); //should be 256 when rumble is 11
+	} else if(rumble < 0) {
+		return -pow(2.0, 7+((-rumble-3)/8.0)); //should be 256 when rumble is 11
 	} else {
 		return 0;
 	}

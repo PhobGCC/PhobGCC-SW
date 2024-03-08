@@ -425,9 +425,9 @@ void commInt() {
 #ifdef RUMBLE
 			if(_cmdByte & 0b00000001){
 				analogWrite(_pinBrake,0);
-				analogWrite(_pinRumble, _rumblePower);
+				analogWrite(_pinRumble, abs(_rumblePower));
 			}
-			else if(_cmdByte & 0b00000010){
+			else if(_cmdByte & 0b00000010 && (_rumblePower >= 0)){
 				analogWrite(_pinRumble,0);
 				analogWrite(_pinBrake,256);
 			}
