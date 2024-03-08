@@ -420,8 +420,8 @@ void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &co
 	btn.Cy = (uint8_t) (_floatOrigin + controls.aySmoothing);
 
 	//Waveshaping on triggers
-	btn.La = (uint8_t) controls.axWaveshaping;
-	btn.Ra = (uint8_t) controls.ayWaveshaping;
+	btn.La = (uint8_t) (controls.axWaveshaping >= 0) ? controls.axWaveshaping : 100-controls.axWaveshaping;
+	btn.Ra = (uint8_t) (controls.ayWaveshaping >= 0) ? controls.ayWaveshaping : 100-controls.ayWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
@@ -523,8 +523,8 @@ void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
 
 	//Waveshaping on triggers
-	btn.La = (uint8_t) controls.cxWaveshaping;
-	btn.Ra = (uint8_t) controls.cyWaveshaping;
+	btn.La = (uint8_t) (controls.cxWaveshaping >= 0) ? controls.cxWaveshaping : 100-controls.cxWaveshaping;
+	btn.Ra = (uint8_t) (controls.cyWaveshaping >= 0) ? controls.cyWaveshaping : 100-controls.cyWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
