@@ -87,7 +87,7 @@ const char asnapback5[]      = "Min: -10  Max: 10  Default: 4";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
 const char awave2[]          = "Greater magnitudes reduce the speed threshold.";
-const char awave3[]          = "<0 lets you mimic a high pode potentiometer.";
+const char awave3[]          = "<0 lets you mimic a heavy pode potentiometer.";
 const char awave4[]          = "It affects pivots, DBOOC, dashback, and more.";
 const char awave5[]          = "Min: -24  Max: 24  Default: 0";
 
