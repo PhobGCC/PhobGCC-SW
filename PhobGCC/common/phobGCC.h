@@ -81,6 +81,7 @@ ControlConfig _controls{
 	.cyWaveshaping = 0,
 	.waveshapingMin = -24,
 	.waveshapingMax = 24,
+	.waveshapingDefault = 0,
 	.waveshapingFactoryAX = 0,
 	.waveshapingFactoryAY = 0,
 	.waveshapingFactoryCX = 0,
@@ -1071,10 +1072,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the axWaveshaping value from eeprom is:");
 	debug_println(controls.axWaveshaping);
 	if(controls.axWaveshaping < controls.waveshapingMin) {
-		controls.axWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	} else if (controls.axWaveshaping > controls.waveshapingMax) {
-		controls.axWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	}
 
@@ -1083,10 +1084,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the ayWaveshaping value from eeprom is:");
 	debug_println(controls.ayWaveshaping);
 	if(controls.ayWaveshaping < controls.waveshapingMin) {
-		controls.ayWaveshaping = controls.waveshapingMin;
+		controls.ayWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	} else if (controls.ayWaveshaping > controls.waveshapingMax) {
-		controls.ayWaveshaping = controls.waveshapingMax;
+		controls.ayWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	}
 
@@ -1095,10 +1096,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the cxWaveshaping value from eeprom is:");
 	debug_println(controls.cxWaveshaping);
 	if(controls.cxWaveshaping < controls.waveshapingMin) {
-		controls.cxWaveshaping = controls.waveshapingMin;
+		controls.cxWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	} else if (controls.cxWaveshaping > controls.waveshapingMax) {
-		controls.cxWaveshaping = controls.waveshapingMin;
+		controls.cxWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	}
 
@@ -1107,10 +1108,10 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the cyWaveshaping value from eeprom is:");
 	debug_println(controls.cyWaveshaping);
 	if(controls.cyWaveshaping < controls.waveshapingMin) {
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	} else if (controls.cyWaveshaping > controls.waveshapingMax) {
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
 	}
 
@@ -1376,15 +1377,15 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		controls.cxWaveshaping = controls.waveshapingFactoryCX;
 		controls.cyWaveshaping = controls.waveshapingFactoryCY;
 	} else {
-		controls.axWaveshaping = controls.waveshapingMin;
-		controls.ayWaveshaping = controls.waveshapingMin;
-		controls.cxWaveshaping = controls.waveshapingMin;
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
+		controls.ayWaveshaping = controls.waveshapingDefault;
+		controls.cxWaveshaping = controls.waveshapingDefault;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 	}
-	setWaveshapingSetting(controls.waveshapingMin, ASTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, ASTICK, YAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, CSTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, CSTICK, YAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, YAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, YAXIS);
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;

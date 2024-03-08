@@ -207,6 +207,7 @@ struct ControlConfig{
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
+	const int waveshapingDefault;
 	const int waveshapingFactoryAX;
 	const int waveshapingFactoryAY;
 	const int waveshapingFactoryCX;
