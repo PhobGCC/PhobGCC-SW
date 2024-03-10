@@ -706,8 +706,9 @@ void drawRumble(unsigned char bitmap[],
 	drawString(bitmap,  30, 110, 15, rumble3);
 	drawString(bitmap,  30, 130, 15, rumble4);
 	drawString(bitmap,  30, 150, 15, rumble5);
-	drawString(bitmap,  30, 180, 15, currentSetting);
-	drawInt(   bitmap, 190, 180, 15, 0, controls.rumble);
+	drawString(bitmap,  30, 170, 15, rumble6);
+	drawString(bitmap,  30, 200, 15, currentSetting);
+	drawInt(   bitmap, 190, 200, 15, 0, controls.rumble);
 }
 
 void drawTrigger(unsigned char bitmap[],

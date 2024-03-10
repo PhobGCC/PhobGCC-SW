@@ -149,7 +149,8 @@ const char rumble1[]         = "This controls the strength of rumble feedback.";
 const char rumble2[]         = "0 is off, the max is 11, and the default is 9.";
 const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
-const char rumble5[]         = "Press Z to test rumble.";
+const char rumble5[]         = "Rumble braking is disabled for negative values.";
+const char rumble6[]         = "Press Z to test rumble.";
 
 //Guide relative to offset   =  10  50   100  150
 const char trigger1[]        = "L Mode:";

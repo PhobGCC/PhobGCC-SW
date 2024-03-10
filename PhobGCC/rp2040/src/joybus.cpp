@@ -142,10 +142,13 @@ void __time_critical_func(enterMode)(const int dataPin,
 			//Rumble
             if(buffer[0] & 1) {
                 pwm_set_gpio_level(brakePin, 0);
-                pwm_set_gpio_level(rumblePin, rumblePower);
-            } else {
+                pwm_set_gpio_level(rumblePin, abs(rumblePower));
+            } else if (rumblePower >= 0) {
                 pwm_set_gpio_level(rumblePin, 0);
                 pwm_set_gpio_level(brakePin, 255);
+            } else {
+                pwm_set_gpio_level(rumblePin, 0);
+                pwm_set_gpio_level(brakePin, 0);
             }
 
         }
