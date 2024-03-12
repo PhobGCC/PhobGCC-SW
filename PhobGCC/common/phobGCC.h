@@ -70,7 +70,7 @@ ControlConfig _controls{
 	.cxSmoothing = 0,
 	.cySmoothing = 0,
 	.smoothingMin = 0,
-	.smoothingMax = 9,
+	.smoothingMax = 18,
 	.snapbackFactoryCX = 0,
 	.snapbackFactoryCY = 0,
 	.smoothingFactoryAX = 0,

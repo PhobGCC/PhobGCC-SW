@@ -95,20 +95,20 @@ const char awave5[]          = "Min: -24  Max: 24  Default: 0";
 const char asmooth1[]        = "This averages the stick position with the past.";
 const char asmooth2[]        = "It can be used to make one axis lag the other.";
 const char asmooth3[]        = "Use X=5 to make down-and-in ledgedashes work.";
-const char asmooth4[]        = "Min: 0  Max: 9  Default: 0";
+const char asmooth4[]        = "Min: 0  Max: 18  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char csmooth1[]        = "This averages the stick position with the past.";//same as asmooth1
 const char csmooth2[]        = "Make these 5 or 6 to reduce snapback.";
 const char csmooth3[]        = "Make one axis higher to make it less responsive.";
-const char csmooth4[]        = "Min: 0  Max: 9  Default: 0";
+const char csmooth4[]        = "Min: 0  Max: 18  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char cwave1[]          = "This makes the stick stop during fast inputs.";//same as awave
 //const char cwave2[]          = "Higher values reduce the speed threshold.";
 //const char cwave3[]          = "<0 lets you mimic a high pode potentiometer.";
 const char cwave4[]          = "This can help C-Stick ledge drop consistency.";
-//const char cwave5[]          = "Min: 24  Max: 24  Default: 0";
+//const char cwave5[]          = "Min: -24  Max: 24  Default: 0";
 
 /*
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char

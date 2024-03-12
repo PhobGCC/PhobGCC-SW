@@ -57,11 +57,15 @@ void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGain
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
-	gains.xSmoothing = controls.axSmoothing/10.0f;
-	gains.ySmoothing = controls.aySmoothing/10.0f;
+	//this is changed in version 0.30 so that:
+	// 8 remains the same
+	// the old 9 becomes 18
+	// the new 9-17 is between the old 8 and old 9
+	gains.xSmoothing = (controls.axSmoothing <= 8) ? controls.axSmoothing/10.0f : controls.axSmoothing/100.0f+0.72f;
+	gains.ySmoothing = (controls.aySmoothing <= 8) ? controls.aySmoothing/10.0f : controls.aySmoothing/100.0f+0.72f;
 
-	gains.cXSmoothing = controls.cxSmoothing/10.0f;
-	gains.cYSmoothing = controls.cySmoothing/10.0f;
+	gains.cXSmoothing = (controls.cxSmoothing <= 8) ? controls.cxSmoothing/10.0f : controls.cxSmoothing/100.0f+0.72f;
+	gains.cYSmoothing = (controls.cySmoothing <= 8) ? controls.cySmoothing/10.0f : controls.cySmoothing/100.0f+0.72f;
 
 	//Recompute the intermediate gains used directly by the kalman filter
 	//This happens according to the time between loop iterations.
