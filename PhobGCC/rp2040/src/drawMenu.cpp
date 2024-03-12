@@ -1417,39 +1417,44 @@ void drawTimeScope(unsigned char bitmap[],
 	switch(capture.mode) {
 		case CM_STICK_FALL:
 			drawString(bitmap, 410,  80, 15, timescope9);
-			drawFloat(bitmap,  410, 110, 15, 2, 6, capture.percents[0]);
-			drawString(bitmap, 470, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 6, capture.percents[0]);
+			drawString(bitmap, 470, 105, 15, "%");
 			drawString(bitmap, 410, 210, 15, timescope10);
-			drawFloat(bitmap,  410, 240, 15, 2, 6, fmax(0, 100-capture.percents[0]));
-			drawString(bitmap, 470, 240, 15, "%");
+			drawFloat(bitmap,  410, 235, 15, 2, 6, fmax(0, 100-capture.percents[0]));
+			drawString(bitmap, 470, 235, 15, "%");
 			break;
 		case CM_STICK_RISE:
-			drawString(bitmap, 410,  80, 15, timescope11);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, capture.percents[0]);
-			drawString(bitmap, 450, 110, 15, "%");
+			drawString(bitmap, 410,  80, 15, timescope18);//vanilla
+			drawString(bitmap, 410, 100, 15, timescope11);
+			drawFloat(bitmap,  410, 125, 15, 2, 4, capture.percents[0]);
+			drawString(bitmap, 450, 125, 15, "%");
+			drawString(bitmap, 410, 190, 15, timescope19);//UCF
+			drawString(bitmap, 410, 210, 15, timescope11);
+			drawFloat(bitmap,  410, 235, 15, 2, 4, capture.percents[1]);
+			drawString(bitmap, 450, 235, 15, "%");
 			break;
 		case CM_STICK_PIVOT:
 			drawString(bitmap, 410,  80, 15, timescope14);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
-			drawString(bitmap, 450, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 450, 105, 15, "%");
 			drawString(bitmap, 410, 140, 15, timescope12);
 			drawString(bitmap, 410, 160, 15, timescope13);
-			drawFloat(bitmap,  410, 190, 15, 2, 4, round(capture.percents[1]));
-			drawString(bitmap, 450, 190, 15, "%");
+			drawFloat(bitmap,  410, 185, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 185, 15, "%");
 			drawString(bitmap, 410, 220, 15, timescope11);
-			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
-			drawString(bitmap, 450, 250, 15, "%");
+			drawFloat(bitmap,  410, 245, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 245, 15, "%");
 			break;
 		case CM_TRIG:
 			drawString(bitmap, 410,  80, 15, timescope15);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
-			drawString(bitmap, 450, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 450, 105, 15, "%");
 			drawString(bitmap, 410, 150, 15, timescope16);
-			drawFloat(bitmap,  410, 180, 15, 2, 4, round(capture.percents[1]));
-			drawString(bitmap, 450, 180, 15, "%");
+			drawFloat(bitmap,  410, 175, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 175, 15, "%");
 			drawString(bitmap, 410, 220, 15, timescope17);
-			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
-			drawString(bitmap, 450, 250, 15, "%");
+			drawFloat(bitmap,  410, 245, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 245, 15, "%");
 			break;
 		default:
 			break;

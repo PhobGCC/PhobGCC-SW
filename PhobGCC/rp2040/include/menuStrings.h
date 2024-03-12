@@ -265,6 +265,8 @@ const char timescope14[]     = "No Turn:";
 const char timescope15[]     = "D PS:";
 const char timescope16[]     = "ADT PS:";
 const char timescope17[]     = "No PS:";
+const char timescope18[]     = "Vanilla";
+const char timescope19[]     = "UCF";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";

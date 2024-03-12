@@ -284,6 +284,7 @@ void second_core() {
 						//stop if done
 						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
 							//calculate the dashback chance
+							//see how many ms were spent in the tilt zone, and divide by 1 frame duration
 							int counter = 0;
 							for(int i = 0; i < 200; i++) {
 								if(fabs(_dataCapture.a1[(i+_dataCapture.startIndex+1) % 200]-_intOrigin) >= 23) {
@@ -294,6 +295,35 @@ void second_core() {
 								}
 							}
 							_dataCapture.percents[0] = fmax(0, (1 - (counter/16.666667f))*100);
+
+							//calculate ucf dashback percent
+							//ucf dashback has a two frame window but the stick must have moved 75 units
+							counter = 0;
+							//try each poll offset; err on the short side
+							for(int offset = 0; offset < 16; offset++) {
+								for(int i = offset; i < (200-32); i += 16) {
+									bool dashback = false;
+									const int waitIndex = (i + _dataCapture.startIndex+1) % 200;
+									const int vanIndex = (i + _dataCapture.startIndex+1+16) % 200;
+									const int ucfIndex = (i + _dataCapture.startIndex+1+32) % 200;
+									const int waitData = abs(_dataCapture.a1[waitIndex] - _intOrigin);
+									const int vanData = abs(_dataCapture.a1[vanIndex] - _intOrigin);
+									const int ucfData = abs(_dataCapture.a1[ucfIndex] - _intOrigin);
+									if(waitData < 23 && vanData >= 64) {
+										dashback = true;
+									}
+									if(waitData < 23 && ucfData >= 64 && ucfData-waitData > 75) {
+										dashback = true;
+									}
+									if(dashback) {
+										counter++;
+									}
+								}
+							}
+							const float ucfDB = fmax(0, fmin(100, counter*100/16.0f));
+							//never want ucf % to read less than vanilla
+							//it would sometimes be like 4% lower, because we were conservative here
+							_dataCapture.percents[1] = fmax(_dataCapture.percents[0], ucfDB);
 
 							//clean up
 							_dataCapture.done = true;
