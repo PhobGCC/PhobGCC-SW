@@ -1297,24 +1297,45 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			controls.tournamentToggle = controls.tournamentToggleMin;
 			setTournamentToggleSetting(controls.tournamentToggleMin);
 			//fallthrough
+			/*
 		case 29:
 			//uncomment these when we do have it migrate
 			migrating = true;
 			debug_println("Updating settings from 0.29");
 
-			//write to controls AND write to settings
+			//write to controls AND write to settings!!
+
+			//fix the cardinal snapping just in case
 			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 			setCardinalSnappingSetting(controls.cardinalSnappingDefault, ASTICK);
 			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 			setCardinalSnappingSetting(controls.cardinalSnappingDefault, CSTICK);
+
+			if(controls.axSmoothing == 9) {
+				controls.axSmoothing = 18;
+				setXSmoothingSetting(18);
+			}
+			if(controls.aySmoothing == 9) {
+				controls.aySmoothing = 18;
+				setYSmoothingSetting(18);
+			}
+			if(controls.cxSmoothing == 9) {
+				controls.cxSmoothing = 18;
+				setCxSmoothingSetting(18);
+			}
+			if(controls.cySmoothing == 9) {
+				controls.cySmoothing = 18;
+				setCySmoothingSetting(18);
+			}
 			//fallthrough
+			*/
 			/*
 		case 30:
 			//uncomment these when we do have it migrate
 			migrating = true;
 			debug_println("Updating settings from 0.30");
 
-			//write to controls AND write to settings
+			//write to controls AND write to settings!!
 			//fallthrough
 			*/
 		default:
