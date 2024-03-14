@@ -1788,6 +1788,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(startLockout <= 0) {
 			tempBtn.S = (uint8_t) (1);
 		}
+		//override and instantly output start if both start and ddown are pressed
+		if(hardware.Dd) {
+			tempBtn.S = (uint8_t) (1);
+			//suppress ddown
+			tempBtn.Dd = (uint8_t) (0);
+		}
 	} else if(startLockout < 1000) {
 		startLockout++;
 	}
@@ -1799,11 +1805,24 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(duLockout <= 0) {
 			tempBtn.Du = (uint8_t) (1);
 		}
+		//override and instantly dup if start and dup are both pressed
+		if(hardware.S) {
+			tempBtn.Du = (uint8_t) (1);
+			//suppress start
+			tempBtn.S = (uint8_t) (0);
+		}
 	} else if(duLockout < 1000) {
 		duLockout++;
 	}
 	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
-		tempBtn.Du = (uint8_t) (0);
+		//override the disable and dup if start and dup are both pressed
+		if(hardware.S && hardware.Du) {
+			tempBtn.Du = (uint8_t) (1);
+			//suppress start
+			tempBtn.S = (uint8_t) (0);
+		} else {
+			tempBtn.Du = (uint8_t) (0);
+		}
 	}
 
 	//Here we make sure LRAS actually operate.
