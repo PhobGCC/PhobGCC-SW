@@ -120,9 +120,10 @@ const char coffset4[]        = "Min: 127  Max: -127  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char cardinals1[]      = "This sets how far the stick snaps to the";
-const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -1";
+const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -2";
 const char cardinals3[]      = "disables 1.0 cardinals even on UCF 0.84+.";
-const char cardinals4[]      = "Min: -1  Max: 6  Default: 6";
+const char cardinals4[]      = "-1 gives 1.0 on 0.84 except for Zelda teleport.";
+const char cardinals5[]      = "Min: -2  Max: 6  Default: 6";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char radius1[]         = "This sets how far from the center the stick can";

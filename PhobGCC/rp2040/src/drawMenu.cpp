@@ -500,14 +500,15 @@ void drawCardinals(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, cardinals2);
 	drawString(bitmap,  30, 110, 15, cardinals3);
 	drawString(bitmap,  30, 130, 15, cardinals4);
-	drawString(bitmap,  30, 160, 15, leftStick);
-	drawInt(   bitmap, 150, 160, 15, 0, controls.astickCardinalSnapping);
-	drawString(bitmap, 280, 160, 15, rightStick);
-	drawInt(   bitmap, 410, 160, 15, 0, controls.cstickCardinalSnapping);
+	drawString(bitmap,  30, 150, 15, cardinals4);
+	drawString(bitmap,  30, 180, 15, leftStick);
+	drawInt(   bitmap, 150, 180, 15, 0, controls.astickCardinalSnapping);
+	drawString(bitmap, 280, 180, 15, rightStick);
+	drawInt(   bitmap, 410, 180, 15, 0, controls.cstickCardinalSnapping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 }
 

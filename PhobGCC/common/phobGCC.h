@@ -88,7 +88,7 @@ ControlConfig _controls{
 	.waveshapingFactoryCY = 0,
 	.astickCardinalSnapping = 6,
 	.cstickCardinalSnapping = 6,
-	.cardinalSnappingMin = -1,
+	.cardinalSnappingMin = -2,
 	.cardinalSnappingMax = 6,
 	.cardinalSnappingDefault = 6,
 	.astickAnalogScaler = 100,

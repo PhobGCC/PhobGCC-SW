@@ -175,35 +175,59 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	if(currentCalStep == -1) {
 
 		if(whichStick == ASTICK) {
-			if(controls.astickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.astickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
+			const int snapping = controls.astickCardinalSnapping;
+			if(snapping > 0) {
+				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.astickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
+				if((abs(*yOut)<snapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
-			} else if(controls.astickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
-					*xOut = 7;
+			} else if(snapping < 0) {
+				//Use this to prevent cardinals from ever being 1.0.
+				//If you have it set to -1, it will prevent all 1.0 on vanilla and ucf prior to 0.84.
+				//It will not prevent 1.0 on 'Melee 1.03'.
+				//It will not prevent 1.0 on UCF 0.84, except for Zelda teleport (for some edge-cancel setups)
+				//If you have it set to -2, it will prevent all 1.0 on vanilla and all UCF.
+				//It will not prevent 1.0 on `Melee 1.03'.
+				if((abs(*xOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*yOut)>=79.5)){
+					if (*xOut >= 0) {
+						*xOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*xOut = (snapping == -2) ? -7 : -1;
+					}
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
-					*yOut = 7;
+				if((abs(*yOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*xOut)>=79.5)){
+					if (*yOut >= 0) {
+						*yOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*yOut = (snapping == -2) ? -7 : -1;
+					}
 				}
 			}
 		} else {
-			if(controls.cstickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.cstickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
+			const int snapping = controls.cstickCardinalSnapping;
+			if(snapping > 0) {
+				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.cstickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
+				if((abs(*yOut)<snapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
-			} else if(controls.cstickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
-					*xOut = 7;
+			} else if(snapping < 0) {
+				if((abs(*xOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*yOut)>=79.5)){
+					if (*xOut >= 0) {
+						*xOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*xOut = (snapping == -2) ? -7 : -1;
+					}
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
-					*yOut = 7;
+				if((abs(*yOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*xOut)>=79.5)){
+					if (*yOut >= 0) {
+						*yOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*yOut = (snapping == -2) ? -7 : -1;
+					}
 				}
 			}
 		}
