@@ -439,7 +439,7 @@ void drawCwave(unsigned char bitmap[],
 	drawString(bitmap,  30,  50, 15, lr_ud);
 	drawString(bitmap,  30,  70, 15, awave1);
 	drawString(bitmap,  30,  90, 15, awave2);
-	drawString(bitmap,  30, 110, 15, awave2);
+	drawString(bitmap,  30, 110, 15, awave3);
 	drawString(bitmap,  30, 130, 15, cwave4);
 	drawString(bitmap,  30, 150, 15, awave5);
 	drawString(bitmap,  30, 180, 15, rightStickX);
@@ -500,7 +500,7 @@ void drawCardinals(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, cardinals2);
 	drawString(bitmap,  30, 110, 15, cardinals3);
 	drawString(bitmap,  30, 130, 15, cardinals4);
-	drawString(bitmap,  30, 150, 15, cardinals4);
+	drawString(bitmap,  30, 150, 15, cardinals5);
 	drawString(bitmap,  30, 180, 15, leftStick);
 	drawInt(   bitmap, 150, 180, 15, 0, controls.astickCardinalSnapping);
 	drawString(bitmap, 280, 180, 15, rightStick);
