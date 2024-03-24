@@ -1405,10 +1405,10 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		controls.cxWaveshaping = controls.waveshapingDefault;
 		controls.cyWaveshaping = controls.waveshapingDefault;
 	}
-	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, YAXIS);
-	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, YAXIS);
+	setWaveshapingSetting(controls.axWaveshaping, ASTICK, XAXIS);
+	setWaveshapingSetting(controls.ayWaveshaping, ASTICK, YAXIS);
+	setWaveshapingSetting(controls.cxWaveshaping, CSTICK, XAXIS);
+	setWaveshapingSetting(controls.cyWaveshaping, CSTICK, YAXIS);
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;
