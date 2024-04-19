@@ -689,7 +689,7 @@ void second_core() {
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
-		if((_btn.B || _controls.autoInit || _videoOut) && !running){
+		if((_hardware.B || _controls.autoInit || _videoOut) && !running){
 			running=true;
 		}
 

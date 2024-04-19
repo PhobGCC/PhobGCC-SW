@@ -1970,13 +1970,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
 			debug_println("Calibrating the A stick");
 			whichStick = ASTICK;
-			currentCalStep ++;
+			currentCalStep = 0;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
 			debug_println("Calibrating the C stick");
 			whichStick = CSTICK;
-			currentCalStep ++;
+			currentCalStep = 0;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Snapback Filtering

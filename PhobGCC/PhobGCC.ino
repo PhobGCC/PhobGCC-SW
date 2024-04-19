@@ -54,7 +54,7 @@ void loop() {
 	static bool running = false;
 
 	//check if we should be reporting values yet
-	if((_btn.B || _controls.autoInit) && !running){
+	if((_hardware.B || _controls.autoInit) && !running){
 		Serial.println("Starting to report values");
 		running=true;
 	}
