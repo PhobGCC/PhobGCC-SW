@@ -259,9 +259,9 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const bool highPodeX = controls.axWaveshaping < 0;
 	const bool highPodeY = controls.ayWaveshaping < 0;
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh);
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*xFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
@@ -308,9 +308,9 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const bool highPodeX = controls.cxWaveshaping < 0;
 	const bool highPodeY = controls.cyWaveshaping < 0;
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh);
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*yFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
