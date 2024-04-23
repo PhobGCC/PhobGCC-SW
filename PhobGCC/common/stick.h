@@ -444,8 +444,8 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 		cmpAmt = 0.769;
 		strAmt = 1.3;
 	} else {//wider bounds for modder notches
-		cmpAmt = 0.666;
-		strAmt = 1.5;
+		cmpAmt = 0.5;
+		strAmt = 2.0;
 	}
 
 	float lowerCompressLimit = prevAngle + cmpAmt*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
