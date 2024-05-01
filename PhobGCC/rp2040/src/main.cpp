@@ -18,7 +18,7 @@ DataCapture _dataCapture;
 
 //This gets called by the comms library
 GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
-	GCReport report = {
+	GCReport report = {{
 		.a       = _btn.A,
 		.b       = _btn.B,
 		.x       = _btn.X,
@@ -39,7 +39,7 @@ GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
 		.cyStick = _btn.Cy,
 		.analogL = _btn.La,
 		.analogR = _btn.Ra
-	};
+	}};
 	return report;
 }
 
