@@ -249,11 +249,24 @@ void navigateMenu(unsigned char bitmap[],
 		uint16_t presses,
 		ControlConfig &controls,
 		DataCapture &capture) {
+
+	//store previous menu positions
+	static bool itemIndexInitialized = false;
+	static uint8_t itemIndexList[MENUCOUNT];
+	if(!itemIndexInitialized) {
+		for(int i = 0; i < MENUCOUNT; i++) {
+			itemIndexList[i] = 0;
+		}
+		itemIndexInitialized = true;
+	}
+
+
 	if(MenuIndex[menu][1] == 0) {
 		if(presses & APRESS) {
 			presses = 0;
+			itemIndexList[menu] = itemIndex;
 			menu = MenuIndex[menu][2];
-			itemIndex = 0;
+			itemIndex = itemIndexList[menu];
 			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
@@ -263,8 +276,9 @@ void navigateMenu(unsigned char bitmap[],
 				//do nothing
 			} else {
 				presses = 0;
+				itemIndexList[menu] = itemIndex;
 				menu = MenuIndex[menu][0];
-				itemIndex = 0;
+				itemIndex = itemIndexList[menu];
 				changeMade = false;
 				redraw = 1;
 			}
@@ -273,8 +287,9 @@ void navigateMenu(unsigned char bitmap[],
 			//if it's a submenu, handle a, dup, and ddown
 			if(presses & APRESS) {
 				presses = 0;
+				itemIndexList[menu] = itemIndex;
 				menu = MenuIndex[menu][itemIndex + 2];
-				itemIndex = 0;
+				itemIndex = itemIndexList[menu];
 				changeMade = false;
 				redraw = 1;
 				//don't return, we may want to handle setup things below
