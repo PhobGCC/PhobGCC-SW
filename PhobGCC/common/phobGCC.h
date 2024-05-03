@@ -67,12 +67,12 @@ ControlConfig _controls{
 	.snapbackFactoryAY = 4,
 	.axSmoothing = 0,
 	.aySmoothing = 0,
-	.cxSmoothing = 0,
-	.cySmoothing = 0,
+	.cxSmoothing = 5,
+	.cySmoothing = 5,
 	.smoothingMin = 0,
 	.smoothingMax = 18,
-	.snapbackFactoryCX = 0,
-	.snapbackFactoryCY = 0,
+	.snapbackFactoryCX = 5,
+	.snapbackFactoryCY = 5,
 	.smoothingFactoryAX = 0,
 	.smoothingFactoryAY = 0,
 	.axWaveshaping = 0,
@@ -1384,8 +1384,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	} else {
 		controls.axSmoothing = controls.smoothingMin;
 		controls.aySmoothing = controls.smoothingMin;
-		controls.cxSmoothing = controls.smoothingMin;
-		controls.cySmoothing = controls.smoothingMin;
+		controls.cxSmoothing = controls.snapbackFactoryCX;
+		controls.cySmoothing = controls.snapbackFactoryCY;
 	}
 	setXSmoothingSetting(controls.axSmoothing);
 	setYSmoothingSetting(controls.aySmoothing);
