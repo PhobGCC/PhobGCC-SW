@@ -5,6 +5,7 @@
 
 #include "hardware/pio.h"
 #include "joybus.pio.h"
+#include <string.h>
 
 #define ORG 127
 
@@ -54,6 +55,43 @@ void __time_critical_func(convertToPio)(const uint8_t* command, const int len, u
     }
     // End bit
     result[len / 2] += 3 << (2 * (8 * (len % 2)));
+}
+
+void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_report, uint8_t mode) {
+    memcpy(dest_report, report, 8);
+    if (mode == 1) {
+        dest_report->mode1.cxStick = report->cxStick >> 4;
+        dest_report->mode1.cyStick = report->cyStick >> 4;
+        dest_report->mode1.analogL = report->analogL;
+        dest_report->mode1.analogR = report->analogR;
+        dest_report->mode1.analogA = 0;
+        dest_report->mode1.analogB = 0;
+    }
+    else if (mode == 2) {
+        dest_report->mode2.cxStick = report->cxStick >> 4;
+        dest_report->mode2.cyStick = report->cyStick >> 4;
+        dest_report->mode2.analogL = report->analogL >> 4;
+        dest_report->mode2.analogR = report->analogR >> 4;
+        dest_report->mode2.analogA = 0;
+        dest_report->mode2.analogB = 0;
+    }
+    else if (mode == 4) {
+        dest_report->mode4.cxStick = report->cxStick;
+        dest_report->mode4.cyStick = report->cyStick;
+        dest_report->mode4.analogA = 0;
+        dest_report->mode4.analogB = 0;
+    }
+    else if (mode == 3) {
+        return;
+    }
+    else { // Mode 0, 5, 6, 7
+        dest_report->mode0.cxStick = report->cxStick;
+        dest_report->mode0.cyStick = report->cyStick;
+        dest_report->mode0.analogL = report->analogL >> 4;
+        dest_report->mode0.analogR = report->analogR >> 4;
+        dest_report->mode0.analogA = 0;
+        dest_report->mode0.analogB = 0;
+    }
 }
 
 void __time_critical_func(enterMode)(const int dataPin,
@@ -119,13 +157,16 @@ void __time_critical_func(enterMode)(const int dataPin,
             // It must be very fast (few us max) to be done between poll and response and still be compatible with adapters
             // Consider whether that makes sense for your project. If your state building is long, use a different control flow i.e precompute somehow and have func read it
             GCReport gcReport = func();
+            GCReport dest_report;
 
 			//get the second byte; we do this interleaved with work that must be done
             buffer[0] = pio_sm_get_blocking(pio, 0);
 
+            convertGCReport(&gcReport, &dest_report, buffer[0]);
+
             uint32_t result[5];
             int resultLen;
-            convertToPio((uint8_t*)(&gcReport), 8, result, resultLen);
+            convertToPio((uint8_t*)(&dest_report), 8, result, resultLen);
 
 			//get the third byte; we do this interleaved with work that must be done
             buffer[0] = pio_sm_get_blocking(pio, 0);
