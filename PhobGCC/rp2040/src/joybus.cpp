@@ -59,8 +59,7 @@ void __time_critical_func(convertToPio)(const uint8_t* command, const int len, u
 
 void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_report, uint8_t mode) {
     memcpy(dest_report, report, 8);
-    if (mode == 1)
-    {
+    if (mode == 1) {
         dest_report->mode1.cxStick = report->cxStick >> 4;
         dest_report->mode1.cyStick = report->cyStick >> 4;
         dest_report->mode1.analogL = report->analogL;
@@ -68,8 +67,7 @@ void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_repo
         dest_report->mode1.analogA = 0;
         dest_report->mode1.analogB = 0;
     }
-    else if (mode == 2)
-    {
+    else if (mode == 2) {
         dest_report->mode2.cxStick = report->cxStick >> 4;
         dest_report->mode2.cyStick = report->cyStick >> 4;
         dest_report->mode2.analogL = report->analogL >> 4;
@@ -77,20 +75,16 @@ void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_repo
         dest_report->mode2.analogA = 0;
         dest_report->mode2.analogB = 0;
     }
-    else if (mode == 4)
-    {
+    else if (mode == 4) {
         dest_report->mode4.cxStick = report->cxStick;
         dest_report->mode4.cyStick = report->cyStick;
         dest_report->mode4.analogA = 0;
         dest_report->mode4.analogB = 0;
     }
-    else if (mode == 3)
-    {
+    else if (mode == 3) {
         return;
     }
-    // Mode 0, 5, 6, 7
-    else
-    {
+    else { // Mode 0, 5, 6, 7
         dest_report->mode0.cxStick = report->cxStick;
         dest_report->mode0.cyStick = report->cyStick;
         dest_report->mode0.analogL = report->analogL >> 4;

@@ -23,10 +23,10 @@ typedef union {
         uint8_t yStick;
         uint8_t cxStick;
         uint8_t cyStick;
+        uint8_t analogR : 4;//note: within bytes, LSB is first
         uint8_t analogL : 4;
-        uint8_t analogR : 4;
-        uint8_t analogA : 4;
         uint8_t analogB : 4;
+        uint8_t analogA : 4;
     } mode0;
 
     struct {
@@ -34,12 +34,12 @@ typedef union {
         uint8_t dLeft : 1; uint8_t dRight : 1; uint8_t dDown : 1; uint8_t dUp : 1; uint8_t z : 1; uint8_t r : 1; uint8_t l : 1; uint8_t pad1 : 1;
         uint8_t xStick;
         uint8_t yStick;
-        uint8_t cxStick : 4;
         uint8_t cyStick : 4;
+        uint8_t cxStick : 4;
         uint8_t analogL;
         uint8_t analogR;
-        uint8_t analogA : 4;
         uint8_t analogB : 4;
+        uint8_t analogA : 4;
     } mode1;
 
     struct {
@@ -47,10 +47,10 @@ typedef union {
         uint8_t dLeft : 1; uint8_t dRight : 1; uint8_t dDown : 1; uint8_t dUp : 1; uint8_t z : 1; uint8_t r : 1; uint8_t l : 1; uint8_t pad1 : 1;
         uint8_t xStick;
         uint8_t yStick;
-        uint8_t cxStick : 4;
         uint8_t cyStick : 4;
-        uint8_t analogL : 4;
+        uint8_t cxStick : 4;
         uint8_t analogR : 4;
+        uint8_t analogL : 4;
         uint8_t analogA;
         uint8_t analogB;
     } mode2;
