@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <bit>
 using std::min;
 using std::max;
 
@@ -33,9 +34,13 @@ using std::max;
 #define SW_VERSION 30
 
 ControlConfig _controls{
-	.jumpConfig = DEFAULTJUMP,
-	.jumpConfigMin = DEFAULTJUMP,
-	.jumpConfigMax = SWAP_YR,
+	.aRemap = A_REMAP,
+	.bRemap = B_REMAP,
+	.lRemap = L_REMAP,
+	.rRemap = R_REMAP,
+	.xRemap = X_REMAP,
+	.yRemap = Y_REMAP,
+	.zRemap = Z_REMAP,
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
@@ -667,70 +672,115 @@ void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &cont
 	clearButtons(750, btn, hardware);
 }
 
-//apply digital button swaps for L, R, or Z jumping
-void applyJump(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
-	switch(controls.jumpConfig){
-		case SWAP_XZ:
-			btn.X = hardware.Z;
-			btn.Z = hardware.X;
+//apply digital button swaps for ABLRXYZ
+void applyRemaps(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
+	uint8_t source =
+		hardware.A << A_REMAP |
+		hardware.B << B_REMAP |
+		hardware.L << L_REMAP |
+		hardware.R << R_REMAP |
+		hardware.X << X_REMAP |
+		hardware.Y << Y_REMAP |
+		hardware.Z << Z_REMAP;
+	btn.A = (source & (1 << controls.aRemap)) != 0;
+	btn.B = (source & (1 << controls.bRemap)) != 0;
+	btn.L = (source & (1 << controls.lRemap)) != 0;
+	btn.R = (source & (1 << controls.rRemap)) != 0;
+	btn.X = (source & (1 << controls.xRemap)) != 0;
+	btn.Y = (source & (1 << controls.yRemap)) != 0;
+	btn.Z = (source & (1 << controls.zRemap)) != 0;
+}
+
+void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
+	if(step == 0) {
+		//clear the struct
+		controls.aRemap = 0;
+		controls.bRemap = 0;
+		controls.lRemap = 0;
+		controls.rRemap = 0;
+		controls.xRemap = 0;
+		controls.yRemap = 0;
+		controls.zRemap = 0;
+	}
+	const uint8_t source =
+		hardware.A << A_REMAP |
+		hardware.B << B_REMAP |
+		hardware.L << L_REMAP |
+		hardware.R << R_REMAP |
+		hardware.X << X_REMAP |
+		hardware.Y << Y_REMAP |
+		hardware.Z << Z_REMAP;
+	const uint8_t mask = controls.aRemap |
+		controls.bRemap |
+		controls.lRemap |
+		controls.rRemap |
+		controls.xRemap |
+		controls.yRemap |
+		controls.zRemap;
+	if (mask & source != 0) {
+		//a button that's already been mapped is currently pressed, so do nothing
+		return;
+	}
+	const int pressCount = hardware.A +
+		hardware.B +
+		hardware.L +
+		hardware.R +
+		hardware.X +
+		hardware.Y +
+		hardware.Z;
+	uint8_t pressedButton = 0;
+	if(pressCount == 1) {
+		if(hardware.A) {pressedButton = A_REMAP;}
+		if(hardware.B) {pressedButton = B_REMAP;}
+		if(hardware.L) {pressedButton = L_REMAP;}
+		if(hardware.R) {pressedButton = R_REMAP;}
+		if(hardware.X) {pressedButton = X_REMAP;}
+		if(hardware.Y) {pressedButton = Y_REMAP;}
+		if(hardware.Z) {pressedButton = Z_REMAP;}
+	} else {
+		//if no buttons or pressed, or somehow two buttons are pressed simultaneously,
+		//do nothingg
+		return;
+	}
+	//if we got to this point, exactly one button is pressed and it's new
+	switch(step) {
+		case -1:
+			return;
+		case A_REMAP:
+			controls.aRemap = pressedButton;
 			break;
-		case SWAP_YZ:
-			btn.Y = hardware.Z;
-			btn.Z = hardware.Y;
+		case B_REMAP:
+			controls.bRemap = pressedButton;
 			break;
-		case SWAP_XL:
-			btn.X = hardware.L;
-			btn.L = hardware.X;
+		case L_REMAP:
+			controls.lRemap = pressedButton;
 			break;
-		case SWAP_YL:
-			btn.Y = hardware.L;
-			btn.L = hardware.Y;
+		case R_REMAP:
+			controls.rRemap = pressedButton;
 			break;
-		case SWAP_XR:
-			btn.X = hardware.R;
-			btn.R = hardware.X;
+		case X_REMAP:
+			controls.xRemap = pressedButton;
 			break;
-		case SWAP_YR:
-			btn.Y = hardware.R;
-			btn.R = hardware.Y;
+		case Y_REMAP:
+			controls.yRemap = pressedButton;
+			break;
+		case Z_REMAP:
+			controls.zRemap = pressedButton;
 			break;
 		default:
 			break;
-			//nothing
 	}
-}
-
-void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
-	debug_print("setting jump to: ");
-	if (controls.jumpConfig == jumpConfig) {
-		controls.jumpConfig = DEFAULTJUMP;
-		debug_println("normal again");
-	} else {
-		controls.jumpConfig = jumpConfig;
-		switch (jumpConfig) {
-			case SWAP_XZ:
-				debug_println("X<->Z");
-				break;
-			case SWAP_YZ:
-				debug_println("Y<->Z");
-				break;
-			case SWAP_XL:
-				debug_println("X<->L");
-				break;
-			case SWAP_YL:
-				debug_println("Y<->L");
-				break;
-			case SWAP_XR:
-				debug_println("X<->R");
-				break;
-			case SWAP_YR:
-				debug_println("Y<->R");
-				break;
-			default:
-				debug_println("normal");
-		}
+	step++;
+	if(step > Z_REMAP) {
+		step = -1;
+		setRemapSetting(controls.aRemap,
+				controls.bRemap,
+				controls.lRemap,
+				controls.rRemap,
+				controls.xRemap,
+				controls.yRemap,
+				controls.zRemap);
 	}
-	setJumpSetting(controls.jumpConfig);
 }
 
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -907,16 +957,14 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	int numberOfNaN = 0;
 
-	//get the jump setting
-	controls.jumpConfig = getJumpSetting();
-	if(controls.jumpConfig < controls.jumpConfigMin){
-		controls.jumpConfig = DEFAULTJUMP;
-		numberOfNaN++;
-	}
-	if(controls.jumpConfig > controls.jumpConfigMax){
-		controls.jumpConfig = DEFAULTJUMP;
-		numberOfNaN++;
-	}
+	//get the remaps
+	getRemapSetting(controls.aRemap,
+			controls.bRemap,
+			controls.lRemap,
+			controls.rRemap,
+			controls.xRemap,
+			controls.yRemap,
+			controls.zRemap);
 
 	//get the L setting
 	controls.lConfig = getLSetting();
@@ -1327,6 +1375,17 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 				controls.cySmoothing = 18;
 				setCySmoothingSetting(18);
 			}
+
+			//set remaps to defaults
+			controls.aRemap = A_REMAP;
+			controls.bRemap = B_REMAP;
+			controls.lRemap = L_REMAP;
+			controls.rRemap = R_REMAP;
+			controls.xRemap = X_REMAP;
+			controls.yRemap = Y_REMAP;
+			controls.zRemap = Z_REMAP;
+			setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
+
 			//fallthrough
 			*/
 			/*
@@ -1353,8 +1412,14 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	debug_println("RESETTING ALL DEFAULTS");
 
-	controls.jumpConfig = DEFAULTJUMP;
-	setJumpSetting(controls.jumpConfig);
+	controls.aRemap = A_REMAP;
+	controls.bRemap = B_REMAP;
+	controls.lRemap = L_REMAP;
+	controls.rRemap = R_REMAP;
+	controls.xRemap = X_REMAP;
+	controls.yRemap = Y_REMAP;
+	controls.zRemap = Z_REMAP;
+	setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
 
 	controls.lConfig = controls.triggerDefault;
 	controls.rConfig = controls.triggerDefault;
@@ -1676,8 +1741,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	Buttons tempBtn;
 	copyButtons(hardware, tempBtn);
 
-	//Swap buttons here for jump remapping
-	applyJump(controls, hardware, tempBtn);
+	//Implement button remaps
+	applyRemaps(controls, hardware, tempBtn);
 
 	//read the L and R sliders here instead of readSticks so we don't get race conditions for mode 6
 
@@ -1689,9 +1754,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
 	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
 
-	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
-	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
-	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
+	//We multiply the analog trigger reads by this to shut them off if the trigger is acting as another button
+	const int shutoffLa = controls.lRemap == L_REMAP ? 0 : 1;
+	const int shutoffRa = controls.rRemap == R_REMAP ? 0 : 1;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
 	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
@@ -1906,7 +1971,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	static int settingChangeCount = 0;
 
 	//check the hardware buttons to change the controller settings
-	if(!controls.safeMode && (currentCalStep == -1)) {
+	if(!controls.safeMode && (currentCalStep == -1) && (currentRemapStep == -1)) {
 		//it'll be unlocked after it hits zero
 		const int hardResetLockoutDuration = 800;
 		static int hardResetLockout = hardResetLockoutDuration;
@@ -2027,7 +2092,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.L && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Analog Scaler
 			settingChangeCount++;
 			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
+		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L remap and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			settingChangeCount++;
@@ -2076,7 +2141,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.L && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
 			settingChangeCount++;
 			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
+		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R remap and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			settingChangeCount++;
@@ -2096,29 +2161,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 			settingChangeCount++;
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
-		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
-			settingChangeCount++;
-			setJumpConfig(SWAP_XZ, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
-			settingChangeCount++;
-			setJumpConfig(SWAP_YZ, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.X && hardware.L && hardware.S) { //Swap X and L
-			settingChangeCount++;
-			setJumpConfig(SWAP_XL, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.L && hardware.S) { //Swap Y and L
-			settingChangeCount++;
-			setJumpConfig(SWAP_YL, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.X && hardware.R && hardware.S) { //Swap X and R
-			settingChangeCount++;
-			setJumpConfig(SWAP_XR, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.R && hardware.S) { //Swap Y and R
-			settingChangeCount++;
-			setJumpConfig(SWAP_YR, controls);
+		} else if(hardware.B && hardware.X && hardware.Y) { //Initiate remapping
+			debug_println("Remapping buttons");
+			currentRemapStep = 0;
 			freezeSticks(2000, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
@@ -2154,7 +2199,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 #endif //BATCHSETTINGS
 			}
 		}
-	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
+	} else if ((currentCalStep == -1) && (currentRemapStep == -1)) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 
 		//it'll be unlocked after it hits zero
 		const int safeModeLockoutDuration = 800;
@@ -2211,6 +2256,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			}
 		} else if (calibLockout >= 50) {
 			advanceCalPressed = false;
+		}
+	}
+
+	if(currentRemapStep != -1) {
+		if(hardware.A || hardware.B || hardware.L || hardware.R ||
+				hardware.X || hardware.Y || hardware.Z) {
+			remapAdvance(currentRemapStep, controls, hardware);
 		}
 	}
 }

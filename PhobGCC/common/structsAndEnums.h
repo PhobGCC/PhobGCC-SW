@@ -3,15 +3,15 @@
 
 #include <stdint.h>
 
-enum JumpConfig {
-	DEFAULTJUMP,
-	SWAP_XZ,
-	SWAP_YZ,
-	SWAP_XL,
-	SWAP_YL,
-	SWAP_XR,
-	SWAP_YR
-};
+enum RemapConfig {
+	A_REMAP,
+	B_REMAP,
+	L_REMAP,
+	R_REMAP,
+	X_REMAP,
+	Y_REMAP,
+	Z_REMAP
+}
 
 enum WhichTrigger {
 	LTRIGGER,
@@ -128,14 +128,6 @@ union Buttons{
 	};
 };
 
-struct HardwareButtons{
-	uint8_t L;
-	uint8_t R;
-	uint8_t Z;
-	uint8_t X;
-	uint8_t Y;
-};
-
 struct RawStick{
 	float axRaw;
 	float ayRaw;
@@ -159,9 +151,13 @@ struct Cardinals{
 };
 
 struct ControlConfig{
-	JumpConfig jumpConfig;
-	const int jumpConfigMin;
-	const int jumpConfigMax;
+	RemapConfig aRemap;
+	RemapConfig bRemap;
+	RemapConfig lRemap;
+	RemapConfig rRemap;
+	RemapConfig xRemap;
+	RemapConfig yRemap;
+	RemapConfig zRemap;
 	int lConfig;
 	int rConfig;
 	const int triggerConfigMin;
