@@ -1770,8 +1770,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
 
 	//We multiply the analog trigger reads by this to shut them off if the trigger is acting as another button
-	const int shutoffLa = controls.lRemap == L_REMAP ? 0 : 1;
-	const int shutoffRa = controls.rRemap == R_REMAP ? 0 : 1;
+	const int shutoffLa = controls.lRemap == (1 << L_REMAP) ? 0 : 1;
+	const int shutoffRa = controls.rRemap == (1 << R_REMAP) ? 0 : 1;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
 	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
