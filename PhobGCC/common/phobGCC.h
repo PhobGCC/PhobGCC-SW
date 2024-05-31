@@ -2177,7 +2177,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 			settingChangeCount++;
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
-		} else if(hardware.B && hardware.X && hardware.Y) { //Initiate remapping
+		} else if(hardware.B && hardware.X && hardware.Y && !hardware.A) { //Initiate remapping
 			debug_println("Remapping buttons");
 			beginRemapping = true;
 			freezeSticks(2000, btn, hardware);

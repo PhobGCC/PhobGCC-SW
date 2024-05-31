@@ -692,55 +692,66 @@ void drawRemap(unsigned char bitmap[],
 	drawString(bitmap,  30, 110, 15, remap4);
 	switch(currentRemapStep) {
 		case -1:
-			drawString(bitmap,  30, 130, 15, remap5);
+			drawString(bitmap,  30, 140, 15, remap5);
 			break;
 		case 0:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "A");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "A");
 			break;
 		case 1:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "B");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "B");
 			break;
 		case 2:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "L");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "L");
 			break;
 		case 3:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "R");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "R");
 			break;
 		case 4:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "X");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "X");
 			break;
 		case 5:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "Y");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Y");
 			break;
 		case 6:
-			drawString(bitmap,  30, 130, 15, remap6);
-			drawString(bitmap, 460, 130, 15, "Z");
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Z");
 			break;
 		default:
 			break;
 	}
+	if(currentRemapStep >= 0) {
+		drawString(bitmap, 470, 140, 15, ".");
+	}
 
 	drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
 
-	drawString(bitmap, 180, 180, 15, remapInvert(L_REMAP, controls));
-	drawString(bitmap, 320, 180, 15, remapInvert(R_REMAP, controls));
+	bool aRemapped = remapInvert(A_REMAP, controls) != " ";
+	bool bRemapped = remapInvert(B_REMAP, controls) != " ";
+	bool lRemapped = remapInvert(L_REMAP, controls) != " ";
+	bool rRemapped = remapInvert(R_REMAP, controls) != " ";
+	bool xRemapped = remapInvert(X_REMAP, controls) != " ";
+	bool yRemapped = remapInvert(Y_REMAP, controls) != " ";
+	bool zRemapped = remapInvert(Z_REMAP, controls) != " ";
+
+	drawString(bitmap, 180, 180, lRemapped ? 15 : 8, lRemapped ? remapInvert(L_REMAP, controls) : "L");
+	drawString(bitmap, 320, 180, rRemapped ? 15 : 8, rRemapped ? remapInvert(R_REMAP, controls) : "R");
 	drawString(bitmap, 250, 210, 15, "S");
 	drawString(bitmap, 180, 230, 10, "D");
 	drawString(bitmap, 160, 230, 15, "L");
 	drawString(bitmap, 200, 230, 15, "R");
 	drawString(bitmap, 180, 210, 15, "U");
 	drawString(bitmap, 180, 250, 15, "D");
-	drawString(bitmap, 320, 240, 15, remapInvert(A_REMAP, controls));
-	drawString(bitmap, 300, 245, 15, remapInvert(B_REMAP, controls));
-	drawString(bitmap, 340, 235, 15, remapInvert(X_REMAP, controls));
-	drawString(bitmap, 315, 220, 15, remapInvert(Y_REMAP, controls));
-	drawString(bitmap, 330, 200, 15, remapInvert(Z_REMAP, controls));
+	drawString(bitmap, 320, 240, aRemapped ? 15 : 8, aRemapped ? remapInvert(A_REMAP, controls) : "A");
+	drawString(bitmap, 300, 245, bRemapped ? 15 : 8, bRemapped ? remapInvert(B_REMAP, controls) : "B");
+	drawString(bitmap, 340, 235, xRemapped ? 15 : 8, xRemapped ? remapInvert(X_REMAP, controls) : "X");
+	drawString(bitmap, 315, 220, yRemapped ? 15 : 8, yRemapped ? remapInvert(Y_REMAP, controls) : "Y");
+	drawString(bitmap, 330, 200, zRemapped ? 15 : 8, zRemapped ? remapInvert(Z_REMAP, controls) : "Z");
 	/*
 	drawInt(bitmap,  30, 330, 15, 2, controls.aRemap);
 	drawInt(bitmap,  60, 330, 15, 2, controls.bRemap);
@@ -1132,8 +1143,8 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawString(bitmap, 450, 200, 8+7*btn.Z,  "Z");
 
 	//erase the graph
-	for(int y=40; y<256+40+1; y++) {
-		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+1/*256 pixels = 128 bytes*/);
+	for(int y=40-3; y<256+40+1+3; y++) {
+		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+2/*256 pixels = 128 bytes*/);
 	}
 
 	const int xCenter = 128;//starts at 1
