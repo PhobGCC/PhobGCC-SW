@@ -18,6 +18,7 @@
 #define YPRESS  0b0000'0010'0000'0000
 #define ZPRESS  0b0000'0100'0000'0000
 #define SPRESS  0b0000'1000'0000'0000
+#define BTAP    0b0001'0000'0000'0000
 
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
@@ -86,6 +87,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	static uint8_t drCounter = 0;//for controls that go faster when you hold them
 
 	if(hardware.B) {
+		presses = presses | BTAP;
 		backAccumulator++;
 		if(backAccumulator == 5) {//only call save once per 0.5 second B hold
 			presses = presses | BSAVE;
@@ -276,7 +278,7 @@ void navigateMenu(unsigned char bitmap[],
 	} else if(MenuIndex[menu][1] > 0) {
 		//handle holding the B button as long as you're not on the splashscreen or calibrating or remapping
 		if(presses & BPRESS) {
-			if((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0) && (currentRemapStep >= 0)) {
+			if(((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0)) || (menu == MENU_REMAP && currentRemapStep >= 0)) {
 				//do nothing
 			} else {
 				presses = 0;
@@ -663,7 +665,7 @@ void navigateMenu(unsigned char bitmap[],
 				if((presses & SPRESS) && currentRemapStep == -1) {
 					pleaseCommit = 10;
 				}
-				if(presses & (APRESS | BPRESS | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
+				if((currentRemapStep > -1) && presses & (APRESS | BTAP | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
 					pleaseCommit = 10;
 				}
 				return;

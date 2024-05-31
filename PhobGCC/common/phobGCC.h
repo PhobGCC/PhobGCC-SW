@@ -34,13 +34,13 @@ using std::max;
 #define SW_VERSION 30
 
 ControlConfig _controls{
-	.aRemap = A_REMAP,
-	.bRemap = B_REMAP,
-	.lRemap = L_REMAP,
-	.rRemap = R_REMAP,
-	.xRemap = X_REMAP,
-	.yRemap = Y_REMAP,
-	.zRemap = Z_REMAP,
+	.aRemap = 1 << A_REMAP,
+	.bRemap = 1 << B_REMAP,
+	.lRemap = 1 << L_REMAP,
+	.rRemap = 1 << R_REMAP,
+	.xRemap = 1 << X_REMAP,
+	.yRemap = 1 << Y_REMAP,
+	.zRemap = 1 << Z_REMAP,
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
@@ -705,13 +705,13 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 		return;
 	}
 	const uint8_t source =
-		hardware.A << A_REMAP |
-		hardware.B << B_REMAP |
-		hardware.L << L_REMAP |
-		hardware.R << R_REMAP |
-		hardware.X << X_REMAP |
-		hardware.Y << Y_REMAP |
-		hardware.Z << Z_REMAP;
+		(hardware.A ? 1 : 0) << A_REMAP |
+		(hardware.B ? 1 : 0) << B_REMAP |
+		(hardware.L ? 1 : 0) << L_REMAP |
+		(hardware.R ? 1 : 0) << R_REMAP |
+		(hardware.X ? 1 : 0) << X_REMAP |
+		(hardware.Y ? 1 : 0) << Y_REMAP |
+		(hardware.Z ? 1 : 0) << Z_REMAP;
 	const uint8_t mask = controls.aRemap |
 		controls.bRemap |
 		controls.lRemap |
@@ -719,11 +719,12 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 		controls.xRemap |
 		controls.yRemap |
 		controls.zRemap;
-	if (mask & source != 0) {
+	if ((mask & source) != 0) {
 		//a button that's already been mapped is currently pressed, so do nothing
 		return;
 	}
-	const int pressCount = hardware.A +
+	const int pressCount =
+		hardware.A +
 		hardware.B +
 		hardware.L +
 		hardware.R +
@@ -746,25 +747,25 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 	}
 	//if we got to this point, exactly one button is pressed and it's new
 	switch(step) {
-		case A_REMAP:
+		case 0:
 			controls.aRemap = pressedButton;
 			break;
-		case B_REMAP:
+		case 1:
 			controls.bRemap = pressedButton;
 			break;
-		case L_REMAP:
+		case 2:
 			controls.lRemap = pressedButton;
 			break;
-		case R_REMAP:
+		case 3:
 			controls.rRemap = pressedButton;
 			break;
-		case X_REMAP:
+		case 4:
 			controls.xRemap = pressedButton;
 			break;
-		case Y_REMAP:
+		case 5:
 			controls.yRemap = pressedButton;
 			break;
-		case Z_REMAP:
+		case 6:
 			controls.zRemap = pressedButton;
 			break;
 		default:
@@ -968,6 +969,17 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			controls.xRemap,
 			controls.yRemap,
 			controls.zRemap);
+	if(controls.aRemap ^ controls.bRemap ^ controls.lRemap ^ controls.rRemap ^ controls.xRemap ^ controls.yRemap ^ controls.zRemap !=
+			127) {
+		controls.aRemap = 1 << A_REMAP;
+		controls.bRemap = 1 << B_REMAP;
+		controls.lRemap = 1 << L_REMAP;
+		controls.rRemap = 1 << R_REMAP;
+		controls.xRemap = 1 << X_REMAP;
+		controls.yRemap = 1 << Y_REMAP;
+		controls.zRemap = 1 << Z_REMAP;
+		numberOfNaN++;
+	}
 
 	//get the L setting
 	controls.lConfig = getLSetting();
@@ -1966,7 +1978,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	*/
 
 	static bool advanceCal = false;
-	bool beginRemapping = true;
+	bool beginRemapping = false;
 
 	//This will count up as we request settings changes continuously
 	//If we enter the following if else block with a nonzero counter but no commands are used,

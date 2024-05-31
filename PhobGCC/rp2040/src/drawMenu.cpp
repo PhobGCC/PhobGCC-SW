@@ -647,7 +647,7 @@ void drawSet_over(unsigned char bitmap[],
 	strcat(remap, remapDecode(controls.yRemap));
 	strcat(remap, remapDecode(controls.zRemap));
 	drawString(bitmap,  30, 250, 15, remap);
-	drawString(bitmap, 120, 250, 15, set_overRemap);
+	drawString(bitmap, 110, 250, 15, set_overRemap);
 	switch(controls.tournamentToggle) {
 		case 0:
 			drawString(bitmap, 30, 270, 15, tourn0);
@@ -686,7 +686,6 @@ void drawRemap(unsigned char bitmap[],
 	if(changeMade) {
 		drawString(bitmap, 300, 20, 15, bToSave);
 	}
-	drawString(bitmap,  30,  50, 15, ud_only);
 	drawString(bitmap,  30,  50, 15, remap1);
 	drawString(bitmap,  30,  70, 15, remap2);
 	drawString(bitmap,  30,  90, 15, remap3);
@@ -695,31 +694,31 @@ void drawRemap(unsigned char bitmap[],
 		case -1:
 			drawString(bitmap,  30, 130, 15, remap5);
 			break;
-		case 1:
+		case 0:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "A");
 			break;
-		case 2:
+		case 1:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "B");
 			break;
-		case 3:
+		case 2:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "L");
 			break;
-		case 4:
+		case 3:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "R");
 			break;
-		case 5:
+		case 4:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "X");
 			break;
-		case 6:
+		case 5:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "Y");
 			break;
-		case 7:
+		case 6:
 			drawString(bitmap,  30, 130, 15, remap6);
 			drawString(bitmap, 460, 130, 15, "Z");
 			break;
@@ -727,19 +726,30 @@ void drawRemap(unsigned char bitmap[],
 			break;
 	}
 
+	drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
+
 	drawString(bitmap, 180, 180, 15, remapInvert(L_REMAP, controls));
 	drawString(bitmap, 320, 180, 15, remapInvert(R_REMAP, controls));
-	drawString(bitmap, 270, 210, 15, "S");
-	drawString(bitmap, 200, 230, 10, "D");
-	drawString(bitmap, 180, 230, 15, "L");
-	drawString(bitmap, 220, 230, 15, "R");
-	drawString(bitmap, 200, 210, 15, "U");
-	drawString(bitmap, 200, 250, 15, "D");
-	drawString(bitmap, 340, 240, 15, remapInvert(A_REMAP, controls));
-	drawString(bitmap, 320, 245, 15, remapInvert(B_REMAP, controls));
-	drawString(bitmap, 360, 235, 15, remapInvert(X_REMAP, controls));
-	drawString(bitmap, 335, 220, 15, remapInvert(Y_REMAP, controls));
-	drawString(bitmap, 350, 200, 15, remapInvert(Z_REMAP, controls));
+	drawString(bitmap, 250, 210, 15, "S");
+	drawString(bitmap, 180, 230, 10, "D");
+	drawString(bitmap, 160, 230, 15, "L");
+	drawString(bitmap, 200, 230, 15, "R");
+	drawString(bitmap, 180, 210, 15, "U");
+	drawString(bitmap, 180, 250, 15, "D");
+	drawString(bitmap, 320, 240, 15, remapInvert(A_REMAP, controls));
+	drawString(bitmap, 300, 245, 15, remapInvert(B_REMAP, controls));
+	drawString(bitmap, 340, 235, 15, remapInvert(X_REMAP, controls));
+	drawString(bitmap, 315, 220, 15, remapInvert(Y_REMAP, controls));
+	drawString(bitmap, 330, 200, 15, remapInvert(Z_REMAP, controls));
+	/*
+	drawInt(bitmap,  30, 330, 15, 2, controls.aRemap);
+	drawInt(bitmap,  60, 330, 15, 2, controls.bRemap);
+	drawInt(bitmap,  90, 330, 15, 2, controls.lRemap);
+	drawInt(bitmap, 120, 330, 15, 2, controls.rRemap);
+	drawInt(bitmap, 150, 330, 15, 2, controls.xRemap);
+	drawInt(bitmap, 180, 330, 15, 2, controls.yRemap);
+	drawInt(bitmap, 210, 330, 15, 2, controls.zRemap);
+	*/
 }
 
 void drawRumble(unsigned char bitmap[],
