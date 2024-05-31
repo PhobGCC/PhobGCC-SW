@@ -537,6 +537,54 @@ void drawRadius(unsigned char bitmap[],
 	}
 }
 
+const char* remapDecode(const uint8_t remap) {
+	switch(remap) {
+		case 1 << A_REMAP:
+			return "A";
+			break;
+		case 1 << B_REMAP:
+			return "B";
+			break;
+		case 1 << L_REMAP:
+			return "L";
+			break;
+		case 1 << R_REMAP:
+			return "R";
+			break;
+		case 1 << X_REMAP:
+			return "X";
+			break;
+		case 1 << Y_REMAP:
+			return "Y";
+			break;
+		case 1 << Z_REMAP:
+			return "Z";
+			break;
+		default:
+			return " ";
+	}
+}
+
+const char* remapInvert(const uint8_t remapCode, const ControlConfig &controls) {
+	if(controls.aRemap == (1 << remapCode)) {
+		return "A";
+	} else if(controls.bRemap == (1 << remapCode)) {
+		return "B";
+	} else if(controls.lRemap == (1 << remapCode)) {
+		return "L";
+	} else if(controls.rRemap == (1 << remapCode)) {
+		return "R";
+	} else if(controls.xRemap == (1 << remapCode)) {
+		return "X";
+	} else if(controls.yRemap == (1 << remapCode)) {
+		return "Y";
+	} else if(controls.zRemap == (1 << remapCode)) {
+		return "Z";
+	} else {
+		return " ";
+	}
+}
+
 void drawSet_over(unsigned char bitmap[],
 		const unsigned int menu,
 		const int itemIndex,
@@ -590,32 +638,16 @@ void drawSet_over(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 30, 230, 15, set_overAutoOff);
 	}
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 30, 250, 15, set_overJumpDf);
-			break;
-		case SWAP_XZ:
-			drawString(bitmap, 30, 250, 15, set_overJumpXZ);
-			break;
-		case SWAP_YZ:
-			drawString(bitmap, 30, 250, 15, set_overJumpYZ);
-			break;
-		case SWAP_XL:
-			drawString(bitmap, 30, 250, 15, set_overJumpXL);
-			break;
-		case SWAP_XR:
-			drawString(bitmap, 30, 250, 15, set_overJumpXR);
-			break;
-		case SWAP_YL:
-			drawString(bitmap, 30, 250, 15, set_overJumpYL);
-			break;
-		case SWAP_YR:
-			drawString(bitmap, 30, 250, 15, set_overJumpYR);
-			break;
-		default:
-			drawString(bitmap, 30, 250, 15, set_overJumpBr);
-			break;
-	}
+	char remap[8] = "";
+	strcat(remap, remapDecode(controls.aRemap));
+	strcat(remap, remapDecode(controls.bRemap));
+	strcat(remap, remapDecode(controls.lRemap));
+	strcat(remap, remapDecode(controls.rRemap));
+	strcat(remap, remapDecode(controls.xRemap));
+	strcat(remap, remapDecode(controls.yRemap));
+	strcat(remap, remapDecode(controls.zRemap));
+	drawString(bitmap,  30, 250, 15, remap);
+	drawString(bitmap, 120, 250, 15, set_overRemap);
 	switch(controls.tournamentToggle) {
 		case 0:
 			drawString(bitmap, 30, 270, 15, tourn0);
@@ -643,7 +675,7 @@ void drawSet_over(unsigned char bitmap[],
 
 void drawRemap(unsigned char bitmap[],
 		const unsigned int menu,
-		const int itemIndex,
+		const int currentRemapStep,
 		const bool changeMade,
 		const Buttons btn,
 		const RawStick raw,
@@ -655,37 +687,59 @@ void drawRemap(unsigned char bitmap[],
 		drawString(bitmap, 300, 20, 15, bToSave);
 	}
 	drawString(bitmap,  30,  50, 15, ud_only);
-	drawString(bitmap,  30,  70, 15, remap1);
-	drawString(bitmap,  30,  90, 15, remap2);
-	drawString(bitmap,  30, 110, 15, remap3);
-	drawString(bitmap,  30, 130, 15, remap4);
-	drawString(bitmap,  30, 160, 15, currentSetting);
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 200, 160, 15, remapDf);
+	drawString(bitmap,  30,  50, 15, remap1);
+	drawString(bitmap,  30,  70, 15, remap2);
+	drawString(bitmap,  30,  90, 15, remap3);
+	drawString(bitmap,  30, 110, 15, remap4);
+	switch(currentRemapStep) {
+		case -1:
+			drawString(bitmap,  30, 130, 15, remap5);
 			break;
-		case SWAP_XZ:
-			drawString(bitmap, 200, 160, 15, remapXZ);
+		case 1:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "A");
 			break;
-		case SWAP_YZ:
-			drawString(bitmap, 200, 160, 15, remapYZ);
+		case 2:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "B");
 			break;
-		case SWAP_XL:
-			drawString(bitmap, 200, 160, 15, remapXL);
+		case 3:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "L");
 			break;
-		case SWAP_YL:
-			drawString(bitmap, 200, 160, 15, remapYL);
+		case 4:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "R");
 			break;
-		case SWAP_XR:
-			drawString(bitmap, 200, 160, 15, remapXR);
+		case 5:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "X");
 			break;
-		case SWAP_YR:
-			drawString(bitmap, 200, 160, 15, remapYR);
+		case 6:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "Y");
+			break;
+		case 7:
+			drawString(bitmap,  30, 130, 15, remap6);
+			drawString(bitmap, 460, 130, 15, "Z");
 			break;
 		default:
-			drawString(bitmap, 200, 160, 15, remapBr);
 			break;
 	}
+
+	drawString(bitmap, 180, 180, 15, remapInvert(L_REMAP, controls));
+	drawString(bitmap, 320, 180, 15, remapInvert(R_REMAP, controls));
+	drawString(bitmap, 270, 210, 15, "S");
+	drawString(bitmap, 200, 230, 10, "D");
+	drawString(bitmap, 180, 230, 15, "L");
+	drawString(bitmap, 220, 230, 15, "R");
+	drawString(bitmap, 200, 210, 15, "U");
+	drawString(bitmap, 200, 250, 15, "D");
+	drawString(bitmap, 340, 240, 15, remapInvert(A_REMAP, controls));
+	drawString(bitmap, 320, 245, 15, remapInvert(B_REMAP, controls));
+	drawString(bitmap, 360, 235, 15, remapInvert(X_REMAP, controls));
+	drawString(bitmap, 335, 220, 15, remapInvert(Y_REMAP, controls));
+	drawString(bitmap, 350, 200, 15, remapInvert(Z_REMAP, controls));
 }
 
 void drawRumble(unsigned char bitmap[],
@@ -1863,6 +1917,7 @@ void drawMenuFast(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		const Buttons btn,
 		const Buttons hardware,
 		const RawStick raw,
@@ -1904,6 +1959,7 @@ void drawMenu(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		const int version,
 		const Buttons btn,
 		const RawStick raw,
@@ -1980,7 +2036,7 @@ void drawMenu(unsigned char bitmap[],
 			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_REMAP:
-			drawRemap(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			drawRemap(bitmap, menu, currentRemapStep, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_RUMBLE:
 			drawRumble(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);

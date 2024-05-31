@@ -3,6 +3,16 @@
 
 #include <stdint.h>
 
+enum JumpConfig {
+	DEFAULTJUMP,
+	SWAP_XZ,
+	SWAP_YZ,
+	SWAP_XL,
+	SWAP_YL,
+	SWAP_XR,
+	SWAP_YR
+};
+
 enum RemapConfig {
 	A_REMAP,
 	B_REMAP,
@@ -11,7 +21,7 @@ enum RemapConfig {
 	X_REMAP,
 	Y_REMAP,
 	Z_REMAP
-}
+};
 
 enum WhichTrigger {
 	LTRIGGER,
@@ -151,13 +161,13 @@ struct Cardinals{
 };
 
 struct ControlConfig{
-	RemapConfig aRemap;
-	RemapConfig bRemap;
-	RemapConfig lRemap;
-	RemapConfig rRemap;
-	RemapConfig xRemap;
-	RemapConfig yRemap;
-	RemapConfig zRemap;
+	uint8_t aRemap;
+	uint8_t bRemap;
+	uint8_t lRemap;
+	uint8_t rRemap;
+	uint8_t xRemap;
+	uint8_t yRemap;
+	uint8_t zRemap;
 	int lConfig;
 	int rConfig;
 	const int triggerConfigMin;

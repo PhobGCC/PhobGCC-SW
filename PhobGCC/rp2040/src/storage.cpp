@@ -50,6 +50,13 @@ void getStoragePage() {
 		_storage.settings.CstickAnalogScaler = temp.settings.CstickAnalogScaler;
 		_storage.settings.interlaceOffset = temp.settings.interlaceOffset;
 		_storage.settings.tournamentToggle = temp.settings.tournamentToggle;
+		_storage.settings.aRemap = temp.settings.aRemap;
+		_storage.settings.bRemap = temp.settings.bRemap;
+		_storage.settings.lRemap = temp.settings.lRemap;
+		_storage.settings.rRemap = temp.settings.rRemap;
+		_storage.settings.xRemap = temp.settings.xRemap;
+		_storage.settings.yRemap = temp.settings.yRemap;
+		_storage.settings.zRemap = temp.settings.zRemap;
 		fresh = true;
 	}
 }
@@ -59,13 +66,39 @@ void commitSettings(const bool noLock/* = false*/) {
 	Persistence::commit(_storage, noLock);
 }
 
-JumpConfig getJumpSetting() {
+void getRemapSetting(
+		uint8_t &aRemap,
+		uint8_t &bRemap,
+		uint8_t &lRemap,
+		uint8_t &rRemap,
+		uint8_t &xRemap,
+		uint8_t &yRemap,
+		uint8_t &zRemap) {
 	getStoragePage();
-	return _storage.settings.jump;
+	aRemap = _storage.settings.aRemap;
+	bRemap = _storage.settings.bRemap;
+	lRemap = _storage.settings.lRemap;
+	rRemap = _storage.settings.rRemap;
+	xRemap = _storage.settings.xRemap;
+	yRemap = _storage.settings.yRemap;
+	zRemap = _storage.settings.zRemap;
 }
-void setJumpSetting(const JumpConfig jump) {
+void setRemapSetting(
+		const uint8_t aRemap,
+		const uint8_t bRemap,
+		const uint8_t lRemap,
+		const uint8_t rRemap,
+		const uint8_t xRemap,
+		const uint8_t yRemap,
+		const uint8_t zRemap) {
 	getStoragePage();
-	_storage.settings.jump = jump;
+	_storage.settings.aRemap = aRemap;
+	_storage.settings.bRemap = bRemap;
+	_storage.settings.lRemap = lRemap;
+	_storage.settings.rRemap = rRemap;
+	_storage.settings.xRemap = xRemap;
+	_storage.settings.yRemap = yRemap;
+	_storage.settings.zRemap = zRemap;
 }
 
 int getLSetting() {

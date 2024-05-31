@@ -6,6 +6,8 @@ project(phobgcc_rp2040 CXX C ASM)
 
 pico_sdk_init()
 
+set(CMAKE_CXX_FLAGS "-O2")
+
 include_directories(
 	include
 	../common

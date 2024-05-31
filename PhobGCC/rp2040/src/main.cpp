@@ -14,6 +14,7 @@ volatile bool _videoOut = false;
 volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
+int _currentRemapStep = -1;//-1 means not remapping
 DataCapture _dataCapture;
 
 //This gets called by the comms library
@@ -677,6 +678,13 @@ void second_core() {
 						//nothing
 						break;
 				}
+			} else if(_pleaseCommit == 10) {
+				//advance remap
+				_pleaseCommit = 255;
+				if(_currentRemapStep == -1) {
+					_currentRemapStep++;
+				}
+				remapAdvance(_currentRemapStep, _controls, _hardware);
 			}
 		}
 
@@ -744,7 +752,7 @@ void second_core() {
 		}
 
 		//read the controller's buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, _currentRemapStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	}
 }
@@ -864,7 +872,7 @@ int main() {
 #else //BUILD_DEV
 		const int version = SW_VERSION;
 #endif //BUILD_DEV
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, version);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, _currentRemapStep, version);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

@@ -682,18 +682,18 @@ void applyRemaps(const ControlConfig &controls, const Buttons &hardware, Buttons
 		hardware.X << X_REMAP |
 		hardware.Y << Y_REMAP |
 		hardware.Z << Z_REMAP;
-	btn.A = (source & (1 << controls.aRemap)) != 0;
-	btn.B = (source & (1 << controls.bRemap)) != 0;
-	btn.L = (source & (1 << controls.lRemap)) != 0;
-	btn.R = (source & (1 << controls.rRemap)) != 0;
-	btn.X = (source & (1 << controls.xRemap)) != 0;
-	btn.Y = (source & (1 << controls.yRemap)) != 0;
-	btn.Z = (source & (1 << controls.zRemap)) != 0;
+	btn.A = (source & controls.aRemap) != 0;
+	btn.B = (source & controls.bRemap) != 0;
+	btn.L = (source & controls.lRemap) != 0;
+	btn.R = (source & controls.rRemap) != 0;
+	btn.X = (source & controls.xRemap) != 0;
+	btn.Y = (source & controls.yRemap) != 0;
+	btn.Z = (source & controls.zRemap) != 0;
 }
 
 void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
-	if(step == 0) {
-		//clear the struct
+	if(step == -1) {
+		//clear the mappings
 		controls.aRemap = 0;
 		controls.bRemap = 0;
 		controls.lRemap = 0;
@@ -701,6 +701,8 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 		controls.xRemap = 0;
 		controls.yRemap = 0;
 		controls.zRemap = 0;
+		step = 0;
+		return;
 	}
 	const uint8_t source =
 		hardware.A << A_REMAP |
@@ -730,22 +732,20 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 		hardware.Z;
 	uint8_t pressedButton = 0;
 	if(pressCount == 1) {
-		if(hardware.A) {pressedButton = A_REMAP;}
-		if(hardware.B) {pressedButton = B_REMAP;}
-		if(hardware.L) {pressedButton = L_REMAP;}
-		if(hardware.R) {pressedButton = R_REMAP;}
-		if(hardware.X) {pressedButton = X_REMAP;}
-		if(hardware.Y) {pressedButton = Y_REMAP;}
-		if(hardware.Z) {pressedButton = Z_REMAP;}
+		if(hardware.A) {pressedButton = 1 << A_REMAP;}
+		if(hardware.B) {pressedButton = 1 << B_REMAP;}
+		if(hardware.L) {pressedButton = 1 << L_REMAP;}
+		if(hardware.R) {pressedButton = 1 << R_REMAP;}
+		if(hardware.X) {pressedButton = 1 << X_REMAP;}
+		if(hardware.Y) {pressedButton = 1 << Y_REMAP;}
+		if(hardware.Z) {pressedButton = 1 << Z_REMAP;}
 	} else {
 		//if no buttons or pressed, or somehow two buttons are pressed simultaneously,
-		//do nothingg
+		//do nothing
 		return;
 	}
 	//if we got to this point, exactly one button is pressed and it's new
 	switch(step) {
-		case -1:
-			return;
 		case A_REMAP:
 			controls.aRemap = pressedButton;
 			break;
@@ -780,6 +780,9 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 				controls.xRemap,
 				controls.yRemap,
 				controls.zRemap);
+#ifdef BATCHSETTINGS
+		commitSettings();
+#endif //BATCHSETTINGS
 	}
 }
 
@@ -1377,13 +1380,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			}
 
 			//set remaps to defaults
-			controls.aRemap = A_REMAP;
-			controls.bRemap = B_REMAP;
-			controls.lRemap = L_REMAP;
-			controls.rRemap = R_REMAP;
-			controls.xRemap = X_REMAP;
-			controls.yRemap = Y_REMAP;
-			controls.zRemap = Z_REMAP;
+			controls.aRemap = 1 << A_REMAP;
+			controls.bRemap = 1 << B_REMAP;
+			controls.lRemap = 1 << L_REMAP;
+			controls.rRemap = 1 << R_REMAP;
+			controls.xRemap = 1 << X_REMAP;
+			controls.yRemap = 1 << Y_REMAP;
+			controls.zRemap = 1 << Z_REMAP;
 			setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
 
 			//fallthrough
@@ -1412,13 +1415,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	debug_println("RESETTING ALL DEFAULTS");
 
-	controls.aRemap = A_REMAP;
-	controls.bRemap = B_REMAP;
-	controls.lRemap = L_REMAP;
-	controls.rRemap = R_REMAP;
-	controls.xRemap = X_REMAP;
-	controls.yRemap = Y_REMAP;
-	controls.zRemap = Z_REMAP;
+	controls.aRemap = 1 << A_REMAP;
+	controls.bRemap = 1 << B_REMAP;
+	controls.lRemap = 1 << L_REMAP;
+	controls.rRemap = 1 << R_REMAP;
+	controls.xRemap = 1 << X_REMAP;
+	controls.yRemap = 1 << Y_REMAP;
+	controls.zRemap = 1 << Z_REMAP;
 	setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
 
 	controls.lConfig = controls.triggerDefault;
@@ -1731,7 +1734,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 	}
 }
 
-void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, int &currentRemapStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, hardware);
 	hardware.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1);
@@ -1963,6 +1966,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	*/
 
 	static bool advanceCal = false;
+	bool beginRemapping = true;
 
 	//This will count up as we request settings changes continuously
 	//If we enter the following if else block with a nonzero counter but no commands are used,
@@ -2163,7 +2167,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.B && hardware.X && hardware.Y) { //Initiate remapping
 			debug_println("Remapping buttons");
-			currentRemapStep = 0;
+			beginRemapping = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
@@ -2259,7 +2263,12 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		}
 	}
 
-	if(currentRemapStep != -1) {
+	if(beginRemapping) {
+		remapAdvance(currentRemapStep, controls, hardware);
+		beginRemapping = false;
+	}
+
+	if((currentRemapStep != -1) && !controls.safeMode) {
 		if(hardware.A || hardware.B || hardware.L || hardware.R ||
 				hardware.X || hardware.Y || hardware.Z) {
 			remapAdvance(currentRemapStep, controls, hardware);

@@ -25,6 +25,7 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		uint16_t presses,
@@ -37,6 +38,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		const Buttons &hardware,
@@ -217,6 +219,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				redraw,
 				changeMade,
 				currentCalStep,
+				currentRemapStep,
 				pleaseCommit,
 				btn,
 				presses,
@@ -244,6 +247,7 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		uint16_t presses,
@@ -270,9 +274,9 @@ void navigateMenu(unsigned char bitmap[],
 			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
-		//handle holding the B button as long as you're not on the splashscreen or calibrating
+		//handle holding the B button as long as you're not on the splashscreen or calibrating or remapping
 		if(presses & BPRESS) {
-			if((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0)) {
+			if((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0) && (currentRemapStep >= 0)) {
 				//do nothing
 			} else {
 				presses = 0;
@@ -656,23 +660,11 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				return;
 			case MENU_REMAP:
-				if(!changeMade) {
-					tempInt1 = controls.jumpConfig;
+				if((presses & SPRESS) && currentRemapStep == -1) {
+					pleaseCommit = 10;
 				}
-				if(presses & DUPRESS) {
-					controls.jumpConfig = (JumpConfig) fmin(controls.jumpConfigMax, controls.jumpConfig+1);
-					changeMade = controls.jumpConfig != tempInt1;
-					redraw = 1;
-				} else if(presses & DDPRESS) {
-					controls.jumpConfig = (JumpConfig) fmax(controls.jumpConfigMin, controls.jumpConfig-1);
-					changeMade = controls.jumpConfig != tempInt1;
-					redraw = 1;
-				} else if((presses & BSAVE) && changeMade) {
-					setJumpSetting(controls.jumpConfig);
-					tempInt1 = controls.jumpConfig;
-					changeMade = false;
-					redraw = 1;
-					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				if(presses & (APRESS | BPRESS | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
+					pleaseCommit = 10;
 				}
 				return;
 			case MENU_RUMBLE:

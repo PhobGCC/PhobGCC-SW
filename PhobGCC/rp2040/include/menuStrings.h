@@ -60,14 +60,7 @@ const char stickdbgCang[] = "C bounds angles";
 
 const char set_overAutoOn[] = "Autoinit on";
 const char set_overAutoOff[] = "Autoinit off";
-const char set_overJumpDf[] = "Normal Jump";
-const char set_overJumpXZ[] = "X Z-jump";
-const char set_overJumpYZ[] = "Y Z-jump";
-const char set_overJumpXL[] = "X L-jump";
-const char set_overJumpXR[] = "X R-jump";
-const char set_overJumpYL[] = "Y L-jump";
-const char set_overJumpYR[] = "Y R-jump";
-const char set_overJumpBr[] = "Broken jump config";
+const char set_overRemap[] = "=> ABXYLRZ";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";
@@ -132,18 +125,12 @@ const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
 const char radius4[]         = "Min: 82  Max: 125  Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
-const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
+const char remap1[]          = "You may remap A, B, L, R, X, Y, or Z.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";
 const char remap4[]          = "value on a face button for lightshielding.";
-const char remapDf[]         = "Default";
-const char remapXZ[]         = "Swap X and Z";
-const char remapYZ[]         = "Swap Y and Z";
-const char remapXL[]         = "Swap X and L";
-const char remapYL[]         = "Swap Y and L";
-const char remapXR[]         = "Swap X and R";
-const char remapYR[]         = "Swap Y and R";
-const char remapBr[]         = "Broken Config";
+const char remap5[]          = "Press Start to begin.";
+const char remap6[]          = "Press an unused button that you want to be";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char rumble1[]         = "This controls the strength of rumble feedback.";

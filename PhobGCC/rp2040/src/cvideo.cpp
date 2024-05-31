@@ -143,6 +143,7 @@ int videoOut(const uint8_t pin_base,
 		volatile bool &extSync,
 		volatile uint8_t &pleaseCommit,
 		int &currentCalStep,
+		int &currentRemapStep,
 		const int version) {
 
 	_interlaceOffset = config.interlaceOffset;
@@ -213,17 +214,17 @@ int videoOut(const uint8_t pin_base,
 			pleaseCommit = 0;
 		}
 
-		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, pleaseCommit, btn, hardware, config, capture);
+		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, currentRemapStep, pleaseCommit, btn, hardware, config, capture);
 
 		if(redraw == 2) { //fast redraw
 			redraw = 0;
-			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, btn, hardware, raw, config, aStick, cStick);
+			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, btn, hardware, raw, config, aStick, cStick);
 		} else if(redraw == 1) { //slow redraw
 			redraw = 0;
 			//write interlace offset
 			_interlaceOffset = config.interlaceOffset;
 			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, version, btn, raw, config, aStick, cStick, capture);
+			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, version, btn, raw, config, aStick, cStick, capture);
 		}
 	}
 }
