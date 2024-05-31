@@ -729,7 +729,7 @@ void drawRemap(unsigned char bitmap[],
 		drawString(bitmap, 470, 140, 15, ".");
 	}
 
-	drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
+	//drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
 
 	bool aRemapped = remapInvert(A_REMAP, controls) != " ";
 	bool bRemapped = remapInvert(B_REMAP, controls) != " ";
@@ -752,6 +752,7 @@ void drawRemap(unsigned char bitmap[],
 	drawString(bitmap, 340, 235, xRemapped ? 15 : 8, xRemapped ? remapInvert(X_REMAP, controls) : "X");
 	drawString(bitmap, 315, 220, yRemapped ? 15 : 8, yRemapped ? remapInvert(Y_REMAP, controls) : "Y");
 	drawString(bitmap, 330, 200, zRemapped ? 15 : 8, zRemapped ? remapInvert(Z_REMAP, controls) : "Z");
+
 	/*
 	drawInt(bitmap,  30, 330, 15, 2, controls.aRemap);
 	drawInt(bitmap,  60, 330, 15, 2, controls.bRemap);

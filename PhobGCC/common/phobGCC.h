@@ -969,7 +969,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			controls.xRemap,
 			controls.yRemap,
 			controls.zRemap);
-	if(controls.aRemap ^ controls.bRemap ^ controls.lRemap ^ controls.rRemap ^ controls.xRemap ^ controls.yRemap ^ controls.zRemap !=
+	if((controls.aRemap ^ controls.bRemap ^ controls.lRemap ^ controls.rRemap ^ controls.xRemap ^ controls.yRemap ^ controls.zRemap) !=
 			127) {
 		controls.aRemap = 1 << A_REMAP;
 		controls.bRemap = 1 << B_REMAP;
@@ -1399,7 +1399,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			controls.xRemap = 1 << X_REMAP;
 			controls.yRemap = 1 << Y_REMAP;
 			controls.zRemap = 1 << Z_REMAP;
-			setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
+			setRemapSetting(controls.aRemap, controls.bRemap, controls.lRemap, controls.rRemap, controls.xRemap, controls.yRemap, controls.zRemap);
 
 			//fallthrough
 			*/
@@ -1434,7 +1434,7 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	controls.xRemap = 1 << X_REMAP;
 	controls.yRemap = 1 << Y_REMAP;
 	controls.zRemap = 1 << Z_REMAP;
-	setRemapSetting(A_REMAP, B_REMAP, L_REMAP, R_REMAP, X_REMAP, Y_REMAP, Z_REMAP);
+	setRemapSetting(controls.aRemap, controls.bRemap, controls.lRemap, controls.rRemap, controls.xRemap, controls.yRemap, controls.zRemap);
 
 	controls.lConfig = controls.triggerDefault;
 	controls.rConfig = controls.triggerDefault;
