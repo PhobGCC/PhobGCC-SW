@@ -787,6 +787,27 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 	}
 }
 
+void resetRemap(ControlConfig &controls) {
+	//clear the mappings
+	controls.aRemap = 1 << A_REMAP;
+	controls.bRemap = 1 << B_REMAP;
+	controls.lRemap = 1 << L_REMAP;
+	controls.rRemap = 1 << R_REMAP;
+	controls.xRemap = 1 << X_REMAP;
+	controls.yRemap = 1 << Y_REMAP;
+	controls.zRemap = 1 << Z_REMAP;
+	setRemapSetting(controls.aRemap,
+			controls.bRemap,
+			controls.lRemap,
+			controls.rRemap,
+			controls.xRemap,
+			controls.yRemap,
+			controls.zRemap);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
+}
+
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
 	ExtrasToggleFn toggleFn = extrasFunctions[slot].toggleFn;
 	if (toggleFn) {
@@ -1770,8 +1791,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
 
 	//We multiply the analog trigger reads by this to shut them off if the trigger is acting as another button
-	const int shutoffLa = controls.lRemap == (1 << L_REMAP) ? 0 : 1;
-	const int shutoffRa = controls.rRemap == (1 << R_REMAP) ? 0 : 1;
+	const int shutoffLa = (controls.lRemap == (1 << L_REMAP)) ? 1 : 0;
+	const int shutoffRa = (controls.rRemap == (1 << R_REMAP)) ? 1 : 0;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
 	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
@@ -1960,12 +1981,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
 	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
 	*
-	* Swap X with Z:  XZ+Start
-	* Swap Y with Z:  YZ+Start
-	* Swap X with L:  LX+Start
-	* Swap Y with L:  LY+Start
-	* Swap X with R:  RX+Start
-	* Swap Y with R:  Ry+Start
+	* Remap: BXY without A, then press ABLRXYZ in order
+	* Cancel all remaps: BXR, without A
 	*
 	* Toggle L Trigger Mode:  AB+L
 	* Toggle R Trigger Mode:  AB+R
@@ -2181,6 +2198,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			debug_println("Remapping buttons");
 			beginRemapping = true;
 			freezeSticks(2000, btn, hardware);
+		} else if(hardware.B && hardware.R && hardware.X && !hardware.A) { //Reset remapping
+			resetRemap(controls);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
