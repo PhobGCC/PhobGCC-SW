@@ -1767,7 +1767,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 	}
 }
 
-void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, int &currentRemapStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, int &currentRemapStep, bool &currentlyRaw, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, hardware);
 	hardware.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1);
@@ -1958,6 +1958,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Skip to Notch Adjustment:  Start
 	* Notch Adjustment CW/CCW:  X/Y
 	* Notch Adjustment Reset:  B
+	* Toggle raw stick output: LR+Du
 	*
 	* Analog Stick Configuration:
 	* Increase/Decrease X-Axis Snapback Filtering:  AX+Du/Dd
@@ -2022,6 +2023,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
+			currentlyRaw = false;
 			freezeSticks(4000, btn, hardware);
 		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y && !hardware.L && !hardware.R) { //display version number (ignore commands for c stick snapback)
 			const int versionHundreds = floor(SW_VERSION/100.0);
@@ -2201,6 +2203,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.B && hardware.R && hardware.X && !hardware.A) { //Reset remapping
 			resetRemap(controls);
 			freezeSticks(2000, btn, hardware);
+		} else if(hardware.L && hardware.R && hardware.Du) {
+			currentlyRaw = !currentlyRaw;
+			freezeSticks(500, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
@@ -2308,7 +2313,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, const int currentCalStep, const bool currentlyRaw){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
@@ -2477,30 +2482,37 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
-	if(readA){
-		if (!skipAHyst) {
-			float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
-			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+	if(!currentlyRaw) {
+		if(readA){
+			if (!skipAHyst) {
+				float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
+				if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+					btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
+				}
+				float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
+				if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+					btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+				}
+			} else {
 				btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			}
-			float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
-			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
 				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 			}
-		} else {
-			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 		}
-	}
-	if(readC){
-		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
-		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+		if(readC){
+			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+			}
+			float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
+			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+				btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
+			}
 		}
-		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
-		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
-		}
+	} else {
+		btn.Ax = (uint8_t) (_floatOrigin + aStickX*100);
+		btn.Ay = (uint8_t) (_floatOrigin + aStickY*100);
+		btn.Cx = (uint8_t) (_floatOrigin + cStickX*100);
+		btn.Cy = (uint8_t) (_floatOrigin + cStickY*100);
 	}
 };
 

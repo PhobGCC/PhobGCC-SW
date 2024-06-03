@@ -61,6 +61,7 @@ void loop() {
 
 	static int currentCalStep = -1;//-1 means not calibrating
 	static int currentRemapStep = -1;//-1 means not remapping
+	static bool currentlyRaw = false;
 
 	//Set up persistent storage for calibration
 	static float tempCalPointsX[_noOfCalibrationPoints];
@@ -71,7 +72,7 @@ void loop() {
 	static float measuredNotchAngles[_noOfNotches];
 
 	//read the controllers buttons
-	processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, currentRemapStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+	processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, currentCalStep, currentRemapStep, currentlyRaw, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	//check to see if we are calibrating
 	if(currentCalStep >= 0){
@@ -93,7 +94,7 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(currentCalStep, true, _notchAngleDefaults, _btn);
 			}
-			readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+			readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, false);
 		}
 		else{//WHICHSTICK == CSTICK
 			if(currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -113,11 +114,11 @@ void loop() {
 			}else{//just show desired stick position
 				displayNotch(currentCalStep, false, _notchAngleDefaults, _btn);
 			}
-			readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+			readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, false);
 		}
 	}
 	else if(running){
 		//if not calibrating read the sticks normally
-		readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep);
+		readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, currentCalStep, currentlyRaw);
 	}
 }

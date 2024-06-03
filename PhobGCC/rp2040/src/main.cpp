@@ -15,6 +15,7 @@ volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
 int _currentRemapStep = -1;//-1 means not remapping
+bool _currentlyRaw = false;
 DataCapture _dataCapture;
 
 //This gets called by the comms library
@@ -720,7 +721,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, false);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -740,16 +741,16 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, false);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _currentlyRaw);
 		}
 
 		//read the controller's buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, _currentRemapStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, _currentRemapStep, _currentlyRaw, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	}
 }
