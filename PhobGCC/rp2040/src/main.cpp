@@ -681,7 +681,7 @@ void second_core() {
 			} else if(_pleaseCommit == 10) {
 				//advance remap
 				_pleaseCommit = 255;
-				remapAdvance(_currentRemapStep, _controls, _hardware);
+				remapAdvance(_currentRemapStep, _controls, _hardware, _btn);
 			}
 		}
 

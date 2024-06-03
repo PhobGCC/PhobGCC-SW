@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <bit>
 using std::min;
 using std::max;
 
@@ -691,7 +690,7 @@ void applyRemaps(const ControlConfig &controls, const Buttons &hardware, Buttons
 	btn.Z = (source & controls.zRemap) != 0;
 }
 
-void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
+void remapAdvance(int &step, ControlConfig &controls, Buttons &hardware, Buttons &btn) {
 	if(step == -1) {
 		//clear the mappings
 		controls.aRemap = 0;
@@ -784,6 +783,7 @@ void remapAdvance(int &step, ControlConfig &controls, const Buttons &hardware) {
 #ifdef BATCHSETTINGS
 		commitSettings();
 #endif //BATCHSETTINGS
+		freezeSticks(2000, btn, hardware);
 	}
 }
 
@@ -2200,6 +2200,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.B && hardware.R && hardware.X && !hardware.A) { //Reset remapping
 			resetRemap(controls);
+			freezeSticks(2000, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
@@ -2295,14 +2296,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 
 	if(beginRemapping) {
-		remapAdvance(currentRemapStep, controls, hardware);
+		remapAdvance(currentRemapStep, controls, hardware, btn);
 		beginRemapping = false;
 	}
 
 	if((currentRemapStep != -1) && !controls.safeMode) {
 		if(hardware.A || hardware.B || hardware.L || hardware.R ||
 				hardware.X || hardware.Y || hardware.Z) {
-			remapAdvance(currentRemapStep, controls, hardware);
+			remapAdvance(currentRemapStep, controls, hardware, btn);
 		}
 	}
 }
