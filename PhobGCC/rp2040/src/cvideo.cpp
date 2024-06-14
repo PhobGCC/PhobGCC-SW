@@ -50,12 +50,12 @@
 
 void cvideo_configure_pio_dma(PIO pio, uint sm, uint dma_channel, size_t buffer_size_words);
 void cvideo_dma_handler(void);
+
 #include "cvideo.pio.h"     // The assembled PIO code
 #include "cvideo.h"
 #include "cvideo_variables.h"
+#include "games/ping.h"
 
-#include "images/cuteGhost.h"
-#include "images/stickmaps.h"
 
 /*-------------------------------------------------------------------*/
 /*------------------Video Standard-----------------------------------*/
@@ -214,17 +214,21 @@ int videoOut(const uint8_t pin_base,
 			pleaseCommit = 0;
 		}
 
-		handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, currentRemapStep, pleaseCommit, btn, hardware, config, capture);
+		if(pleaseCommit == 100) {
+			runPing(_bitmap, hardware, raw, config, pleaseCommit);
+		} else if(pleaseCommit < 100) {
+			handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, currentRemapStep, pleaseCommit, btn, hardware, config, capture);
 
-		if(redraw == 2) { //fast redraw
-			redraw = 0;
-			drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, btn, hardware, raw, config, aStick, cStick);
-		} else if(redraw == 1) { //slow redraw
-			redraw = 0;
-			//write interlace offset
-			_interlaceOffset = config.interlaceOffset;
-			memset(_bitmap, BLACK2, BUFFERLEN);
-			drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, version, btn, raw, config, aStick, cStick, capture);
+			if(redraw == 2) { //fast redraw
+				redraw = 0;
+				drawMenuFast(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, btn, hardware, raw, config, aStick, cStick);
+			} else if(redraw == 1) { //slow redraw
+				redraw = 0;
+				//write interlace offset
+				_interlaceOffset = config.interlaceOffset;
+				memset(_bitmap, BLACK2, BUFFERLEN);
+				drawMenu(_bitmap, menuIndex, itemIndex, changeMade, currentCalStep, currentRemapStep, version, btn, raw, config, aStick, cStick, capture);
+			}
 		}
 	}
 }

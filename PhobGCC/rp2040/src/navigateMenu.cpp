@@ -1124,6 +1124,9 @@ void navigateMenu(unsigned char bitmap[],
 					redraw = 1;
 				}
 				return;
+			case MENU_PING:
+				pleaseCommit = 100;//launch the game
+				return;
 			case MENU_VISION:
 				if(!changeMade) {
 					tempInt1 = controls.interlaceOffset;

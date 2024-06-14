@@ -2093,6 +2093,9 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_REACTION:
 			drawReaction(bitmap, menu, itemIndex, capture);
 			break;
+		case MENU_PING:
+			//don't draw the placeholder
+			break;
 		case MENU_VISION:
 			drawVision(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
