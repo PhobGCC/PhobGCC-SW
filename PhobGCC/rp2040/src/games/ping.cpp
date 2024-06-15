@@ -10,9 +10,10 @@ using std::max;
 #define FIELDX 512
 #define FIELDY 300
 #define FIELDYOFFSET 83
-#define PADDLEWIDTH 25
-#define BALLSIZE 4
-#define PADDLESPEED 18.0f
+#define PADDLEWIDTH 40
+#define BALLSIZE 2
+#define PADDLESPEED 6.0f
+#define BALLSPEEDLIMIT 9.0f
 
 #define OUTSIDEMARGIN 12
 #define INSIDEMARGIN 20
@@ -21,12 +22,126 @@ using std::max;
 #define MAXLEFTX (FIELDX/2 - INSIDEMARGIN)
 #define MINRIGHTX (FIELDX/2 + INSIDEMARGIN)
 #define MAXRIGHTX (FIELDX - OUTSIDEMARGIN)
-#define MINPADDLEY (PADDLEWIDTH/2.0F)
-#define MAXPADDLEY (FIELDY - PADDLEWIDTH/2.0F)
+#define MINPADDLEY (PADDLEWIDTH/2.0f)
+#define MAXPADDLEY (FIELDY - PADDLEWIDTH/2.0f)
+
+#define MINBALLX (BALLSIZE/2.0f)
+#define MAXBALLX (FIELDX - BALLSIZE/2.0f)
+#define MINBALLY (BALLSIZE/2.0f)
+#define MAXBALLY (FIELDY - BALLSIZE/2.0f)
 
 
 float clamp(const float minimum, const float maximum, const float input) {
     return max(minimum, min(maximum, input));
+}
+
+void collisionDetectPaddle(
+        const float paddleX0,
+        const float paddleY0,
+        const float paddleX1,
+        const float paddleY1,
+        const float ballX0,
+        const float ballY0,
+        float &ballX1,
+        float &ballY1,
+        float &ballDX,
+        float &ballDY,
+        float &ballSpin) {
+    const float paddleDX = paddleX1 - paddleX0;
+    const float paddleDY = paddleY1 - paddleY0;
+
+    //calculate relative position and velocity
+    const float relX0 = paddleX0 - ballX0;
+    const float relY0 = paddleY0 - ballY0;
+    const float relX1 = paddleX1 - ballX1;
+    const float relY1 = paddleY1 - ballY1;
+
+    const float relDX = paddleDX - ballDX;
+    const float relDY = paddleDY - ballDY;
+
+    //check for whether it crosses the x coordinate of the paddle (rel x crosses zero)
+    float crossTime = -1; //[0 1) will count for crossing
+    if(relX0 == 0.0f) {
+        crossTime = 0;
+    } else if(relX0 < 0.0f) {
+        if(relX1 > 0.0f) {
+            crossTime = relX0 / (relX0 - relX1);
+        }
+    } else {
+        if(relX1 < 0.0f) {
+            crossTime = relX0 / (relX0 - relX1);
+        }
+    }
+
+    //no crossing = no change in trajectory
+    if(crossTime == -1) {
+        return;
+    }
+
+    //calculate the y-intercept and see if it's within the paddle width
+    const float relYCross = crossTime*relDY + relY0;
+    if(abs(relYCross) > PADDLEWIDTH/2) {
+        //it's not within the paddle width
+        return;
+    }
+
+    //we now know it intersected
+    //find the point of contact using the old velocity
+    const float crossX = ballX0 + crossTime*ballDX;
+    const float crossY = ballY0 + crossTime*ballDY;
+
+    //set up the new velocity
+    ballDX = 2*paddleDX - ballDX;
+    ballDY = paddleDY + ballDY;
+
+    //cap the speed
+    const float speedfactor = min(1.0, BALLSPEEDLIMIT / sqrt(ballDX*ballDX + ballDY*ballDY));
+    ballDX *= speedfactor;
+    ballDY *= speedfactor;
+
+    //set the position after contact
+    ballX1 = crossX + (1-crossTime)*ballDX;
+    ballY1 = crossY + (1-crossTime)*ballDY;
+}
+
+void collisionDetectWall(
+        const float ballX0,
+        const float ballY0,
+        float &ballX1,
+        float &ballY1,
+        float &ballDX,
+        float &ballDY,
+        float &ballSpin) {
+    //calculate position relative to the boundary
+    const float relY0Top = ballY0 - MINBALLY;
+    const float relY1Top = ballY1 - MINBALLY;
+    const float relY0Bot = ballY0 - MAXBALLY;
+    const float relY1Bot = ballY1 - MAXBALLY;
+
+    //check whether it crosses
+    float crossTime = -1;
+    if(relY1Top < 0.0f) {
+        crossTime = -relY0Top / ballDY;
+    } else if(relY1Bot > 0.0f) {
+        crossTime = -relY0Bot / ballDY;
+    }
+
+    //no crossing = no change in trajectory
+    if(crossTime == -1) {
+        return;
+    }
+
+    //we now know it intersected
+    //find the point of contact using the old velocity
+    const float crossX = ballX0 + crossTime*ballDX;
+    const float crossY = ballY0 + crossTime*ballDY;
+
+    //set up the new velocity
+    ballDY = -ballDY;
+
+    //set the position after contact
+    ballX1 = crossX + (1-crossTime)*ballDX;
+    ballY1 = crossY + (1-crossTime)*ballDY;
 }
 
 void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, const ControlConfig config, volatile uint8_t &pleaseCommit) {
@@ -65,13 +180,58 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     drawLine(bitmap, rx, ry0, rx, ry1, BLACK);
 
     //ball location
-    static float ballX = MINLEFTX
+    static float ballX = MINLEFTX + 50;
+    static float ballY = FIELDY/2;
+    static float ballDX = 0;
+    static float ballDY = 0;
+    static float ballSpin = 0;
+
+    //erase old ball
+    static uint16_t bx0 = round(ballX - BALLSIZE/2);
+    static uint16_t bx1 = round(ballX + BALLSIZE/2);
+    static uint16_t by0 = round(ballY + FIELDYOFFSET - BALLSIZE/2);
+    static uint16_t by1 = round(ballY + FIELDYOFFSET + BALLSIZE/2);
+    drawLine(bitmap, bx0, by0, bx0, by1, BLACK);
+    drawLine(bitmap, bx1, by0, bx1, by1, BLACK);
 
     //update paddle locations
+    //save old paddle locations for collision detection
+    const float oldLeftX = leftX;
+    const float oldLeftY = leftY;
+    const float oldRightX = rightX;
+    const float oldRightY = rightY;
     leftX = clamp(MINLEFTX, MAXLEFTX, leftX + PADDLESPEED * ax);
     leftY = clamp(MINPADDLEY, MAXPADDLEY, leftY + PADDLESPEED * -ay);
     rightX = clamp(MINRIGHTX, MAXRIGHTX, rightX + PADDLESPEED * cx);
     rightY = clamp(MINPADDLEY, MAXPADDLEY, rightY + PADDLESPEED * -cy);
+
+    //update ball location
+    //save old ball locations for collision detection
+    const float oldBallX = ballX;
+    const float oldBallY = ballY;
+    ballX = ballX + ballDX;
+    ballY = ballY + ballDY;
+
+    //check for paddle collision
+    collisionDetectPaddle(oldLeftX, oldLeftY, leftX, leftY, oldBallX, oldBallY, ballX, ballY, ballDX, ballDY, ballSpin);
+    collisionDetectPaddle(oldRightX, oldRightY, rightX, rightY, oldBallX, oldBallY, ballX, ballY, ballDX, ballDY, ballSpin);
+
+    //check for wall collision
+    collisionDetectWall(oldBallX, oldBallY, ballX, ballY, ballDX, ballDY, ballSpin);
+
+    if(ballX < MINBALLX) {
+        ballX = MINLEFTX + 50;
+        ballY = FIELDY/2;
+        ballDX = 0;
+        ballDY = 0;
+        ballSpin = 0;
+    } else if(ballX > MAXBALLX) {
+        ballX = MAXRIGHTX - 50;
+        ballY = FIELDY/2;
+        ballDX = 0;
+        ballDY = 0;
+        ballSpin = 0;
+    }
 
     //offset and round to integer locations
     lx = round(leftX);
@@ -80,9 +240,17 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     rx = round(rightX);
     ry0 = round(rightY + FIELDYOFFSET - PADDLEWIDTH/2);
     ry1 = round(rightY + FIELDYOFFSET + PADDLEWIDTH/2);
+    bx0 = round(ballX - BALLSIZE/2);
+    bx1 = round(ballX + BALLSIZE/2);
+    by0 = round(ballY + FIELDYOFFSET - BALLSIZE/2);
+    by1 = round(ballY + FIELDYOFFSET + BALLSIZE/2);
 
     //draw paddles
     drawLine(bitmap, lx, ly0, lx, ly1, WHITE);
     drawLine(bitmap, rx, ry0, rx, ry1, WHITE);
+
+    //draw ball
+    drawLine(bitmap, bx0, by0, bx0, by1, WHITE);
+    drawLine(bitmap, bx1, by0, bx1, by1, WHITE);
 }
 
