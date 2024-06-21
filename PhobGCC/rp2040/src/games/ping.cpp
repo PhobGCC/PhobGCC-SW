@@ -7,7 +7,7 @@ using std::max;
 #include "structsAndEnums.h"
 #include "games/ping.h"
 
-#define FIELDX 512
+#define FIELDX 511
 #define FIELDY 300
 #define FIELDYOFFSET 83
 #define PADDLEWIDTH 40
@@ -168,6 +168,74 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     static float leftY = FIELDY/2;
     static float rightX = MAXRIGHTX;
     static float rightY = FIELDY/2;
+
+    //ball location
+    static float ballX = MINLEFTX + 50;
+    static float ballY = FIELDY/2;
+    static float ballDX = 0;
+    static float ballDY = 0;
+    static float ballSpin = 0;
+
+    //handle point sfx
+    static uint8_t framesSinceScore = 0;
+    if(framesSinceScore > 1) {
+        framesSinceScore--;
+        const uint16_t point1x = (60-framesSinceScore) * 1;
+        const uint16_t point1y = (60-framesSinceScore) * 3;
+        const uint16_t point2x = ((60-framesSinceScore) * 3) << 1;
+        const uint16_t point2y = (60 - framesSinceScore) * 2;
+        const uint16_t point3x = (60 - framesSinceScore) * 4;
+        const uint16_t point3y = (60 - framesSinceScore) * 1;
+        const uint16_t point4x = (60 - framesSinceScore) * 2;
+        const uint16_t point4y = ((framesSinceScore - 60) * 3) << 1;
+        const uint16_t point5x = (60 - framesSinceScore) * 3;
+        const uint16_t point5y = ((framesSinceScore - 60) * 7) << 2;
+        const uint16_t point6x = ((60 - framesSinceScore) * 5) << 1;
+        const uint16_t point6y = ((framesSinceScore - 60) * 1) << 1;
+        const uint16_t ballXint = round(min(511.0f, ballX));
+        const uint16_t ballYint = round(ballY + FIELDYOFFSET);
+        if(ballX < FIELDX/2) {
+            //draw rightward lines from ball position
+            drawLine(bitmap, ballXint, ballYint, ballXint + point1x, ballYint + point1y, WHITE);
+            drawLine(bitmap, ballXint, ballYint, ballXint + point2x, ballYint + point2y, WHITE);
+            drawLine(bitmap, ballXint, ballYint, ballXint + point3x, ballYint + point3y, WHITE);
+            drawLine(bitmap, ballXint, ballYint, ballXint + point4x, ballYint + point4y, WHITE);
+            drawLine(bitmap, ballXint, ballYint, ballXint + point5x, ballYint + point5y, WHITE);
+            drawLine(bitmap, ballXint, ballYint, ballXint + point6x, ballYint + point6y, WHITE);
+        } else {
+            //draw leftward lines from ball position
+            drawLine(bitmap, ballXint - point1x, ballYint + point1y, ballXint, ballYint, WHITE);
+            drawLine(bitmap, ballXint - point2x, ballYint + point2y, ballXint, ballYint, WHITE);
+            drawLine(bitmap, ballXint - point3x, ballYint + point3y, ballXint, ballYint, WHITE);
+            drawLine(bitmap, ballXint - point4x, ballYint + point4y, ballXint, ballYint, WHITE);
+            drawLine(bitmap, ballXint - point5x, ballYint + point5y, ballXint, ballYint, WHITE);
+            drawLine(bitmap, ballXint - point6x, ballYint + point6y, ballXint, ballYint, WHITE);
+        }
+        return;//don't accept any input until this is done
+    } else if(framesSinceScore == 1) {
+        framesSinceScore--;
+        //erase everything
+        eraseRows(bitmap, 0, 384);
+        //reset ball
+        if(ballX < FIELDX/2) {
+            ballX = MINLEFTX + 50;
+            ballY = FIELDY/2;
+            ballDX = 0;
+            ballDY = 0;
+            ballSpin = 0;
+        } else {
+            ballX = MAXRIGHTX - 50;
+            ballY = FIELDY/2;
+            ballDX = 0;
+            ballDY = 0;
+            ballSpin = 0;
+        }
+        //reset paddles
+        leftX = MINLEFTX;
+        leftY = FIELDY/2;
+        rightX = MAXRIGHTX;
+        rightY = FIELDY/2;
+    }//otherwise continue
     
     //erase old paddles
     static uint16_t lx = round(leftX);
@@ -178,13 +246,6 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     static uint16_t ry1 = round(rightY + FIELDYOFFSET + PADDLEWIDTH);
     drawLine(bitmap, lx, ly0, lx, ly1, BLACK);
     drawLine(bitmap, rx, ry0, rx, ry1, BLACK);
-
-    //ball location
-    static float ballX = MINLEFTX + 50;
-    static float ballY = FIELDY/2;
-    static float ballDX = 0;
-    static float ballDY = 0;
-    static float ballSpin = 0;
 
     //erase old ball
     static uint16_t bx0 = round(ballX - BALLSIZE/2);
@@ -219,18 +280,21 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     //check for wall collision
     collisionDetectWall(oldBallX, oldBallY, ballX, ballY, ballDX, ballDY, ballSpin);
 
+    //handle point scoring
+    static uint8_t leftScore = 0;
+    static uint8_t rightScore = 0;
     if(ballX < MINBALLX) {
-        ballX = MINLEFTX + 50;
-        ballY = FIELDY/2;
-        ballDX = 0;
-        ballDY = 0;
-        ballSpin = 0;
+        //erase old score
+        eraseRows(bitmap, 20, 30);
+        //update score
+        rightScore++;
+        framesSinceScore = 60;
     } else if(ballX > MAXBALLX) {
-        ballX = MAXRIGHTX - 50;
-        ballY = FIELDY/2;
-        ballDX = 0;
-        ballDY = 0;
-        ballSpin = 0;
+        //erase old score
+        eraseRows(bitmap, 20, 30);
+        //update score
+        leftScore++;
+        framesSinceScore = 60;
     }
 
     //offset and round to integer locations
@@ -244,6 +308,15 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     bx1 = round(ballX + BALLSIZE/2);
     by0 = round(ballY + FIELDYOFFSET - BALLSIZE/2);
     by1 = round(ballY + FIELDYOFFSET + BALLSIZE/2);
+
+    //draw scores
+    drawInt2x(bitmap,   0, 20, 10, 0, leftScore);
+    drawInt2x(bitmap, 420, 20, 10, 2, rightScore);
+
+    //draw play field boundary
+    drawLine(bitmap, 0, FIELDYOFFSET-1, FIELDX-1, FIELDYOFFSET-1, GRAY);//top
+    drawLine(bitmap, MAXLEFTX, FIELDYOFFSET, MAXLEFTX, VHEIGHT-1, GRAY);//left "net"
+    drawLine(bitmap, MINRIGHTX, FIELDYOFFSET, MINRIGHTX, VHEIGHT-1, GRAY);//right "net"
 
     //draw paddles
     drawLine(bitmap, lx, ly0, lx, ly1, WHITE);
