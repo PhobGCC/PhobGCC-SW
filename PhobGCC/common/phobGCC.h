@@ -1560,8 +1560,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		setNotchAnglesSetting(notchAngles, ASTICK);
 		setNotchAnglesSetting(notchAngles, CSTICK);
 
-		setPointsSetting(_defaultCalPointsX, ASTICK, XAXIS);
-		setPointsSetting(_defaultCalPointsY, ASTICK, YAXIS);
+		setPointsSetting(_defaultCalPoints, ASTICK, XAXIS);
+		setPointsSetting(_defaultCalPoints, ASTICK, YAXIS);
 		debug_println("A calibration points stored in EEPROM");
 
 		float cleanedPointsX[_noOfNotches+1];
@@ -1570,17 +1570,17 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		float notchPointsY[_noOfNotches+1];
 		NotchStatus notchStatus[_noOfNotches];
 
-		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+		cleanCalPoints(_defaultCalPoints, _defaultCalPoints, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 		debug_println("A calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
 		debug_println("A stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
 
-		setPointsSetting(_defaultCalPointsX, CSTICK, XAXIS);
-		setPointsSetting(_defaultCalPointsY, CSTICK, YAXIS);
+		setPointsSetting(_defaultCalPoints, CSTICK, XAXIS);
+		setPointsSetting(_defaultCalPoints, CSTICK, YAXIS);
 		debug_println("C calibration points stored in EEPROM");
 
-		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+		cleanCalPoints(_defaultCalPoints, _defaultCalPoints, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 		debug_println("C calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
 		debug_println("C stick linearized");
@@ -2480,10 +2480,14 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	skipAHyst = ess::remap(&remappedAx, &remappedAy, controls.extras[ess::extrasEssConfigSlot].config);
 #endif
 
+	//output raw either if it's been requested, or if the stick in question is completely uncalibrated (from a hard reset or when just initialized)
+	const bool aRaw = currentlyRaw || ((aStickParams.fitCoeffsX[0] == 0) && (aStickParams.fitCoeffsY[0] == 0));
+	const bool cRaw = currentlyRaw || ((cStickParams.fitCoeffsX[0] == 0) && (cStickParams.fitCoeffsY[0] == 0));
+
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
-	if(!currentlyRaw) {
-		if(readA){
+	if(readA){
+		if(!aRaw) {
 			if (!skipAHyst) {
 				float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
 				if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
@@ -2497,8 +2501,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 				btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
 				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 			}
+		} else {
+			btn.Ax = (uint8_t) (_floatOrigin + aStickX*100);
+			btn.Ay = (uint8_t) (_floatOrigin + aStickY*100);
 		}
-		if(readC){
+	}
+	if(readC){
+		if(!cRaw) {
 			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
 			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
 				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
@@ -2507,12 +2516,10 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
 				btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
 			}
+		} else {
+			btn.Cx = (uint8_t) (_floatOrigin + cStickX*100);
+			btn.Cy = (uint8_t) (_floatOrigin + cStickY*100);
 		}
-	} else {
-		btn.Ax = (uint8_t) (_floatOrigin + aStickX*100);
-		btn.Ay = (uint8_t) (_floatOrigin + aStickY*100);
-		btn.Cx = (uint8_t) (_floatOrigin + cStickX*100);
-		btn.Cy = (uint8_t) (_floatOrigin + cStickY*100);
 	}
 };
 
