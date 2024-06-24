@@ -214,9 +214,15 @@ int videoOut(const uint8_t pin_base,
 			pleaseCommit = 0;
 		}
 
+		//run games
 		if(pleaseCommit == 100) {
-			runPing(_bitmap, hardware, raw, config, pleaseCommit);
-		} else if(pleaseCommit < 100) {
+			if(runPing(_bitmap, hardware, raw, config)) {
+				pleaseCommit = 99;//go back from the game
+			}
+		}
+
+		//handle normal menus
+		if(pleaseCommit < 100) {
 			handleMenuButtons(_bitmap, menuIndex, itemIndex, redraw, changeMade, currentCalStep, currentRemapStep, pleaseCommit, btn, hardware, config, capture);
 
 			if(redraw == 2) { //fast redraw

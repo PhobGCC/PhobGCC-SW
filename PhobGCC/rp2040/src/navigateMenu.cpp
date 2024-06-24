@@ -213,6 +213,19 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		}
 	}
 
+	//handle a game returning
+	if(pleaseCommit == 99) {
+		//behave like a long B press, because that's what happened in game
+		backAccumulator = 0;
+		aLockout = 0;//make A available immediately after backing out
+		presses = presses | BPRESS;
+		capture.autoRepeat = false;//cancel auto repeating if you back out
+		capture.begin = false;
+		capture.triggered = false;
+		capture.done = true;
+		pleaseCommit = 0;
+	}
+
 	//handle actual navigation and settings changes
 	if(presses) {
 		navigateMenu(bitmap,

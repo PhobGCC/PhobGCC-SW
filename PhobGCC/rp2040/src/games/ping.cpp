@@ -144,7 +144,7 @@ void collisionDetectWall(
     ballY1 = crossY + (1-crossTime)*ballDY;
 }
 
-void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, const ControlConfig config, volatile uint8_t &pleaseCommit) {
+bool runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, const ControlConfig config) {
 	//process raw sticks so that they all are scaled equally, with the max being 1
 	//use raw because we don't want cardinal snapping
 	//snapback should not be a concern
@@ -178,6 +178,9 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
 
     //handle point sfx
     static uint8_t framesSinceScore = 0;
+    static bool gameIsOver = false;
+    static uint8_t leftScore = 0;
+    static uint8_t rightScore = 0;
     if(framesSinceScore > 1) {
         framesSinceScore--;
         const uint16_t point1x = (60-framesSinceScore) * 1;
@@ -211,7 +214,7 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
             drawLine(bitmap, ballXint - point5x, ballYint + point5y, ballXint, ballYint, WHITE);
             drawLine(bitmap, ballXint - point6x, ballYint + point6y, ballXint, ballYint, WHITE);
         }
-        return;//don't accept any input until this is done
+        return false;//don't accept any input until this is done
     } else if(framesSinceScore == 1) {
         framesSinceScore--;
         //erase everything
@@ -235,6 +238,11 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
         leftY = FIELDY/2;
         rightX = MAXRIGHTX;
         rightY = FIELDY/2;
+        if(gameIsOver) {
+            gameIsOver = false;
+            leftScore = 0;
+            rightScore = 0;
+        }
     }//otherwise continue
     
     //erase old paddles
@@ -281,8 +289,6 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     collisionDetectWall(oldBallX, oldBallY, ballX, ballY, ballDX, ballDY, ballSpin);
 
     //handle point scoring
-    static uint8_t leftScore = 0;
-    static uint8_t rightScore = 0;
     if(ballX < MINBALLX) {
         //erase old score
         eraseRows(bitmap, 20, 30);
@@ -295,6 +301,16 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
         //update score
         leftScore++;
         framesSinceScore = 60;
+    }
+
+    if((framesSinceScore == 60) && (leftScore >= 11) && (leftScore > (rightScore + 1))) {
+        //left wins
+        drawString2x(bitmap, 165, 30, 15, "Left Wins!");
+        gameIsOver = true;
+    } else if((framesSinceScore == 60) && (rightScore >= 11) && rightScore > (leftScore + 1)) {
+        //right wins
+        drawString2x(bitmap, 155, 30, 15, "Right Wins!");
+        gameIsOver = true;
     }
 
     //offset and round to integer locations
@@ -325,5 +341,17 @@ void runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     //draw ball
     drawLine(bitmap, bx0, by0, bx0, by1, WHITE);
     drawLine(bitmap, bx1, by0, bx1, by1, WHITE);
+
+    static uint8_t backAccumulator = 0;
+    if(hardware.B) {
+        backAccumulator++;
+    } else {
+        backAccumulator = max(0, backAccumulator - 1);
+    }
+
+    if(backAccumulator >= 30) {
+        return true;//request that we go back
+    }
+    return false;
 }
 
