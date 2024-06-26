@@ -1810,7 +1810,11 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			if(!tempBtn.L) {
+				tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			} else {
+				tempBtn.La = (uint8_t) 255;
+			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.L) {
@@ -1850,7 +1854,11 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			if(!tempBtn.R) {
+				tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			} else {
+				tempBtn.Ra = (uint8_t) 255;
+			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.R) {
