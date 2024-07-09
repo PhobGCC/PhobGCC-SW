@@ -350,6 +350,8 @@ bool runPing(unsigned char *bitmap, const Buttons hardware, const RawStick raw, 
     }
 
     if(backAccumulator >= 30) {
+        leftScore = 0;
+        rightScore = 0;
         return true;//request that we go back
     }
     return false;
