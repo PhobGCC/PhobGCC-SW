@@ -122,7 +122,7 @@ const char cardinals5[]      = "Min: -2  Max: 6  Default: 6";
 const char radius1[]         = "This sets how far from the center the stick can";
 const char radius2[]         = "reach. A normal GCC can get to roughly 100-103.";
 const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
-const char radius4[]         = "Min: 82  Max: 125  Default: 100";
+const char radius4[]         = "Min:     Max:      Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "You may remap A, B, L, R, X, Y, or Z.";

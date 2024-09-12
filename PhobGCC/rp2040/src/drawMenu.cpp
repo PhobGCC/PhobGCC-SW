@@ -526,6 +526,8 @@ void drawRadius(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, radius2);
 	drawString(bitmap,  30, 110, 15, radius3);
 	drawString(bitmap,  30, 130, 15, radius4);
+	drawInt(   bitmap,  70, 130, 15, 0, controls.analogScalerMin);
+	drawInt(   bitmap, 160, 130, 15, 0, controls.analogScalerMax);
 	drawString(bitmap,  30, 160, 15, leftStick);
 	drawInt(   bitmap, 140, 160, 15, 2, controls.astickAnalogScaler);
 	drawString(bitmap, 280, 160, 15, rightStick);
