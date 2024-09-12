@@ -806,17 +806,8 @@ void drawTrigger(unsigned char bitmap[],
 	drawInt(   bitmap, 120, 210, 15, 0, controls.lTriggerOffset);
 	drawString(bitmap, 280, 210, 15, trigger4);
 	drawInt(   bitmap, 370, 210, 15, 0, controls.rTriggerOffset);
-	if(controls.lConfig == 4) {
-		if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
-			drawString(bitmap, 30, 230, 15, trigger5);
-		}
-	} else if(controls.rConfig == 4) {
-		if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
-			drawString(bitmap, 30, 230, 15, trigger6);
-		}
-	}
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 }
 
 void drawTriggerFast(unsigned char bitmap[],
@@ -830,36 +821,36 @@ void drawTriggerFast(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	//input
+	eraseCharLine(bitmap, 250);
 	eraseCharLine(bitmap, 270);
-	eraseCharLine(bitmap, 290);
-	drawString(bitmap, 30, 270, 15, "LD");
-	drawString(bitmap, 30, 290, 15, "RD");
+	drawString(bitmap, 30, 250, 15, "LD");
+	drawString(bitmap, 30, 270, 15, "RD");
 	if(hardware.L) {
-		drawString(bitmap, 70, 270, 15, "Pressed");
+		drawString(bitmap, 70, 250, 15, "Pressed");
 	}
 	if(hardware.R) {
-		drawString(bitmap, 70, 290, 15, "Pressed");
+		drawString(bitmap, 70, 270, 15, "Pressed");
 	}
-	drawString(bitmap, 280, 270, 15, "LA:");
-	drawInt   (bitmap, 310, 270, 15, 2, hardware.La);
-	drawString(bitmap, 280, 290, 15, "RA:");
-	drawInt   (bitmap, 310, 290, 15, 2, hardware.Ra);
+	drawString(bitmap, 280, 250, 15, "LA:");
+	drawInt   (bitmap, 310, 250, 15, 2, hardware.La);
+	drawString(bitmap, 280, 270, 15, "RA:");
+	drawInt   (bitmap, 310, 270, 15, 2, hardware.Ra);
 
 	//output
+	eraseCharLine(bitmap, 310);
 	eraseCharLine(bitmap, 330);
-	eraseCharLine(bitmap, 350);
-	drawString(bitmap, 30, 330, 15, "LD");
-	drawString(bitmap, 30, 350, 15, "RD");
+	drawString(bitmap, 30, 310, 15, "LD");
+	drawString(bitmap, 30, 330, 15, "RD");
 	if(btn.L) {
-		drawString(bitmap, 70, 330, 15, "Pressed");
+		drawString(bitmap, 70, 310, 15, "Pressed");
 	}
 	if(btn.R) {
-		drawString(bitmap, 70, 350, 15, "Pressed");
+		drawString(bitmap, 70, 330, 15, "Pressed");
 	}
-	drawString(bitmap, 280, 330, 15, "LA:");
-	drawInt   (bitmap, 310, 330, 15, 2, btn.La);
-	drawString(bitmap, 280, 350, 15, "RA:");
-	drawInt   (bitmap, 310, 350, 15, 2, btn.Ra);
+	drawString(bitmap, 280, 310, 15, "LA:");
+	drawInt   (bitmap, 310, 310, 15, 2, btn.La);
+	drawString(bitmap, 280, 330, 15, "RA:");
+	drawInt   (bitmap, 310, 330, 15, 2, btn.Ra);
 }
 
 void drawLtrigger(unsigned char bitmap[],
@@ -891,7 +882,6 @@ void drawLtrigger(unsigned char bitmap[],
 	switch(controls.lConfig) {
 		case 0:
 			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 150, 15, l5conflict);}
 			break;
 		case 1:
 			drawString(bitmap,  30, 130, 15, lrtrigger5);
@@ -900,25 +890,19 @@ void drawLtrigger(unsigned char bitmap[],
 		case 2:
 			drawString(bitmap,  30, 130, 15, lrtrigger7);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 170, 15, l5conflict);}
 			break;
 		case 3:
 			drawString(bitmap,  30, 130, 15, lrtrigger9);
 			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger10);
-			drawString(bitmap,  30, 170, 15, lrtrigger11);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
+			drawString(bitmap,  30, 150, 15, lrtrigger13);
+			drawString(bitmap,  30, 170, 15, lrtrigger14);
+			drawString(bitmap,  30, 190, 15, lrtrigger10);
+			drawString(bitmap,  30, 210, 15, lrtrigger11);
 			break;
 		case 4:
 			drawString(bitmap,  30, 130, 15, lrtrigger12);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			drawString(bitmap,  30, 170, 15, lrtrigger13);
-			drawString(bitmap,  30, 190, 15, lrtrigger14);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
-			if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
-				drawString(bitmap, 30, 230, 15, trigger5);
-			}
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);}
 			break;
 		case 5:
 			drawString(bitmap,  30, 130, 15, lrtrigger15);
@@ -933,7 +917,6 @@ void drawLtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 170, 15, lrtrigger21);
 			drawString(bitmap,  30, 190, 15, lrtrigger22);
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.lTriggerOffset) + 0.4494f);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
 			break;
 	}
 	//graph?
@@ -968,7 +951,6 @@ void drawRtrigger(unsigned char bitmap[],
 	switch(controls.rConfig) {
 		case 0:
 			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 150, 15, r5conflict);}
 			break;
 		case 1:
 			drawString(bitmap,  30, 130, 15, lrtrigger5);
@@ -977,25 +959,19 @@ void drawRtrigger(unsigned char bitmap[],
 		case 2:
 			drawString(bitmap,  30, 130, 15, lrtrigger7);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 170, 15, r5conflict);}
 			break;
 		case 3:
 			drawString(bitmap,  30, 130, 15, lrtrigger9);
 			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger10);
-			drawString(bitmap,  30, 170, 15, lrtrigger11);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
+			drawString(bitmap,  30, 150, 15, lrtrigger13);
+			drawString(bitmap,  30, 170, 15, lrtrigger14);
+			drawString(bitmap,  30, 190, 15, lrtrigger10);
+			drawString(bitmap,  30, 210, 15, lrtrigger11);
 			break;
 		case 4:
 			drawString(bitmap,  30, 130, 15, lrtrigger12);
 			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			drawString(bitmap,  30, 170, 15, lrtrigger13);
-			drawString(bitmap,  30, 190, 15, lrtrigger14);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
-			if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
-				drawString(bitmap, 30, 230, 15, trigger6);
-			}
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);}
 			break;
 		case 5:
 			drawString(bitmap,  30, 130, 15, lrtrigger15);
@@ -1010,7 +986,6 @@ void drawRtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 170, 15, lrtrigger21);
 			drawString(bitmap,  30, 190, 15, lrtrigger22);
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.rTriggerOffset) + 0.4494f);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
 			break;
 	}
 	//graph?

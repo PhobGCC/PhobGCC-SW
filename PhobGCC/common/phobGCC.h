@@ -901,21 +901,8 @@ void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, Con
 	setLSetting(controls.lConfig);
 	setRSetting(controls.rConfig);
 
-	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
-	//(user-facing mode 5)
-	int lConfig = controls.lConfig;
-	int rConfig = controls.rConfig;
-	int triggerConflict = 0;
-	if(rConfig == 4 && (lConfig == 0 || lConfig == 2 || lConfig == 3)) {
-		triggerConflict = -100;
-	}
-	if(lConfig == 4 && (rConfig == 0 || rConfig == 2 || rConfig == 3)) {
-		triggerConflict = -100;
-	}
 	//We want to one-index the modes for the users, so we add 1 here
-	btn.Ay = (uint8_t) (_floatOrigin + triggerConflict);
 	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
-	btn.Cy = (uint8_t) (_floatOrigin + triggerConflict);
 	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
 
 	clearButtons(1000, btn, hardware);
@@ -1782,14 +1769,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 	//read the L and R sliders here instead of readSticks so we don't get race conditions for mode 6
 
-	//set up lockout for mode 5; it's not permissible to have analog trigger
-	// inputs available while mode 5 is active
-	//when a trigger is in lockout due to the other being mode 5,
-	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
-	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
-	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
-
 	//We multiply the analog trigger reads by this to shut them off if the trigger is acting as another button
 	const int shutoffLa = (controls.lRemap == (1 << L_REMAP)) ? 1 : 0;
 	const int shutoffRa = (controls.rRemap == (1 << R_REMAP)) ? 1 : 0;
@@ -1837,10 +1816,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		default:
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 	}
-	if(lockoutL){
-		tempBtn.L  = (uint8_t) 0;
-		tempBtn.La = (uint8_t) 0;
-	}
 
 	switch(controls.rConfig) {
 		case 0: //Default Trigger state
@@ -1880,10 +1855,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			break;
 		default:
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-	}
-	if(lockoutR){
-		tempBtn.R  = (uint8_t) 0;
-		tempBtn.Ra = (uint8_t) 0;
 	}
 
 	//Apply any further button remapping to tempBtn here
