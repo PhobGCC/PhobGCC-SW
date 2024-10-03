@@ -1435,6 +1435,9 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	debug_println("RESETTING ALL DEFAULTS");
 
+	controls.tournamentToggle = controls.tournamentToggleMin;
+	setTournamentToggleSetting(controls.tournamentToggle);
+
 	controls.aRemap = 1 << A_REMAP;
 	controls.bRemap = 1 << B_REMAP;
 	controls.lRemap = 1 << L_REMAP;
