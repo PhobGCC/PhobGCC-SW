@@ -42,22 +42,26 @@ void drawStickCal(unsigned char bitmap[],
 	drawString(bitmap, 380,  50, 15, "/44");
 
 	if(itemIndex == -1 || ((itemIndex < 32) && (itemIndex % 2 == 0))) {
+		//measurement phase
 		drawString(bitmap, 260,  80, 15, stickCal3);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		if(itemIndex > 0) {
 			drawString(bitmap, 260, 120, 15, stickCal5);//z to go back
 		}
 	} else if(itemIndex <= 15 && (itemIndex % 2 == 1)) {
+		//cardinal & diagonal measurement
 		drawString(bitmap, 260,  80, 15, stickCal6);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		drawString(bitmap, 260, 120, 15, stickCal5);
 	} else if(itemIndex <= 31 && (itemIndex % 2 == 1)) {
+		//modder added notch measurement
 		drawString(bitmap, 260,  80, 15, stickCal6);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		drawString(bitmap, 260, 120, 15, stickCal5);
 		drawString(bitmap, 260, 140, 15, stickCal7);
 		drawString(bitmap, 260, 160, 15, stickCal8);
 	} else {
+		//notch adjust phase
 		drawString(bitmap, 260,  80, 15, stickCal9);
 		drawString(bitmap, 260, 100, 15, stickCal10);
 		drawString(bitmap, 260, 120, 15, stickCal11);
@@ -65,7 +69,34 @@ void drawStickCal(unsigned char bitmap[],
 		drawString(bitmap, 260, 160, 15, stickCal13);
 		drawString(bitmap, 260, 180, 15, stickCal14);
 		if(itemIndex > 32) {
+			//you can't go back to the measurement phase
 			drawString(bitmap, 260, 200, 15, stickCal5);//z to go back
+		}
+		if(itemIndex >= 36) {
+			//read out mesaured notch coordinate
+			drawString(bitmap, 270, 220, 15, stickCal17);
+			drawString(bitmap, 270, 240, 15, stickCal18);
+			const int axCoord = btn.Ax - ORG;
+			const int ayCoord = btn.Ay - ORG;
+			float axMelee;
+			float ayMelee;
+			meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
+			const int cxCoord = btn.Cx - ORG;
+			const int cyCoord = btn.Cy - ORG;
+			float cxMelee;
+			float cyMelee;
+			meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
+			if(whichStick == ASTICK) {
+				drawFloat(bitmap, 260, 260, 15, 2, 4, btn.Cx - ORG);
+				drawFloat(bitmap, 370, 260, 15, 0, 7, cxMelee);
+				drawFloat(bitmap, 260, 280, 15, 2, 4, btn.Cy - ORG);
+				drawFloat(bitmap, 370, 280, 15, 0, 7, cyMelee);
+			} else {
+				drawFloat(bitmap, 260, 260, 15, 2, 4, btn.Ax - ORG);
+				drawFloat(bitmap, 370, 260, 15, 0, 7, axMelee);
+				drawFloat(bitmap, 260, 280, 15, 2, 4, btn.Ay - ORG);
+				drawFloat(bitmap, 370, 280, 15, 0, 7, ayMelee);
+			}
 		}
 	}
 
@@ -127,30 +158,31 @@ void drawStickCalFast(unsigned char bitmap[],
 
 	eraseCharLine(bitmap, 340);
 	eraseCharLine(bitmap, 360);
+	const int axCoord = btn.Ax - ORG;
+	const int ayCoord = btn.Ay - ORG;
+	float axMelee;
+	float ayMelee;
+	meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
+	const int cxCoord = btn.Cx - ORG;
+	const int cyCoord = btn.Cy - ORG;
+	float cxMelee;
+	float cyMelee;
+	meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
 	if(whichStick == ASTICK) {
 		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.axRaw);
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.ayRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.axUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.ayUnfiltered);
-		const int xCoord = btn.Ax - ORG;
-		const int yCoord = btn.Ay - ORG;
-		float xMelee;
-		float yMelee;
-		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
-		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
-		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, axMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, ayMelee);
 	} else {
 		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.cxRaw);
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.cyRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.cyUnfiltered);
-		const int xCoord = btn.Cx - ORG;
-		const int yCoord = btn.Cy - ORG;
-		float xMelee;
-		float yMelee;
-		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
-		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
-		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+		meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, cxMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, cyMelee);
 	}
 }
 
@@ -784,10 +816,10 @@ void drawRumble(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, rumble2);
 	drawString(bitmap,  30, 110, 15, rumble3);
 	drawString(bitmap,  30, 130, 15, rumble4);
-	drawString(bitmap,  30, 150, 15, rumble5);
-	drawString(bitmap,  30, 170, 15, rumble6);
-	drawString(bitmap,  30, 200, 15, currentSetting);
-	drawInt(   bitmap, 190, 200, 15, 0, controls.rumble);
+	//drawString(bitmap,  30, 150, 15, rumble5);
+	drawString(bitmap,  30, 150, 15, rumble6);
+	drawString(bitmap,  30, 180, 15, currentSetting);
+	drawInt(   bitmap, 190, 180, 15, 0, controls.rumble);
 }
 
 void drawTrigger(unsigned char bitmap[],

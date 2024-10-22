@@ -34,6 +34,9 @@ const char stickCal14[]      = "Press A/L/R to move on.";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char stickCal15[]      = "Raw Values:      Stick Coords:    Melee Coords:";
 const char stickCal16[]      = "(0 to 1)         (-127 to 127)    (-1 to 1)";
+//Guide relative to offset   =  10  50   100  150  200  250  300
+const char stickCal17[]      = "Measured notch coords:";
+const char stickCal18[]      = "Stick:    Melee:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char autoinit1[]       = "By default you have to press B to get the sticks";
@@ -137,7 +140,7 @@ const char rumble1[]         = "This controls the strength of rumble feedback.";
 const char rumble2[]         = "0 is off, the max is 11, and the default is 9.";
 const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
-const char rumble5[]         = "Rumble braking is disabled for negative values.";
+//const char rumble5[]         = "Rumble braking is disabled for negative values.";
 const char rumble6[]         = "Press Z to test rumble.";
 
 //Guide relative to offset   =  10  50   100  150
