@@ -54,7 +54,7 @@ ControlConfig _controls{
 	.cMax = 127,
 	.cMin = -127,
 	.rumble = 9,
-	.rumbleMin = -11,
+	.rumbleMin = 0,
 	.rumbleMax = 11,
 	.rumbleDefault = 9,//5 is the max for 3v cell rumble, 9 is for oem-feeling normal rumble motors
 	.rumbleFactory = 9,

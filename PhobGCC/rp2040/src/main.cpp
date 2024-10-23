@@ -859,6 +859,12 @@ int main() {
 		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, to alleviate performance issues
 	}
 
+	//delay for 10 milliseconds, should help with cubstraption
+	const uint32_t lastMicros = micros();
+	while(micros() - lastMicros < 10'000) {
+		tight_loop_contents();
+	}
+
 	multicore_lockout_victim_init();
 
 	multicore_launch_core1(second_core);
