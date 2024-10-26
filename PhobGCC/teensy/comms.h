@@ -423,13 +423,17 @@ void commInt() {
 
 			//actually write to the rumble pins after beginning the write
 #ifdef RUMBLE
-			if(_cmdByte & 0b00000001){
-				analogWrite(_pinBrake,0);
-				analogWrite(_pinRumble, _rumblePower);
+			if(_cmdByte & 0b00000010) {
+				_rumble = RUMBLE_BRAKE;
 			}
+			else if(_cmdByte & 0b00000001) {
+				_rumble = RUMBLE_ON;
+				//analogWrite(_pinBrake,0);
+				//analogWrite(_pinRumble, _rumblePower);
 			else {
-				analogWrite(_pinRumble,0);
-				analogWrite(_pinBrake,256);
+				_rumble = RUMBLE_OFF;
+				//analogWrite(_pinRumble,0);
+				//analogWrite(_pinBrake,256);
 			}
 #endif
 		}

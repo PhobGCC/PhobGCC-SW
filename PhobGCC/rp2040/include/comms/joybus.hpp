@@ -3,6 +3,7 @@
 
 #include "pico/stdlib.h"
 #include "gcReport.hpp"
+#include "../../common/structsAndEnums.h"
 
 #include <functional>
 
@@ -12,6 +13,6 @@
  * @param dataPin GPIO number of the console data line pin
  * @param func Function to be called to obtain the GCReport to be sent to the console
  */
-void enterMode(const int dataPin, const int rumblePin, const int brakePin, int &rumblePower, std::function<GCReport()> func);
+void enterMode(const int dataPin, RumbleState &rumble, std::function<GCReport()> func);
 
 #endif

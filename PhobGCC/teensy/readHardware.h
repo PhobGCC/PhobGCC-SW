@@ -99,4 +99,18 @@ int readCy(const Pins &pin) {
 	return adc->adc0->analogRead(pin.pinCy);
 }
 
+//output rumble state
+void writeRumble(RumbleState state, uint8_t power) {
+	if(rumbleState == RUMBLE_ON) {
+		analogWrite(_pinBrake, 0);
+		analogWrite(_pinRumble, power);
+	} else if(rumbleState == RUMBLE_BRAKE) {
+		analogWrite(_pinRumble, 0);
+		analogWrite(_pinBrake, 255);
+	} else {
+		analogWrite(_pinRumble, 0);
+		analogWrite(_pinBrake, 0);
+	}
+}
+
 #endif //READHARDWARE_H

@@ -11,6 +11,7 @@
 #include "hardware/adc.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
+#include "hardware/pwm.h"
 
 #include "structsAndEnums.h"
 #include "storage/pages/storage.h"
@@ -251,6 +252,20 @@ uint32_t micros() {
 
 uint64_t millis() {
 	return time_us_64()/1000;
+}
+
+//output rumble state
+void writeRumble(RumbleState rumble, uint8_t power) {
+	if(rumble == RUMBLE_ON) {
+		pwm_set_gpio_level(_pinBrake, 0);
+		pwm_set_gpio_level(_pinRumble, power);
+	} else if(rumble == RUMBLE_BRAKE) {
+		pwm_set_gpio_level(_pinRumble, 0);
+		pwm_set_gpio_level(_pinBrake, 255);
+	} else {
+		pwm_set_gpio_level(_pinRumble, 0);
+		pwm_set_gpio_level(_pinBrake, 0);
+	}
 }
 
 #endif //READHARDWARE_H

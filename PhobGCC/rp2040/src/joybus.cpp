@@ -1,7 +1,7 @@
 #include "comms/joybus.hpp"
+#include "../common/structsAndEnums.h"
 
 #include "hardware/gpio.h"
-#include "hardware/pwm.h"
 
 #include "hardware/pio.h"
 #include "joybus.pio.h"
@@ -96,9 +96,7 @@ void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_repo
 }
 
 void __time_critical_func(enterMode)(const int dataPin,
-                                     const int rumblePin,
-                                     const int brakePin,
-                                     int &rumblePower,
+                                     RumbleState &rumble,
                                      std::function<GCReport()> func) {
     gpio_init(dataPin);
     gpio_set_dir(dataPin, GPIO_IN);
@@ -182,13 +180,13 @@ void __time_critical_func(enterMode)(const int dataPin,
 
 			//Rumble
 			bool rumbleBrake = joybusByte & 2;
-			bool rumble = (joybusByte & 1) && !rumbleBrake;
-            if(rumble) {
-                pwm_set_gpio_level(brakePin, 0);
-                pwm_set_gpio_level(rumblePin, rumblePower);
+			bool rumbleOn = joybusByte & 1;
+			if(rumbleBrake) {
+				rumble = RUMBLE_BRAKE;
+			} else if(rumbleOn) {
+				rumble = RUMBLE_ON;
             } else {
-                pwm_set_gpio_level(rumblePin, 0);
-                pwm_set_gpio_level(brakePin, rumbleBrake ? 255 : 0);
+				rumble = RUMBLE_OFF;
             }
 
         }

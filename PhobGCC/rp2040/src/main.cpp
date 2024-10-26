@@ -879,9 +879,7 @@ int main() {
 		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, _currentRemapStep, version);
 	} else {
 		enterMode(_pinTX,
-				_pinRumble,
-				_pinBrake,
-				_rumblePower,
+				_rumble,
 				buttonsToGCReport);
 	}
 

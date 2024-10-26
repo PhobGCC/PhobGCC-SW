@@ -2298,6 +2298,30 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, const int currentCalStep, const bool currentlyRaw){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
+	//Rumble ramping
+	//To prevent inrush current from causing issues with adapters on Switch, we are trying
+	// a short ramp whenever we turn on the rumble.
+#ifdef RUMBLE
+	static uint16_t rumbleCount;
+	const int rampDuration = min(1,(controls.rumble < 6) ? (controls.rumble*2) : (controls.rumble*4 - 10));
+	if(_rumble == RUMBLE_OFF || _rumble == RUMBLE_BRAKE) {
+		writeRumble(_rumble, 0);
+		rumbleCount == 0;
+	} else { //rumble is on
+		rumbleCount = min(rampDuration, rumbleCount + 1);
+		//division works funny on rp2040?
+		uint8_t divided = 0;
+		if(rampDuration > 0) {
+			while(divided*rampDuration < 255) {
+				divided = divided+1;
+			}
+		} else {
+			divided = 255;
+		}
+		writeRumble(_rumble, divided * rumbleCount);
+	}
+#endif //RUMBLE
+
 	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
 	//This is 2^32 microseconds
 	static uint32_t lastMicros = micros();

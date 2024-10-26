@@ -56,13 +56,19 @@ enum NotchStatus {
 	CARDINAL
 };
 
-enum ExtrasSlot{
+enum ExtrasSlot {
 	EXTRAS_UP,
 	EXTRAS_DOWN,
 	EXTRAS_LEFT,
 	EXTRAS_RIGHT,
 	EXTRAS_SIZE,
 	EXTRAS_UNSET
+};
+
+enum RumbleState {
+	RUMBLE_ON,
+	RUMBLE_OFF,
+	RUMBLE_BRAKE
 };
 
 union IntOrFloat{

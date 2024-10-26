@@ -19,6 +19,7 @@ float _ADCScale = 1;
 float _ADCScaleFactor = 1;
 
 int _rumblePower = 0;
+RumbleState _rumble = RUMBLE_OFF;
 
 float _dT;
 
