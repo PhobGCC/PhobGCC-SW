@@ -861,8 +861,10 @@ int main() {
 
 	//delay for 10 milliseconds, should help with cubstraption
 	const uint32_t lastMicros = micros();
+	bool toggle = false;
 	while(micros() - lastMicros < 10'000) {
-		tight_loop_contents();
+		gpio_put(_pinDac0, toggle);
+		toggle = !toggle;
 	}
 
 	multicore_lockout_victim_init();
