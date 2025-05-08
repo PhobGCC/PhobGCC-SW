@@ -906,8 +906,8 @@ void drawLtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.lConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.lTriggerOffset);
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
@@ -915,42 +915,54 @@ void drawLtrigger(unsigned char bitmap[],
 	}
 	switch(controls.lConfig) {
 		case 0:
-			drawString(bitmap,  30, 130, 15, lrtrigger4);
+			drawString(bitmap,  30, 130, 15, lrtrigger4); //default trigger behavior
 			break;
 		case 1:
-			drawString(bitmap,  30, 130, 15, lrtrigger5);
-			drawString(bitmap,  30, 150, 15, lrtrigger6);
+			drawString(bitmap,  30, 130, 15, lrtrigger5); //disables analog
+			drawString(bitmap,  30, 150, 15, lrtrigger6); //won't be able to shield in s4 ult
 			break;
 		case 2:
-			drawString(bitmap,  30, 130, 15, lrtrigger7);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);
+			drawString(bitmap,  30, 130, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
 			break;
 		case 3:
-			drawString(bitmap,  30, 130, 15, lrtrigger9);
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
 			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger13);
-			drawString(bitmap,  30, 170, 15, lrtrigger14);
-			drawString(bitmap,  30, 190, 15, lrtrigger10);
-			drawString(bitmap,  30, 210, 15, lrtrigger11);
+			drawString(bitmap,  30, 150, 15, lrtrigger13); //until the digital output is pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger14); //jumps to 255
+			drawString(bitmap,  30, 190, 15, lrtrigger10); //in melee you get a large lightshield
+			drawString(bitmap,  30, 210, 15, lrtrigger11); //then a hard shield
 			break;
 		case 4:
-			drawString(bitmap,  30, 130, 15, lrtrigger12);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger12); //outputs an analog value when hard pressed
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
 			break;
 		case 5:
-			drawString(bitmap,  30, 130, 15, lrtrigger15);
-			drawString(bitmap,  30, 150, 15, lrtrigger16);
-			drawString(bitmap,  30, 170, 15, lrtrigger17);
-			drawString(bitmap,  30, 190, 15, lrtrigger18);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger15); //outputs both analog and digital
+			drawString(bitmap,  30, 150, 15, lrtrigger16); //value when hard pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger17); //in melee like mode 2 but
+			drawString(bitmap,  30, 190, 15, lrtrigger18); //you can shield with it > 79
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);} //increase offset
 			break;
 		case 6:
-			drawString(bitmap,  30, 130, 15, lrtrigger19);
-			drawString(bitmap,  30, 150, 15, lrtrigger20);
-			drawString(bitmap,  30, 170, 15, lrtrigger21);
-			drawString(bitmap,  30, 190, 15, lrtrigger22);
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger22); //multiplier:
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.lTriggerOffset) + 0.4494f);
+			break;
+		case 7:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger7); //disables hard shield preserves lras
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
+			break;
+		case 8:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
+			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
 			break;
 	}
 	//graph?
@@ -975,8 +987,8 @@ void drawRtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.rConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.rTriggerOffset);
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
@@ -984,42 +996,54 @@ void drawRtrigger(unsigned char bitmap[],
 	}
 	switch(controls.rConfig) {
 		case 0:
-			drawString(bitmap,  30, 130, 15, lrtrigger4);
+			drawString(bitmap,  30, 130, 15, lrtrigger4); //default trigger behavior
 			break;
 		case 1:
-			drawString(bitmap,  30, 130, 15, lrtrigger5);
-			drawString(bitmap,  30, 150, 15, lrtrigger6);
+			drawString(bitmap,  30, 130, 15, lrtrigger5); //disables analog
+			drawString(bitmap,  30, 150, 15, lrtrigger6); //won't be able to shield in s4 ult
 			break;
 		case 2:
-			drawString(bitmap,  30, 130, 15, lrtrigger7);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);
+			drawString(bitmap,  30, 130, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
 			break;
 		case 3:
-			drawString(bitmap,  30, 130, 15, lrtrigger9);
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
 			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger13);
-			drawString(bitmap,  30, 170, 15, lrtrigger14);
-			drawString(bitmap,  30, 190, 15, lrtrigger10);
-			drawString(bitmap,  30, 210, 15, lrtrigger11);
+			drawString(bitmap,  30, 150, 15, lrtrigger13); //until the digital output is pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger14); //jumps to 255
+			drawString(bitmap,  30, 190, 15, lrtrigger10); //in melee you get a large lightshield
+			drawString(bitmap,  30, 210, 15, lrtrigger11); //then a hard shield
 			break;
 		case 4:
-			drawString(bitmap,  30, 130, 15, lrtrigger12);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger12); //outputs an analog value when hard pressed
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
 			break;
 		case 5:
-			drawString(bitmap,  30, 130, 15, lrtrigger15);
-			drawString(bitmap,  30, 150, 15, lrtrigger16);
-			drawString(bitmap,  30, 170, 15, lrtrigger17);
-			drawString(bitmap,  30, 190, 15, lrtrigger18);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger15); //outputs both analog and digital
+			drawString(bitmap,  30, 150, 15, lrtrigger16); //value when hard pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger17); //in melee like mode 2 but
+			drawString(bitmap,  30, 190, 15, lrtrigger18); //you can shield with it > 79
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);} //increase offset
 			break;
 		case 6:
-			drawString(bitmap,  30, 130, 15, lrtrigger19);
-			drawString(bitmap,  30, 150, 15, lrtrigger20);
-			drawString(bitmap,  30, 170, 15, lrtrigger21);
-			drawString(bitmap,  30, 190, 15, lrtrigger22);
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger22); //multiplier:
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.rTriggerOffset) + 0.4494f);
+			break;
+		case 7:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger7); //disables hard shield preserves lras
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
+			break;
+		case 8:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
+			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
 			break;
 	}
 	//graph?

@@ -180,6 +180,8 @@ const char lrtrigger21[]     = "This makes it respond quicker in Ultimate.";
 const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
+const char lrtrigger25[]     = "but has an analog multiplier of 2.5x, enabling";
+const char lrtrigger26[]     = "lightshield with short travel triggers.";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char tourney1[]        = "This prevents misinputs during tournaments by";

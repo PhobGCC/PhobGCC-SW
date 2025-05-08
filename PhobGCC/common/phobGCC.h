@@ -43,7 +43,7 @@ ControlConfig _controls{
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 6,
+	.triggerConfigMax = 8,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
@@ -1816,6 +1816,17 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 6: //Scales Analog Trigger Values
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 			break;
+		case 7: //Trigger plug emulation but no digital
+			tempBtn.L = (uint8_t) 0;
+			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			break;
+		case 8: //trigger plug emulation but high gain
+			if(!tempBtn.L) {
+				tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, 2.5*readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			} else {
+				tempBtn.La = (uint8_t) 255;
+			}
+			break;
 		default:
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 	}
@@ -1855,6 +1866,17 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			break;
 		case 6: //Scales Analog Trigger Values
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
+			break;
+		case 7: //Trigger plug emulation but no digital
+			tempBtn.R = (uint8_t) 0;
+			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			break;
+		case 8: //trigger plug emulation but high gain
+			if(!tempBtn.R) {
+				tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, 2.5*readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			} else {
+				tempBtn.Ra = (uint8_t) 255;
+			}
 			break;
 		default:
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
