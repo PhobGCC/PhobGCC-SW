@@ -608,6 +608,30 @@ void adjustAnalogScaler(const WhichStick whichStick, const Increase increase, Bu
 	clearButtons(750, btn, hardware);
 }
 
+void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(trigger == LTRIGGER) {
+		if(controls.lConfig >= controls.triggerConfigMax) {
+			controls.lConfig = 0;
+		} else {
+			controls.lConfig = controls.lConfig + 1;
+		}
+	} else {
+		if(controls.rConfig >= controls.triggerConfigMax) {
+			controls.rConfig = 0;
+		} else {
+			controls.rConfig = controls.rConfig + 1;
+		}
+	}
+	setLSetting(controls.lConfig);
+	setRSetting(controls.rConfig);
+
+	//We want to one-index the modes for the users, so we add 1 here
+	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
+
+	clearButtons(1000, btn, hardware);
+}
+
 void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER && increase == INCREASE) {
 		controls.lTriggerOffset++;
@@ -651,6 +675,20 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	}
 
 	clearButtons(100, btn, hardware);
+}
+
+void showTriggerSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains) {
+	//L trigger mode on A-stick
+	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+
+	//R trigger mode on C-stick
+	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
+
+	//Trigger analog offset on trigger analog
+	btn.La = (uint8_t) controls.lTriggerOffset;
+	btn.Ra = (uint8_t) controls.rTriggerOffset;
+
+	clearButtons(2000, btn, hardware);
 }
 
 void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
@@ -882,30 +920,6 @@ bool checkAdjustExtra(ExtrasSlot slot, Buttons &btn, bool checkConfig){
 		}
 	}
 	return false;
-}
-
-void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
-	if(trigger == LTRIGGER) {
-		if(controls.lConfig >= controls.triggerConfigMax) {
-			controls.lConfig = 0;
-		} else {
-			controls.lConfig = controls.lConfig + 1;
-		}
-	} else {
-		if(controls.rConfig >= controls.triggerConfigMax) {
-			controls.rConfig = 0;
-		} else {
-			controls.rConfig = controls.rConfig + 1;
-		}
-	}
-	setLSetting(controls.lConfig);
-	setRSetting(controls.rConfig);
-
-	//We want to one-index the modes for the users, so we add 1 here
-	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
-	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
-
-	clearButtons(1000, btn, hardware);
 }
 
 void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startUpRa){
@@ -1993,6 +2007,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Toggle R Trigger Mode:  AB+R
 	* Increase/Decrease L-trigger Offset:  LB+Du/Dd
 	* Increase/Decrease R-Trigger Offset:  RB+Du/Dd
+	* Show Trigger Settings: LR+Z
 	*
 	* Extras:
 	* Toggle by holding both sticks in the chosen direction, then pressing A+B
@@ -2200,6 +2215,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 			settingChangeCount++;
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
+		} else if(hardware.L && hardware.R && hardware.Z) { //Show Trigger Settings
+			showTriggerSettings(btn, hardware, controls, gains);
 		} else if(hardware.B && hardware.X && hardware.Y && !hardware.A) { //Initiate remapping
 			debug_println("Remapping buttons");
 			beginRemapping = true;
@@ -2208,7 +2225,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			resetRemap(controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.L && hardware.R && hardware.Du) {
-			currentlyRaw = !currentlyRaw;
+			currentlyRaw = true;
+			freezeSticks(500, btn, hardware);
+		} else if(hardware.L && hardware.R && hardware.Dd) {
+			currentlyRaw = false;
 			freezeSticks(500, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
