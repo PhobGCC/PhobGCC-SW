@@ -1994,8 +1994,6 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease Y-Axis Snapback Filtering:  AYZ+Du/Dd
 	* Increase/Decrease X-Axis Waveshaping:  LXZ+Du/Dd
 	* Increase/Decrease X-Axis Waveshaping:  LXZ+Du/Dd
-	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
-	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
 	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
 	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
@@ -2170,19 +2168,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			settingChangeCount++;
 			adjustWaveshaping(CSTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Waveshaping
+			settingChangeCount++;
 			adjustWaveshaping(CSTICK, YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X Offset
-			settingChangeCount++;
-			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X Offset
-			settingChangeCount++;
-			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y Offset
-			settingChangeCount++;
-			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
-			settingChangeCount++;
-			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
 			settingChangeCount++;
 			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
