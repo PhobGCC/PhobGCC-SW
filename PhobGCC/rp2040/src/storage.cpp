@@ -52,6 +52,7 @@ void getStoragePage() {
 		_storage.settings.tournamentToggle = temp.settings.tournamentToggle;
 		_storage.settings.aRemap = temp.settings.aRemap;
 		_storage.settings.bRemap = temp.settings.bRemap;
+		_storage.settings.dRemap = temp.settings.dRemap;
 		_storage.settings.lRemap = temp.settings.lRemap;
 		_storage.settings.rRemap = temp.settings.rRemap;
 		_storage.settings.xRemap = temp.settings.xRemap;
@@ -69,6 +70,7 @@ void commitSettings(const bool noLock/* = false*/) {
 void getRemapSetting(
 		uint8_t &aRemap,
 		uint8_t &bRemap,
+		uint8_t &dRemap,
 		uint8_t &lRemap,
 		uint8_t &rRemap,
 		uint8_t &xRemap,
@@ -77,6 +79,7 @@ void getRemapSetting(
 	getStoragePage();
 	aRemap = _storage.settings.aRemap;
 	bRemap = _storage.settings.bRemap;
+	dRemap = _storage.settings.dRemap;
 	lRemap = _storage.settings.lRemap;
 	rRemap = _storage.settings.rRemap;
 	xRemap = _storage.settings.xRemap;
@@ -86,6 +89,7 @@ void getRemapSetting(
 void setRemapSetting(
 		const uint8_t aRemap,
 		const uint8_t bRemap,
+		const uint8_t dRemap,
 		const uint8_t lRemap,
 		const uint8_t rRemap,
 		const uint8_t xRemap,
@@ -94,6 +98,7 @@ void setRemapSetting(
 	getStoragePage();
 	_storage.settings.aRemap = aRemap;
 	_storage.settings.bRemap = bRemap;
+	_storage.settings.dRemap = dRemap;
 	_storage.settings.lRemap = lRemap;
 	_storage.settings.rRemap = rRemap;
 	_storage.settings.xRemap = xRemap;

@@ -16,6 +16,7 @@ enum JumpConfig {
 enum RemapConfig {
 	A_REMAP,
 	B_REMAP,
+	D_REMAP,
 	L_REMAP,
 	R_REMAP,
 	X_REMAP,
@@ -163,6 +164,7 @@ struct Cardinals{
 struct ControlConfig{
 	uint8_t aRemap;
 	uint8_t bRemap;
+	uint8_t dRemap;
 	uint8_t lRemap;
 	uint8_t rRemap;
 	uint8_t xRemap;

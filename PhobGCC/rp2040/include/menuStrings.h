@@ -63,7 +63,7 @@ const char stickdbgCang[] = "C bounds angles";
 
 const char set_overAutoOn[] = "Autoinit on";
 const char set_overAutoOff[] = "Autoinit off";
-const char set_overRemap[] = "=> ABLRXYZ";
+const char set_overRemap[] = "=> ABLURXYZ";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";
@@ -128,10 +128,10 @@ const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
 const char radius4[]         = "Min:     Max:      Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
-const char remap1[]          = "You may remap A, B, L, R, X, Y, or Z.";
+const char remap1[]          = "You may remap A, B, Du, L, R, X, Y, or Z.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";
-const char remap4[]          = "value on a face button for lightshielding.";
+const char remap4[]          = "value on a digital button for lightshielding.";
 const char remap5[]          = "Press Start to begin.";
 const char remap6[]          = "Press an unused button that you want to be";
 

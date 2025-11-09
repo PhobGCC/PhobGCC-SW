@@ -50,7 +50,8 @@ namespace Eeprom {
 	const int _eepromTournamentToggle = _eepromCstickAnalogScaler+_bytesPerFloat;
 	const int _eepromARemap = _eepromTournamentToggle+_bytesPerUint8;
 	const int _eepromBRemap = _eepromARemap+_bytesPerUint8;
-	const int _eepromLRemap = _eepromBRemap+_bytesPerUint8;
+	const int _eepromDRemap = _eepromBRemap+_bytesPerUint8;
+	const int _eepromLRemap = _eepromDRemap+_bytesPerUint8;
 	const int _eepromRRemap = _eepromLRemap+_bytesPerUint8;
 	const int _eepromXRemap = _eepromRRemap+_bytesPerUint8;
 	const int _eepromYRemap = _eepromXRemap+_bytesPerUint8;
@@ -69,6 +70,7 @@ JumpConfig getJumpSetting() {
 void getRemapSetting(
 		uint8_t &aRemap,
 		uint8_t &bRemap,
+		uint8_t &dRemap,
 		uint8_t &lRemap,
 		uint8_t &rRemap,
 		uint8_t &xRemap,
@@ -76,6 +78,7 @@ void getRemapSetting(
 		uint8_t &zRemap) {
 	EEPROM.get(Eeprom::_eepromARemap, aRemap);
 	EEPROM.get(Eeprom::_eepromBRemap, bRemap);
+	EEPROM.get(Eeprom::_eepromDRemap, dRemap);
 	EEPROM.get(Eeprom::_eepromLRemap, lRemap);
 	EEPROM.get(Eeprom::_eepromRRemap, rRemap);
 	EEPROM.get(Eeprom::_eepromXRemap, xRemap);
@@ -92,6 +95,7 @@ void setJumpSetting(const JumpConfig jump) {
 void setRemapSetting(
 		const uint8_t aRemap,
 		const uint8_t bRemap,
+		const uint8_t dRemap,
 		const uint8_t lRemap,
 		const uint8_t rRemap,
 		const uint8_t xRemap,
@@ -99,6 +103,7 @@ void setRemapSetting(
 		const uint8_t zRemap) {
 	EEPROM.put(Eeprom::_eepromARemap, aRemap);
 	EEPROM.put(Eeprom::_eepromBRemap, bRemap);
+	EEPROM.put(Eeprom::_eepromDRemap, dRemap);
 	EEPROM.put(Eeprom::_eepromLRemap, lRemap);
 	EEPROM.put(Eeprom::_eepromRRemap, rRemap);
 	EEPROM.put(Eeprom::_eepromXRemap, xRemap);
@@ -316,13 +321,13 @@ void setAnalogScalerSetting(const int analogScaler, const WhichStick whichStick)
 	}
 }
 
-int getTournamentToggleSetting() {
-	int output;
+uint8_t getTournamentToggleSetting() {
+	uint8_t output;
 	EEPROM.get(Eeprom::_eepromTournamentToggle, output);
 	return output;
 }
 
-void setTournamentToggleSetting(const int tournamentToggle) {
+void setTournamentToggleSetting(const uint8_t tournamentToggle) {
 	EEPROM.put(Eeprom::_eepromTournamentToggle, tournamentToggle);
 }
 

@@ -1,6 +1,6 @@
 #include <cmath>
 #include <cstring>
-#include "pico/platform.h"
+#include "pico.h"
 #include "cvideo.h"
 #include "cvideo_variables.h"
 #include "menu.h"
@@ -579,6 +579,9 @@ const char* remapDecode(const uint8_t remap) {
 		case 1 << B_REMAP:
 			return "B";
 			break;
+		case 1 << D_REMAP:
+			return "U";
+			break;
 		case 1 << L_REMAP:
 			return "L";
 			break;
@@ -604,6 +607,8 @@ const char* remapInvert(const uint8_t remapCode, const ControlConfig &controls) 
 		return "A";
 	} else if(controls.bRemap == (1 << remapCode)) {
 		return "B";
+	} else if(controls.dRemap == (1 << remapCode)) {
+		return "U";
 	} else if(controls.lRemap == (1 << remapCode)) {
 		return "L";
 	} else if(controls.rRemap == (1 << remapCode)) {
@@ -672,9 +677,10 @@ void drawSet_over(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 30, 230, 15, set_overAutoOff);
 	}
-	char remap[8] = "";
+	char remap[9] = "";
 	strcat(remap, remapDecode(controls.aRemap));
 	strcat(remap, remapDecode(controls.bRemap));
+	strcat(remap, remapDecode(controls.dRemap));
 	strcat(remap, remapDecode(controls.lRemap));
 	strcat(remap, remapDecode(controls.rRemap));
 	strcat(remap, remapDecode(controls.xRemap));
@@ -738,21 +744,25 @@ void drawRemap(unsigned char bitmap[],
 			break;
 		case 2:
 			drawString(bitmap,  30, 140, 15, remap6);
-			drawString(bitmap, 460, 140, 15, "L");
+			drawString(bitmap, 460, 140, 15, "Du");
 			break;
 		case 3:
 			drawString(bitmap,  30, 140, 15, remap6);
-			drawString(bitmap, 460, 140, 15, "R");
+			drawString(bitmap, 460, 140, 15, "L");
 			break;
 		case 4:
 			drawString(bitmap,  30, 140, 15, remap6);
-			drawString(bitmap, 460, 140, 15, "X");
+			drawString(bitmap, 460, 140, 15, "R");
 			break;
 		case 5:
 			drawString(bitmap,  30, 140, 15, remap6);
-			drawString(bitmap, 460, 140, 15, "Y");
+			drawString(bitmap, 460, 140, 15, "X");
 			break;
 		case 6:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Y");
+			break;
+		case 7:
 			drawString(bitmap,  30, 140, 15, remap6);
 			drawString(bitmap, 460, 140, 15, "Z");
 			break;
@@ -760,13 +770,14 @@ void drawRemap(unsigned char bitmap[],
 			break;
 	}
 	if(currentRemapStep >= 0) {
-		drawString(bitmap, 470, 140, 15, ".");
+		drawString(bitmap, currentRemapStep == 2 ? 480 : 470, 140, 15, ".");
 	}
 
 	//drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
 
 	bool aRemapped = remapInvert(A_REMAP, controls) != " ";
 	bool bRemapped = remapInvert(B_REMAP, controls) != " ";
+	bool dRemapped = remapInvert(D_REMAP, controls) != " ";
 	bool lRemapped = remapInvert(L_REMAP, controls) != " ";
 	bool rRemapped = remapInvert(R_REMAP, controls) != " ";
 	bool xRemapped = remapInvert(X_REMAP, controls) != " ";
@@ -779,7 +790,7 @@ void drawRemap(unsigned char bitmap[],
 	drawString(bitmap, 180, 230, 10, "D");
 	drawString(bitmap, 160, 230, 15, "L");
 	drawString(bitmap, 200, 230, 15, "R");
-	drawString(bitmap, 180, 210, 15, "U");
+	drawString(bitmap, 180, 210, dRemapped ? 15 : 8, dRemapped ? remapInvert(D_REMAP, controls) : "U");
 	drawString(bitmap, 180, 250, 15, "D");
 	drawString(bitmap, 320, 240, aRemapped ? 15 : 8, aRemapped ? remapInvert(A_REMAP, controls) : "A");
 	drawString(bitmap, 300, 245, bRemapped ? 15 : 8, bRemapped ? remapInvert(B_REMAP, controls) : "B");
@@ -787,15 +798,6 @@ void drawRemap(unsigned char bitmap[],
 	drawString(bitmap, 315, 220, yRemapped ? 15 : 8, yRemapped ? remapInvert(Y_REMAP, controls) : "Y");
 	drawString(bitmap, 330, 200, zRemapped ? 15 : 8, zRemapped ? remapInvert(Z_REMAP, controls) : "Z");
 
-	/*
-	drawInt(bitmap,  30, 330, 15, 2, controls.aRemap);
-	drawInt(bitmap,  60, 330, 15, 2, controls.bRemap);
-	drawInt(bitmap,  90, 330, 15, 2, controls.lRemap);
-	drawInt(bitmap, 120, 330, 15, 2, controls.rRemap);
-	drawInt(bitmap, 150, 330, 15, 2, controls.xRemap);
-	drawInt(bitmap, 180, 330, 15, 2, controls.yRemap);
-	drawInt(bitmap, 210, 330, 15, 2, controls.zRemap);
-	*/
 }
 
 void drawRumble(unsigned char bitmap[],

@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstring>
 #include <string>
-#include "pico/platform.h"
+#include "pico.h"
 #include "cvideo.h"
 #include "cvideo_variables.h"
 #include "images/font.h"

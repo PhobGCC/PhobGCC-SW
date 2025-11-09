@@ -42,7 +42,7 @@
 
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
-#include "pico/platform.h"
+#include "pico.h"
 
 #include "hardware/pio.h"
 #include "hardware/dma.h"

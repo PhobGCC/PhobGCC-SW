@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 using std::min;
 using std::max;
 

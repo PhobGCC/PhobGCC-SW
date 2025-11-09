@@ -1,5 +1,5 @@
 #include <cmath>
-#include "pico/platform.h"
+#include "pico.h"
 #include "hardware/timer.h"
 #include "cvideo.h"
 #include "menu.h"
@@ -678,7 +678,7 @@ void navigateMenu(unsigned char bitmap[],
 				if((presses & SPRESS) && currentRemapStep == -1) {
 					pleaseCommit = 10;
 				}
-				if((currentRemapStep > -1) && presses & (APRESS | BTAP | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
+				if((currentRemapStep > -1) && presses & (APRESS | BTAP | DUPRESS | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
 					pleaseCommit = 10;
 				}
 				return;

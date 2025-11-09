@@ -8,6 +8,7 @@
 #include "comms/joybus.hpp"
 #include "cvideo.h"
 #include "cvideo_variables.h"
+#include "hardware/clocks.h"
 
 volatile bool _videoOut = false;
 //Variables used by PhobVision to communicate with the event loop core
