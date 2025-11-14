@@ -681,9 +681,11 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 void showTriggerSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains) {
 	//L trigger mode on A-stick
 	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+	btn.Ay = (uint8_t) (_floatOrigin);
 
 	//R trigger mode on C-stick
 	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
+	btn.Cy = (uint8_t) (_floatOrigin);
 
 	//Trigger analog offset on trigger analog
 	btn.La = (uint8_t) controls.lTriggerOffset;
