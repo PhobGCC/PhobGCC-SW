@@ -31,6 +31,8 @@ Altimor - Stickmap visualizer
 
 venus23gg - Stickmaps
 
+mizuyoukanao - joybus fixes
+
 # Libraries
 
 DogeSSBM - DogeBawx - 2021-12-18 - GPLv3 - Modified

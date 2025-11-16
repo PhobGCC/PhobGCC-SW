@@ -18,7 +18,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -30,16 +30,21 @@ using std::max;
 //#define BUILD_DEV
 
 //This is just an integer.
-#define SW_VERSION 29
+#define SW_VERSION 31
 
 ControlConfig _controls{
-	.jumpConfig = DEFAULTJUMP,
-	.jumpConfigMin = DEFAULTJUMP,
-	.jumpConfigMax = SWAP_YR,
+	.aRemap = 1 << A_REMAP,
+	.bRemap = 1 << B_REMAP,
+	.dRemap = 1 << D_REMAP,
+	.lRemap = 1 << L_REMAP,
+	.rRemap = 1 << R_REMAP,
+	.xRemap = 1 << X_REMAP,
+	.yRemap = 1 << Y_REMAP,
+	.zRemap = 1 << Z_REMAP,
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 6,
+	.triggerConfigMax = 8,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 	.rTriggerOffset = 49,
@@ -67,33 +72,34 @@ ControlConfig _controls{
 	.snapbackFactoryAY = 4,
 	.axSmoothing = 0,
 	.aySmoothing = 0,
-	.cxSmoothing = 0,
-	.cySmoothing = 0,
+	.cxSmoothing = 5,
+	.cySmoothing = 5,
 	.smoothingMin = 0,
-	.smoothingMax = 9,
-	.snapbackFactoryCX = 0,
-	.snapbackFactoryCY = 0,
+	.smoothingMax = 18,
+	.snapbackFactoryCX = 5,
+	.snapbackFactoryCY = 5,
 	.smoothingFactoryAX = 0,
 	.smoothingFactoryAY = 0,
 	.axWaveshaping = 0,
 	.ayWaveshaping = 0,
 	.cxWaveshaping = 0,
 	.cyWaveshaping = 0,
-	.waveshapingMin = 0,
-	.waveshapingMax = 15,
+	.waveshapingMin = -24,
+	.waveshapingMax = 24,
+	.waveshapingDefault = 0,
 	.waveshapingFactoryAX = 0,
 	.waveshapingFactoryAY = 0,
 	.waveshapingFactoryCX = 0,
 	.waveshapingFactoryCY = 0,
 	.astickCardinalSnapping = 6,
 	.cstickCardinalSnapping = 6,
-	.cardinalSnappingMin = -1,
+	.cardinalSnappingMin = -2,
 	.cardinalSnappingMax = 6,
 	.cardinalSnappingDefault = 6,
 	.astickAnalogScaler = 100,
 	.cstickAnalogScaler = 100,
-	.analogScalerMin = 82,
-	.analogScalerMax = 125,
+	.analogScalerMin = 90,
+	.analogScalerMax = 110,
 	.analogScalerDefault = 100,
 	.tournamentToggle = 0,
 	.tournamentToggleMin = 0,
@@ -148,6 +154,8 @@ Pins _pinList {
 int calcRumblePower(const int rumble){
 	if(rumble > 0) {
 		return pow(2.0, 7+((rumble-3)/8.0)); //should be 256 when rumble is 11
+	} else if(rumble < 0) {
+		return -pow(2.0, 7+((-rumble-3)/8.0)); //should be 256 when rumble is 11
 	} else {
 		return 0;
 	}
@@ -419,8 +427,8 @@ void showAstickSettings(Buttons &btn, Buttons &hardware, const ControlConfig &co
 	btn.Cy = (uint8_t) (_floatOrigin + controls.aySmoothing);
 
 	//Waveshaping on triggers
-	btn.La = (uint8_t) controls.axWaveshaping;
-	btn.Ra = (uint8_t) controls.ayWaveshaping;
+	btn.La = (uint8_t) (controls.axWaveshaping >= 0) ? controls.axWaveshaping : 100-controls.axWaveshaping;
+	btn.Ra = (uint8_t) (controls.ayWaveshaping >= 0) ? controls.ayWaveshaping : 100-controls.ayWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
@@ -522,8 +530,8 @@ void showCstickSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls
 	btn.Cy = (uint8_t) (_floatOrigin + controls.cYOffset);
 
 	//Waveshaping on triggers
-	btn.La = (uint8_t) controls.cxWaveshaping;
-	btn.Ra = (uint8_t) controls.cyWaveshaping;
+	btn.La = (uint8_t) (controls.cxWaveshaping >= 0) ? controls.cxWaveshaping : 100-controls.cxWaveshaping;
+	btn.Ra = (uint8_t) (controls.cyWaveshaping >= 0) ? controls.cyWaveshaping : 100-controls.cyWaveshaping;
 
 	clearButtons(2000, btn, hardware);
 }
@@ -601,6 +609,30 @@ void adjustAnalogScaler(const WhichStick whichStick, const Increase increase, Bu
 	clearButtons(750, btn, hardware);
 }
 
+void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
+	if(trigger == LTRIGGER) {
+		if(controls.lConfig >= controls.triggerConfigMax) {
+			controls.lConfig = 0;
+		} else {
+			controls.lConfig = controls.lConfig + 1;
+		}
+	} else {
+		if(controls.rConfig >= controls.triggerConfigMax) {
+			controls.rConfig = 0;
+		} else {
+			controls.rConfig = controls.rConfig + 1;
+		}
+	}
+	setLSetting(controls.lConfig);
+	setRSetting(controls.rConfig);
+
+	//We want to one-index the modes for the users, so we add 1 here
+	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
+
+	clearButtons(1000, btn, hardware);
+}
+
 void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(trigger == LTRIGGER && increase == INCREASE) {
 		controls.lTriggerOffset++;
@@ -646,6 +678,22 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 	clearButtons(100, btn, hardware);
 }
 
+void showTriggerSettings(Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains) {
+	//L trigger mode on A-stick
+	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
+	btn.Ay = (uint8_t) (_floatOrigin);
+
+	//R trigger mode on C-stick
+	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
+	btn.Cy = (uint8_t) (_floatOrigin);
+
+	//Trigger analog offset on trigger analog
+	btn.La = (uint8_t) controls.lTriggerOffset;
+	btn.Ra = (uint8_t) controls.rTriggerOffset;
+
+	clearButtons(2000, btn, hardware);
+}
+
 void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &controls) {
 	if(controls.tournamentToggle == controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
@@ -664,70 +712,154 @@ void changeTournamentToggle(Buttons &btn, Buttons &hardware, ControlConfig &cont
 	clearButtons(750, btn, hardware);
 }
 
-//apply digital button swaps for L, R, or Z jumping
-void applyJump(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
-	switch(controls.jumpConfig){
-		case SWAP_XZ:
-			btn.X = hardware.Z;
-			btn.Z = hardware.X;
+//apply digital button swaps for ABLRXYZ
+void applyRemaps(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
+	uint8_t source =
+		hardware.A << A_REMAP |
+		hardware.B << B_REMAP |
+		hardware.Du << D_REMAP |
+		hardware.L << L_REMAP |
+		hardware.R << R_REMAP |
+		hardware.X << X_REMAP |
+		hardware.Y << Y_REMAP |
+		hardware.Z << Z_REMAP;
+	btn.A  = (source & controls.aRemap) != 0;
+	btn.B  = (source & controls.bRemap) != 0;
+	btn.Du = (source & controls.dRemap) != 0;
+	btn.L  = (source & controls.lRemap) != 0;
+	btn.R  = (source & controls.rRemap) != 0;
+	btn.X  = (source & controls.xRemap) != 0;
+	btn.Y  = (source & controls.yRemap) != 0;
+	btn.Z  = (source & controls.zRemap) != 0;
+}
+
+void remapAdvance(int &step, ControlConfig &controls, Buttons &hardware, Buttons &btn) {
+	if(step == -1) {
+		//clear the mappings
+		controls.aRemap = 0;
+		controls.bRemap = 0;
+		controls.dRemap = 0;
+		controls.lRemap = 0;
+		controls.rRemap = 0;
+		controls.xRemap = 0;
+		controls.yRemap = 0;
+		controls.zRemap = 0;
+		step = 0;
+		return;
+	}
+	const uint8_t source =
+		(hardware.A  ? 1 : 0) << A_REMAP |
+		(hardware.B  ? 1 : 0) << B_REMAP |
+		(hardware.Du ? 1 : 0) << D_REMAP |
+		(hardware.L  ? 1 : 0) << L_REMAP |
+		(hardware.R  ? 1 : 0) << R_REMAP |
+		(hardware.X  ? 1 : 0) << X_REMAP |
+		(hardware.Y  ? 1 : 0) << Y_REMAP |
+		(hardware.Z  ? 1 : 0) << Z_REMAP;
+	const uint8_t mask = controls.aRemap |
+		controls.bRemap |
+		controls.dRemap |
+		controls.lRemap |
+		controls.rRemap |
+		controls.xRemap |
+		controls.yRemap |
+		controls.zRemap;
+	if ((mask & source) != 0) {
+		//a button that's already been mapped is currently pressed, so do nothing
+		return;
+	}
+	const int pressCount =
+		hardware.A +
+		hardware.B +
+		hardware.Du +
+		hardware.L +
+		hardware.R +
+		hardware.X +
+		hardware.Y +
+		hardware.Z;
+	uint8_t pressedButton = 0;
+	if(pressCount == 1) {
+		if(hardware.A ) {pressedButton = 1 << A_REMAP;}
+		if(hardware.B ) {pressedButton = 1 << B_REMAP;}
+		if(hardware.Du) {pressedButton = 1 << D_REMAP;}
+		if(hardware.L ) {pressedButton = 1 << L_REMAP;}
+		if(hardware.R ) {pressedButton = 1 << R_REMAP;}
+		if(hardware.X ) {pressedButton = 1 << X_REMAP;}
+		if(hardware.Y ) {pressedButton = 1 << Y_REMAP;}
+		if(hardware.Z ) {pressedButton = 1 << Z_REMAP;}
+	} else {
+		//if no buttons or pressed, or somehow two buttons are pressed simultaneously,
+		//do nothing
+		return;
+	}
+	//if we got to this point, exactly one button is pressed and it's new
+	switch(step) {
+		case 0:
+			controls.aRemap = pressedButton;
 			break;
-		case SWAP_YZ:
-			btn.Y = hardware.Z;
-			btn.Z = hardware.Y;
+		case 1:
+			controls.bRemap = pressedButton;
 			break;
-		case SWAP_XL:
-			btn.X = hardware.L;
-			btn.L = hardware.X;
+		case 2:
+			controls.dRemap = pressedButton;
 			break;
-		case SWAP_YL:
-			btn.Y = hardware.L;
-			btn.L = hardware.Y;
+		case 3:
+			controls.lRemap = pressedButton;
 			break;
-		case SWAP_XR:
-			btn.X = hardware.R;
-			btn.R = hardware.X;
+		case 4:
+			controls.rRemap = pressedButton;
 			break;
-		case SWAP_YR:
-			btn.Y = hardware.R;
-			btn.R = hardware.Y;
+		case 5:
+			controls.xRemap = pressedButton;
+			break;
+		case 6:
+			controls.yRemap = pressedButton;
+			break;
+		case 7:
+			controls.zRemap = pressedButton;
 			break;
 		default:
 			break;
-			//nothing
+	}
+	step++;
+	if(step > Z_REMAP) {
+		step = -1;
+		setRemapSetting(controls.aRemap,
+				controls.bRemap,
+				controls.dRemap,
+				controls.lRemap,
+				controls.rRemap,
+				controls.xRemap,
+				controls.yRemap,
+				controls.zRemap);
+#ifdef BATCHSETTINGS
+		commitSettings();
+#endif //BATCHSETTINGS
+		freezeSticks(2000, btn, hardware);
 	}
 }
 
-void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
-	debug_print("setting jump to: ");
-	if (controls.jumpConfig == jumpConfig) {
-		controls.jumpConfig = DEFAULTJUMP;
-		debug_println("normal again");
-	} else {
-		controls.jumpConfig = jumpConfig;
-		switch (jumpConfig) {
-			case SWAP_XZ:
-				debug_println("X<->Z");
-				break;
-			case SWAP_YZ:
-				debug_println("Y<->Z");
-				break;
-			case SWAP_XL:
-				debug_println("X<->L");
-				break;
-			case SWAP_YL:
-				debug_println("Y<->L");
-				break;
-			case SWAP_XR:
-				debug_println("X<->R");
-				break;
-			case SWAP_YR:
-				debug_println("Y<->R");
-				break;
-			default:
-				debug_println("normal");
-		}
-	}
-	setJumpSetting(controls.jumpConfig);
+void resetRemap(ControlConfig &controls) {
+	//clear the mappings
+	controls.aRemap = 1 << A_REMAP;
+	controls.bRemap = 1 << B_REMAP;
+	controls.dRemap = 1 << D_REMAP;
+	controls.lRemap = 1 << L_REMAP;
+	controls.rRemap = 1 << R_REMAP;
+	controls.xRemap = 1 << X_REMAP;
+	controls.yRemap = 1 << Y_REMAP;
+	controls.zRemap = 1 << Z_REMAP;
+	setRemapSetting(controls.aRemap,
+			controls.bRemap,
+			controls.dRemap,
+			controls.lRemap,
+			controls.rRemap,
+			controls.xRemap,
+			controls.yRemap,
+			controls.zRemap);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
 }
 
 void toggleExtra(ExtrasSlot slot, Buttons &btn, Buttons &hardware, ControlConfig &controls){
@@ -806,43 +938,6 @@ bool checkAdjustExtra(ExtrasSlot slot, Buttons &btn, bool checkConfig){
 	return false;
 }
 
-void nextTriggerState(WhichTrigger trigger, Buttons &btn, Buttons &hardware, ControlConfig &controls) {
-	if(trigger == LTRIGGER) {
-		if(controls.lConfig >= controls.triggerConfigMax) {
-			controls.lConfig = 0;
-		} else {
-			controls.lConfig = controls.lConfig + 1;
-		}
-	} else {
-		if(controls.rConfig >= controls.triggerConfigMax) {
-			controls.rConfig = 0;
-		} else {
-			controls.rConfig = controls.rConfig + 1;
-		}
-	}
-	setLSetting(controls.lConfig);
-	setRSetting(controls.rConfig);
-
-	//if the modes are incompatible due to mode 5, make it show -100 on the stick that isn't mode 5
-	//(user-facing mode 5)
-	int lConfig = controls.lConfig;
-	int rConfig = controls.rConfig;
-	int triggerConflict = 0;
-	if(rConfig == 4 && (lConfig == 0 || lConfig == 2 || lConfig == 3)) {
-		triggerConflict = -100;
-	}
-	if(lConfig == 4 && (rConfig == 0 || rConfig == 2 || rConfig == 3)) {
-		triggerConflict = -100;
-	}
-	//We want to one-index the modes for the users, so we add 1 here
-	btn.Ay = (uint8_t) (_floatOrigin + triggerConflict);
-	btn.Ax = (uint8_t) (_floatOrigin + controls.lConfig + 1);
-	btn.Cy = (uint8_t) (_floatOrigin + triggerConflict);
-	btn.Cx = (uint8_t) (_floatOrigin + controls.rConfig + 1);
-
-	clearButtons(1000, btn, hardware);
-}
-
 void initializeButtons(const Pins &pin, Buttons &btn,int &startUpLa, int &startUpRa){
 	//set the analog stick values to the chosen center value that will be reported to the console on startup
 	//We choose 127 (_intOrigin) for this, and elsewhere we use an offset of 127.5 (_floatOrigin) truncated to int in order to round properly
@@ -904,15 +999,43 @@ void applyCalFromPoints(const WhichStick whichStick, float notchAngles[], const 
 int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	int numberOfNaN = 0;
 
-	//get the jump setting
-	controls.jumpConfig = getJumpSetting();
-	if(controls.jumpConfig < controls.jumpConfigMin){
-		controls.jumpConfig = DEFAULTJUMP;
+	//get the remaps
+	getRemapSetting(controls.aRemap,
+			controls.bRemap,
+			controls.dRemap,
+			controls.lRemap,
+			controls.rRemap,
+			controls.xRemap,
+			controls.yRemap,
+			controls.zRemap);
+	debug_print("A remap: ");
+	debug_println(controls.aRemap);
+	debug_print("B remap: ");
+	debug_println(controls.bRemap);
+	debug_print("Du remap: ");
+	debug_println(controls.dRemap);
+	debug_print("L remap: ");
+	debug_println(controls.lRemap);
+	debug_print("R remap: ");
+	debug_println(controls.rRemap);
+	debug_print("X remap: ");
+	debug_println(controls.xRemap);
+	debug_print("Y remap: ");
+	debug_println(controls.yRemap);
+	debug_print("Z remap: ");
+	debug_println(controls.zRemap);
+	if((controls.aRemap ^ controls.bRemap ^ controls.dRemap ^ controls.lRemap ^ controls.rRemap ^ controls.xRemap ^ controls.yRemap ^ controls.zRemap) !=
+			255) {
+		controls.aRemap = 1 << A_REMAP;
+		controls.bRemap = 1 << B_REMAP;
+		controls.dRemap = 1 << D_REMAP;
+		controls.lRemap = 1 << L_REMAP;
+		controls.rRemap = 1 << R_REMAP;
+		controls.xRemap = 1 << X_REMAP;
+		controls.yRemap = 1 << Y_REMAP;
+		controls.zRemap = 1 << Z_REMAP;
 		numberOfNaN++;
-	}
-	if(controls.jumpConfig > controls.jumpConfigMax){
-		controls.jumpConfig = DEFAULTJUMP;
-		numberOfNaN++;
+		debug_println("numberOfNaN increased at remap");
 	}
 
 	//get the L setting
@@ -920,10 +1043,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.lConfig < controls.triggerConfigMin) {
 		controls.lConfig = controls.triggerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at lconfig");
 	}
 	if(controls.lConfig > controls.triggerConfigMax) {
 		controls.lConfig = controls.triggerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at lconfig");
 	}
 
 	//get the R setting
@@ -931,10 +1056,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.rConfig < controls.triggerConfigMin) {
 		controls.rConfig = controls.triggerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at rconfig");
 	}
 	if(controls.rConfig > controls.triggerConfigMax) {
 		controls.rConfig = controls.triggerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at rconfig");
 	}
 
 	//get the L-trigger Offset value
@@ -942,9 +1069,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.lTriggerOffset > controls.triggerMax) {
 		controls.lTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at loffset");
 	} else if(controls.lTriggerOffset < controls.triggerMin) {
 		controls.lTriggerOffset = controls.triggerMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at loffset");
 	}
 
 	//get the R-trigger Offset value
@@ -952,9 +1081,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.rTriggerOffset > controls.triggerMax) {
 		controls.rTriggerOffset = controls.triggerMax;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at roffset");
 	} else if(controls.rTriggerOffset < controls.triggerMin) {
 		controls.rTriggerOffset = controls.triggerMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at roffset");
 	}
 
 
@@ -963,9 +1094,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cXOffset > controls.cMax) {
 		controls.cXOffset = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxoffset");
 	} else if(controls.cXOffset < controls.cMin) {
 		controls.cXOffset = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxoffset");
 	}
 
 	//get the C-stick Y offset
@@ -973,9 +1106,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cYOffset > controls.cMax) {
 		controls.cYOffset = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cyoffset");
 	} else if(controls.cYOffset < controls.cMin) {
 		controls.cYOffset = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cyoffset");
 	}
 
 	//get the x-axis snapback correction
@@ -985,9 +1120,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.xSnapback < controls.snapbackMin) {
 		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at xsnapback");
 	} else if (controls.xSnapback > controls.snapbackMax) {
 		controls.xSnapback = controls.snapbackDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at xsnapback");
 	}
 
 	//get the y-ayis snapback correction
@@ -997,9 +1134,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.ySnapback < controls.snapbackMin) {
 		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ysnapback");
 	} else if (controls.ySnapback > controls.snapbackMax) {
 		controls.ySnapback = controls.snapbackDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ysnapback");
 	}
 
 	//get the x-axis smoothing value
@@ -1009,11 +1148,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.axSmoothing > controls.smoothingMax) {
 		controls.axSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at xsmoothing");
 		debug_print("the xSmoothing value was adjusted to:");
 		debug_println(controls.axSmoothing);
 	} else if(controls.axSmoothing < controls.smoothingMin) {
 		controls.axSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at xsmoothing");
 		debug_print("the xSmoothing value was adjusted to:");
 		debug_println(controls.axSmoothing);
 	}
@@ -1025,11 +1166,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.aySmoothing > controls.smoothingMax) {
 		controls.aySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ysmoothing");
 		debug_print("the ySmoothing value was adjusted to:");
 		debug_println(controls.aySmoothing);
 	} else if(controls.aySmoothing < controls.smoothingMin) {
 		controls.aySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ysmoothing");
 		debug_print("the ySmoothing value was adjusted to:");
 		debug_println(controls.aySmoothing);
 	}
@@ -1041,11 +1184,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cxSmoothing > controls.smoothingMax) {
 		controls.cxSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxsmoothing");
 		debug_print("the cXSmoothing value was adjusted to:");
 		debug_println(controls.cxSmoothing);
 	} else if(controls.cxSmoothing < controls.smoothingMin) {
 		controls.cxSmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxsmoothing");
 		debug_print("the cXSmoothing value was adjusted to:");
 		debug_println(controls.cxSmoothing);
 	}
@@ -1057,11 +1202,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cySmoothing > controls.smoothingMax) {
 		controls.cySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cysmoothing");
 		debug_print("the cYSmoothing value was adjusted to:");
 		debug_println(controls.cySmoothing);
 	} else if(controls.cySmoothing < controls.smoothingMin) {
 		controls.cySmoothing = controls.smoothingMin;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cysmoothing");
 		debug_print("the cYSmoothing value was adjusted to:");
 		debug_println(controls.cySmoothing);
 	}
@@ -1071,11 +1218,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the axWaveshaping value from eeprom is:");
 	debug_println(controls.axWaveshaping);
 	if(controls.axWaveshaping < controls.waveshapingMin) {
-		controls.axWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at axwaveshaping");
 	} else if (controls.axWaveshaping > controls.waveshapingMax) {
-		controls.axWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at axwaveshaping");
 	}
 
 	//get the a-stick y-axis waveshaping value
@@ -1083,11 +1232,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the ayWaveshaping value from eeprom is:");
 	debug_println(controls.ayWaveshaping);
 	if(controls.ayWaveshaping < controls.waveshapingMin) {
-		controls.ayWaveshaping = controls.waveshapingMin;
+		controls.ayWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at aywaveshaping");
 	} else if (controls.ayWaveshaping > controls.waveshapingMax) {
-		controls.ayWaveshaping = controls.waveshapingMax;
+		controls.ayWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at aywaveshaping");
 	}
 
 	//get the c-stick x-axis waveshaping value
@@ -1095,11 +1246,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the cxWaveshaping value from eeprom is:");
 	debug_println(controls.cxWaveshaping);
 	if(controls.cxWaveshaping < controls.waveshapingMin) {
-		controls.cxWaveshaping = controls.waveshapingMin;
+		controls.cxWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxwaveshaping");
 	} else if (controls.cxWaveshaping > controls.waveshapingMax) {
-		controls.cxWaveshaping = controls.waveshapingMin;
+		controls.cxWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cxwaveshaping");
 	}
 
 	//get the c-stick y-axis waveshaping value
@@ -1107,11 +1260,13 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	debug_print("the cyWaveshaping value from eeprom is:");
 	debug_println(controls.cyWaveshaping);
 	if(controls.cyWaveshaping < controls.waveshapingMin) {
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cywaveshaping");
 	} else if (controls.cyWaveshaping > controls.waveshapingMax) {
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cywaveshaping");
 	}
 
 	if(controls.axWaveshaping != 0){
@@ -1129,6 +1284,7 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(std::isnan(controls.rumble)) {
 		controls.rumble = controls.rumbleDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at rumble");
 	}
 	if(controls.rumble < controls.rumbleMin) {
 		controls.rumble = controls.rumbleDefault;
@@ -1147,10 +1303,12 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.autoInit < 0) {
 		controls.autoInit = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at autoinit");
 	}
 	if(controls.autoInit > 1) {
 		controls.autoInit = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at autoinit");
 	}
 	debug_print("Auto init: ");
 	debug_println(controls.autoInit);
@@ -1198,9 +1356,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.astickCardinalSnapping > controls.cardinalSnappingMax) {
 		controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at acardinal");
 	} else if (controls.astickCardinalSnapping < controls.cardinalSnappingMin) {
 		controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at acardinal");
 	}
 
 	//get the C-stick cardinal snapping
@@ -1208,9 +1368,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cstickCardinalSnapping > controls.cardinalSnappingMax) {
 		controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ccardinal");
 	} else if (controls.cstickCardinalSnapping < controls.cardinalSnappingMin) {
 		controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ccardinal");
 	}
 
 	//get the A-stick analog scaler
@@ -1218,9 +1380,11 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.astickAnalogScaler > controls.analogScalerMax) {
 		controls.astickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ascaling");
 	} else if (controls.astickAnalogScaler < controls.analogScalerMin) {
 		controls.astickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at ascaling");
 	}
 
 	//get the C-stick analog scaler
@@ -1228,30 +1392,40 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 	if(controls.cstickAnalogScaler > controls.analogScalerMax) {
 		controls.cstickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cscaling");
 	} else if (controls.cstickAnalogScaler < controls.analogScalerMin) {
 		controls.cstickAnalogScaler = controls.analogScalerDefault;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at cscaling");
 	}
 
 	//get the tournament toggle setting
 	controls.tournamentToggle = getTournamentToggleSetting();
+	debug_print("Saved tournament toggle setting: ");
+	debug_println(controls.tournamentToggle);
 	if(controls.tournamentToggle > controls.tournamentToggleMax) {
 		controls.tournamentToggle = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at tourney");
 	} else if(controls.tournamentToggle < controls.tournamentToggleMin) {
 		controls.tournamentToggle = 0;
 		numberOfNaN++;
+		debug_println("numberOfNaN increased at tourney");
 	}
+	debug_print("New tournament toggle setting: ");
+	debug_println(controls.tournamentToggle);
 
 #ifdef PICO_RP2040
 	_controls.interlaceOffset = getInterlaceOffsetSetting();
 	if(controls.interlaceOffset < controls.interlaceOffsetMin) {
 		controls.interlaceOffset = 0;
 		numberOfNaN++;
+		debug_print("numberOfNaN increased at interlace");
 	}
 	if(controls.interlaceOffset > controls.interlaceOffsetMax) {
 		controls.interlaceOffset = 0;
 		numberOfNaN++;
+		debug_print("numberOfNaN increased at interlace");
 	}
 #endif //PICO_RP2040
 
@@ -1264,6 +1438,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		case -1:
 			migrating = true;
 			debug_println("Updating settings from unitialized");
+
+			//write to controls AND write to settings
 			controls.rumble = controls.rumble!=0 ? controls.rumble + 4 : 0;
 			_rumblePower = calcRumblePower(controls.rumble);
 			setRumbleSetting(controls.rumble);
@@ -1273,23 +1449,85 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 			debug_println(_rumblePower);
 			//fallthrough
 		case 28:
-			//uncomment these when we do have it migrate
 			migrating = true;
 			debug_println("Updating settings from 0.28");
+
+			//write to controls AND write to settings
 #ifdef PICO_RP2040
 			controls.interlaceOffset = 0;
+			setInterlaceOffsetSetting(0);
 #endif //PICO_RP2040
 			controls.astickAnalogScaler = controls.analogScalerDefault;
+			setAnalogScalerSetting(controls.analogScalerDefault, ASTICK);
 			controls.cstickAnalogScaler = controls.analogScalerDefault;
+			setAnalogScalerSetting(controls.analogScalerDefault, CSTICK);
 			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, ASTICK);
 			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, CSTICK);
 			controls.tournamentToggle = controls.tournamentToggleMin;
+			setTournamentToggleSetting(controls.tournamentToggleMin);
 			//fallthrough
 		case 29:
 			//uncomment these when we do have it migrate
-			//migrating = true;
-			//debug_println("Schema is now current");
+			migrating = true;
+			debug_println("Updating settings from 0.29");
+
+			//write to controls AND write to settings!!
+
+			//fix the cardinal snapping just in case
+			controls.astickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, ASTICK);
+			controls.cstickCardinalSnapping = controls.cardinalSnappingDefault;
+			setCardinalSnappingSetting(controls.cardinalSnappingDefault, CSTICK);
+
+			if(controls.axSmoothing == 9) {
+				controls.axSmoothing = 18;
+				setXSmoothingSetting(18);
+			}
+			if(controls.aySmoothing == 9) {
+				controls.aySmoothing = 18;
+				setYSmoothingSetting(18);
+			}
+			if(controls.cxSmoothing == 9) {
+				controls.cxSmoothing = 18;
+				setCxSmoothingSetting(18);
+			}
+			if(controls.cySmoothing == 9) {
+				controls.cySmoothing = 18;
+				setCySmoothingSetting(18);
+			}
+
 			//fallthrough
+		case 30:
+			//uncomment these when we do have it migrate
+			migrating = true;
+			debug_println("Updating settings from 0.30");
+
+			//write to controls AND write to settings!!
+
+			//set remaps to defaults
+			controls.aRemap = 1 << A_REMAP;
+			controls.bRemap = 1 << B_REMAP;
+			controls.dRemap = 1 << D_REMAP;
+			controls.lRemap = 1 << L_REMAP;
+			controls.rRemap = 1 << R_REMAP;
+			controls.xRemap = 1 << X_REMAP;
+			controls.yRemap = 1 << Y_REMAP;
+			controls.zRemap = 1 << Z_REMAP;
+			setRemapSetting(controls.aRemap, controls.bRemap, controls.dRemap, controls.lRemap, controls.rRemap, controls.xRemap, controls.yRemap, controls.zRemap);
+
+			//fallthrough
+			/*
+		case 31:
+			//uncomment these when we do have it migrate
+			migrating = true;
+			debug_println("Updating settings from 0.31");
+
+			//write to controls AND write to settings!!
+
+			//fallthrough
+			*/
 		default:
 			if(migrating) {
 				debug_println("Updating saved settings schema");
@@ -1305,8 +1543,18 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, StickParams &aStickParams, StickParams &cStickParams, const bool noLock = false){
 	debug_println("RESETTING ALL DEFAULTS");
 
-	controls.jumpConfig = DEFAULTJUMP;
-	setJumpSetting(controls.jumpConfig);
+	controls.tournamentToggle = 0;
+	setTournamentToggleSetting(controls.tournamentToggle);
+
+	controls.aRemap = 1 << A_REMAP;
+	controls.bRemap = 1 << B_REMAP;
+	controls.dRemap = 1 << D_REMAP;
+	controls.lRemap = 1 << L_REMAP;
+	controls.rRemap = 1 << R_REMAP;
+	controls.xRemap = 1 << X_REMAP;
+	controls.yRemap = 1 << Y_REMAP;
+	controls.zRemap = 1 << Z_REMAP;
+	setRemapSetting(controls.aRemap, controls.bRemap, controls.dRemap, controls.lRemap, controls.rRemap, controls.xRemap, controls.yRemap, controls.zRemap);
 
 	controls.lConfig = controls.triggerDefault;
 	controls.rConfig = controls.triggerDefault;
@@ -1336,8 +1584,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 	} else {
 		controls.axSmoothing = controls.smoothingMin;
 		controls.aySmoothing = controls.smoothingMin;
-		controls.cxSmoothing = controls.smoothingMin;
-		controls.cySmoothing = controls.smoothingMin;
+		controls.cxSmoothing = controls.snapbackFactoryCX;
+		controls.cySmoothing = controls.snapbackFactoryCY;
 	}
 	setXSmoothingSetting(controls.axSmoothing);
 	setYSmoothingSetting(controls.aySmoothing);
@@ -1352,15 +1600,15 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		controls.cxWaveshaping = controls.waveshapingFactoryCX;
 		controls.cyWaveshaping = controls.waveshapingFactoryCY;
 	} else {
-		controls.axWaveshaping = controls.waveshapingMin;
-		controls.ayWaveshaping = controls.waveshapingMin;
-		controls.cxWaveshaping = controls.waveshapingMin;
-		controls.cyWaveshaping = controls.waveshapingMin;
+		controls.axWaveshaping = controls.waveshapingDefault;
+		controls.ayWaveshaping = controls.waveshapingDefault;
+		controls.cxWaveshaping = controls.waveshapingDefault;
+		controls.cyWaveshaping = controls.waveshapingDefault;
 	}
-	setWaveshapingSetting(controls.waveshapingMin, ASTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, ASTICK, YAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, CSTICK, XAXIS);
-	setWaveshapingSetting(controls.waveshapingMin, CSTICK, YAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, ASTICK, YAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, XAXIS);
+	setWaveshapingSetting(controls.waveshapingDefault, CSTICK, YAXIS);
 
 	controls.lTriggerOffset = controls.triggerMin;
 	controls.rTriggerOffset = controls.triggerMin;
@@ -1411,8 +1659,8 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		setNotchAnglesSetting(notchAngles, ASTICK);
 		setNotchAnglesSetting(notchAngles, CSTICK);
 
-		setPointsSetting(_defaultCalPointsX, ASTICK, XAXIS);
-		setPointsSetting(_defaultCalPointsY, ASTICK, YAXIS);
+		setPointsSetting(_defaultCalPoints, ASTICK, XAXIS);
+		setPointsSetting(_defaultCalPoints, ASTICK, YAXIS);
 		debug_println("A calibration points stored in EEPROM");
 
 		float cleanedPointsX[_noOfNotches+1];
@@ -1421,21 +1669,23 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 		float notchPointsY[_noOfNotches+1];
 		NotchStatus notchStatus[_noOfNotches];
 
-		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+		cleanCalPoints(_defaultCalPoints, _defaultCalPoints, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 		debug_println("A calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, aStickParams);
 		debug_println("A stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, aStickParams);
 
-		setPointsSetting(_defaultCalPointsX, CSTICK, XAXIS);
-		setPointsSetting(_defaultCalPointsY, CSTICK, YAXIS);
+		setPointsSetting(_defaultCalPoints, CSTICK, XAXIS);
+		setPointsSetting(_defaultCalPoints, CSTICK, YAXIS);
 		debug_println("C calibration points stored in EEPROM");
 
-		cleanCalPoints(_defaultCalPointsX, _defaultCalPointsY, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
+		cleanCalPoints(_defaultCalPoints, _defaultCalPoints, notchAngles, cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, notchStatus);
 		debug_println("C calibration points cleaned");
 		linearizeCal(cleanedPointsX, cleanedPointsY, cleanedPointsX, cleanedPointsY, cStickParams);
 		debug_println("C stick linearized");
 		notchCalibrate(cleanedPointsX, cleanedPointsY, notchPointsX, notchPointsY, _noOfNotches, cStickParams);
+
+		setSchemaSetting(SW_VERSION);
 	}
 
 #ifdef BATCHSETTINGS
@@ -1618,7 +1868,7 @@ void calibrationAdvance(ControlConfig &controls, int &currentCalStep, const Whic
 	}
 }
 
-void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
+void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &controls, FilterGains &gains, FilterGains &normGains, int &currentCalStep, int &currentRemapStep, bool &currentlyRaw, bool &running, float tempCalPointsX[], float tempCalPointsY[], WhichStick &whichStick, NotchStatus notchStatus[], float notchAngles[], float measuredNotchAngles[], StickParams &aStickParams, StickParams &cStickParams){
 	//Gather the button data from the hardware
 	readButtons(pin, hardware);
 	hardware.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1);
@@ -1628,22 +1878,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	Buttons tempBtn;
 	copyButtons(hardware, tempBtn);
 
-	//Swap buttons here for jump remapping
-	applyJump(controls, hardware, tempBtn);
+	//Implement button remaps
+	applyRemaps(controls, hardware, tempBtn);
 
 	//read the L and R sliders here instead of readSticks so we don't get race conditions for mode 6
 
-	//set up lockout for mode 5; it's not permissible to have analog trigger
-	// inputs available while mode 5 is active
-	//when a trigger is in lockout due to the other being mode 5,
-	// modes 1, 3, and 4 will have no output on that trigger to warn the user.
-	//(the above modes are 1-indexed, user-facing values)
-	const bool lockoutL = controls.rConfig == 4 && (controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5);
-	const bool lockoutR = controls.lConfig == 4 && (controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5);
-
-	//We multiply the analog trigger reads by this to shut them off if the trigger is mapped to jump
-	const int shutoffLa = (controls.jumpConfig == SWAP_XL || controls.jumpConfig == SWAP_YL) ? 0 : 1;
-	const int shutoffRa = (controls.jumpConfig == SWAP_XR || controls.jumpConfig == SWAP_YR) ? 0 : 1;
+	//We multiply the analog trigger reads by this to shut them off if the trigger is acting as another button
+	const int shutoffLa = (controls.lRemap == (1 << L_REMAP)) ? 1 : 0;
+	const int shutoffRa = (controls.rRemap == (1 << R_REMAP)) ? 1 : 0;
 
 	//These are used for mode 7, but they're calculated out here so we can scale the deadzone too.
 	float triggerScaleL = (0.0112f * controls.lTriggerOffset) + 0.4494f;
@@ -1661,7 +1903,11 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			if(!tempBtn.L) {
+				tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			} else {
+				tempBtn.La = (uint8_t) 255;
+			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.L) {
@@ -1681,12 +1927,19 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 6: //Scales Analog Trigger Values
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
 			break;
+		case 7: //Trigger plug emulation but no digital
+			tempBtn.L = (uint8_t) 0;
+			tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			break;
+		case 8: //trigger plug emulation but high gain
+			if(!tempBtn.L) {
+				tempBtn.La = (uint8_t) fmin(controls.lTriggerOffset, 2.5*readLa(pin, controls.lTrigInitial, 1) * shutoffLa);
+			} else {
+				tempBtn.La = (uint8_t) 255;
+			}
+			break;
 		default:
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
-	}
-	if(lockoutL){
-		tempBtn.L  = (uint8_t) 0;
-		tempBtn.La = (uint8_t) 0;
 	}
 
 	switch(controls.rConfig) {
@@ -1701,7 +1954,11 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
 			break;
 		case 3: //Trigger Plug Emulation state
-			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			if(!tempBtn.R) {
+				tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			} else {
+				tempBtn.Ra = (uint8_t) 255;
+			}
 			break;
 		case 4: //Digital => Analog Value state
 			if(tempBtn.R) {
@@ -1721,24 +1978,39 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		case 6: //Scales Analog Trigger Values
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 			break;
+		case 7: //Trigger plug emulation but no digital
+			tempBtn.R = (uint8_t) 0;
+			tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			break;
+		case 8: //trigger plug emulation but high gain
+			if(!tempBtn.R) {
+				tempBtn.Ra = (uint8_t) fmin(controls.rTriggerOffset, 2.5*readRa(pin, controls.rTrigInitial, 1) * shutoffRa);
+			} else {
+				tempBtn.Ra = (uint8_t) 255;
+			}
+			break;
 		default:
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
-	}
-	if(lockoutR){
-		tempBtn.R  = (uint8_t) 0;
-		tempBtn.Ra = (uint8_t) 0;
 	}
 
 	//Apply any further button remapping to tempBtn here
 
 	//Tournament toggle
 	static int startLockout = 1000;
+	//store the temporary dup in case it's remapped
+	const uint8_t tempDu = tempBtn.Du;
 	if(controls.tournamentToggle >= 3 && hardware.S) {
 		if(startLockout > 0) {
 			startLockout--;
 			tempBtn.S = (uint8_t) (0);
 		} else if(startLockout <= 0) {
 			tempBtn.S = (uint8_t) (1);
+		}
+		//override and instantly output start if both start and ddown are pressed
+		if(hardware.Dd) {
+			tempBtn.S = (uint8_t) (1);
+			//suppress ddown
+			tempBtn.Dd = (uint8_t) (0);
 		}
 	} else if(startLockout < 1000) {
 		startLockout++;
@@ -1751,11 +2023,24 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(duLockout <= 0) {
 			tempBtn.Du = (uint8_t) (1);
 		}
+		//override and instantly dup if start and dup are both pressed
+		if(hardware.S) {
+			tempBtn.Du = (uint8_t) (1);
+			//suppress start
+			tempBtn.S = (uint8_t) (0);
+		}
 	} else if(duLockout < 1000) {
 		duLockout++;
 	}
 	if(controls.tournamentToggle == 2 || controls.tournamentToggle == 5) {
-		tempBtn.Du = (uint8_t) (0);
+		//override the disable and dup if start and dup are both pressed
+		if(hardware.S && tempDu) {
+			tempBtn.Du = (uint8_t) (1);
+			//suppress start
+			tempBtn.S = (uint8_t) (0);
+		} else {
+			tempBtn.Du = (uint8_t) (0);
+		}
 	}
 
 	//Here we make sure LRAS actually operate.
@@ -1777,7 +2062,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Soft Reset:  ABZ+Start
 	* Hard Reset:  ABZ+Dd
 	* Auto-Initialize: AXY+Z
-	* Tournament Toggle:  Z+Start
+	* Tournament Toggle:  Z+Start+Du
 	*
 	* Increase/Decrease Rumble: AB+Du/Dd
 	* Show Current Rumble Setting: AB+Start
@@ -1790,6 +2075,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Skip to Notch Adjustment:  Start
 	* Notch Adjustment CW/CCW:  X/Y
 	* Notch Adjustment Reset:  B
+	* Toggle raw stick output: LR+Du
 	*
 	* Analog Stick Configuration:
 	* Increase/Decrease X-Axis Snapback Filtering:  AX+Du/Dd
@@ -1807,23 +2093,18 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease Y-Axis Snapback Filtering:  AYZ+Du/Dd
 	* Increase/Decrease X-Axis Waveshaping:  LXZ+Du/Dd
 	* Increase/Decrease X-Axis Waveshaping:  LXZ+Du/Dd
-	* Increase/Decrease X-Axis Offset:  RXZ+Du/Dd
-	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
 	* Increase/Decrease Analog Scaler: LAZ+Du/Dd
 	* Increase/Decrease Cardinal Snapping: RAZ+Du/Dd
 	*
-	* Swap X with Z:  XZ+Start
-	* Swap Y with Z:  YZ+Start
-	* Swap X with L:  LX+Start
-	* Swap Y with L:  LY+Start
-	* Swap X with R:  RX+Start
-	* Swap Y with R:  Ry+Start
+	* Remap: BXY without A, then press ABLRXYZ in order
+	* Cancel all remaps: BXR, without A
 	*
 	* Toggle L Trigger Mode:  AB+L
 	* Toggle R Trigger Mode:  AB+R
 	* Increase/Decrease L-trigger Offset:  LB+Du/Dd
 	* Increase/Decrease R-Trigger Offset:  RB+Du/Dd
+	* Show Trigger Settings: LR+Z
 	*
 	* Extras:
 	* Toggle by holding both sticks in the chosen direction, then pressing A+B
@@ -1831,6 +2112,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	*/
 
 	static bool advanceCal = false;
+	bool beginRemapping = false;
 
 	//This will count up as we request settings changes continuously
 	//If we enter the following if else block with a nonzero counter but no commands are used,
@@ -1839,7 +2121,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	static int settingChangeCount = 0;
 
 	//check the hardware buttons to change the controller settings
-	if(!controls.safeMode && (currentCalStep == -1)) {
+	if(!controls.safeMode && (currentCalStep == -1) && (currentRemapStep == -1)) {
 		//it'll be unlocked after it hits zero
 		const int hardResetLockoutDuration = 800;
 		static int hardResetLockout = hardResetLockoutDuration;
@@ -1857,6 +2139,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 
 		if(hardware.A && hardware.X && hardware.Y && hardware.S && !hardware.L && !hardware.R) { //Safe Mode Toggle
 			controls.safeMode = true;
+			currentlyRaw = false;
 			freezeSticks(4000, btn, hardware);
 		} else if (hardware.A && hardware.Z && hardware.Du && !hardware.X && !hardware.Y && !hardware.L && !hardware.R) { //display version number (ignore commands for c stick snapback)
 			const int versionHundreds = floor(SW_VERSION/100.0);
@@ -1874,7 +2157,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.Z) { //Toggle Auto-Initialize
 			settingChangeCount++;
 			changeAutoInit(btn, hardware, controls);
-		} else if(hardware.Z && hardware.S && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
+		} else if(hardware.Z && hardware.S && hardware.Du && !hardware.A && !hardware.B && !hardware.X && !hardware.Y) {
 			settingChangeCount++;
 			changeTournamentToggle(btn, hardware, controls);
 		} else if (hardware.A && hardware.B && hardware.Du) { //Increase Rumble
@@ -1903,13 +2186,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.L) { //Analog Calibration
 			debug_println("Calibrating the A stick");
 			whichStick = ASTICK;
-			currentCalStep ++;
+			currentCalStep = 0;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if (hardware.A && hardware.X && hardware.Y && hardware.R) { //C-stick Calibration
 			debug_println("Calibrating the C stick");
 			whichStick = CSTICK;
-			currentCalStep ++;
+			currentCalStep = 0;
 			advanceCal = true;
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.A && hardware.X && !hardware.Z && hardware.Du) { //Increase Analog X-Axis Snapback Filtering
@@ -1960,7 +2243,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.L && hardware.A && hardware.Dd && !hardware.Z) { //Decrease Analog Scaler
 			settingChangeCount++;
 			adjustAnalogScaler(ASTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L jump and L trigger toggle and LRAS)
+		} else if(hardware.L && hardware.S && !hardware.A && !hardware.R && !hardware.X && !hardware.Y) { //Show Current Analog Settings (ignore L remap and L trigger toggle and LRAS)
 			showAstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X-Axis Snapback Filtering
 			settingChangeCount++;
@@ -1984,19 +2267,8 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 			settingChangeCount++;
 			adjustWaveshaping(CSTICK, YAXIS, INCREASE, btn, hardware, controls);
 		} else if(hardware.L && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y-Axis Waveshaping
+			settingChangeCount++;
 			adjustWaveshaping(CSTICK, YAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Z && hardware.Du) { //Increase C-stick X Offset
-			settingChangeCount++;
-			adjustCstickOffset(XAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.X && hardware.Z && hardware.Dd) { //Decrease C-stick X Offset
-			settingChangeCount++;
-			adjustCstickOffset(XAXIS, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Du) { //Increase C-stick Y Offset
-			settingChangeCount++;
-			adjustCstickOffset(YAXIS, INCREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.Y && hardware.Z && hardware.Dd) { //Decrease C-stick Y Offset
-			settingChangeCount++;
-			adjustCstickOffset(YAXIS, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.A && hardware.Z && hardware.Du) { //Increase C-stick Cardinal Snapping
 			settingChangeCount++;
 			adjustCardinalSnapping(CSTICK, INCREASE, btn, hardware, controls);
@@ -2009,7 +2281,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.L && hardware.A && hardware.Z && hardware.Dd) { //Decrease C-stick Analog Scaler
 			settingChangeCount++;
 			adjustAnalogScaler(CSTICK, DECREASE, btn, hardware, controls);
-		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R jump and R trigger toggle and LRAS)
+		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R remap and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			settingChangeCount++;
@@ -2029,30 +2301,21 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 			settingChangeCount++;
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
-		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
-			settingChangeCount++;
-			setJumpConfig(SWAP_XZ, controls);
+		} else if(hardware.L && hardware.R && hardware.Z) { //Show Trigger Settings
+			showTriggerSettings(btn, hardware, controls, gains);
+		} else if(hardware.B && hardware.X && hardware.Y && !hardware.A) { //Initiate remapping
+			debug_println("Remapping buttons");
+			beginRemapping = true;
 			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
-			settingChangeCount++;
-			setJumpConfig(SWAP_YZ, controls);
+		} else if(hardware.B && hardware.R && hardware.X && !hardware.A) { //Reset remapping
+			resetRemap(controls);
 			freezeSticks(2000, btn, hardware);
-		} else if(hardware.X && hardware.L && hardware.S) { //Swap X and L
-			settingChangeCount++;
-			setJumpConfig(SWAP_XL, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.L && hardware.S) { //Swap Y and L
-			settingChangeCount++;
-			setJumpConfig(SWAP_YL, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.X && hardware.R && hardware.S) { //Swap X and R
-			settingChangeCount++;
-			setJumpConfig(SWAP_XR, controls);
-			freezeSticks(2000, btn, hardware);
-		} else if(hardware.Y && hardware.R && hardware.S) { //Swap Y and R
-			settingChangeCount++;
-			setJumpConfig(SWAP_YR, controls);
-			freezeSticks(2000, btn, hardware);
+		} else if(hardware.L && hardware.R && hardware.Du) {
+			currentlyRaw = true;
+			freezeSticks(500, btn, hardware);
+		} else if(hardware.L && hardware.R && hardware.Dd) {
+			currentlyRaw = false;
+			freezeSticks(500, btn, hardware);
 		} else if(checkAdjustExtra(EXTRAS_UP, btn, false)) { // Toggle Extras
 			settingChangeCount++;
 			toggleExtra(EXTRAS_UP, btn, hardware, controls);
@@ -2087,7 +2350,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 #endif //BATCHSETTINGS
 			}
 		}
-	} else if (currentCalStep == -1) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
+	} else if ((currentCalStep == -1) && (currentRemapStep == -1)) { //Safe Mode Enabled, Lock Settings, wait for safe mode command
 
 		//it'll be unlocked after it hits zero
 		const int safeModeLockoutDuration = 800;
@@ -2126,24 +2389,41 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//Advance Calibration Using L or R triggers or A button
 	static int calibLockout = 50;
 	static bool advanceCalPressed = false;
-	if((hardware.A || hardware.L || hardware.R) && advanceCal){
-		if(calibLockout > 0) {
-			calibLockout--;
-		} else if(calibLockout == 0 && !advanceCalPressed) {
-			calibLockout = 50;
+	if(advanceCal) {
+		if(hardware.A || hardware.L || hardware.R) {
+			if(calibLockout >= 50) {
+				calibLockout = 0;
+			} else {
+				calibLockout = max(0, calibLockout - 1);
+			}
+		} else {
+			calibLockout = min(50, calibLockout + 1);
+		}
+		if(calibLockout < 50 && !advanceCalPressed) {
 			advanceCalPressed = true;
 			calibrationAdvance(controls, currentCalStep, whichStick, tempCalPointsX, tempCalPointsY, undoCal, notchAngles, notchStatus, measuredNotchAngles, aStickParams, cStickParams);
 			if(currentCalStep == -1) {
 				advanceCal = false;
 			}
+		} else if (calibLockout >= 50) {
+			advanceCalPressed = false;
 		}
-	} else if(calibLockout < 50) {
-		calibLockout++;
-		advanceCalPressed = false;
+	}
+
+	if(beginRemapping) {
+		remapAdvance(currentRemapStep, controls, hardware, btn);
+		beginRemapping = false;
+	}
+
+	if((currentRemapStep != -1) && !controls.safeMode) {
+		if(hardware.A || hardware.B || hardware.Du || hardware.L || hardware.R ||
+				hardware.X || hardware.Y || hardware.Z) {
+			remapAdvance(currentRemapStep, controls, hardware, btn);
+		}
 	}
 }
 
-void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, int &currentCalStep){
+void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, const Buttons &hardware, const ControlConfig &controls, const FilterGains &normGains, const StickParams &aStickParams, const StickParams &cStickParams, float &dT, const int currentCalStep, const bool currentlyRaw){
 	readADCScale(_ADCScale, _ADCScaleFactor);
 
 	//on Arduino (and therefore Teensy), micros() overflows after about 71.58 minutes
@@ -2310,31 +2590,45 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	skipAHyst = ess::remap(&remappedAx, &remappedAy, controls.extras[ess::extrasEssConfigSlot].config);
 #endif
 
+	//output raw either if it's been requested, or if the stick in question is completely uncalibrated (from a hard reset or when just initialized)
+	const bool aRaw = currentlyRaw || ((aStickParams.fitCoeffsX[0] == 0) && (aStickParams.fitCoeffsY[0] == 0));
+	const bool cRaw = currentlyRaw || ((cStickParams.fitCoeffsX[0] == 0) && (cStickParams.fitCoeffsY[0] == 0));
+
 	float hystVal = 0.3;
 	//assign the remapped values to the button struct
 	if(readA){
-		if (!skipAHyst) {
-			float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
-			if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+		if(!aRaw) {
+			if (!skipAHyst) {
+				float diffAx = (remappedAx+_floatOrigin)-btn.Ax;
+				if( (diffAx > (1.0 + hystVal)) || (diffAx < -hystVal) ){
+					btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
+				}
+				float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
+				if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
+					btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+				}
+			} else {
 				btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			}
-			float diffAy = (remappedAy+_floatOrigin)-btn.Ay;
-			if( (diffAy > (1.0 + hystVal)) || (diffAy < -hystVal) ){
 				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 			}
 		} else {
-			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+			btn.Ax = (uint8_t) (_floatOrigin + aStickX*100);
+			btn.Ay = (uint8_t) (_floatOrigin + aStickY*100);
 		}
 	}
 	if(readC){
-		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
-		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
-		}
-		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
-		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
-			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
+		if(!cRaw) {
+			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+			}
+			float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
+			if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
+				btn.Cy = (uint8_t) (remappedCy+_floatOrigin);
+			}
+		} else {
+			btn.Cx = (uint8_t) (_floatOrigin + cStickX*100);
+			btn.Cy = (uint8_t) (_floatOrigin + cStickY*100);
 		}
 	}
 };

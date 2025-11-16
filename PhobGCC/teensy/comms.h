@@ -427,13 +427,9 @@ void commInt() {
 				analogWrite(_pinBrake,0);
 				analogWrite(_pinRumble, _rumblePower);
 			}
-			else if(_cmdByte & 0b00000010){
+			else {
 				analogWrite(_pinRumble,0);
 				analogWrite(_pinBrake,256);
-			}
-			else{
-				analogWrite(_pinRumble,0);
-				analogWrite(_pinBrake,0);
 			}
 #endif
 		}

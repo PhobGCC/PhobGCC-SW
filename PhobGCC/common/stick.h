@@ -19,41 +19,23 @@ const int _noOfAdjNotches = 12;
 const int _fitOrder = 3; //fit order used in the linearization step
 const float _maxStickAngle = 0.4886921906;//28 degrees; this is the max angular deflection of the stick.
 
-const float _defaultCalPointsX[_noOfCalibrationPoints] =  {
-	0.3010610568,0.3603937084,//right
-	0.3010903951,0.3000194135,
-	0.3005567843,0.3471911134,//up right
-	0.3006904343,0.3009976295,
-	0.3000800899,0.300985051,//up
-	0.3001020858,0.300852804,
-	0.3008746305,0.2548450139,//up left
-	0.3001434092,0.3012600593,
-	0.3011594091,0.2400535218,//left
-	0.3014621077,0.3011248469,
-	0.3010860944,0.2552106305,//down left
-	0.3002197989,0.3001679513,
-	0.3004438517,0.300486505,//down
-	0.3002766984,0.3012828579,
-	0.3014959877,0.346512936,//down right
-	0.3013398149,0.3007809916};
-const float _defaultCalPointsY[_noOfCalibrationPoints] =  {
-	0.300092277, 0.3003803475,//right
-	0.3002205792,0.301004752,
-	0.3001241394,0.3464200104,//up right
-	0.3001331245,0.3011881186,
-	0.3010685972,0.3606900641,//up
-	0.3001520488,0.3010662947,
-	0.3008837105,0.3461478452,//up left
-	0.3011732026,0.3007367683,
-	0.3011345742,0.3000566197,//left
-	0.3006843288,0.3009673425,
-	0.3011228978,0.2547579852,//down left
-	0.3011177285,0.301264851,
-	0.3002376991,0.2403885431,//down
-	0.3006540818,0.3010588401,
-	0.3011093054,0.2555000655,//down right
-	0.3000802760,0.3008482317};
-
+const float _defaultCalPoints[_noOfCalibrationPoints] =  {
+	0.0,0.0,//right
+	0.0,0.0,
+	0.0,0.0,//up right
+	0.0,0.0,
+	0.0,0.0,//up
+	0.0,0.0,
+	0.0,0.0,//up left
+	0.0,0.0,
+	0.0,0.0,//left
+	0.0,0.0,
+	0.0,0.0,//down left
+	0.0,0.0,
+	0.0,0.0,//down
+	0.0,0.0,
+	0.0,0.0,//down right
+	0.0,0.0};
 
 //Defaults
 //                                                         right        notch 1      up right     notch 2      up           notch 3      up left      notch 4      left         notch 5      down left    notch 6      down         notch 7      down right   notch 8
@@ -175,35 +157,59 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 	if(currentCalStep == -1) {
 
 		if(whichStick == ASTICK) {
-			if(controls.astickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.astickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
+			const int snapping = controls.astickCardinalSnapping;
+			if(snapping > 0) {
+				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.astickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
+				if((abs(*yOut)<snapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
-			} else if(controls.astickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
-					*xOut = 7;
+			} else if(snapping < 0) {
+				//Use this to prevent cardinals from ever being 1.0.
+				//If you have it set to -1, it will prevent all 1.0 on vanilla and ucf prior to 0.84.
+				//It will not prevent 1.0 on 'Melee 1.03'.
+				//It will not prevent 1.0 on UCF 0.84, except for Zelda teleport (for some edge-cancel setups)
+				//If you have it set to -2, it will prevent all 1.0 on vanilla and all UCF.
+				//It will not prevent 1.0 on `Melee 1.03'.
+				if((abs(*xOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*yOut)>=79.5)){
+					if (*xOut >= 0) {
+						*xOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*xOut = (snapping == -2) ? -7 : -1;
+					}
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
-					*yOut = 7;
+				if((abs(*yOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*xOut)>=79.5)){
+					if (*yOut >= 0) {
+						*yOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*yOut = (snapping == -2) ? -7 : -1;
+					}
 				}
 			}
 		} else {
-			if(controls.cstickCardinalSnapping > 0) {
-				if((abs(*xOut)<controls.cstickCardinalSnapping+0.5) && (abs(*yOut)>=79.5)){
+			const int snapping = controls.cstickCardinalSnapping;
+			if(snapping > 0) {
+				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
 					*xOut = 0;
 				}
-				if((abs(*yOut)<controls.cstickCardinalSnapping+0.5) && (abs(*xOut)>=79.5)){
+				if((abs(*yOut)<snapping+0.5) && (abs(*xOut)>=79.5)){
 					*yOut = 0;
 				}
-			} else if(controls.cstickCardinalSnapping == -1) {
-				if((abs(*xOut)<6.5) && (abs(*yOut)>=79.5)){
-					*xOut = 7;
+			} else if(snapping < 0) {
+				if((abs(*xOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*yOut)>=79.5)){
+					if (*xOut >= 0) {
+						*xOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*xOut = (snapping == -2) ? -7 : -1;
+					}
 				}
-				if((abs(*yOut)<6.5) && (abs(*xOut)>=79.5)){
-					*yOut = 7;
+				if((abs(*yOut) < ((snapping == -2) ? 6.5 : 0.5)) && (abs(*xOut)>=79.5)){
+					if (*yOut >= 0) {
+						*yOut = (snapping == -2) ? 7 : 1;
+					} else {
+						*yOut = (snapping == -2) ? -7 : -1;
+					}
 				}
 			}
 		}
@@ -420,8 +426,8 @@ void legalizeNotch(const int notchIndex, float measuredNotchAngles[], float notc
 		cmpAmt = 0.769;
 		strAmt = 1.3;
 	} else {//wider bounds for modder notches
-		cmpAmt = 0.666;
-		strAmt = 1.5;
+		cmpAmt = 0.5;
+		strAmt = 2.0;
 	}
 
 	float lowerCompressLimit = prevAngle + cmpAmt*(thisMeasAngle-prevMeasAngle);//how far we can squish when reducing the angle
@@ -558,6 +564,20 @@ void insertCalPoints(const WhichStick whichStick, const int currentStepIn, float
 		linearization fit coefficients for X and Y
 *******************/
 void linearizeCal(const float inX[], const float inY[], float outX[], float outY[], StickParams &stickParams){
+	//if the fit points are 0, then output 0 fit parameters
+	if((inX[0] == 0) && (inY[0] == 0)) {
+		outX[0] = 0;
+		outX[1] = 0;
+		outX[3] = 0;
+		outX[4] = 0;
+		outX[5] = 0;
+		outY[0] = 0;
+		outY[1] = 0;
+		outY[3] = 0;
+		outY[4] = 0;
+		outY[5] = 0;
+		return;
+	}
 	debug_println("beginning linearization");
 
 	//do the curve fit first

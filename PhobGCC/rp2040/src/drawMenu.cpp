@@ -1,6 +1,6 @@
 #include <cmath>
 #include <cstring>
-#include "pico/platform.h"
+#include "pico.h"
 #include "cvideo.h"
 #include "cvideo_variables.h"
 #include "menu.h"
@@ -42,22 +42,26 @@ void drawStickCal(unsigned char bitmap[],
 	drawString(bitmap, 380,  50, 15, "/44");
 
 	if(itemIndex == -1 || ((itemIndex < 32) && (itemIndex % 2 == 0))) {
+		//measurement phase
 		drawString(bitmap, 260,  80, 15, stickCal3);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		if(itemIndex > 0) {
 			drawString(bitmap, 260, 120, 15, stickCal5);//z to go back
 		}
 	} else if(itemIndex <= 15 && (itemIndex % 2 == 1)) {
+		//cardinal & diagonal measurement
 		drawString(bitmap, 260,  80, 15, stickCal6);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		drawString(bitmap, 260, 120, 15, stickCal5);
 	} else if(itemIndex <= 31 && (itemIndex % 2 == 1)) {
+		//modder added notch measurement
 		drawString(bitmap, 260,  80, 15, stickCal6);
 		drawString(bitmap, 260, 100, 15, stickCal4);
 		drawString(bitmap, 260, 120, 15, stickCal5);
 		drawString(bitmap, 260, 140, 15, stickCal7);
 		drawString(bitmap, 260, 160, 15, stickCal8);
 	} else {
+		//notch adjust phase
 		drawString(bitmap, 260,  80, 15, stickCal9);
 		drawString(bitmap, 260, 100, 15, stickCal10);
 		drawString(bitmap, 260, 120, 15, stickCal11);
@@ -65,7 +69,34 @@ void drawStickCal(unsigned char bitmap[],
 		drawString(bitmap, 260, 160, 15, stickCal13);
 		drawString(bitmap, 260, 180, 15, stickCal14);
 		if(itemIndex > 32) {
+			//you can't go back to the measurement phase
 			drawString(bitmap, 260, 200, 15, stickCal5);//z to go back
+		}
+		if(itemIndex >= 36) {
+			//read out mesaured notch coordinate
+			drawString(bitmap, 270, 220, 15, stickCal17);
+			drawString(bitmap, 270, 240, 15, stickCal18);
+			const int axCoord = btn.Ax - ORG;
+			const int ayCoord = btn.Ay - ORG;
+			float axMelee;
+			float ayMelee;
+			meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
+			const int cxCoord = btn.Cx - ORG;
+			const int cyCoord = btn.Cy - ORG;
+			float cxMelee;
+			float cyMelee;
+			meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
+			if(whichStick == ASTICK) {
+				drawFloat(bitmap, 260, 260, 15, 2, 4, btn.Cx - ORG);
+				drawFloat(bitmap, 370, 260, 15, 0, 7, cxMelee);
+				drawFloat(bitmap, 260, 280, 15, 2, 4, btn.Cy - ORG);
+				drawFloat(bitmap, 370, 280, 15, 0, 7, cyMelee);
+			} else {
+				drawFloat(bitmap, 260, 260, 15, 2, 4, btn.Ax - ORG);
+				drawFloat(bitmap, 370, 260, 15, 0, 7, axMelee);
+				drawFloat(bitmap, 260, 280, 15, 2, 4, btn.Ay - ORG);
+				drawFloat(bitmap, 370, 280, 15, 0, 7, ayMelee);
+			}
 		}
 	}
 
@@ -127,30 +158,31 @@ void drawStickCalFast(unsigned char bitmap[],
 
 	eraseCharLine(bitmap, 340);
 	eraseCharLine(bitmap, 360);
+	const int axCoord = btn.Ax - ORG;
+	const int ayCoord = btn.Ay - ORG;
+	float axMelee;
+	float ayMelee;
+	meleeCoordClamp(axCoord, ayCoord, axMelee, ayMelee);
+	const int cxCoord = btn.Cx - ORG;
+	const int cyCoord = btn.Cy - ORG;
+	float cxMelee;
+	float cyMelee;
+	meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
 	if(whichStick == ASTICK) {
 		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.axRaw);
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.ayRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.axUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.ayUnfiltered);
-		const int xCoord = btn.Ax - ORG;
-		const int yCoord = btn.Ay - ORG;
-		float xMelee;
-		float yMelee;
-		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
-		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
-		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, axMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, ayMelee);
 	} else {
 		drawFloat(bitmap,   30, 340, 15, 0, 6, raw.cxRaw);
 		drawFloat(bitmap,   30, 360, 15, 0, 6, raw.cyRaw);
 		drawFloat(bitmap,  200, 340, 15, 2, 6, raw.cxUnfiltered);
 		drawFloat(bitmap,  200, 360, 15, 2, 6, raw.cyUnfiltered);
-		const int xCoord = btn.Cx - ORG;
-		const int yCoord = btn.Cy - ORG;
-		float xMelee;
-		float yMelee;
-		meleeCoordClamp(xCoord, yCoord, xMelee, yMelee);
-		drawFloat(bitmap,  370, 340, 15, 0, 7, xMelee);
-		drawFloat(bitmap,  370, 360, 15, 0, 7, yMelee);
+		meleeCoordClamp(cxCoord, cyCoord, cxMelee, cyMelee);
+		drawFloat(bitmap,  370, 340, 15, 0, 7, cxMelee);
+		drawFloat(bitmap,  370, 360, 15, 0, 7, cyMelee);
 	}
 }
 
@@ -350,14 +382,15 @@ void drawAwave(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, awave2);
 	drawString(bitmap,  30, 110, 15, awave3);
 	drawString(bitmap,  30, 130, 15, awave4);
-	drawString(bitmap,  30, 160, 15, leftStickX);
-	drawInt(   bitmap, 160, 160, 15, 1, controls.axWaveshaping);
-	drawString(bitmap, 280, 160, 15, leftStickY);
-	drawInt(   bitmap, 410, 160, 15, 1, controls.ayWaveshaping);
+	drawString(bitmap,  30, 150, 15, awave5);
+	drawString(bitmap,  30, 180, 15, leftStickX);
+	drawInt(   bitmap, 160, 180, 15, 1, controls.axWaveshaping);
+	drawString(bitmap, 280, 180, 15, leftStickY);
+	drawInt(   bitmap, 410, 180, 15, 1, controls.ayWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 	//graph?
 }
@@ -438,16 +471,17 @@ void drawCwave(unsigned char bitmap[],
 	drawString(bitmap,  30,  50, 15, lr_ud);
 	drawString(bitmap,  30,  70, 15, awave1);
 	drawString(bitmap,  30,  90, 15, awave2);
-	drawString(bitmap,  30, 110, 15, cwave3);
-	drawString(bitmap,  30, 130, 15, awave4);
-	drawString(bitmap,  30, 160, 15, rightStickX);
-	drawInt(   bitmap, 170, 160, 15, 1, controls.cxWaveshaping);
-	drawString(bitmap, 280, 160, 15, rightStickY);
-	drawInt(   bitmap, 420, 160, 15, 1, controls.cyWaveshaping);
+	drawString(bitmap,  30, 110, 15, awave3);
+	drawString(bitmap,  30, 130, 15, cwave4);
+	drawString(bitmap,  30, 150, 15, awave5);
+	drawString(bitmap,  30, 180, 15, rightStickX);
+	drawInt(   bitmap, 170, 180, 15, 1, controls.cxWaveshaping);
+	drawString(bitmap, 280, 180, 15, rightStickY);
+	drawInt(   bitmap, 420, 180, 15, 1, controls.cyWaveshaping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 	//graph?
 }
@@ -498,14 +532,15 @@ void drawCardinals(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, cardinals2);
 	drawString(bitmap,  30, 110, 15, cardinals3);
 	drawString(bitmap,  30, 130, 15, cardinals4);
-	drawString(bitmap,  30, 160, 15, leftStick);
-	drawInt(   bitmap, 150, 160, 15, 0, controls.astickCardinalSnapping);
-	drawString(bitmap, 280, 160, 15, rightStick);
-	drawInt(   bitmap, 410, 160, 15, 0, controls.cstickCardinalSnapping);
+	drawString(bitmap,  30, 150, 15, cardinals5);
+	drawString(bitmap,  30, 180, 15, leftStick);
+	drawInt(   bitmap, 150, 180, 15, 0, controls.astickCardinalSnapping);
+	drawString(bitmap, 280, 180, 15, rightStick);
+	drawInt(   bitmap, 410, 180, 15, 0, controls.cstickCardinalSnapping);
 	if(itemIndex == 0) {
-		drawString(bitmap,  10, 160, 15, arrowRight);
+		drawString(bitmap,  10, 180, 15, arrowRight);
 	} else {
-		drawString(bitmap, 260, 160, 15, arrowRight);
+		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
 }
 
@@ -523,6 +558,8 @@ void drawRadius(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, radius2);
 	drawString(bitmap,  30, 110, 15, radius3);
 	drawString(bitmap,  30, 130, 15, radius4);
+	drawInt(   bitmap,  70, 130, 15, 0, controls.analogScalerMin);
+	drawInt(   bitmap, 160, 130, 15, 0, controls.analogScalerMax);
 	drawString(bitmap,  30, 160, 15, leftStick);
 	drawInt(   bitmap, 140, 160, 15, 2, controls.astickAnalogScaler);
 	drawString(bitmap, 280, 160, 15, rightStick);
@@ -531,6 +568,59 @@ void drawRadius(unsigned char bitmap[],
 		drawString(bitmap,  10, 160, 15, arrowRight);
 	} else {
 		drawString(bitmap, 260, 160, 15, arrowRight);
+	}
+}
+
+const char* remapDecode(const uint8_t remap) {
+	switch(remap) {
+		case 1 << A_REMAP:
+			return "A";
+			break;
+		case 1 << B_REMAP:
+			return "B";
+			break;
+		case 1 << D_REMAP:
+			return "U";
+			break;
+		case 1 << L_REMAP:
+			return "L";
+			break;
+		case 1 << R_REMAP:
+			return "R";
+			break;
+		case 1 << X_REMAP:
+			return "X";
+			break;
+		case 1 << Y_REMAP:
+			return "Y";
+			break;
+		case 1 << Z_REMAP:
+			return "Z";
+			break;
+		default:
+			return " ";
+	}
+}
+
+const char* remapInvert(const uint8_t remapCode, const ControlConfig &controls) {
+	if(controls.aRemap == (1 << remapCode)) {
+		return "A";
+	} else if(controls.bRemap == (1 << remapCode)) {
+		return "B";
+	} else if(controls.dRemap == (1 << remapCode)) {
+		return "U";
+	} else if(controls.lRemap == (1 << remapCode)) {
+		return "L";
+	} else if(controls.rRemap == (1 << remapCode)) {
+		return "R";
+	} else if(controls.xRemap == (1 << remapCode)) {
+		return "X";
+	} else if(controls.yRemap == (1 << remapCode)) {
+		return "Y";
+	} else if(controls.zRemap == (1 << remapCode)) {
+		return "Z";
+	} else {
+		return " ";
 	}
 }
 
@@ -587,32 +677,17 @@ void drawSet_over(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 30, 230, 15, set_overAutoOff);
 	}
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 30, 250, 15, set_overJumpDf);
-			break;
-		case SWAP_XZ:
-			drawString(bitmap, 30, 250, 15, set_overJumpXZ);
-			break;
-		case SWAP_YZ:
-			drawString(bitmap, 30, 250, 15, set_overJumpYZ);
-			break;
-		case SWAP_XL:
-			drawString(bitmap, 30, 250, 15, set_overJumpXL);
-			break;
-		case SWAP_XR:
-			drawString(bitmap, 30, 250, 15, set_overJumpXR);
-			break;
-		case SWAP_YL:
-			drawString(bitmap, 30, 250, 15, set_overJumpYL);
-			break;
-		case SWAP_YR:
-			drawString(bitmap, 30, 250, 15, set_overJumpYR);
-			break;
-		default:
-			drawString(bitmap, 30, 250, 15, set_overJumpBr);
-			break;
-	}
+	char remap[9] = "";
+	strcat(remap, remapDecode(controls.aRemap));
+	strcat(remap, remapDecode(controls.bRemap));
+	strcat(remap, remapDecode(controls.dRemap));
+	strcat(remap, remapDecode(controls.lRemap));
+	strcat(remap, remapDecode(controls.rRemap));
+	strcat(remap, remapDecode(controls.xRemap));
+	strcat(remap, remapDecode(controls.yRemap));
+	strcat(remap, remapDecode(controls.zRemap));
+	drawString(bitmap,  30, 250, 15, remap);
+	drawString(bitmap, 110, 250, 15, set_overRemap);
 	switch(controls.tournamentToggle) {
 		case 0:
 			drawString(bitmap, 30, 270, 15, tourn0);
@@ -640,7 +715,7 @@ void drawSet_over(unsigned char bitmap[],
 
 void drawRemap(unsigned char bitmap[],
 		const unsigned int menu,
-		const int itemIndex,
+		const int currentRemapStep,
 		const bool changeMade,
 		const Buttons btn,
 		const RawStick raw,
@@ -651,38 +726,78 @@ void drawRemap(unsigned char bitmap[],
 	if(changeMade) {
 		drawString(bitmap, 300, 20, 15, bToSave);
 	}
-	drawString(bitmap,  30,  50, 15, ud_only);
-	drawString(bitmap,  30,  70, 15, remap1);
-	drawString(bitmap,  30,  90, 15, remap2);
-	drawString(bitmap,  30, 110, 15, remap3);
-	drawString(bitmap,  30, 130, 15, remap4);
-	drawString(bitmap,  30, 160, 15, currentSetting);
-	switch(controls.jumpConfig) {
-		case DEFAULTJUMP:
-			drawString(bitmap, 200, 160, 15, remapDf);
+	drawString(bitmap,  30,  50, 15, remap1);
+	drawString(bitmap,  30,  70, 15, remap2);
+	drawString(bitmap,  30,  90, 15, remap3);
+	drawString(bitmap,  30, 110, 15, remap4);
+	switch(currentRemapStep) {
+		case -1:
+			drawString(bitmap,  30, 140, 15, remap5);
 			break;
-		case SWAP_XZ:
-			drawString(bitmap, 200, 160, 15, remapXZ);
+		case 0:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "A");
 			break;
-		case SWAP_YZ:
-			drawString(bitmap, 200, 160, 15, remapYZ);
+		case 1:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "B");
 			break;
-		case SWAP_XL:
-			drawString(bitmap, 200, 160, 15, remapXL);
+		case 2:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Du");
 			break;
-		case SWAP_YL:
-			drawString(bitmap, 200, 160, 15, remapYL);
+		case 3:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "L");
 			break;
-		case SWAP_XR:
-			drawString(bitmap, 200, 160, 15, remapXR);
+		case 4:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "R");
 			break;
-		case SWAP_YR:
-			drawString(bitmap, 200, 160, 15, remapYR);
+		case 5:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "X");
+			break;
+		case 6:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Y");
+			break;
+		case 7:
+			drawString(bitmap,  30, 140, 15, remap6);
+			drawString(bitmap, 460, 140, 15, "Z");
 			break;
 		default:
-			drawString(bitmap, 200, 160, 15, remapBr);
 			break;
 	}
+	if(currentRemapStep >= 0) {
+		drawString(bitmap, currentRemapStep == 2 ? 480 : 470, 140, 15, ".");
+	}
+
+	//drawInt(bitmap, 200, 20, 15, 2, currentRemapStep);
+
+	bool aRemapped = remapInvert(A_REMAP, controls) != " ";
+	bool bRemapped = remapInvert(B_REMAP, controls) != " ";
+	bool dRemapped = remapInvert(D_REMAP, controls) != " ";
+	bool lRemapped = remapInvert(L_REMAP, controls) != " ";
+	bool rRemapped = remapInvert(R_REMAP, controls) != " ";
+	bool xRemapped = remapInvert(X_REMAP, controls) != " ";
+	bool yRemapped = remapInvert(Y_REMAP, controls) != " ";
+	bool zRemapped = remapInvert(Z_REMAP, controls) != " ";
+
+	drawString(bitmap, 180, 180, lRemapped ? 15 : 8, lRemapped ? remapInvert(L_REMAP, controls) : "L");
+	drawString(bitmap, 320, 180, rRemapped ? 15 : 8, rRemapped ? remapInvert(R_REMAP, controls) : "R");
+	drawString(bitmap, 250, 210, 15, "S");
+	drawString(bitmap, 180, 230, 10, "D");
+	drawString(bitmap, 160, 230, 15, "L");
+	drawString(bitmap, 200, 230, 15, "R");
+	drawString(bitmap, 180, 210, dRemapped ? 15 : 8, dRemapped ? remapInvert(D_REMAP, controls) : "U");
+	drawString(bitmap, 180, 250, 15, "D");
+	drawString(bitmap, 320, 240, aRemapped ? 15 : 8, aRemapped ? remapInvert(A_REMAP, controls) : "A");
+	drawString(bitmap, 300, 245, bRemapped ? 15 : 8, bRemapped ? remapInvert(B_REMAP, controls) : "B");
+	drawString(bitmap, 340, 235, xRemapped ? 15 : 8, xRemapped ? remapInvert(X_REMAP, controls) : "X");
+	drawString(bitmap, 315, 220, yRemapped ? 15 : 8, yRemapped ? remapInvert(Y_REMAP, controls) : "Y");
+	drawString(bitmap, 330, 200, zRemapped ? 15 : 8, zRemapped ? remapInvert(Z_REMAP, controls) : "Z");
+
 }
 
 void drawRumble(unsigned char bitmap[],
@@ -703,7 +818,8 @@ void drawRumble(unsigned char bitmap[],
 	drawString(bitmap,  30,  90, 15, rumble2);
 	drawString(bitmap,  30, 110, 15, rumble3);
 	drawString(bitmap,  30, 130, 15, rumble4);
-	drawString(bitmap,  30, 150, 15, rumble5);
+	//drawString(bitmap,  30, 150, 15, rumble5);
+	drawString(bitmap,  30, 150, 15, rumble6);
 	drawString(bitmap,  30, 180, 15, currentSetting);
 	drawInt(   bitmap, 190, 180, 15, 0, controls.rumble);
 }
@@ -726,17 +842,8 @@ void drawTrigger(unsigned char bitmap[],
 	drawInt(   bitmap, 120, 210, 15, 0, controls.lTriggerOffset);
 	drawString(bitmap, 280, 210, 15, trigger4);
 	drawInt(   bitmap, 370, 210, 15, 0, controls.rTriggerOffset);
-	if(controls.lConfig == 4) {
-		if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
-			drawString(bitmap, 30, 230, 15, trigger5);
-		}
-	} else if(controls.rConfig == 4) {
-		if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
-			drawString(bitmap, 30, 230, 15, trigger6);
-		}
-	}
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 }
 
 void drawTriggerFast(unsigned char bitmap[],
@@ -750,36 +857,36 @@ void drawTriggerFast(unsigned char bitmap[],
 		const StickParams &aStick,
 		const StickParams &cStick) {
 	//input
+	eraseCharLine(bitmap, 250);
 	eraseCharLine(bitmap, 270);
-	eraseCharLine(bitmap, 290);
-	drawString(bitmap, 30, 270, 15, "LD");
-	drawString(bitmap, 30, 290, 15, "RD");
+	drawString(bitmap, 30, 250, 15, "LD");
+	drawString(bitmap, 30, 270, 15, "RD");
 	if(hardware.L) {
-		drawString(bitmap, 70, 270, 15, "Pressed");
+		drawString(bitmap, 70, 250, 15, "Pressed");
 	}
 	if(hardware.R) {
-		drawString(bitmap, 70, 290, 15, "Pressed");
+		drawString(bitmap, 70, 270, 15, "Pressed");
 	}
-	drawString(bitmap, 280, 270, 15, "LA:");
-	drawInt   (bitmap, 310, 270, 15, 2, hardware.La);
-	drawString(bitmap, 280, 290, 15, "RA:");
-	drawInt   (bitmap, 310, 290, 15, 2, hardware.Ra);
+	drawString(bitmap, 280, 250, 15, "LA:");
+	drawInt   (bitmap, 310, 250, 15, 2, hardware.La);
+	drawString(bitmap, 280, 270, 15, "RA:");
+	drawInt   (bitmap, 310, 270, 15, 2, hardware.Ra);
 
 	//output
+	eraseCharLine(bitmap, 310);
 	eraseCharLine(bitmap, 330);
-	eraseCharLine(bitmap, 350);
-	drawString(bitmap, 30, 330, 15, "LD");
-	drawString(bitmap, 30, 350, 15, "RD");
+	drawString(bitmap, 30, 310, 15, "LD");
+	drawString(bitmap, 30, 330, 15, "RD");
 	if(btn.L) {
-		drawString(bitmap, 70, 330, 15, "Pressed");
+		drawString(bitmap, 70, 310, 15, "Pressed");
 	}
 	if(btn.R) {
-		drawString(bitmap, 70, 350, 15, "Pressed");
+		drawString(bitmap, 70, 330, 15, "Pressed");
 	}
-	drawString(bitmap, 280, 330, 15, "LA:");
-	drawInt   (bitmap, 310, 330, 15, 2, btn.La);
-	drawString(bitmap, 280, 350, 15, "RA:");
-	drawInt   (bitmap, 310, 350, 15, 2, btn.Ra);
+	drawString(bitmap, 280, 310, 15, "LA:");
+	drawInt   (bitmap, 310, 310, 15, 2, btn.La);
+	drawString(bitmap, 280, 330, 15, "RA:");
+	drawInt   (bitmap, 310, 330, 15, 2, btn.Ra);
 }
 
 void drawLtrigger(unsigned char bitmap[],
@@ -801,8 +908,8 @@ void drawLtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.lConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.lTriggerOffset);
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
@@ -810,50 +917,54 @@ void drawLtrigger(unsigned char bitmap[],
 	}
 	switch(controls.lConfig) {
 		case 0:
-			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 150, 15, l5conflict);}
+			drawString(bitmap,  30, 130, 15, lrtrigger4); //default trigger behavior
 			break;
 		case 1:
-			drawString(bitmap,  30, 130, 15, lrtrigger5);
-			drawString(bitmap,  30, 150, 15, lrtrigger6);
+			drawString(bitmap,  30, 130, 15, lrtrigger5); //disables analog
+			drawString(bitmap,  30, 150, 15, lrtrigger6); //won't be able to shield in s4 ult
 			break;
 		case 2:
-			drawString(bitmap,  30, 130, 15, lrtrigger7);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 170, 15, l5conflict);}
+			drawString(bitmap,  30, 130, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
 			break;
 		case 3:
-			drawString(bitmap,  30, 130, 15, lrtrigger9);
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
 			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger10);
-			drawString(bitmap,  30, 170, 15, lrtrigger11);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
+			drawString(bitmap,  30, 150, 15, lrtrigger13); //until the digital output is pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger14); //jumps to 255
+			drawString(bitmap,  30, 190, 15, lrtrigger10); //in melee you get a large lightshield
+			drawString(bitmap,  30, 210, 15, lrtrigger11); //then a hard shield
 			break;
 		case 4:
-			drawString(bitmap,  30, 130, 15, lrtrigger12);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			drawString(bitmap,  30, 170, 15, lrtrigger13);
-			drawString(bitmap,  30, 190, 15, lrtrigger14);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
-			if(controls.rConfig != 1 && controls.rConfig != 4 && controls.rConfig != 5) {
-				drawString(bitmap, 30, 230, 15, trigger5);
-			}
+			drawString(bitmap,  30, 130, 15, lrtrigger12); //outputs an analog value when hard pressed
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
 			break;
 		case 5:
-			drawString(bitmap,  30, 130, 15, lrtrigger15);
-			drawString(bitmap,  30, 150, 15, lrtrigger16);
-			drawString(bitmap,  30, 170, 15, lrtrigger17);
-			drawString(bitmap,  30, 190, 15, lrtrigger18);
-			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger15); //outputs both analog and digital
+			drawString(bitmap,  30, 150, 15, lrtrigger16); //value when hard pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger17); //in melee like mode 2 but
+			drawString(bitmap,  30, 190, 15, lrtrigger18); //you can shield with it > 79
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);} //increase offset
 			break;
 		case 6:
-			drawString(bitmap,  30, 130, 15, lrtrigger19);
-			drawString(bitmap,  30, 150, 15, lrtrigger20);
-			drawString(bitmap,  30, 170, 15, lrtrigger21);
-			drawString(bitmap,  30, 190, 15, lrtrigger22);
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger22); //multiplier:
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.lTriggerOffset) + 0.4494f);
-			if(controls.rConfig == 4) {drawString(bitmap, 30, 210, 15, l5conflict);}
+			break;
+		case 7:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger7); //disables hard shield preserves lras
+			if(controls.lTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
+			break;
+		case 8:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.lTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
+			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
 			break;
 	}
 	//graph?
@@ -878,8 +989,8 @@ void drawRtrigger(unsigned char bitmap[],
 	drawInt(   bitmap,  80, 100, 15, 1, controls.rConfig+1);
 	drawString(bitmap, 280, 100, 15, lrtrigger3);
 	drawInt(   bitmap, 350, 100, 15, 1, controls.rTriggerOffset);
-	drawString(bitmap,  30, 250, 15, lrtrigger23);
-	drawString(bitmap,  30, 310, 15, lrtrigger24);
+	drawString(bitmap,  30, 230, 15, lrtrigger23);
+	drawString(bitmap,  30, 290, 15, lrtrigger24);
 	if(itemIndex == 0) {
 		drawString(bitmap,  10, 100, 15, arrowRight);
 	} else {
@@ -887,50 +998,54 @@ void drawRtrigger(unsigned char bitmap[],
 	}
 	switch(controls.rConfig) {
 		case 0:
-			drawString(bitmap,  30, 130, 15, lrtrigger4);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 150, 15, r5conflict);}
+			drawString(bitmap,  30, 130, 15, lrtrigger4); //default trigger behavior
 			break;
 		case 1:
-			drawString(bitmap,  30, 130, 15, lrtrigger5);
-			drawString(bitmap,  30, 150, 15, lrtrigger6);
+			drawString(bitmap,  30, 130, 15, lrtrigger5); //disables analog
+			drawString(bitmap,  30, 150, 15, lrtrigger6); //won't be able to shield in s4 ult
 			break;
 		case 2:
-			drawString(bitmap,  30, 130, 15, lrtrigger7);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 170, 15, r5conflict);}
+			drawString(bitmap,  30, 130, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
 			break;
 		case 3:
-			drawString(bitmap,  30, 130, 15, lrtrigger9);
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
 			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
-			drawString(bitmap,  30, 150, 15, lrtrigger10);
-			drawString(bitmap,  30, 170, 15, lrtrigger11);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 190, 15, lrultimate);}
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
+			drawString(bitmap,  30, 150, 15, lrtrigger13); //until the digital output is pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger14); //jumps to 255
+			drawString(bitmap,  30, 190, 15, lrtrigger10); //in melee you get a large lightshield
+			drawString(bitmap,  30, 210, 15, lrtrigger11); //then a hard shield
 			break;
 		case 4:
-			drawString(bitmap,  30, 130, 15, lrtrigger12);
-			drawString(bitmap,  30, 150, 15, lrtrigger8);//reused
-			drawString(bitmap,  30, 170, 15, lrtrigger13);
-			drawString(bitmap,  30, 190, 15, lrtrigger14);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
-			if(controls.lConfig != 1 && controls.lConfig != 4 && controls.lConfig != 5) {
-				drawString(bitmap, 30, 230, 15, trigger6);
-			}
+			drawString(bitmap,  30, 130, 15, lrtrigger12); //outputs an analog value when hard pressed
+			drawString(bitmap,  30, 150, 15, lrtrigger8); //can't ad or tech in melee
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
 			break;
 		case 5:
-			drawString(bitmap,  30, 130, 15, lrtrigger15);
-			drawString(bitmap,  30, 150, 15, lrtrigger16);
-			drawString(bitmap,  30, 170, 15, lrtrigger17);
-			drawString(bitmap,  30, 190, 15, lrtrigger18);
-			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);}
+			drawString(bitmap,  30, 130, 15, lrtrigger15); //outputs both analog and digital
+			drawString(bitmap,  30, 150, 15, lrtrigger16); //value when hard pressed
+			drawString(bitmap,  30, 170, 15, lrtrigger17); //in melee like mode 2 but
+			drawString(bitmap,  30, 190, 15, lrtrigger18); //you can shield with it > 79
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 210, 15, lrultimate);} //increase offset
 			break;
 		case 6:
-			drawString(bitmap,  30, 130, 15, lrtrigger19);
-			drawString(bitmap,  30, 150, 15, lrtrigger20);
-			drawString(bitmap,  30, 170, 15, lrtrigger21);
-			drawString(bitmap,  30, 190, 15, lrtrigger22);
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger22); //multiplier:
 			drawFloat( bitmap, 140, 190, 15, 0, 6, (0.0112f * controls.rTriggerOffset) + 0.4494f);
-			if(controls.lConfig == 4) {drawString(bitmap, 30, 210, 15, r5conflict);}
+			break;
+		case 7:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger7); //disables hard shield preserves lras
+			if(controls.rTriggerOffset < 80) {drawString(bitmap, 30, 170, 15, lrultimate);} //increase offset
+			break;
+		case 8:
+			drawString(bitmap,  30, 130, 15, lrtrigger9); //caps the max analog value at
+			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
+			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
+			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
 			break;
 	}
 	//graph?
@@ -1064,8 +1179,8 @@ void drawInputviewFast(unsigned char bitmap[],
 	drawString(bitmap, 450, 200, 8+7*btn.Z,  "Z");
 
 	//erase the graph
-	for(int y=40; y<256+40+1; y++) {
-		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+1/*256 pixels = 128 bytes*/);
+	for(int y=40-3; y<256+40+1+3; y++) {
+		memset(bitmap + y*VWIDTHBYTE, BLACK2, 128+2/*256 pixels = 128 bytes*/);
 	}
 
 	const int xCenter = 128;//starts at 1
@@ -1414,39 +1529,44 @@ void drawTimeScope(unsigned char bitmap[],
 	switch(capture.mode) {
 		case CM_STICK_FALL:
 			drawString(bitmap, 410,  80, 15, timescope9);
-			drawFloat(bitmap,  410, 110, 15, 2, 6, capture.percents[0]);
-			drawString(bitmap, 470, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 6, capture.percents[0]);
+			drawString(bitmap, 470, 105, 15, "%");
 			drawString(bitmap, 410, 210, 15, timescope10);
-			drawFloat(bitmap,  410, 240, 15, 2, 6, fmax(0, 100-capture.percents[0]));
-			drawString(bitmap, 470, 240, 15, "%");
+			drawFloat(bitmap,  410, 235, 15, 2, 6, fmax(0, 100-capture.percents[0]));
+			drawString(bitmap, 470, 235, 15, "%");
 			break;
 		case CM_STICK_RISE:
-			drawString(bitmap, 410,  80, 15, timescope11);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, capture.percents[0]);
-			drawString(bitmap, 450, 110, 15, "%");
+			drawString(bitmap, 410,  80, 15, timescope18);//vanilla
+			drawString(bitmap, 410, 100, 15, timescope11);
+			drawFloat(bitmap,  410, 125, 15, 2, 4, capture.percents[0]);
+			drawString(bitmap, 450, 125, 15, "%");
+			drawString(bitmap, 410, 190, 15, timescope19);//UCF
+			drawString(bitmap, 410, 210, 15, timescope11);
+			drawFloat(bitmap,  410, 235, 15, 2, 4, capture.percents[1]);
+			drawString(bitmap, 450, 235, 15, "%");
 			break;
 		case CM_STICK_PIVOT:
 			drawString(bitmap, 410,  80, 15, timescope14);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
-			drawString(bitmap, 450, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 450, 105, 15, "%");
 			drawString(bitmap, 410, 140, 15, timescope12);
 			drawString(bitmap, 410, 160, 15, timescope13);
-			drawFloat(bitmap,  410, 190, 15, 2, 4, round(capture.percents[1]));
-			drawString(bitmap, 450, 190, 15, "%");
+			drawFloat(bitmap,  410, 185, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 185, 15, "%");
 			drawString(bitmap, 410, 220, 15, timescope11);
-			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
-			drawString(bitmap, 450, 250, 15, "%");
+			drawFloat(bitmap,  410, 245, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 245, 15, "%");
 			break;
 		case CM_TRIG:
 			drawString(bitmap, 410,  80, 15, timescope15);
-			drawFloat(bitmap,  410, 110, 15, 2, 4, round(capture.percents[0]));
-			drawString(bitmap, 450, 110, 15, "%");
+			drawFloat(bitmap,  410, 105, 15, 2, 4, round(capture.percents[0]));
+			drawString(bitmap, 450, 105, 15, "%");
 			drawString(bitmap, 410, 150, 15, timescope16);
-			drawFloat(bitmap,  410, 180, 15, 2, 4, round(capture.percents[1]));
-			drawString(bitmap, 450, 180, 15, "%");
+			drawFloat(bitmap,  410, 175, 15, 2, 4, round(capture.percents[1]));
+			drawString(bitmap, 450, 175, 15, "%");
 			drawString(bitmap, 410, 220, 15, timescope17);
-			drawFloat(bitmap,  410, 250, 15, 2, 4, round(capture.percents[2]));
-			drawString(bitmap, 450, 250, 15, "%");
+			drawFloat(bitmap,  410, 245, 15, 2, 4, round(capture.percents[2]));
+			drawString(bitmap, 450, 245, 15, "%");
 			break;
 		default:
 			break;
@@ -1854,6 +1974,7 @@ void drawMenuFast(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		const Buttons btn,
 		const Buttons hardware,
 		const RawStick raw,
@@ -1895,6 +2016,7 @@ void drawMenu(unsigned char bitmap[],
 		const int itemIndex,
 		const bool changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		const int version,
 		const Buttons btn,
 		const RawStick raw,
@@ -1971,7 +2093,7 @@ void drawMenu(unsigned char bitmap[],
 			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_REMAP:
-			drawRemap(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
+			drawRemap(bitmap, menu, currentRemapStep, changeMade, btn, raw, controls, aStick, cStick);
 			break;
 		case MENU_RUMBLE:
 			drawRumble(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
@@ -2005,6 +2127,9 @@ void drawMenu(unsigned char bitmap[],
 			break;
 		case MENU_REACTION:
 			drawReaction(bitmap, menu, itemIndex, capture);
+			break;
+		case MENU_PING:
+			//don't draw the placeholder
 			break;
 		case MENU_VISION:
 			drawVision(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);

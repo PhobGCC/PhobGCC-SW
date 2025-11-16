@@ -5,6 +5,8 @@
 
 #include "hardware/pio.h"
 #include "joybus.pio.h"
+#include <string.h>
+#include <math.h>
 
 #define ORG 127
 
@@ -56,6 +58,43 @@ void __time_critical_func(convertToPio)(const uint8_t* command, const int len, u
     result[len / 2] += 3 << (2 * (8 * (len % 2)));
 }
 
+void __time_critical_func(convertGCReport)(GCReport* report, GCReport* dest_report, uint8_t mode) {
+    memcpy(dest_report, report, 8);
+    if (mode == 1) {
+        dest_report->mode1.cxStick = report->cxStick >> 4;
+        dest_report->mode1.cyStick = report->cyStick >> 4;
+        dest_report->mode1.analogL = report->analogL;
+        dest_report->mode1.analogR = report->analogR;
+        dest_report->mode1.analogA = 0;
+        dest_report->mode1.analogB = 0;
+    }
+    else if (mode == 2) {
+        dest_report->mode2.cxStick = report->cxStick >> 4;
+        dest_report->mode2.cyStick = report->cyStick >> 4;
+        dest_report->mode2.analogL = report->analogL >> 4;
+        dest_report->mode2.analogR = report->analogR >> 4;
+        dest_report->mode2.analogA = 0;
+        dest_report->mode2.analogB = 0;
+    }
+    else if (mode == 4) {
+        dest_report->mode4.cxStick = report->cxStick;
+        dest_report->mode4.cyStick = report->cyStick;
+        dest_report->mode4.analogA = 0;
+        dest_report->mode4.analogB = 0;
+    }
+    else if (mode == 3) {
+        return;
+    }
+    else { // Mode 0, 5, 6, 7
+        dest_report->mode0.cxStick = report->cxStick;
+        dest_report->mode0.cyStick = report->cyStick;
+        dest_report->mode0.analogL = report->analogL >> 4;
+        dest_report->mode0.analogR = report->analogR >> 4;
+        dest_report->mode0.analogA = 0;
+        dest_report->mode0.analogB = 0;
+    }
+}
+
 void __time_critical_func(enterMode)(const int dataPin,
                                      const int rumblePin,
                                      const int brakePin,
@@ -83,10 +122,9 @@ void __time_critical_func(enterMode)(const int dataPin,
     pio_sm_set_enabled(pio, 0, true);
     
     while (true) {
-        uint8_t buffer[3];
-        buffer[0] = pio_sm_get_blocking(pio, 0);
+		uint8_t joybusByte = pio_sm_get_blocking(pio, 0);
 
-        if (buffer[0] == 0) { // Probe
+        if (joybusByte == 0) { // Probe
             uint8_t probeResponse[3] = { 0x09, 0x00, 0x03 };
             uint32_t result[2];
             int resultLen;
@@ -99,7 +137,7 @@ void __time_critical_func(enterMode)(const int dataPin,
 
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
         }
-        else if (buffer[0] == 0x41) { // Origin (NOT 0x81)
+        else if (joybusByte == 0x41) { // Origin (NOT 0x81)
             gpio_put(25, 1);
             uint8_t originResponse[10] = { 0x00, 0x80, ORG, ORG, ORG, ORG, 0, 0, 0, 0 };
             // TODO The origin response sends centered values in this code excerpt. Consider whether that makes sense for your project (digital controllers -> yes)
@@ -114,21 +152,24 @@ void __time_critical_func(enterMode)(const int dataPin,
 
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
         }
-        else if (buffer[0] == 0x40) { // Could check values past the first byte for reliability
+        else if (joybusByte == 0x40) { // Could check values past the first byte for reliability
             //The call to the state building function happens here, because on digital controllers, it's near instant, so it can be done between the poll and the response
             // It must be very fast (few us max) to be done between poll and response and still be compatible with adapters
             // Consider whether that makes sense for your project. If your state building is long, use a different control flow i.e precompute somehow and have func read it
             GCReport gcReport = func();
+            GCReport dest_report;
 
 			//get the second byte; we do this interleaved with work that must be done
-            buffer[0] = pio_sm_get_blocking(pio, 0);
+            joybusByte = pio_sm_get_blocking(pio, 0);
+
+            convertGCReport(&gcReport, &dest_report, joybusByte);
 
             uint32_t result[5];
             int resultLen;
-            convertToPio((uint8_t*)(&gcReport), 8, result, resultLen);
+            convertToPio((uint8_t*)(&dest_report), 8, result, resultLen);
 
 			//get the third byte; we do this interleaved with work that must be done
-            buffer[0] = pio_sm_get_blocking(pio, 0);
+            joybusByte = pio_sm_get_blocking(pio, 0);
 
 			//sleep_us(4);//add delay so we don't overwrite the stop bit
 			sleep_us(7);//add delay so we don't overwrite the stop bit
@@ -140,12 +181,14 @@ void __time_critical_func(enterMode)(const int dataPin,
             for (int i = 0; i<resultLen; i++) pio_sm_put_blocking(pio, 0, result[i]);
 
 			//Rumble
-            if(buffer[0] & 1) {
+			bool rumbleBrake = joybusByte & 2;
+			bool rumble = (joybusByte & 1) && !rumbleBrake;
+            if(rumble) {
                 pwm_set_gpio_level(brakePin, 0);
                 pwm_set_gpio_level(rumblePin, rumblePower);
             } else {
                 pwm_set_gpio_level(rumblePin, 0);
-                pwm_set_gpio_level(brakePin, 255);
+                pwm_set_gpio_level(brakePin, rumbleBrake ? 255 : 0);
             }
 
         }

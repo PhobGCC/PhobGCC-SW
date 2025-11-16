@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.12)
 
-include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
+include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 project(phobgcc_rp2040 CXX C ASM)
 
 pico_sdk_init()
+
+set(CMAKE_CXX_FLAGS "-O3 -mcpu=cortex-m0plus -mthumb")
 
 include_directories(
 	include
@@ -22,6 +24,7 @@ add_executable(phobgcc_rp2040
 	src/main.cpp
 	src/navigateMenu.cpp
 	src/storage.cpp
+	src/games/ping.cpp
 	)
 
 pico_generate_pio_header(phobgcc_rp2040 ${CMAKE_CURRENT_LIST_DIR}/pio/joybus.pio)

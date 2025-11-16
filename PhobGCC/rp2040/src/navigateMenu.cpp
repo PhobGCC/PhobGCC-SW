@@ -1,5 +1,5 @@
 #include <cmath>
-#include "pico/platform.h"
+#include "pico.h"
 #include "hardware/timer.h"
 #include "cvideo.h"
 #include "menu.h"
@@ -18,6 +18,7 @@
 #define YPRESS  0b0000'0010'0000'0000
 #define ZPRESS  0b0000'0100'0000'0000
 #define SPRESS  0b0000'1000'0000'0000
+#define BTAP    0b0001'0000'0000'0000
 
 void navigateMenu(unsigned char bitmap[],
 		unsigned int &menu,
@@ -25,6 +26,7 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		uint16_t presses,
@@ -37,6 +39,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		const Buttons &hardware,
@@ -84,6 +87,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 	static uint8_t drCounter = 0;//for controls that go faster when you hold them
 
 	if(hardware.B) {
+		presses = presses | BTAP;
 		backAccumulator++;
 		if(backAccumulator == 5) {//only call save once per 0.5 second B hold
 			presses = presses | BSAVE;
@@ -209,6 +213,19 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 		}
 	}
 
+	//handle a game returning
+	if(pleaseCommit == 99) {
+		//behave like a long B press, because that's what happened in game
+		backAccumulator = 0;
+		aLockout = 0;//make A available immediately after backing out
+		presses = presses | BPRESS;
+		capture.autoRepeat = false;//cancel auto repeating if you back out
+		capture.begin = false;
+		capture.triggered = false;
+		capture.done = true;
+		pleaseCommit = 0;
+	}
+
 	//handle actual navigation and settings changes
 	if(presses) {
 		navigateMenu(bitmap,
@@ -217,6 +234,7 @@ void __time_critical_func(handleMenuButtons)(unsigned char bitmap[],
 				redraw,
 				changeMade,
 				currentCalStep,
+				currentRemapStep,
 				pleaseCommit,
 				btn,
 				presses,
@@ -244,27 +262,42 @@ void navigateMenu(unsigned char bitmap[],
 		uint8_t &redraw,
 		bool &changeMade,
 		const int currentCalStep,
+		const int currentRemapStep,
 		volatile uint8_t &pleaseCommit,
 		const Buttons &btn,
 		uint16_t presses,
 		ControlConfig &controls,
 		DataCapture &capture) {
+
+	//store previous menu positions
+	static bool itemIndexInitialized = false;
+	static uint8_t itemIndexList[MENUCOUNT];
+	if(!itemIndexInitialized) {
+		for(int i = 0; i < MENUCOUNT; i++) {
+			itemIndexList[i] = 0;
+		}
+		itemIndexInitialized = true;
+	}
+
+
 	if(MenuIndex[menu][1] == 0) {
 		if(presses & APRESS) {
 			presses = 0;
+			itemIndexList[menu] = itemIndex;
 			menu = MenuIndex[menu][2];
-			itemIndex = 0;
+			itemIndex = itemIndexList[menu];
 			redraw = 1;
 		}
 	} else if(MenuIndex[menu][1] > 0) {
-		//handle holding the B button as long as you're not on the splashscreen or calibrating
+		//handle holding the B button as long as you're not on the splashscreen or calibrating or remapping
 		if(presses & BPRESS) {
-			if((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0)) {
+			if(((menu == MENU_ASTICKCAL || menu == MENU_CSTICKCAL) && (currentCalStep >= 0)) || (menu == MENU_REMAP && currentRemapStep >= 0)) {
 				//do nothing
 			} else {
 				presses = 0;
+				itemIndexList[menu] = itemIndex;
 				menu = MenuIndex[menu][0];
-				itemIndex = 0;
+				itemIndex = itemIndexList[menu];
 				changeMade = false;
 				redraw = 1;
 			}
@@ -273,8 +306,9 @@ void navigateMenu(unsigned char bitmap[],
 			//if it's a submenu, handle a, dup, and ddown
 			if(presses & APRESS) {
 				presses = 0;
+				itemIndexList[menu] = itemIndex;
 				menu = MenuIndex[menu][itemIndex + 2];
-				itemIndex = 0;
+				itemIndex = itemIndexList[menu];
 				changeMade = false;
 				redraw = 1;
 				//don't return, we may want to handle setup things below
@@ -641,23 +675,11 @@ void navigateMenu(unsigned char bitmap[],
 				}
 				return;
 			case MENU_REMAP:
-				if(!changeMade) {
-					tempInt1 = controls.jumpConfig;
+				if((presses & SPRESS) && currentRemapStep == -1) {
+					pleaseCommit = 10;
 				}
-				if(presses & DUPRESS) {
-					controls.jumpConfig = (JumpConfig) fmin(controls.jumpConfigMax, controls.jumpConfig+1);
-					changeMade = controls.jumpConfig != tempInt1;
-					redraw = 1;
-				} else if(presses & DDPRESS) {
-					controls.jumpConfig = (JumpConfig) fmax(controls.jumpConfigMin, controls.jumpConfig-1);
-					changeMade = controls.jumpConfig != tempInt1;
-					redraw = 1;
-				} else if((presses & BSAVE) && changeMade) {
-					setJumpSetting(controls.jumpConfig);
-					tempInt1 = controls.jumpConfig;
-					changeMade = false;
-					redraw = 1;
-					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				if((currentRemapStep > -1) && presses & (APRESS | BTAP | DUPRESS | LRPRESS | XPRESS | YPRESS | ZPRESS)) {
+					pleaseCommit = 10;
 				}
 				return;
 			case MENU_RUMBLE:
@@ -1030,7 +1052,7 @@ void navigateMenu(unsigned char bitmap[],
 				if(!changeMade) {
 					capture.stickThresh = 23;//dash
 					capture.triggerThresh = 255;//no lightshield threshold by default
-					capture.autoRepeat = 0;//don't auto repeat by default
+					capture.autoRepeat = 1;//auto repeat by default
 					changeMade = true;
 				}
 				if(presses & DLPRESS) {
@@ -1114,6 +1136,9 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 9;
 					redraw = 1;
 				}
+				return;
+			case MENU_PING:
+				pleaseCommit = 100;//launch the game
 				return;
 			case MENU_VISION:
 				if(!changeMade) {

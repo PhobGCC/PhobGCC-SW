@@ -13,6 +13,17 @@ enum JumpConfig {
 	SWAP_YR
 };
 
+enum RemapConfig {
+	A_REMAP,
+	B_REMAP,
+	D_REMAP,
+	L_REMAP,
+	R_REMAP,
+	X_REMAP,
+	Y_REMAP,
+	Z_REMAP
+};
+
 enum WhichTrigger {
 	LTRIGGER,
 	RTRIGGER
@@ -128,14 +139,6 @@ union Buttons{
 	};
 };
 
-struct HardwareButtons{
-	uint8_t L;
-	uint8_t R;
-	uint8_t Z;
-	uint8_t X;
-	uint8_t Y;
-};
-
 struct RawStick{
 	float axRaw;
 	float ayRaw;
@@ -159,9 +162,14 @@ struct Cardinals{
 };
 
 struct ControlConfig{
-	JumpConfig jumpConfig;
-	const int jumpConfigMin;
-	const int jumpConfigMax;
+	uint8_t aRemap;
+	uint8_t bRemap;
+	uint8_t dRemap;
+	uint8_t lRemap;
+	uint8_t rRemap;
+	uint8_t xRemap;
+	uint8_t yRemap;
+	uint8_t zRemap;
 	int lConfig;
 	int rConfig;
 	const int triggerConfigMin;
@@ -207,6 +215,7 @@ struct ControlConfig{
 	int cyWaveshaping;
 	const int waveshapingMin;
 	const int waveshapingMax;
+	const int waveshapingDefault;
 	const int waveshapingFactoryAX;
 	const int waveshapingFactoryAY;
 	const int waveshapingFactoryCX;

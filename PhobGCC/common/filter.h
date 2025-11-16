@@ -57,11 +57,15 @@ void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGain
 	gains.xVelDamp = velDampFromSnapback(controls.xSnapback);
 	gains.yVelDamp = velDampFromSnapback(controls.ySnapback);
 
-	gains.xSmoothing = controls.axSmoothing/10.0f;
-	gains.ySmoothing = controls.aySmoothing/10.0f;
+	//this is changed in version 0.30 so that:
+	// 8 remains the same
+	// the old 9 becomes 18
+	// the new 9-17 is between the old 8 and old 9
+	gains.xSmoothing = (controls.axSmoothing <= 8) ? controls.axSmoothing/10.0f : controls.axSmoothing/100.0f+0.72f;
+	gains.ySmoothing = (controls.aySmoothing <= 8) ? controls.aySmoothing/10.0f : controls.aySmoothing/100.0f+0.72f;
 
-	gains.cXSmoothing = controls.cxSmoothing/10.0f;
-	gains.cYSmoothing = controls.cySmoothing/10.0f;
+	gains.cXSmoothing = (controls.cxSmoothing <= 8) ? controls.cxSmoothing/10.0f : controls.cxSmoothing/100.0f+0.72f;
+	gains.cYSmoothing = (controls.cySmoothing <= 8) ? controls.cySmoothing/10.0f : controls.cySmoothing/100.0f+0.72f;
 
 	//Recompute the intermediate gains used directly by the kalman filter
 	//This happens according to the time between loop iterations.
@@ -210,6 +214,8 @@ float calcWaveshapeMult(const int setting){
 		return 1.0/(440 - 40*setting);
 	} else if (setting > 5 && setting <= 15) {
 		return 1.0/(340 - 20*setting);
+	} else if (setting > 15 && setting <= 24) {
+		return 1.0/(100 - 4*setting);
 	} else {
 		return 0;
 	}
@@ -234,6 +240,8 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float yVel = yPos - oldYPos;
 	const float xVelSmooth = 0.5*(xVel + oldXVel);
 	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xAccel = xVel - oldXVel;
+	const float yAccel = yVel - oldYVel;
 
 	//The lower this value, the stronger the effect.
 	//Per Rienne's experimentation:
@@ -245,12 +253,18 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(controls.axWaveshaping);
-	const float yFactor = calcWaveshapeMult(controls.ayWaveshaping);
+	const float xFactor = calcWaveshapeMult(abs(controls.axWaveshaping));
+	const float yFactor = calcWaveshapeMult(abs(controls.ayWaveshaping));
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const bool highPodeX = controls.axWaveshaping < 0;
+	const bool highPodeY = controls.ayWaveshaping < 0;
+
+	//for negative waveshaping, we want it to be more sensitive to acceleration than the snapback filter.
+	const float accelFactor = 3;
+
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*xFactor*accelFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
@@ -278,6 +292,8 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	const float yVel = yPos - oldYPos;
 	const float xVelSmooth = 0.5*(xVel + oldXVel);
 	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xAccel = xVel - oldXVel;
+	const float yAccel = yVel - oldYVel;
 
 	//The lower this value, the stronger the effect.
 	//Per Rienne's experimentation:
@@ -289,12 +305,18 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(controls.cxWaveshaping);
-	const float yFactor = calcWaveshapeMult(controls.cyWaveshaping);
+	const float xFactor = calcWaveshapeMult(abs(controls.cxWaveshaping));
+	const float yFactor = calcWaveshapeMult(abs(controls.cyWaveshaping));
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor);
+	const bool highPodeX = controls.cxWaveshaping < 0;
+	const bool highPodeY = controls.cyWaveshaping < 0;
+
+	//for negative waveshaping, we want it to be more sensitive to acceleration than the snapback filter.
+	const float accelFactor = 3;
+
+	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor);
+	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*yFactor*accelFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;

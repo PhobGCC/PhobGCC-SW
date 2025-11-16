@@ -11,7 +11,7 @@ struct Storage {
 	static const int index = (int) PageIndexes::STORAGE;
 
 	struct __attribute__((packed)) Settings {
-		JumpConfig jump;
+		JumpConfig jump;//not used
 		int l;
 		int r;
 		int lOffset;
@@ -47,6 +47,14 @@ struct Storage {
 		int CstickAnalogScaler;
 		int interlaceOffset;
 		int tournamentToggle;
+		uint8_t aRemap;
+		uint8_t bRemap;
+		uint8_t dRemap;
+		uint8_t lRemap;
+		uint8_t rRemap;
+		uint8_t xRemap;
+		uint8_t yRemap;
+		uint8_t zRemap;
 	} settings;
 };
 
@@ -56,8 +64,24 @@ struct Storage {
 //the code must commit settings after making any change or else it won't get written
 void commitSettings(const bool noLock = false);
 
-JumpConfig getJumpSetting();
-void setJumpSetting(const JumpConfig);
+void getRemapSetting(
+		uint8_t &aRemap,
+		uint8_t &bRemap,
+		uint8_t &dRemap,
+		uint8_t &lRemap,
+		uint8_t &rRemap,
+		uint8_t &xRemap,
+		uint8_t &yRemap,
+		uint8_t &zRemap);
+void setRemapSetting(
+		const uint8_t aRemap,
+		const uint8_t bRemap,
+		const uint8_t dRemap,
+		const uint8_t lRemap,
+		const uint8_t rRemap,
+		const uint8_t xRemap,
+		const uint8_t yRemap,
+		const uint8_t zRemap);
 
 int  getLSetting();
 void setLSetting(const int);

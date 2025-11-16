@@ -57,11 +57,21 @@ namespace ess {
 			coords[0] = (coords[0] / 2) - BOUNDARY;
 			coords[1] = (coords[1] / 2) - BOUNDARY;
 			uint16_t index = triangular_to_linear_index(coords[1], coords[0], remainder);
+#ifdef ARDUINO
 			coords[0] = pgm_read_byte(triangular_map + 2 * index);
 			coords[1] = pgm_read_byte(triangular_map + 2 * index + 1);
+#else //ARDUINO
+			coords[0] = triangular_map[2 * index];
+			coords[1] = triangular_map[2 * index + 1];
+#endif //ARDUINO
 		} else {
+#ifdef ARDUINO
 			coords[0] = pgm_read_byte(one_dimensional_map + coords[0]);
 			coords[1] = pgm_read_byte(one_dimensional_map + coords[1]);
+#else //ARDUINO
+			coords[0] = one_dimensional_map[coords[0]];
+			coords[1] = one_dimensional_map[coords[1]];
+#endif //ARDUINO
 		}
 	}
 

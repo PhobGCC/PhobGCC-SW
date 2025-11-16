@@ -8,17 +8,20 @@
 #include "comms/joybus.hpp"
 #include "cvideo.h"
 #include "cvideo_variables.h"
+#include "hardware/clocks.h"
 
 volatile bool _videoOut = false;
 //Variables used by PhobVision to communicate with the event loop core
 volatile bool _sync = false;
 volatile uint8_t _pleaseCommit = 0;//255 = redraw please
 int _currentCalStep = -1;//-1 means not calibrating
+int _currentRemapStep = -1;//-1 means not remapping
+bool _currentlyRaw = false;
 DataCapture _dataCapture;
 
 //This gets called by the comms library
 GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
-	GCReport report = {
+	GCReport report = {{
 		.a       = _btn.A,
 		.b       = _btn.B,
 		.x       = _btn.X,
@@ -39,7 +42,7 @@ GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
 		.cyStick = _btn.Cy,
 		.analogL = _btn.La,
 		.analogR = _btn.Ra
-	};
+	}};
 	return report;
 }
 
@@ -284,6 +287,7 @@ void second_core() {
 						//stop if done
 						if(_dataCapture.begin && _dataCapture.startIndex == _dataCapture.endIndex) {
 							//calculate the dashback chance
+							//see how many ms were spent in the tilt zone, and divide by 1 frame duration
 							int counter = 0;
 							for(int i = 0; i < 200; i++) {
 								if(fabs(_dataCapture.a1[(i+_dataCapture.startIndex+1) % 200]-_intOrigin) >= 23) {
@@ -294,6 +298,35 @@ void second_core() {
 								}
 							}
 							_dataCapture.percents[0] = fmax(0, (1 - (counter/16.666667f))*100);
+
+							//calculate ucf dashback percent
+							//ucf dashback has a two frame window but the stick must have moved 75 units
+							counter = 0;
+							//try each poll offset; err on the short side
+							for(int offset = 0; offset < 16; offset++) {
+								for(int i = offset; i < (200-32); i += 16) {
+									bool dashback = false;
+									const int waitIndex = (i + _dataCapture.startIndex+1) % 200;
+									const int vanIndex = (i + _dataCapture.startIndex+1+16) % 200;
+									const int ucfIndex = (i + _dataCapture.startIndex+1+32) % 200;
+									const int waitData = abs(_dataCapture.a1[waitIndex] - _intOrigin);
+									const int vanData = abs(_dataCapture.a1[vanIndex] - _intOrigin);
+									const int ucfData = abs(_dataCapture.a1[ucfIndex] - _intOrigin);
+									if(waitData < 23 && vanData >= 64) {
+										dashback = true;
+									}
+									if(waitData < 23 && ucfData >= 64 && ucfData-waitData > 75) {
+										dashback = true;
+									}
+									if(dashback) {
+										counter++;
+									}
+								}
+							}
+							const float ucfDB = fmax(0, fmin(100, counter*100/16.0f));
+							//never want ucf % to read less than vanilla
+							//it would sometimes be like 4% lower, because we were conservative here
+							_dataCapture.percents[1] = fmax(_dataCapture.percents[0], ucfDB);
 
 							//clean up
 							_dataCapture.done = true;
@@ -647,6 +680,10 @@ void second_core() {
 						//nothing
 						break;
 				}
+			} else if(_pleaseCommit == 10) {
+				//advance remap
+				_pleaseCommit = 255;
+				remapAdvance(_currentRemapStep, _controls, _hardware, _btn);
 			}
 		}
 
@@ -659,7 +696,7 @@ void second_core() {
 		//pwm_set_gpio_level(_pinLED, 255*gpio_get_out_level(_pinSpare0));
 
 		//check if we should be reporting values yet
-		if((_btn.B || _controls.autoInit || _videoOut) && !running){
+		if((_hardware.B || _controls.autoInit || _videoOut) && !running){
 			running=true;
 		}
 
@@ -685,7 +722,7 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, true, _notchAngleDefaults, _btn);
 				}
-				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+				readSticks(true,false, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, false);
 			}
 			else{//WHICHSTICK == CSTICK
 				if(_currentCalStep >= _noOfCalibrationPoints){//adjust notch angles
@@ -705,16 +742,16 @@ void second_core() {
 				}else{//just show desired stick position
 					displayNotch(_currentCalStep, false, _notchAngleDefaults, _btn);
 				}
-				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+				readSticks(false,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, false);
 			}
 		}
 		else if(running){
 			//if not calibrating read the sticks normally
-			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep);
+			readSticks(true,true, _btn, _pinList, _raw, _hardware, _controls, _normGains, _aStickParams, _cStickParams, _dT, _currentCalStep, _currentlyRaw);
 		}
 
 		//read the controller's buttons
-		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
+		processButtons(_pinList, _btn, _hardware, _controls, _gains, _normGains, _currentCalStep, _currentRemapStep, _currentlyRaw, running, tempCalPointsX, tempCalPointsY, whichStick, notchStatus, notchAngles, measuredNotchAngles, _aStickParams, _cStickParams);
 
 	}
 }
@@ -724,6 +761,11 @@ int main() {
 	//the comms library needs this clockspeed
 	//it's actually the default so we don't need to
 	//set_sys_clock_khz(1000*_us, true);
+
+	//debug stuff
+#if (DEBUG_ENABLED)
+	stdio_init_all();
+#endif
 
 	//Read settings; true = don't lock out the core because running it on core 1 will freeze
 	const int numberOfNaN = readEEPROM(_controls, _gains, _normGains, _aStickParams, _cStickParams, true);
@@ -818,6 +860,14 @@ int main() {
 		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, to alleviate performance issues
 	}
 
+	//delay for 20 milliseconds, should help with cubstraption
+	const uint32_t lastMicros = micros();
+	bool toggle = false;
+	while(micros() - lastMicros < 20'000) {
+		gpio_put(_pinDac0, toggle);
+		toggle = !toggle;
+	}
+
 	multicore_lockout_victim_init();
 
 	multicore_launch_core1(second_core);
@@ -829,7 +879,7 @@ int main() {
 #else //BUILD_DEV
 		const int version = SW_VERSION;
 #endif //BUILD_DEV
-		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, version);
+		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, _currentRemapStep, version);
 	} else {
 		enterMode(_pinTX,
 				_pinRumble,

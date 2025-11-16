@@ -34,6 +34,9 @@ const char stickCal14[]      = "Press A/L/R to move on.";
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char stickCal15[]      = "Raw Values:      Stick Coords:    Melee Coords:";
 const char stickCal16[]      = "(0 to 1)         (-127 to 127)    (-1 to 1)";
+//Guide relative to offset   =  10  50   100  150  200  250  300
+const char stickCal17[]      = "Measured notch coords:";
+const char stickCal18[]      = "Stick:    Melee:";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char autoinit1[]       = "By default you have to press B to get the sticks";
@@ -60,14 +63,7 @@ const char stickdbgCang[] = "C bounds angles";
 
 const char set_overAutoOn[] = "Autoinit on";
 const char set_overAutoOff[] = "Autoinit off";
-const char set_overJumpDf[] = "Normal Jump";
-const char set_overJumpXZ[] = "X Z-jump";
-const char set_overJumpYZ[] = "Y Z-jump";
-const char set_overJumpXL[] = "X L-jump";
-const char set_overJumpXR[] = "X R-jump";
-const char set_overJumpYL[] = "Y L-jump";
-const char set_overJumpYR[] = "Y R-jump";
-const char set_overJumpBr[] = "Broken jump config";
+const char set_overRemap[] = "=> ABLURXYZ";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";
@@ -86,27 +82,29 @@ const char asnapback5[]      = "Min: -10  Max: 10  Default: 4";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char awave1[]          = "This makes the stick stop during fast inputs.";
-const char awave2[]          = "Higher values reduce the speed threshold.";
-const char awave3[]          = "It affects pivots, DBOOC, dashback, and more.";
-const char awave4[]          = "Min: 0  Max: 15  Default: 0";
+const char awave2[]          = "Greater magnitudes reduce the speed threshold.";
+const char awave3[]          = "<0 lets you mimic a heavy pode potentiometer.";
+const char awave4[]          = "It affects pivots, DBOOC, dashback, and more.";
+const char awave5[]          = "Min: -24  Max: 24  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char asmooth1[]        = "This averages the stick position with the past.";
 const char asmooth2[]        = "It can be used to make one axis lag the other.";
 const char asmooth3[]        = "Use X=5 to make down-and-in ledgedashes work.";
-const char asmooth4[]        = "Min: 0  Max: 9  Default: 0";
+const char asmooth4[]        = "Min: 0  Max: 18  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char csmooth1[]        = "This averages the stick position with the past.";//same as asmooth1
 const char csmooth2[]        = "Make these 5 or 6 to reduce snapback.";
 const char csmooth3[]        = "Make one axis higher to make it less responsive.";
-const char csmooth4[]        = "Min: 0  Max: 9  Default: 0";
+const char csmooth4[]        = "Min: 0  Max: 18  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 //const char cwave1[]          = "This makes the stick stop during fast inputs.";//same as awave
 //const char cwave2[]          = "Higher values reduce the speed threshold.";
-const char cwave3[]          = "We're not sure what it can be used for here.";
-//const char cwave4[]          = "Min: 0  Max: 15  Default: 0";
+//const char cwave3[]          = "<0 lets you mimic a high pode potentiometer.";
+const char cwave4[]          = "This can help C-Stick ledge drop consistency.";
+//const char cwave5[]          = "Min: -24  Max: 24  Default: 0";
 
 /*
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
@@ -118,45 +116,38 @@ const char coffset4[]        = "Min: 127  Max: -127  Default: 0";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char cardinals1[]      = "This sets how far the stick snaps to the";
-const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -1";
+const char cardinals2[]      = "cardinal axes. 0 disables snapping, and -2";
 const char cardinals3[]      = "disables 1.0 cardinals even on UCF 0.84+.";
-const char cardinals4[]      = "Min: -1  Max: 6  Default: 6";
+const char cardinals4[]      = "-1 gives 1.0 on 0.84 except for Zelda teleport.";
+const char cardinals5[]      = "Min: -2  Max: 6  Default: 6";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char radius1[]         = "This sets how far from the center the stick can";
 const char radius2[]         = "reach. A normal GCC can get to roughly 100-103.";
 const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
-const char radius4[]         = "Min: 82  Max: 125  Default: 100";
+const char radius4[]         = "Min:     Max:      Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
-const char remap1[]          = "This swaps one of L, R, or Z with either X or Y.";
+const char remap1[]          = "You may remap A, B, Du, L, R, X, Y, or Z.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";
-const char remap4[]          = "value on a face button for lightshielding.";
-const char remapDf[]         = "Default";
-const char remapXZ[]         = "Swap X and Z";
-const char remapYZ[]         = "Swap Y and Z";
-const char remapXL[]         = "Swap X and L";
-const char remapYL[]         = "Swap Y and L";
-const char remapXR[]         = "Swap X and R";
-const char remapYR[]         = "Swap Y and R";
-const char remapBr[]         = "Broken Config";
+const char remap4[]          = "value on a digital button for lightshielding.";
+const char remap5[]          = "Press Start to begin.";
+const char remap6[]          = "Press an unused button that you want to be";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char rumble1[]         = "This controls the strength of rumble feedback.";
 const char rumble2[]         = "0 is off, the max is 11, and the default is 9.";
 const char rumble3[]         = "9 is ~OEM strength. <5 won't spin OEM motors.";
 const char rumble4[]         = "Use values 5 or lower for 3V cellphone rumble.";
-const char rumble5[]         = "Press Z to test rumble.";
+//const char rumble5[]         = "Rumble braking is disabled for negative values.";
+const char rumble6[]         = "Press Z to test rumble.";
 
 //Guide relative to offset   =  10  50   100  150
 const char trigger1[]        = "L Mode:";
 const char trigger2[]        = "R Mode:";
 const char trigger3[]        = "L Offset:";
 const char trigger4[]        = "R Offset:";
-//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
-const char trigger5[]        = "Mode 5 conflict; R will be inoperable";
-const char trigger6[]        = "Mode 5 conflict; L will be inoperable";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char ltrigger1[]       = "This changes the behavior of the L trigger.";
@@ -176,8 +167,8 @@ const char lrtrigger9[]      = "This caps the maximum analog value at";
 const char lrtrigger10[]     = "In Melee, you get a large lightshield for much";
 const char lrtrigger11[]     = " of the slider travel, then a hardshield.";
 const char lrtrigger12[]     = "This outputs an analog value when hard pressed.";
-const char lrtrigger13[]     = "In the Melee ruleset, you cannot use this and";
-const char lrtrigger14[]     = " have an analog trigger input active.";
+const char lrtrigger13[]     = " until the digital output is pressed, where it";
+const char lrtrigger14[]     = " will jump to 255 for Ultimate compatibility.";
 const char lrtrigger15[]     = "This outputs both an analog value and a digital";
 const char lrtrigger16[]     = "  output when hard pressed.";
 const char lrtrigger17[]     = "In Melee this is the same as mode 2 but it lets";
@@ -189,6 +180,8 @@ const char lrtrigger21[]     = "This makes it respond quicker in Ultimate.";
 const char lrtrigger22[]     = "Multiplier:";
 const char lrtrigger23[]     = "Trigger Inputs:";
 const char lrtrigger24[]     = "Trigger Outputs:";
+const char lrtrigger25[]     = "but has an analog multiplier of 2.5x, enabling";
+const char lrtrigger26[]     = "lightshield with short travel triggers.";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char tourney1[]        = "This prevents misinputs during tournaments by";
@@ -262,6 +255,8 @@ const char timescope14[]     = "No Turn:";
 const char timescope15[]     = "D PS:";
 const char timescope16[]     = "ADT PS:";
 const char timescope17[]     = "No PS:";
+const char timescope18[]     = "Vanilla";
+const char timescope19[]     = "UCF";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char presstime1[]      = "Press Start to initiate 200ms of recording,";
