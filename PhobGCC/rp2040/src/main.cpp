@@ -860,10 +860,10 @@ int main() {
 		set_sys_clock_khz(1000*250, true);//overclock to 250 khz, to alleviate performance issues
 	}
 
-	//delay for 10 milliseconds, should help with cubstraption
+	//delay for 20 milliseconds, should help with cubstraption
 	const uint32_t lastMicros = micros();
 	bool toggle = false;
-	while(micros() - lastMicros < 10'000) {
+	while(micros() - lastMicros < 20'000) {
 		gpio_put(_pinDac0, toggle);
 		toggle = !toggle;
 	}
