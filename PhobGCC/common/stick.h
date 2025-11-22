@@ -188,6 +188,7 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 				}
 			}
 		} else {
+            /*
 			const int snapping = controls.cstickCardinalSnapping;
 			if(snapping > 0) {
 				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
@@ -212,6 +213,31 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 					}
 				}
 			}
+            */
+            //60 unit activation radius
+            //Cardinals are 50 degrees wide
+			//Diagonals are 40 degrees wide
+			if((*xOut)*(*xOut) + (*yOut)*(*yOut) > 60*60) {
+				if(abs(*yOut) > 2.1445*abs(*xOut)) {
+					//greater than 65 degrees from horizontal
+					//vertical
+					*xOut = 0;
+					*yOut = (*yOut > 0) ? 100 : -100;
+				} else if(abs(*yOut) > 0.46631*abs(*xOut)) {
+					//greater than 25 degrees from horizontal, but less than 65
+					//diagonal
+					*xOut = (*xOut > 0) ? 69 : -69;
+					*yOut = (*yOut > 0) ? 40 : -40;
+				} else {
+					//less than 25 degrees from horizontal
+					//horizontal
+					*xOut = (*xOut > 0) ? 100 : -100;
+					*yOut = 0;
+				}
+			} else {
+				*xOut = 0;
+				*yOut = 0;
+            }
 		}
 
 		if((abs(*xOut)<3) && (abs(*yOut)<3)) {
