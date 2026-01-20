@@ -1,0 +1,110 @@
+name: Test Teensy and RP2040 Builds
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-teensies:
+    runs-on: ubuntu-latest
+
+    # The Teensy 3.2 uses the 3.1 FQBN
+    strategy:
+      matrix:
+        fqbn:
+          - teensy:avr:teensy31
+          - teensy:avr:teensy40
+        phob_version:
+          - 1_0
+          - 1_1
+          - 1_2
+        diode_short:
+          - true
+          - false
+        exclude:
+          - fqbn: teensy:avr:teensy31
+            phob_version: 1_2
+          - fqbn: teensy:avr:teensy40
+            phob_version: 1_0
+          - phob_version: 1_2
+            diode_short: true
+
+    env:
+      H_FILE: ${{ format('{0}Teensy{1}{2}.h', matrix.phob_version, matrix.fqbn == 'teensy:avr:teensy31' && '3_2' || '4_0', matrix.diode_short == true && 'DiodeShort' || '') }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: uncomment include
+        run: sed -i "/$H_FILE/s://::" PhobGCC/common/phobGCC.h
+        
+      - uses: arduino/compile-sketches@v1.1.0
+        with:
+          fqbn: ${{ matrix.fqbn }}
+          platforms: |
+            - name: "teensy:avr"
+              source-url: "https://www.pjrc.com/teensy/package_teensy_index.json"
+          libraries: |
+            - name: CurveFitting
+            - name: Bolder Flight Systems Eigen
+            - name: Bounce2
+            - name: TeensyTimerTool
+              version: 1.0.0
+          sketch-paths: |
+            - PhobGCC
+          verbose: true
+
+
+  build-rp2040:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: apt update
+      run: sudo apt update
+
+    # # DOES NOT WORK
+    # # Get/cache requisite APT packages
+    # - uses: awalsh128/cache-apt-pkgs-action@v1.3.0
+    #   with:
+    #     packages: cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+
+    - name: apt install
+      run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+
+    - uses: actions/checkout@v4
+      with:
+        path: PhobGCC-SW
+
+    - name: uncomment include
+      run: sed -i '/Phob2_0.h/s://::' PhobGCC-SW/PhobGCC/common/phobGCC.h
+
+    # Cache action for the pico-sdk directory
+    # If the cache doesn't already exist it will be created at the end of the workflow
+    - name: cache pico sdk
+      id: cache-pico-sdk
+      uses: actions/cache@v3
+      with:
+        path: pico-sdk
+        key: rp2040-pico-sdk
+
+    - name: clone pico-sdk
+      if: steps.cache-pico-sdk.outputs.cache-hit != 'true'
+      uses: actions/checkout@v4
+      with:
+        repository: raspberrypi/pico-sdk
+        path: pico-sdk
+
+    - name: init pico-sdk submodules
+      if: steps.cache-pico-sdk.outputs.cache-hit != 'true'
+      run: cd $GITHUB_WORKSPACE/pico-sdk && git submodule update --init
+
+    - name: set pico sdk path
+      run: echo "PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk" >> "$GITHUB_ENV"
+
+    - name: cmake
+      run: cd PhobGCC-SW/PhobGCC/rp2040 && mkdir build && cd build && cmake ..
+      
+    - name: make
+      run: cd PhobGCC-SW/PhobGCC/rp2040/build && make
