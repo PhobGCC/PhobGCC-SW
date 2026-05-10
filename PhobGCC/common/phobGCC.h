@@ -45,7 +45,7 @@ ControlConfig _controls{
 	.lConfig = 0,
 	.rConfig = 0,
 	.triggerConfigMin = 0,
-	.triggerConfigMax = 8,
+	.triggerConfigMax = 9,
 	.triggerDefault = 0,
 	.lTriggerOffset = 49,
 #ifndef B0XXRIGHT
@@ -2094,6 +2094,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 				tempBtn.La = (uint8_t) 255;
 			}
 			break;
+		case 9: //Scales analog trigger values but no digital
+			tempBtn.L = 0;
+			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, triggerScaleL) * shutoffLa;
+			break;
 		default:
 			tempBtn.La = (uint8_t) readLa(pin, controls.lTrigInitial, 1) * shutoffLa;
 	}
@@ -2144,6 +2148,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 			} else {
 				tempBtn.Ra = (uint8_t) 255;
 			}
+			break;
+		case 9: //Scales analog trigger values but no digital
+			tempBtn.R = 0;
+			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, triggerScaleR) * shutoffRa;
 			break;
 		default:
 			tempBtn.Ra = (uint8_t) readRa(pin, controls.rTrigInitial, 1) * shutoffRa;
@@ -2476,7 +2484,7 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 			adjustCardinalSnapping(CSTICK, DECREASE, btn, hardware, controls);
 		} else if(hardware.R && hardware.S && !hardware.A && !hardware.L && !hardware.X && !hardware.Y) { //Show Current C-stick Settings (ignore R remap and R trigger toggle and LRAS)
 			showCstickSettings(btn, hardware, controls, gains);
-#ifdef B0XXRIGHT
+#ifndef B0XXRIGHT
 		} else if(hardware.A && hardware.B && hardware.L) { //Toggle Analog L
 			settingChangeCount++;
 			nextTriggerState(LTRIGGER, btn, hardware, controls);
