@@ -873,7 +873,7 @@ int main() {
 #endif //PHOBVISION
 
 #ifdef NEOPIXEL_CHAIN
-	neopixel = new WS2812(_ledCount, _pinLED);
+	neopixel = new WS2812(_ledCount, _pinLED, pio1, 0);
 	neopixel->begin();
 	writeLED(neopixel);
 #endif //NEOPIXEL_CHAIN
