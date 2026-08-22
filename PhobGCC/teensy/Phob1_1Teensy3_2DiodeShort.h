@@ -12,6 +12,10 @@
 //Hardware specific code for half duplex—using one pin for both TX and RX
 #define HALFDUPLEX
 
+//Hardware-specific code for gamecube-function boards
+#define DPAD
+#define ANALOG_TRIG
+
 //defining which pin is what on the teensy
 const int _pinLa = 16;
 const int _pinRa = 23;

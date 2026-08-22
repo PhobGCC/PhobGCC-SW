@@ -1,9 +1,17 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#ifndef CLEANADC
 #define CLEANADC
-#endif //CLEANADC
+
+#define SPI_ADC
+//#define MCP3002
+#define MCP3202
+
+#define DPAD
+
+#define ANALOG_TRIG
+
+#define PHOBVISION
 
 //defining which pin is what
 //GPIO

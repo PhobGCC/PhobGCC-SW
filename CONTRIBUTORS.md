@@ -54,3 +54,7 @@ https://github.com/obstruse/pico-composite8
 Rowan Easter-Robinson - CurveFitting - 2021-12-28 - Public Domain - Verbatim
 
 https://registry.platformio.org/libraries/rotario/CurveFitting
+
+PDBeal - pico-ws2812 - 2026-03-28 - LGPLv3 - Verbatim
+
+https://github.com/PDBeal/pico-ws2812

@@ -46,7 +46,7 @@ void setPinModes(){
 	pinMode(_pinCy,INPUT_DISABLE);
 }
 
-void readButtons(const Pins &pin, Buttons &hardware) {
+void readButtons(const Pins &pin, Buttons &hardware, ExtraButtons &) {
 	hardware.A = !digitalRead(pin.pinA);
 	hardware.B = !digitalRead(pin.pinB);
 	hardware.X = !digitalRead(pin.pinX);

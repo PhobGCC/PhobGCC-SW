@@ -63,7 +63,7 @@ const char stickdbgCang[] = "C bounds angles";
 
 const char set_overAutoOn[] = "Autoinit on";
 const char set_overAutoOff[] = "Autoinit off";
-const char set_overRemap[] = "=> ABLURXYZ";
+const char set_overRemap[] = "=> ABULRXYZ";
 
 //Guide relative to offset   =  10  50   100  150
 const char leftStick[]       = "Left stick:";

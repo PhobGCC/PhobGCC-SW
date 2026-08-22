@@ -966,6 +966,14 @@ void drawLtrigger(unsigned char bitmap[],
 			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
 			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
 			break;
+		case 9:
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 210, 15, lrtrigger22); //multiplier:
+			drawFloat( bitmap, 140, 210, 15, 0, 6, (0.0112f * controls.lTriggerOffset) + 0.4494f);
+			break;
 	}
 	//graph?
 }
@@ -1046,6 +1054,14 @@ void drawRtrigger(unsigned char bitmap[],
 			drawInt(   bitmap, 400, 130, 15, 0, controls.rTriggerOffset);
 			drawString(bitmap,  30, 150, 15, lrtrigger25); //analog multiplier of 2.5x
 			drawString(bitmap,  30, 170, 15, lrtrigger26); //enabling lightshield with short trigger travel
+			break;
+		case 9:
+			drawString(bitmap,  30, 130, 15, lrtrigger19); //this increases sensitivity
+			drawString(bitmap,  30, 150, 15, lrtrigger20); //a multiplier that changes
+			drawString(bitmap,  30, 170, 15, lrtrigger21); //faster response in ult
+			drawString(bitmap,  30, 190, 15, lrtrigger7); //disables hard shield preserves lras
+			drawString(bitmap,  30, 210, 15, lrtrigger22); //multiplier:
+			drawFloat( bitmap, 140, 210, 15, 0, 6, (0.0112f * controls.rTriggerOffset) + 0.4494f);
 			break;
 	}
 	//graph?

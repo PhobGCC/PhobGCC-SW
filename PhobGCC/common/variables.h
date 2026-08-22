@@ -8,6 +8,8 @@ Buttons _btn;
 
 Buttons _hardware;
 
+ExtraButtons _extraBtn;
+
 RawStick _raw;
 
 StickParams _aStickParams;

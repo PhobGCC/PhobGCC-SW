@@ -613,17 +613,17 @@ void navigateMenu(unsigned char bitmap[],
 					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
-						controls.astickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.astickCardinalSnapping+1);
+						controls.astickCardinalSnapping = fmin(controls.acardinalSnappingMax, controls.astickCardinalSnapping+1);
 					} else {//itemIndex == 1
-						controls.cstickCardinalSnapping = fmin(controls.cardinalSnappingMax, controls.cstickCardinalSnapping+1);
+						controls.cstickCardinalSnapping = fmin(controls.ccardinalSnappingMax, controls.cstickCardinalSnapping+1);
 					}
 					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
-						controls.astickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.astickCardinalSnapping-1);
+						controls.astickCardinalSnapping = fmax(controls.acardinalSnappingMin, controls.astickCardinalSnapping-1);
 					} else {//itemIndex == 1
-						controls.cstickCardinalSnapping = fmax(controls.cardinalSnappingMin, controls.cstickCardinalSnapping-1);
+						controls.cstickCardinalSnapping = fmax(controls.ccardinalSnappingMin, controls.cstickCardinalSnapping-1);
 					}
 					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
 					redraw = 1;

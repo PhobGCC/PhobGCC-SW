@@ -23,12 +23,14 @@ add_executable(phobgcc_rp2040
 	src/joybus.cpp
 	src/main.cpp
 	src/navigateMenu.cpp
+	src/ws2812.cpp
 	src/storage.cpp
 	src/games/ping.cpp
 	)
 
 pico_generate_pio_header(phobgcc_rp2040 ${CMAKE_CURRENT_LIST_DIR}/pio/joybus.pio)
 pico_generate_pio_header(phobgcc_rp2040 ${CMAKE_CURRENT_LIST_DIR}/pio/cvideo.pio)
+pico_generate_pio_header(phobgcc_rp2040 ${CMAKE_CURRENT_LIST_DIR}/pio/ws2812.pio)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/joybus.pio
@@ -38,6 +40,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/joybus.pio.h
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/cvideo.pio.h
 	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/cvideo.pio
 	COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/cvideo.pio ${CMAKE_CURRENT_LIST_DIR}/generated/cvideo.pio.h
+	)
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/ws2812.pio.h
+	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio
+	COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio ${CMAKE_CURRENT_LIST_DIR}/generated/ws2812.pio.h
 	)
 
 target_compile_definitions(phobgcc_rp2040
