@@ -7,6 +7,9 @@
 #include "structsAndEnums.h"
 #include "filter.h"
 
+//if you want to digitize the cstick output
+//#define DIGITIZEDCSTICK
+
 //TODO: either put these const globals in varables.h or make them #defines
 //origin values, useful for writing readable stick positions
 const int _intOrigin = 127;
@@ -188,7 +191,7 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 				}
 			}
 		} else {
-            /*
+#ifndef DIGITIZEDCSTICK //normal behavior
 			const int snapping = controls.cstickCardinalSnapping;
 			if(snapping > 0) {
 				if((abs(*xOut)<snapping+0.5) && (abs(*yOut)>=79.5)){
@@ -213,10 +216,34 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 					}
 				}
 			}
-            */
+#else //DIGITIZEDCSTICK
             //60 unit activation radius
             //Cardinals are 50 degrees wide
 			//Diagonals are 40 degrees wide
+
+			//Like button-input cstick
+			//Repurpose cardinal snapping for setting the diagonal
+			//repurpose cardinal snapping for setting the diagonal
+			int cxDiag;
+			int cyDiag;
+			const int diagSetting = controls.cstickCardinalSnapping;
+			switch(diagSetting) {
+				case 0:
+					cxDiag = 42;
+					cyDiag = 68;
+					break;
+				case 1:
+					cxDiag = 69;
+					cyDiag = 40;
+					break;
+				case 2:
+					cxDiag = 70;
+					cyDiag = 70;
+					break;
+				default:
+					cxDiag = 42;
+					cyDiag = 68;
+			}
 			if((*xOut)*(*xOut) + (*yOut)*(*yOut) > 60*60) {
 				if(abs(*yOut) > 2.1445*abs(*xOut)) {
 					//greater than 65 degrees from horizontal
@@ -226,8 +253,8 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 				} else if(abs(*yOut) > 0.46631*abs(*xOut)) {
 					//greater than 25 degrees from horizontal, but less than 65
 					//diagonal
-					*xOut = (*xOut > 0) ? 69 : -69;
-					*yOut = (*yOut > 0) ? 40 : -40;
+					*xOut = (*xOut > 0) ? cxDiag : -cxDiag;
+					*yOut = (*yOut > 0) ? cyDiag : -cyDiag;
 				} else {
 					//less than 25 degrees from horizontal
 					//horizontal
@@ -238,6 +265,7 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 				*xOut = 0;
 				*yOut = 0;
             }
+#endif //DIGITIZEDCSTICK
 		}
 
 		if((abs(*xOut)<3) && (abs(*yOut)<3)) {

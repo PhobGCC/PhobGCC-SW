@@ -100,17 +100,17 @@ ControlConfig _controls{
 	.acardinalSnappingMin = -2,
 	.acardinalSnappingMax = 6,
 	.acardinalSnappingDefault = 6,
-#ifndef CBUTTONS
+#if !defined(CBUTTONS) && !defined(DIGITIZEDCSTICK) //DIGITIZEDCSTICK comes from stick.h
 	.cstickCardinalSnapping = 6,
 	.ccardinalSnappingMin = -2,
 	.ccardinalSnappingMax = 6,
 	.ccardinalSnappingDefault = 6,
-#else //CBUTTONS
+#else //CBUTTONS or DIGITIZEDCSTICK
 	.cstickCardinalSnapping = 0,
 	.ccardinalSnappingMin = 0,
-	.ccardinalSnappingMax = 1,
+	.ccardinalSnappingMax = 2,
 	.ccardinalSnappingDefault = 0,
-#endif //CBUTTONS
+#endif //CBUTTONS or DIGITIZEDCSTICK
 	.astickAnalogScaler = 100,
 	.cstickAnalogScaler = 100,
 	.analogScalerMin = 90,
@@ -2237,9 +2237,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 	if(tempExtra.Cu) {
 		Cy += 1;
 	}
+	//Repurpose cardinal snapping for setting the diagonal
 	int cxDiag;
 	int cyDiag;
-	//repurpose cardinal snapping for setting the diagonal
 	const int diagSetting = controls.cstickCardinalSnapping;
 	switch(diagSetting) {
 		case 0:
@@ -2249,6 +2249,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 		case 1:
 			cxDiag = 69;
 			cyDiag = 40;
+			break;
+		case 2:
+			cxDiag = 70;
+			cyDiag = 70;
 			break;
 		default:
 			cxDiag = 42;
