@@ -74,9 +74,9 @@ void recomputeGains(const ControlConfig controls, FilterGains &gains, FilterGain
 	//Even if it's not *exactly* 1000 Hz, it should be constant enough.
 	//Hopefully.
 	//So now, this should be called any time gains gets changed.
-	const float timeFactor = 1.0 / 1.2;
-	const float timeDivisor = 1.2 / 1.0;
-	normGains.maxStick      = gains.maxStick*gains.maxStick;//we actually use the square
+	const float timeFactor = 1.0f / 1.2f;
+	const float timeDivisor = 1.2f / 1.0f;
+	normGains.maxStick      = 1.0f / (gains.maxStick*gains.maxStick);//use the inverse square to avoid division in runKalman
 	normGains.xVelDecay     = gains.xVelDecay      * timeFactor;
 	normGains.yVelDecay     = gains.yVelDecay      * timeFactor;
 	normGains.xVelPosFactor = gains.xVelPosFactor  * timeFactor;
@@ -125,15 +125,15 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	yPos = yZ;
 	xVel = xPos - oldXPos;
 	yVel = yPos - oldYPos;
-	const float xVelSmooth = 0.5*(xVel + oldXVel);
-	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xVelSmooth = 0.5f*(xVel + oldXVel);
+	const float yVelSmooth = 0.5f*(yVel + oldYVel);
 	const float xAccel = xVel - oldXVel;
 	const float yAccel = yVel - oldYVel;
 	const float oldXPosDiff = oldXPos - oldXPosFilt;
 	const float oldYPosDiff = oldYPos - oldYPosFilt;
 
 	//compute stick position exponents for weights
-	const float stickDistance2 = fmin(normGains.maxStick, xPos*xPos + yPos*yPos)/normGains.maxStick;//0-1
+	const float stickDistance2 = fminf(1.0f, (xPos*xPos + yPos*yPos)*normGains.maxStick);//0-1
 	const float stickDistance6 = stickDistance2*stickDistance2*stickDistance2;
 
 	//the current velocity weight for the filtered velocity is the stick r^2
@@ -167,8 +167,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	if(controls.xSnapback > 0){
 		xVelFilt = velWeight1*xVel + (1-normGains.xVelDecay)*velWeight2*oldXVelFilt + normGains.xVelPosFactor*oldXPosDiff;
 
-		const float xPosWeightVelAcc = 1 - fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
-		const float xPosWeight1 = fmax(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeightVelAcc = 1 - fminf(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
+		const float xPosWeight1 = fmaxf(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		xPosFilt = xPosWeight1*xPos +
@@ -176,8 +176,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	} else if(controls.xSnapback < 0) {
 		const float xLPF = oldXPosFilt*normGains.xVelDamp + xPos*(1-normGains.xVelDamp);
 
-		const float xPosWeightVelAcc = 1 - fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
-		const float xPosWeight1 = fmax(xPosWeightVelAcc, stickDistance6);
+		const float xPosWeightVelAcc = 1 - fminf(1, xVelSmooth*xVelSmooth*normGains.velThresh + xAccel*xAccel*normGains.accelThresh);
+		const float xPosWeight1 = fmaxf(xPosWeightVelAcc, stickDistance6);
 		const float xPosWeight2 = 1-xPosWeight1;
 
 		xPosFilt = xPosWeight1*xPos + xPosWeight2*xLPF;
@@ -188,8 +188,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	if(controls.ySnapback > 0){
 		yVelFilt = velWeight1*yVel + (1-normGains.yVelDecay)*velWeight2*oldYVelFilt + normGains.yVelPosFactor*oldYPosDiff;
 
-		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
-		const float yPosWeight1 = fmax(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeightVelAcc = 1 - fminf(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
+		const float yPosWeight1 = fmaxf(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		yPosFilt = yPosWeight1*yPos +
@@ -197,8 +197,8 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 	} else if(controls.ySnapback < 0) {
 		const float yLPF = oldYPosFilt*normGains.yVelDamp + yPos*(1-normGains.yVelDamp);
 
-		const float yPosWeightVelAcc = 1 - fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
-		const float yPosWeight1 = fmax(yPosWeightVelAcc, stickDistance6);
+		const float yPosWeightVelAcc = 1 - fminf(1, yVelSmooth*yVelSmooth*normGains.velThresh + yAccel*yAccel*normGains.accelThresh);
+		const float yPosWeight1 = fmaxf(yPosWeightVelAcc, stickDistance6);
 		const float yPosWeight2 = 1-yPosWeight1;
 
 		yPosFilt = yPosWeight1*yPos + yPosWeight2*yLPF;
@@ -211,15 +211,29 @@ void runKalman(float &xPosFilt, float &yPosFilt, const float xZ,const float yZ, 
 //The output should be 0 for 0.
 float calcWaveshapeMult(const int setting){
 	if (setting > 0 && setting <= 5) {
-		return 1.0/(440 - 40*setting);
+		return 1.0f/(440 - 40*setting);
 	} else if (setting > 5 && setting <= 15) {
-		return 1.0/(340 - 20*setting);
+		return 1.0f/(340 - 20*setting);
 	} else if (setting > 15 && setting <= 24) {
-		return 1.0/(100 - 4*setting);
+		return 1.0f/(100 - 4*setting);
 	} else {
 		return 0;
 	}
 }
+
+//The waveshaping settings only change from the menus, so we avoid redoing
+//the float division every millisecond by caching the last result.
+struct WaveshapeMultCache {
+	int setting = 0;
+	float mult = 0;//calcWaveshapeMult(0)
+	float get(const int newSetting) {
+		if(newSetting != setting) {
+			setting = newSetting;
+			mult = calcWaveshapeMult(newSetting);
+		}
+		return mult;
+	}
+};
 
 //This simulates an idealized sort of pode:
 // if the stick is moving fast, it responds poorly, while
@@ -228,18 +242,22 @@ float calcWaveshapeMult(const int setting){
 // the smart snapback filter, it should be able to hold the
 // output at the rim longer when released.
 void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains){
-	volatile static float oldXPos = 0;
-	volatile static float oldYPos = 0;
-	volatile static float oldXVel = 0;
-	volatile static float oldYVel = 0;
+	//not volatile: only this function touches them, so they can stay in registers
+	static float oldXPos = 0;
+	static float oldYPos = 0;
+	static float oldXVel = 0;
+	static float oldYVel = 0;
 
-	volatile static float oldXOut = 0;
-	volatile static float oldYOut = 0;
+	static float oldXOut = 0;
+	static float oldYOut = 0;
+
+	static WaveshapeMultCache xMult;
+	static WaveshapeMultCache yMult;
 
 	const float xVel = xPos - oldXPos;
 	const float yVel = yPos - oldYPos;
-	const float xVelSmooth = 0.5*(xVel + oldXVel);
-	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xVelSmooth = 0.5f*(xVel + oldXVel);
+	const float yVelSmooth = 0.5f*(yVel + oldYVel);
 	const float xAccel = xVel - oldXVel;
 	const float yAccel = yVel - oldYVel;
 
@@ -253,8 +271,8 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(abs(controls.axWaveshaping));
-	const float yFactor = calcWaveshapeMult(abs(controls.ayWaveshaping));
+	const float xFactor = xMult.get(abs(controls.axWaveshaping));
+	const float yFactor = yMult.get(abs(controls.ayWaveshaping));
 
 	const bool highPodeX = controls.axWaveshaping < 0;
 	const bool highPodeY = controls.ayWaveshaping < 0;
@@ -262,9 +280,9 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//for negative waveshaping, we want it to be more sensitive to acceleration than the snapback filter.
 	const float accelFactor = 3;
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
+	const float oldXPosWeight = fminf(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*xFactor*accelFactor);
+	const float oldYPosWeight = fminf(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*yFactor*accelFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
@@ -280,18 +298,22 @@ void aRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 }
 //We need to duplicate this and call each one only once so that we don't reuse the history and screw things up.
 void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOut, const ControlConfig &controls, const FilterGains &normGains){
-	volatile static float oldXPos = 0;
-	volatile static float oldYPos = 0;
-	volatile static float oldXVel = 0;
-	volatile static float oldYVel = 0;
+	//not volatile: only this function touches them, so they can stay in registers
+	static float oldXPos = 0;
+	static float oldYPos = 0;
+	static float oldXVel = 0;
+	static float oldYVel = 0;
 
-	volatile static float oldXOut = 0;
-	volatile static float oldYOut = 0;
+	static float oldXOut = 0;
+	static float oldYOut = 0;
+
+	static WaveshapeMultCache xMult;
+	static WaveshapeMultCache yMult;
 
 	const float xVel = xPos - oldXPos;
 	const float yVel = yPos - oldYPos;
-	const float xVelSmooth = 0.5*(xVel + oldXVel);
-	const float yVelSmooth = 0.5*(yVel + oldYVel);
+	const float xVelSmooth = 0.5f*(xVel + oldXVel);
+	const float yVelSmooth = 0.5f*(yVel + oldYVel);
 	const float xAccel = xVel - oldXVel;
 	const float yAccel = yVel - oldYVel;
 
@@ -305,8 +327,8 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//extreme pode is like 32-80
 	//32 should be the limit
 
-	const float xFactor = calcWaveshapeMult(abs(controls.cxWaveshaping));
-	const float yFactor = calcWaveshapeMult(abs(controls.cyWaveshaping));
+	const float xFactor = xMult.get(abs(controls.cxWaveshaping));
+	const float yFactor = yMult.get(abs(controls.cyWaveshaping));
 
 	const bool highPodeX = controls.cxWaveshaping < 0;
 	const bool highPodeY = controls.cyWaveshaping < 0;
@@ -314,9 +336,9 @@ void cRunWaveShaping(const float xPos, const float yPos, float &xOut, float &yOu
 	//for negative waveshaping, we want it to be more sensitive to acceleration than the snapback filter.
 	const float accelFactor = 3;
 
-	const float oldXPosWeight = fmin(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
+	const float oldXPosWeight = fminf(1, xVelSmooth*xVelSmooth*normGains.velThresh*xFactor + highPodeX*xAccel*xAccel*normGains.accelThresh*xFactor*accelFactor);
 	const float newXPosWeight = 1 - oldXPosWeight;
-	const float oldYPosWeight = fmin(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*yFactor*accelFactor);
+	const float oldYPosWeight = fminf(1, yVelSmooth*yVelSmooth*normGains.velThresh*yFactor + highPodeY*yAccel*yAccel*normGains.accelThresh*yFactor*accelFactor);
 	const float newYPosWeight = 1 - oldYPosWeight;
 
 	xOut = oldXOut*oldXPosWeight + xPos*newXPosWeight;
