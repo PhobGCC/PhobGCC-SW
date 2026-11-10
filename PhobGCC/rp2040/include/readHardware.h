@@ -207,19 +207,19 @@ void readADCScale(float &, float ) {
 #ifdef ANALOG_TRIG
 int readLa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinLadc);
-	float temp = adc_read() / 16.0;
+	float temp = adc_read() * (1.0f/16.0f);
 	if(temp < 3) {
 		temp = 0.0f;
 	}
-	return fmin(255, fmax(0, temp - initial) * scale);
+	return fminf(255.0f, fmaxf(0.0f, temp - initial) * scale);
 }
 int readRa(const Pins &, const int initial, const float scale) {
 	adc_select_input(_pinRadc);
-	float temp = adc_read() / 16.0;
+	float temp = adc_read() * (1.0f/16.0f);
 	if(temp < 3) {
 		temp = 0.0f;
 	}
-	return fmin(255, fmax(0, temp - initial) * scale);
+	return fminf(255.0f, fmaxf(0.0f, temp - initial) * scale);
 }
 #endif //ANALOG_TRIG
 
