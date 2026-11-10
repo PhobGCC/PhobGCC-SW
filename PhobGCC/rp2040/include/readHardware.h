@@ -309,7 +309,7 @@ int __time_critical_func(readExtAdc)(const WhichStick whichStick, const WhichAxi
 	if(whichAxis == YAXIS) {
 		configBits[0] =     0b11110000;//channel 1
 	}
-	uint8_t buf[2];
+	uint8_t buf[3];
 	//asm volatile("nop \n nop \n nop");//these were in the example; are they needed?
 	if(whichStick == ASTICK) {
 		//left stick
