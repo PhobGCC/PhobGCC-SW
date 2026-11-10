@@ -50,7 +50,7 @@ const NotchStatus _notchStatusDefaults[_noOfNotches] =    {CARDINAL,    TERT_ACT
 const int _notchAdjOrder[_noOfAdjNotches] =               {2,           6,           10,          14,          1,           3,           5,           7,           9,           11,          13,          15};
 
 float linearize(const float point, const float coefficients[]){
-	return (coefficients[0]*(point*point*point) + coefficients[1]*(point*point) + coefficients[2]*point + coefficients[3]);
+	return (((coefficients[0]*point + coefficients[1])*point + coefficients[2])*point + coefficients[3]);
 };
 
 /*
