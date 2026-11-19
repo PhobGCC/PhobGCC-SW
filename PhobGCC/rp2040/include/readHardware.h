@@ -172,30 +172,31 @@ void setPinModes() {
 }
 
 void readButtons(const Pins &, Buttons &hardware, ExtraButtons &extra) {
-	hardware.A  = !gpio_get(_pinA);
-	hardware.B  = !gpio_get(_pinB);
-	hardware.X  = !gpio_get(_pinX);
-	hardware.Y  = !gpio_get(_pinY);
-	hardware.L  = !gpio_get(_pinL);
-	hardware.R  = !gpio_get(_pinR);
-	hardware.Z  = !gpio_get(_pinZ);
-	hardware.S  = !gpio_get(_pinS);
+	const uint32_t pins = ~gpio_get_all();
+	hardware.A  = (pins >> _pinA) & 1;
+	hardware.B  = (pins >> _pinB) & 1;
+	hardware.X  = (pins >> _pinX) & 1;
+	hardware.Y  = (pins >> _pinY) & 1;
+	hardware.L  = (pins >> _pinL) & 1;
+	hardware.R  = (pins >> _pinR) & 1;
+	hardware.Z  = (pins >> _pinZ) & 1;
+	hardware.S  = (pins >> _pinS) & 1;
 #ifdef DPAD
-	hardware.Dr = !gpio_get(_pinDr);
-	hardware.Du = !gpio_get(_pinDu);
-	hardware.Dl = !gpio_get(_pinDl);
-	hardware.Dd = !gpio_get(_pinDd);
+	hardware.Dr = (pins >> _pinDr) & 1;
+	hardware.Du = (pins >> _pinDu) & 1;
+	hardware.Dl = (pins >> _pinDl) & 1;
+	hardware.Dd = (pins >> _pinDd) & 1;
 #endif //DPAD
 #ifdef B0XXRIGHT
-	extra.LS = !gpio_get(_pinLS);
-	extra.MS = !gpio_get(_pinMS);
-	extra.UP = !gpio_get(_pinUP);
+	extra.LS = (pins >> _pinLS) & 1;
+	extra.MS = (pins >> _pinMS) & 1;
+	extra.UP = (pins >> _pinUP) & 1;
 #endif //B0XXRIGHT
 #ifdef CBUTTONS
-	extra.Cl = !gpio_get(_pinCl);
-	extra.Cr = !gpio_get(_pinCr);
-	extra.Cd = !gpio_get(_pinCd);
-	extra.Cu = !gpio_get(_pinCu);
+	extra.Cl = (pins >> _pinCl) & 1;
+	extra.Cr = (pins >> _pinCr) & 1;
+	extra.Cd = (pins >> _pinCd) & 1;
+	extra.Cu = (pins >> _pinCu) & 1;
 #endif //CBUTTONS
 }
 
