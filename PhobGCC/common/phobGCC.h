@@ -108,7 +108,7 @@ ControlConfig _controls{
 #else //CBUTTONS or DIGITIZEDCSTICK
 	.cstickCardinalSnapping = 0,
 	.ccardinalSnappingMin = 0,
-	.ccardinalSnappingMax = 2,
+	.ccardinalSnappingMax = 4,
 	.ccardinalSnappingDefault = 0,
 #endif //CBUTTONS or DIGITIZEDCSTICK
 	.astickAnalogScaler = 100,
@@ -2253,6 +2253,14 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ExtraButtons &ex
 		case 2:
 			cxDiag = 70;
 			cyDiag = 70;
+			break;
+		case 3:
+			cxDiag = 100;
+			cyDiag = 0;
+			break;
+		case 4:
+			cxDiag = 0;
+			cyDiag = 100;
 			break;
 		default:
 			cxDiag = 42;

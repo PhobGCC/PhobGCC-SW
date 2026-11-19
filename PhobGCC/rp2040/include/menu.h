@@ -21,6 +21,9 @@ enum ScreenNumber {//mark finished ones with asterisks
 	MENU_GEOM,			//16	|   3
 	MENU_CARDINALS,		//17	|    4
 	MENU_RADIUS,		//18	|    4
+#ifdef DIGITIZEDCSTICK
+	MENU_DIGCSTICK,     //18.5  |    4
+#endif //DIGITIZEDCSTICK
 	MENU_SETTINGS,		//19	|  2
 	MENU_SET_OVER,		//20	|   3*		Overview of all settings
 	MENU_REMAP,			//21	|   3*
@@ -47,7 +50,11 @@ enum ScreenNumber {//mark finished ones with asterisks
 //2. Number of child indices: 255 = leaf node, 0 = one child node but not visible
 //3. List of child indices (up to 6)
 
+#ifndef DIGITIZEDCSTICK
 #define MENUCOUNT 38
+#else //DIGITIZEDCSTICK
+#define MENUCOUNT 39
+#endif //DIGITIZEDCSTICK
 const uint8_t MenuIndex[MENUCOUNT][8] = {
 //   PARENT			COUNT	NEXT1			NEXT2			NEXT3			NEXT4			NEXT5			NEXT6
 	{255,			0,		MENU_MAIN,		255,			255,			255,			255,			255},//splashscreen
@@ -66,9 +73,16 @@ const uint8_t MenuIndex[MENUCOUNT][8] = {
 	{MENU_FILTER,	255,	255,			255,			255,			255,			255,			255},//a smoothing
 	{MENU_FILTER,	255,	255,			255,			255,			255,			255,			255},//c snapback
 	{MENU_FILTER,	255,	255,			255,			255,			255,			255,			255},//c waveshping
+#ifndef DIGITIZEDCSTICK
 	{MENU_STICK,	2,		MENU_CARDINALS,	MENU_RADIUS,	255,			255,			255,			255},//geometry settings
+#else //DIGITIZEDCSTICK
+	{MENU_STICK,	3,		MENU_CARDINALS,	MENU_RADIUS,	MENU_DIGCSTICK,	255,			255,			255},//geometry settings
+#endif //DIGITIZEDCSTICK
 	{MENU_GEOM,		255,	255,			255,			255,			255,			255,			255},//cardinal snapping
 	{MENU_GEOM,		255,	255,			255,			255,			255,			255,			255},//radius scaling
+#ifdef DIGITIZEDCSTICK
+	{MENU_GEOM,		255,	255,			255,			255,			255,			255,			255},//digitized cstick
+#endif //DIGITIZEDCSTICK
 	{MENU_MAIN,		6,		MENU_SET_OVER,	MENU_REMAP,		MENU_RUMBLE,	MENU_TRIGGER,	MENU_TOURNEY,	MENU_RESET},//settings menu
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//setting overview
 	{MENU_SETTINGS,	255,	255,			255,			255,			255,			255,			255},//remapping
@@ -113,6 +127,9 @@ const char MenuNames[MENUCOUNT][28] = {
 	"Stick Geometry Settings    ",
 	"Cardinal Snapping          ",
 	"Stick Radius Scaling       ",
+#ifdef DIGITIZEDCSTICK
+	"Digitized C-Stick Settings ",
+#endif //DIGITIZEDCSTICK
 	"Settings                   ",
 	"Settings Overview          ",
 	"Button Remapping           ",

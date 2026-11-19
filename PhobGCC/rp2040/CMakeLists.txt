@@ -52,6 +52,7 @@ target_compile_definitions(phobgcc_rp2040
 	PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 	#PICO_DEFAULT_BOOT_STAGE2=boot2_generic_03h
 	#PICO_FLASH_SPI_CLKDIV=8
+	#DIGITIZEDCSTICK #uncomment for digitized cstick
 	)
 
 target_link_libraries(phobgcc_rp2040

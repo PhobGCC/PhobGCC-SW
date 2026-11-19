@@ -128,6 +128,14 @@ const char radius3[]         = "Melee only sees <=80, and max possible is 127.";
 const char radius4[]         = "Min:     Max:      Default: 100";
 
 //Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
+const char digitized1[]      = "This adjusts how the C-Stick is digitized.";
+const char digitized2[]      = "50 degree cardinals, slideoff diagonals";
+const char digitized3[]      = "50 degree cardinals, angled fsmash diagonals";
+const char digitized4[]      = "50 degree cardinals, perfect diagonals";
+const char digitized5[]      = "100 degree horizontal cardinals, no diagonals";
+const char digitized6[]      = "100 degree vertical cardinals, no diagonals";
+
+//Guide for 30 offset        =  40    100       200       300       400       500 //510 is the last char
 const char remap1[]          = "You may remap A, B, Du, L, R, X, Y, or Z.";
 const char remap2[]          = "When L or R are swapped, they are digital only.";
 const char remap3[]          = "Use Trigger Mode 5 to get an analog trigger";

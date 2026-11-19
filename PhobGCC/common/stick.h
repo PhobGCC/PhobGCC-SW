@@ -218,45 +218,63 @@ void notchRemap(const float xIn, const float yIn, float* xOut, float* yOut, cons
 			}
 #else //DIGITIZEDCSTICK
             //60 unit activation radius
-            //Cardinals are 50 degrees wide
-			//Diagonals are 40 degrees wide
 
 			//Like button-input cstick
 			//Repurpose cardinal snapping for setting the diagonal
-			//repurpose cardinal snapping for setting the diagonal
 			int cxDiag;
 			int cyDiag;
+			float mappingAngle;
 			const int diagSetting = controls.cstickCardinalSnapping;
 			switch(diagSetting) {
-				case 0:
+				case 0: //slideoff
 					cxDiag = 42;
 					cyDiag = 68;
+					mappingAngle = 25;
 					break;
-				case 1:
+				case 1: //angled fsmash
 					cxDiag = 69;
 					cyDiag = 40;
+					mappingAngle = 25;
 					break;
-				case 2:
+				case 2: //perfect diagonal
 					cxDiag = 70;
 					cyDiag = 70;
+					mappingAngle = 25;
 					break;
-				default:
+				case 3: //horizontal bias, 10 degree diags
+					cxDiag = 100;
+					cyDiag = 0;
+					mappingAngle = 42.5;
+					break;
+				case 4: //vertical bias, 10 degree diags
+					cxDiag = 0;
+					cyDiag = 100;
+					mappingAngle = 42.5;
+					break;
+				default: //same as slideoff
 					cxDiag = 42;
 					cyDiag = 68;
+					mappingAngle = 25;;
+			}
+			float upperThresh;
+			float lowerThresh;
+			if(mappingAngle == 25) {
+				upperThresh = 2.1445;
+				lowerThresh = 0.46631;
+			} else if(mappingAngle == 42.5) {
+				upperThresh = 1.0913;
+				lowerThresh = 0.91633;
 			}
 			if((*xOut)*(*xOut) + (*yOut)*(*yOut) > 60*60) {
-				if(abs(*yOut) > 2.1445*abs(*xOut)) {
-					//greater than 65 degrees from horizontal
+				if(abs(*yOut) > upperThresh*abs(*xOut)) {
 					//vertical
 					*xOut = 0;
 					*yOut = (*yOut > 0) ? 100 : -100;
-				} else if(abs(*yOut) > 0.46631*abs(*xOut)) {
-					//greater than 25 degrees from horizontal, but less than 65
+				} else if(abs(*yOut) > lowerThresh*abs(*xOut)) {
 					//diagonal
 					*xOut = (*xOut > 0) ? cxDiag : -cxDiag;
 					*yOut = (*yOut > 0) ? cyDiag : -cyDiag;
 				} else {
-					//less than 25 degrees from horizontal
 					//horizontal
 					*xOut = (*xOut > 0) ? 100 : -100;
 					*yOut = 0;

@@ -603,35 +603,47 @@ void navigateMenu(unsigned char bitmap[],
 			case MENU_CARDINALS:
 				if(!changeMade) {
 					tempInt1 = controls.astickCardinalSnapping;
+#ifndef DIGITIZEDCSTICK
 					tempInt2 = controls.cstickCardinalSnapping;
+#endif //DIGITIZEDCSTICK
 				}
 				if(presses & DLPRESS) {
 					itemIndex = 0;
 					redraw = 1;
 				} else if(presses & DRPRESS) {
+#ifndef DIGITIZEDCSTICK
 					itemIndex = 1;
+#else //DIGITIZEDCSTICK
+					itemIndex = 0;
+#endif //DIGITIZEDCSTICK
 					redraw = 1;
 				} else if(presses & DUPRESS) {
 					if(itemIndex == 0) {
 						controls.astickCardinalSnapping = fmin(controls.acardinalSnappingMax, controls.astickCardinalSnapping+1);
+#ifndef DIGITIZEDCSTICK
 					} else {//itemIndex == 1
 						controls.cstickCardinalSnapping = fmin(controls.ccardinalSnappingMax, controls.cstickCardinalSnapping+1);
+#endif //DIGITIZEDCSTICK
 					}
 					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
 					redraw = 1;
 				} else if(presses & DDPRESS) {
 					if(itemIndex == 0) {
 						controls.astickCardinalSnapping = fmax(controls.acardinalSnappingMin, controls.astickCardinalSnapping-1);
+#ifndef DIGITIZEDCSTICK
 					} else {//itemIndex == 1
 						controls.cstickCardinalSnapping = fmax(controls.ccardinalSnappingMin, controls.cstickCardinalSnapping-1);
+#endif //DIGITIZEDCSTICK
 					}
 					changeMade = (controls.astickCardinalSnapping != tempInt1) || (controls.cstickCardinalSnapping != tempInt2);
 					redraw = 1;
 				} else if((presses & BSAVE) && changeMade) {
 					setCardinalSnappingSetting(controls.astickCardinalSnapping, ASTICK);
-					setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
 					tempInt1 = controls.astickCardinalSnapping;
+#ifndef DIGITIZEDCSTICK
+					setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
 					tempInt2 = controls.cstickCardinalSnapping;
+#endif //DIGITIZEDCSTICK
 					changeMade = false;
 					redraw = 1;
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
@@ -674,6 +686,28 @@ void navigateMenu(unsigned char bitmap[],
 					pleaseCommit = 1;//ask the other thread to commit settings to flash
 				}
 				return;
+#ifdef DIGITIZEDCSTICK
+			case MENU_DIGCSTICK:
+				if(!changeMade) {
+					tempInt1 = controls.cstickCardinalSnapping;
+				}
+				if(presses & DUPRESS) {
+					controls.cstickCardinalSnapping = fmin(controls.ccardinalSnappingMax, controls.cstickCardinalSnapping+1);
+					changeMade = (controls.cstickCardinalSnapping != tempInt1);
+					redraw = 1;
+				} else if(presses & DDPRESS) {
+					controls.cstickCardinalSnapping = fmax(controls.ccardinalSnappingMin, controls.cstickCardinalSnapping-1);
+					changeMade = (controls.cstickCardinalSnapping != tempInt1);
+					redraw = 1;
+				} else if((presses & BSAVE) && changeMade) {
+					setCardinalSnappingSetting(controls.cstickCardinalSnapping, CSTICK);
+					tempInt1 = controls.cstickCardinalSnapping;
+					changeMade = false;
+					redraw = 1;
+					pleaseCommit = 1;//ask the other thread to commit settings to flash
+				}
+				return;
+#endif //DIGITIZEDCSTICK
 			case MENU_REMAP:
 				if((presses & SPRESS) && currentRemapStep == -1) {
 					pleaseCommit = 10;

@@ -7,7 +7,8 @@ To build PhobGCC for the RP2040:
 5. Export the `pico-sdk` directory as an environment variable `export PICO_SDK_PATH=[directory containing]/pico-sdk`
 6. Clone the PhobGCC-SW repository.
 7. Uncomment the appropriate `#include` line for your board in `../common/phobGCC.h`.
-8. `cd` into the `PhobGCC/rp2040` subdirectory inside the `PhobGCC-SW` folder.
-9. `mkdir build && cd build`
-10. `cmake ..`
-11. `make`?
+8. In `CMakeLists.txt` you can uncomment a line to enable digitized analog cstick
+9. `cd` into the `PhobGCC/rp2040` subdirectory inside the `PhobGCC-SW` folder.
+10. `mkdir build && cd build`
+11. `cmake ..`
+12. `make`?

@@ -527,7 +527,11 @@ void drawCardinals(unsigned char bitmap[],
 	if(changeMade) {
 		drawString(bitmap, 300, 20, 15, bToSave);
 	}
+#ifndef DIGITIZEDCSTICK
 	drawString(bitmap,  30,  50, 15, lr_ud);
+#else //DIGITIZEDCSTICK
+	drawString(bitmap,  30,  50, 15, ud_only);
+#endif //DIGITIZEDCSTICK
 	drawString(bitmap,  30,  70, 15, cardinals1);
 	drawString(bitmap,  30,  90, 15, cardinals2);
 	drawString(bitmap,  30, 110, 15, cardinals3);
@@ -535,6 +539,7 @@ void drawCardinals(unsigned char bitmap[],
 	drawString(bitmap,  30, 150, 15, cardinals5);
 	drawString(bitmap,  30, 180, 15, leftStick);
 	drawInt(   bitmap, 150, 180, 15, 0, controls.astickCardinalSnapping);
+#ifndef DIGITIZEDCSTICK //don't draw the right stick values or the cursor if digitized
 	drawString(bitmap, 280, 180, 15, rightStick);
 	drawInt(   bitmap, 410, 180, 15, 0, controls.cstickCardinalSnapping);
 	if(itemIndex == 0) {
@@ -542,6 +547,7 @@ void drawCardinals(unsigned char bitmap[],
 	} else {
 		drawString(bitmap, 260, 180, 15, arrowRight);
 	}
+#endif //DIGITIZEDCSTICK
 }
 
 void drawRadius(unsigned char bitmap[],
@@ -570,6 +576,40 @@ void drawRadius(unsigned char bitmap[],
 		drawString(bitmap, 260, 160, 15, arrowRight);
 	}
 }
+
+#ifdef DIGITIZEDCSTICK
+void drawDigitized(unsigned char bitmap[],
+		const unsigned int menu,
+		const int itemIndex,
+		const bool changeMade,
+		const ControlConfig &controls) {
+	drawString(bitmap,  20,  20, 15, MenuNames[menu]);
+	if(changeMade) {
+		drawString(bitmap, 300, 20, 15, bToSave);
+	}
+	drawString(bitmap,  30,  50, 15, ud_only);
+	drawString(bitmap,  30,  70, 15, digitized1);
+	drawString(bitmap,  30, 100, 15, lrtrigger2);//"Mode:"
+	drawInt(   bitmap,  80, 100, 15, 1, controls.cstickCardinalSnapping);
+	switch(controls.cstickCardinalSnapping) {
+		case 0:
+			drawString(bitmap,  30, 130, 15, digitized2);
+			break;
+		case 1:
+			drawString(bitmap,  30, 130, 15, digitized3);
+			break;
+		case 2:
+			drawString(bitmap,  30, 130, 15, digitized4);
+			break;
+		case 3:
+			drawString(bitmap,  30, 130, 15, digitized5);
+			break;
+		case 4:
+			drawString(bitmap,  30, 130, 15, digitized6);
+			break;
+	}
+}
+#endif //DIGITIZEDCSTICK
 
 const char* remapDecode(const uint8_t remap) {
 	switch(remap) {
@@ -2105,6 +2145,11 @@ void drawMenu(unsigned char bitmap[],
 		case MENU_RADIUS:
 			drawRadius(bitmap, menu, itemIndex, changeMade, controls);
 			break;
+#ifdef DIGITIZEDCSTICK
+		case MENU_DIGCSTICK:
+			drawDigitized(bitmap, menu, itemIndex, changeMade, controls);
+			break;
+#endif //DIGITIZEDCSTICK
 		case MENU_SET_OVER:
 			drawSet_over(bitmap, menu, itemIndex, changeMade, btn, raw, controls, aStick, cStick);
 			break;
